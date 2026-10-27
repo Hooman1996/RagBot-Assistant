@@ -29,7 +29,9 @@ that must not be committed sit under the git-ignored `local/` folder.
   rule is enforced, not just promised.
 - **Running services:** PostgreSQL, Qdrant, vLLM and TEI already run as Docker containers
   that RagBot uses. This project only connects to them as a client, with its own database,
-  role and collection (P0-06). It never stops, restarts or reconfigures a container.
+  role and collection (P0-06). It never stops, restarts or reconfigures a container. The
+  names, the init SQL and how to run it are in `deployment/README.md`; settings are in
+  `.env.example`.
 - **Skills:** add a skill once under `.agents/skills/`. Codex reads it there, and Claude Code
   reads it through the `.claude/skills` symlink.
 - **Safety of `local/`:** `.gitignore` keeps it out of commits, and the check runner only

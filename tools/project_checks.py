@@ -7,6 +7,7 @@ Usage:
     python tools/project_checks.py foundation
     python tools/project_checks.py baseline
     python tools/project_checks.py contracts
+    python tools/project_checks.py isolation
     python tools/project_checks.py all
     python tools/project_checks.py all --root path/to/checkout
 """
@@ -21,6 +22,7 @@ import sys
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
+from urllib.parse import urlsplit
 
 RAGBOT_BASELINE_SHA = "fc2f6a1dc85be71f782868f18833a895e502226a"
 
@@ -94,6 +96,30 @@ HTTP_METHODS = ("get", "put", "post", "delete", "patch")
 COMMAND_OPERATIONS = ["observe", "navigate", "fill_form", "select_candidate", "show_review"]
 PROFILE_DIR = "app_profiles"
 PROFILE_SCHEMA = "app_profiles/profile.schema.json"
+
+# Plan §12 and §15: the project's own resources on the shared dev PostgreSQL and Qdrant.
+PROJECT_TARGETS = {
+    "database": {"ragbot_assistant_dev"},
+    "schema": {"assistant", "mock_bank"},
+    "role": {"assistant_app", "mock_bank_app"},
+    "collection": {"ragbot_assistant_knowledge"},
+    "bucket": {"ragbot-assistant-dev"},
+}
+RAGBOT_TARGETS = {"hihelp_db", "hihelp_embeddings", "hihelp-documents"}
+DEVELOPMENT_HOSTS = {"localhost", "127.0.0.1"}
+ENV_EXAMPLE = ".env.example"
+ENV_TARGETS = {
+    "POSTGRES_DB": "database",
+    "ASSISTANT_DB_SCHEMA": "schema",
+    "MOCK_BANK_DB_SCHEMA": "schema",
+    "ASSISTANT_DB_USER": "role",
+    "MOCK_BANK_DB_USER": "role",
+    "QDRANT_COLLECTION": "collection",
+    "MINIO_BUCKET": "bucket",
+}
+SECRET_SETTING_WORDS = ("PASSWORD", "SECRET", "TOKEN", "KEY")
+SECRET_PLACEHOLDER = "change-me"
+INIT_SQL = "deployment/init_project_db.sql"
 
 
 @dataclass
@@ -371,12 +397,72 @@ def check_contracts(root: Path, report: Report) -> None:
         report.check(not crossing, f"{path.name}: no edge uses a user-only action", "; ".join(crossing))
 
 
+def guard_target(kind: str, name: str) -> None:
+    """Raise unless name is one of the project's own resources of that kind.
+
+    Reset and migration code calls this before changing anything.
+    """
+    if name in RAGBOT_TARGETS:
+        raise ValueError(f"{name!r} is a RagBot resource")
+    if name not in PROJECT_TARGETS.get(kind, set()):
+        raise ValueError(f"{name!r} is not a project {kind}")
+
+
+def is_development_host(value: str) -> bool:
+    """True if a host name or URL points at a development host."""
+    host = urlsplit(value).hostname if "://" in value else value
+    return host in DEVELOPMENT_HOSTS
+
+
+def check_isolation(root: Path, report: Report) -> None:
+    text = read(root, ENV_EXAMPLE)
+    report.check(text is not None, f"{ENV_EXAMPLE} exists")
+    settings = {}
+    for line in (text or "").splitlines():
+        if line.strip() and not line.startswith("#"):
+            key, _, value = line.partition("=")
+            settings[key.strip()] = value.strip()
+
+    report.check(settings.get("MINIO_ENABLED") == "false", "MinIO is off by default")
+    for key, kind in ENV_TARGETS.items():
+        try:
+            guard_target(kind, settings.get(key, ""))
+            problem = ""
+        except ValueError as exc:
+            problem = str(exc)
+        report.check(not problem, f"{key} is a project {kind}", problem)
+    for key, value in settings.items():
+        if key.endswith(("_HOST", "_URL")):
+            report.check(is_development_host(value), f"{key} is a development host", value)
+        if any(word in key for word in SECRET_SETTING_WORDS):
+            report.check(value == SECRET_PLACEHOLDER, f"{key} is a placeholder", f"use {SECRET_PLACEHOLDER}")
+
+    sql = read(root, INIT_SQL)
+    report.check(sql is not None, f"{INIT_SQL} exists")
+    sql = sql or ""
+    report.check("hihelp" not in sql.lower(), "init SQL names no RagBot resource")
+    created = {kind: set() for kind in ("database", "schema", "role")}
+    for kind, name in re.findall(r"^CREATE (DATABASE|SCHEMA|ROLE) (\w+)", sql, flags=re.MULTILINE):
+        created[kind.lower()].add(name)
+    for kind, names in created.items():
+        report.check(
+            names == PROJECT_TARGETS[kind],
+            f"init SQL creates exactly the project {kind} names",
+            f"found {sorted(names)}",
+        )
+    connects = re.findall(r"^\\connect (\w+)", sql, flags=re.MULTILINE)
+    report.check(
+        connects == ["ragbot_assistant_dev"], "init SQL connects only to the project database", f"{connects}"
+    )
+
+
 SUITES = {
     "foundation": (check_foundation,),
     "baseline": (check_baseline,),
     "contracts": (check_contracts,),
+    "isolation": (check_isolation,),
 }
-SUITES["all"] = SUITES["foundation"] + SUITES["baseline"] + SUITES["contracts"]
+SUITES["all"] = SUITES["foundation"] + SUITES["baseline"] + SUITES["contracts"] + SUITES["isolation"]
 
 
 def run(suite: str, root: Path) -> Report:

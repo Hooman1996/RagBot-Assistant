@@ -19,10 +19,12 @@ spec.loader.exec_module(project_checks)
 COPIED = (
     "AGENTS.md",
     "CLAUDE.md",
+    ".env.example",
     ".gitignore",
     ".github",
     "app_profiles",
     "contracts",
+    "deployment",
     "docs",
     "tools",
 )
