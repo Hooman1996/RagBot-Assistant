@@ -30,16 +30,25 @@ plan disagree, stop and ask the managers; do not improvise.
 6. **Money is exact integers** with an explicit unit. Never use floating point for amounts.
 7. **No fake green.** Do not add empty tests, permanently skipped tests or placeholder CI jobs.
    A component without code is "not yet applicable", never "tested".
+8. **Only the code the issue needs.** The owner reads every line. Write the smallest, plainest
+   code that meets the issue's goal and acceptance command. No extra features, options,
+   abstractions, helpers or files "for later".
 
 ## Approval before implementation
 
 Nothing gets implemented without the owner's approval (hooman, 27 Oct 2026).
 
-1. **Propose.** A manager files the task as an issue with the `proposal` label and explains
-   in plain language what it will do.
+1. **Propose.** When the owner asks for the next step, a manager explains in plain language what
+   it will do, and files it as an issue with the `proposal` label.
 2. **Approve.** The owner approves it, and the issue's label changes from `proposal` to `approved`.
-3. **Implement.** Agents only start issues labelled `approved`. If an issue is labelled
-   `proposal` or `blocked`, do not start it, even if it looks ready.
+3. **Hand over.** The manager then writes the exact prompt for Claude Code or Codex, and the
+   owner gives it to the agent.
+4. **Implement.** Agents only start issues labelled `approved`, and only do what the prompt and
+   the issue say. If an issue is labelled `proposal` or `blocked`, do not start it, even if it
+   looks ready.
+
+The features the assistant will support are chosen by the owner after the APK's features are
+catalogued. The card transfer in the plan is an example, not a commitment.
 
 Phase status is tracked in `docs/status.md`. Phase specs are in `docs/phases/`.
 
