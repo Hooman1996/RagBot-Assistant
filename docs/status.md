@@ -47,6 +47,6 @@ approval or on an input.
 | Input | Needed by | Status |
 |---|---|---|
 | Original APK and any split files | P0-03 | Not yet provided |
-| Private evidence location reachable by both agents (for example a private repo) | P0-03 | Not yet decided |
-| Server for implementation, with the tools in `docs/runbook/server-setup.md` | P0-04 onward | Owner is preparing it |
+| Private evidence location reachable by both agents | P0-03 | Proposed: `/projects/assistant-evidence/` on the dev server |
+| Dev server checkout `/projects/assistant` and conda env `assistant` | Now | Setup prompt given to the owner |
 | Approval of each proposed issue | Every task | Ongoing |
