@@ -19,6 +19,14 @@ build/
 *.jks
 *.keystore
 
+# Local-only project files: evidence, RagBot baseline, toolchains, scratch (see AGENTS.md)
+local/
+
+# Shared agent skills live only on the dev server
+.agents/
+.claude/skills
+.claude/settings.local.json
+
 # Private evidence never enters git (see AGENTS.md rule 2)
 evidence/
 private/

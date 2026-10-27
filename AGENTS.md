@@ -18,8 +18,9 @@ plan disagree, stop and ask the managers; do not improvise.
    `fc2f6a1dc85be71f782868f18833a895e502226a` (see `docs/source-manifest.md`).
 2. **This repository is public.** Never commit original or built APK/AAB files, decompiled
    source, raw REA output, original-app screenshots or traces, code findings, original
-   endpoint hosts, credentials or personal data. These live in the private evidence root,
-   referenced only by evidence IDs. Issues, PR bodies and CI logs follow the same rule.
+   endpoint hosts, credentials or personal data. These live in the git-ignored
+   `local/evidence/` folder, referenced only by evidence IDs. Issues, PR bodies and CI logs
+   follow the same rule.
 3. **No production banking calls.** The replica, mock services and adapters use explicit
    development addresses only. Do not copy endpoint defaults from the APK.
 4. **The assistant never authorizes or submits a transaction.** No tool, command, executor
@@ -41,6 +42,38 @@ Nothing gets implemented without the owner's approval (hooman, 27 Oct 2026).
    `proposal` or `blocked`, do not start it, even if it looks ready.
 
 Phase status is tracked in `docs/status.md`. Phase specs are in `docs/phases/`.
+
+## Local files
+
+Every file this project uses lives inside the checkout. Anything that must not be committed
+goes under the git-ignored `local/` folder:
+
+| Path | Holds |
+|---|---|
+| `local/evidence/` (mode 700) | APK and splits (`apk/`), raw REA output (`rea/`), original-app captures (`captures/`), the private code-findings register (`findings/`) |
+| `local/ragbot-baseline/` | Read-only RagBot clone at `fc2f6a1`, push disabled |
+| `local/toolchain/` | Downloaded tools (Node.js, JDK, JADX, Android SDK) and offline installers |
+| `local/scratch/` | Temporary files, logs and large archives. Safe to delete. |
+
+- Never put project files in `/tmp` or another folder outside the checkout.
+- Never run `git clean -x` or `git clean -X`. They delete `local/`, including the evidence.
+- `.agents/` (shared skills) and the `.claude/skills` symlink are also git-ignored.
+
+## Git workflow
+
+Keep the structure simple. **Agents commit, and the owner pushes and merges.**
+
+- `main` is the only long-lived branch. Agents never commit on `main`, never push and never merge.
+- **One task, one branch:** start `task/<issue>-<short-name>` from `main` (for example
+  `task/3-db-isolation`). It is merged back into `main`.
+- **Multi-step feature:** the owner creates `feature/<name>` from `main`. Its task branches start
+  from that branch and merge back into it, and the feature branch merges into `main` when the
+  feature is complete.
+- Keep one open branch per task. Delete it after it is merged.
+- Commit messages: `[P0-06] short summary (#3)`.
+- When a task is done, report the branch name, the commits, the acceptance command output and
+  a ready-to-paste PR description, so the owner can push and open the PR.
+- Never rewrite history on a branch someone else has pushed.
 
 ## How work is organized
 
@@ -79,7 +112,8 @@ Folders appear when their phase starts; do not create empty placeholders.
 
 - Python target: **3.12** (matches RagBot).
 - Dev server: the checkout lives in `/root/projects/assistant`. Run everything inside
-  `conda activate assistant`, a clone of RagBot's `faq` env. Never install into `faq`.
+  `conda activate assistant`, a copy of RagBot's `faq` env. Never install into `faq`.
+  The server has no direct PyPI access, so prefer packages already in `assistant`.
   See `docs/runbook/server-setup.md`.
 - Foundation checks: `python tools/project_checks.py foundation`
 - Planning baseline checks: `python tools/project_checks.py baseline`

@@ -6,31 +6,35 @@ pinned by the tasks in the last column of section 3, not guessed here.
 
 ## 1. Layout on the dev server
 
+Everything the project uses lives inside the checkout (owner decision, 27 Oct 2026). Files
+that must not be committed sit under the git-ignored `local/` folder.
+
 ```text
-/root/projects/assistant/        <- this repository's checkout (repo root = this folder)
-    .agents/                     <- shared agent skills (local, not committed)
-    .claude/skills -> ../.agents/skills   <- symlink so Claude Code sees the same skills
-/root/projects/assistant-evidence/  <- private evidence root (never inside the repo)
-    apk/          original APK and splits
-    rea/          raw REA output
-    captures/     original-app screenshots and traces
-    findings/     private code-findings register
-/root/projects/ragbot-baseline/  <- read-only RagBot clone, detached at fc2f6a1, push disabled
+/root/projects/assistant/                  <- repository checkout (repo root = this folder)
+    .agents/skills/                        <- shared agent skills (git-ignored)
+    .claude/skills -> ../.agents/skills    <- symlink so Claude Code sees the same skills
+    local/                                 <- git-ignored, never committed
+        evidence/        (mode 700)
+            apk/         original APK and splits
+            rea/         raw REA output
+            captures/    original-app screenshots and traces
+            findings/    private code-findings register
+        ragbot-baseline/ read-only RagBot clone, detached at fc2f6a1, push disabled
+        toolchain/       Node.js, JDK, JADX, Android SDK, offline installers
+        scratch/         temporary files, logs, large archives (safe to delete)
 ```
 
-- **RagBot source:** P2 copies the retained modules from `/root/projects/ragbot-baseline`, never
-  from the checkout the running RagBot service uses. Its push URL is disabled, so the
-  read-only rule is enforced, not just promised.
+- **RagBot source:** P2 copies the retained modules from `local/ragbot-baseline`, never from
+  the checkout the running RagBot service uses. Its push URL is disabled, so the read-only
+  rule is enforced, not just promised.
 - **Running services:** PostgreSQL, Qdrant, vLLM and TEI already run as Docker containers
   that RagBot uses. This project only connects to them as a client, with its own database,
   role and collection (P0-06). It never stops, restarts or reconfigures a container.
-
 - **Skills:** add a skill once under `.agents/skills/`. Codex reads it there, and Claude Code
-  reads it through the `.claude/skills` symlink. Both paths are listed in the checkout's
-  `.git/info/exclude`, so they stay local until the managers decide to commit shared skills.
-- **Evidence root:** both agents run on this server, so a local folder outside the checkout
-  (mode `700`) meets the plan's rule. P0-03 adds the environment variable that points to it.
-  Code never hard-codes the path.
+  reads it through the `.claude/skills` symlink.
+- **Safety of `local/`:** `.gitignore` keeps it out of commits, and the check runner only
+  scans files git would commit. Never run `git clean -x` or `git clean -X`, which would delete
+  it. P0-03 adds the setting that points code at `local/evidence/`; code never hard-codes it.
 
 ## 2. Python environment
 
@@ -45,6 +49,14 @@ versions.
 
 - **No internet installs:** any new package (Python, npm, JDK, Android SDK) needs a mirror or
   proxy, or an offline transfer, first. Tasks should prefer packages already in `assistant`.
+- **PyPI mirrors to try** (not yet tested from the server):
+  `https://package-mirror.liara.ir/repository/pypi/` and
+  `https://mirror-pypi.runflare.com/simple`. Test one first with a dry download into
+  `local/scratch/`, for example
+  `pip download --no-deps -d local/scratch --index-url <mirror> ruff==0.16.4`. A Nexus-style
+  URL like Liara's may need `simple/` appended. Once one works, set it **only for the
+  `assistant` env** with `pip config --site set global.index-url <mirror>`, never globally
+  and never in `faq`.
 - **Editable packages copied from `faq`:** `snappbox_decision_support` points to
   `/root/projects/eda`, and `dots_ocr` / `dotsocr` point to a path that does not exist on this
   server. The project does not use any of them.
@@ -67,9 +79,9 @@ ruff check . && ruff format --check .
 |---|---|---|---|
 | git, conda env `assistant` (Python 3.12.12) | Backend, check runner | Now | Done |
 | Codex CLI and Claude Code, both signed in | The implementing agents | Now | n/a |
-| `/root/projects/assistant-evidence/` (mode 700) | APK and all raw evidence | P0-03 | Done (empty) |
-| Original APK and any split files in `apk/` of the evidence root | Investigation input | P0-03 | P0-03 |
-| **A package mirror, proxy or offline transfer** (the server cannot reach PyPI, Anaconda or, likely, npm) | Every new tool below | P0-04 | P0-04 |
+| `local/evidence/` (mode 700) | APK and all raw evidence | P0-03 | Moving into the checkout |
+| Original APK and any split files in `local/evidence/apk/` | Investigation input | P0-03 | P0-03 |
+| **A package mirror, proxy or offline transfer** (the server cannot reach PyPI, Anaconda or, likely, npm). PyPI mirror candidates are in section 2. | Every new tool below | P0-04 | P0-04 |
 | Node.js in a range REA supports (its README lists 22.x ≥ 22.23.4, 24.x ≥ 24.22.1, or ≥ 26.12.1) and npm | REA MCP server and CLI | P0-04 | P0-04 |
 | A JDK and JADX | REA's APK analysis | P0-04 | P0-04 |
 | Android SDK command-line tools, platform-tools (`adb`) and the emulator, with hardware acceleration (`/dev/kvm` must exist) | Emulator profile, replica builds, original-app observation | P1a | P1a-01 |
