@@ -2,9 +2,7 @@
 
 Last updated: 27 October 2026. This page is updated whenever a task changes state.
 
-**Where we are:** getting the repo, server and tools ready (P0). The order of work is: finish
-P0, install the REA MCP server, add the agent skills, run a readiness check, then reverse
-engineer the app (D-019). P0-03 to P0-07 are done.
+**Where we are:** P0 is done. Reverse engineering (P1a) starts when the owner asks.
 
 ## Status key
 
@@ -21,7 +19,7 @@ engineer the app (D-019). P0-03 to P0-07 are done.
 | Phase | Status | Spec | Notes |
 |---|---|---|---|
 | Planning (plan v1, review v3, plan v2) | Done | `docs/plan/` | Plan v2 is the master; D-018 and D-019 change the P1 order |
-| P0: Foundation and readiness | In progress | [P0](phases/P0-foundation.md) | 7 of 8 tasks done |
+| P0: Foundation and readiness | Done | [P0](phases/P0-foundation.md) | 8 of 8 tasks done |
 | P1a: Reverse engineering and whole-app catalogue | Planned | [P1](phases/P1-apk-investigation.md) | Starts after the P0-08 readiness check, when the owner asks |
 | P1b: Owner picks the features | Planned | [P1](phases/P1-apk-investigation.md) | After P1a |
 | P1c: Navigation prototype | Planned | [P1](phases/P1-apk-investigation.md) | Python simulator, no Android |
@@ -45,7 +43,7 @@ engineer the app (D-019). P0-03 to P0-07 are done.
 | P0-05 | Contract and lifecycle schemas, with no assistant submit path | Done (PR #13) |
 | P0-06 | Project-only database and collection names, and a production/RagBot block | Done (PR #15) |
 | P0-07 | Agent skills in `.agents/skills/` | Done (PR #21). Runbook: `docs/runbook/agent-skills.md` |
-| P0-08 | Readiness check on the server | Planned: last P0 step |
+| P0-08 | Readiness check on the server | Done (PR #24). Report: `docs/reports/P0-08-readiness.md` |
 
 ## Inputs needed from the owner
 
