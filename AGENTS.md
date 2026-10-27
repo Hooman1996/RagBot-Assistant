@@ -67,6 +67,8 @@ goes under the git-ignored `local/` folder:
 - Never put project files in `/tmp` or another folder outside the checkout.
 - Never run `git clean -x` or `git clean -X`. They delete `local/`, including the evidence.
 - `.agents/` (shared skills) and the `.claude/skills` symlink are also git-ignored.
+- Skills in `.agents/skills/` are guidance only. Where a skill conflicts with this file (money
+  types, `/tmp`, cloud services, install commands), this file wins. See `docs/runbook/agent-skills.md`.
 
 ## Git workflow
 

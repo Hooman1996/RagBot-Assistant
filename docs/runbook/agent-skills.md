@@ -15,7 +15,6 @@ whole from its source at the commit below, and every file was read before it was
 | `navigation-3` | `github.com/android/skills` | `navigation/navigation-3` | `45fd1739a4dbca5452c3e936570797f7f6261cd7` | Apache-2.0 |
 | `testing-setup` | `github.com/android/skills` | `testing/testing-setup` | `45fd1739a4dbca5452c3e936570797f7f6261cd7` | Apache-2.0 |
 | `android-intent-security` | `github.com/android/skills` | `security/android-intent-security` | `45fd1739a4dbca5452c3e936570797f7f6261cd7` | Apache-2.0 |
-| `jetpack-compose-performance` | `github.com/android/skills` | `jetpack-compose/jetpack-compose-performance` | `45fd1739a4dbca5452c3e936570797f7f6261cd7` | Apache-2.0 |
 | `android-emulator-qa` | `github.com/openai/plugins` | `plugins/test-android-apps/skills/android-emulator-qa` | `0722921d5542fc593105c27bd52630babd8b8c2a` | Apache-2.0 |
 | `fastapi` | `github.com/fastapi/fastapi` | `fastapi/.agents/skills/fastapi` | `79cab5bed28b24d92c185d236feb33f5783dfeb3` | MIT |
 | `async-python-patterns` | `github.com/wshobson/agents` | `plugins/python-development/skills/async-python-patterns` | `0874a27b17a22e2b7c2e2bcd725768e0803cad06` | MIT |
@@ -32,9 +31,9 @@ whole from its source at the commit below, and every file was read before it was
 | `langgraph-human-in-the-loop` | `github.com/langchain-ai/langchain-skills` | `config/skills/langgraph-human-in-the-loop` | `126c384d8552dcb476b226c244172186cc3f4328` | MIT |
 | `reverse-engineer-anything` | npm `rea-agents` 6.8.0, installed in `local/toolchain/rea/` (P0-04) | `node_modules/rea-agents/skills/reverse-engineer-anything` | npm 6.8.0 (no git commit in the package) | MIT |
 
-The Jetpack Compose skill: `jetpack-compose/` holds no single general UI skill, so
-`jetpack-compose-performance` was picked. The others there cover adaptive layouts, XML
-migration and inking.
+`jetpack-compose/` holds no general Compose UI skill. `jetpack-compose-performance` was installed
+first and then removed (27 Oct 2026): Compose tuning is not needed. A Compose skill is chosen when
+the replica work (P4) starts.
 
 Where a repository keeps its license only at the root, that file was copied into the skill's
 folder. `android-emulator-qa` ships its own `LICENSE.txt`.
@@ -62,6 +61,7 @@ Moved, not deleted, to `local/scratch/removed-skills/`:
 | `fastapi-templates` | Yes, moved |
 | `python-observability` | Yes, moved |
 | `python-performance-optimization` | Yes, moved |
+| `jetpack-compose-performance` | Installed in P0-07, then moved |
 | `ragbot-inference-benchmark`, `ragbot-load-test`, `ragbot-performance-audit`, `design-taste-frontend`, `frontend-design`, `grafana-dashboards`, `prometheus-configuration`, `supabase-postgres-best-practices` | No, nothing to move |
 
 The previous copies of the kept skills are in `local/scratch/old-skills/`.
@@ -129,8 +129,8 @@ Use the CLI binaries from the VS Code extensions (`docs/runbook/rea-setup.md` §
 `<repo>`:
 
 - Claude Code: `claude -p "Reply OK" --output-format stream-json --verbose --max-turns 1`.
-  The `init` event's `skills` list holds all 20 names.
-- Codex: `codex debug prompt-input` (no model call). Its skill list holds all 20 names under
+  The `init` event's `skills` list holds all 19 names.
+- Codex: `codex debug prompt-input` (no model call). Its skill list holds all 19 names under
   the root `/root/projects/assistant/.agents/skills`.
 
-Checked on 27 Oct 2026: both list all 20, and none of the removed skills.
+Checked on 27 Oct 2026: both listed all 20 before `jetpack-compose-performance` was removed, and none of the removed skills.
