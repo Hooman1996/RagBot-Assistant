@@ -78,7 +78,7 @@ Folders appear when their phase starts; do not create empty placeholders.
 ## Commands
 
 - Python target: **3.12** (matches RagBot).
-- Dev server: the checkout lives in `/projects/assistant`. Run everything inside
+- Dev server: the checkout lives in `/root/projects/assistant`. Run everything inside
   `conda activate assistant`, a clone of RagBot's `faq` env. Never install into `faq`.
   See `docs/runbook/server-setup.md`.
 - Foundation checks: `python tools/project_checks.py foundation`
