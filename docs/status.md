@@ -4,7 +4,7 @@ Last updated: 27 October 2026. This page is updated whenever a task changes stat
 
 **Where we are:** getting the repo, server and tools ready (P0). The order of work is: finish
 P0, install the REA MCP server, add the agent skills, run a readiness check, then reverse
-engineer the app (D-019). P0-05 and P0-06 are done.
+engineer the app (D-019). P0-03 to P0-06 are done.
 
 ## Status key
 
@@ -21,7 +21,7 @@ engineer the app (D-019). P0-05 and P0-06 are done.
 | Phase | Status | Spec | Notes |
 |---|---|---|---|
 | Planning (plan v1, review v3, plan v2) | Done | `docs/plan/` | Plan v2 is the master; D-018 and D-019 change the P1 order |
-| P0: Foundation and readiness | In progress | [P0](phases/P0-foundation.md) | 4 of 8 tasks done |
+| P0: Foundation and readiness | In progress | [P0](phases/P0-foundation.md) | 5 of 8 tasks done |
 | P1a: Reverse engineering and whole-app catalogue | Planned | [P1](phases/P1-apk-investigation.md) | Starts after the P0-08 readiness check, when the owner asks |
 | P1b: Owner picks the features | Planned | [P1](phases/P1-apk-investigation.md) | After P1a |
 | P1c: Navigation prototype | Planned | [P1](phases/P1-apk-investigation.md) | Python simulator, no Android |
@@ -40,8 +40,8 @@ engineer the app (D-019). P0-05 and P0-06 are done.
 |---|---|---|
 | P0-01 | Agent rules, issue template, CI, check runner | Done (PR #1) |
 | P0-02 | Plan, overview, decision index, RagBot source manifest | Done (PR #1) |
-| P0-03 | Record the APK's identity (hash, version, splits). No decompilation. | Approved (#4), runs next |
-| P0-04 | Install and pin the REA MCP server for both agents. No APK analysis. | Proposed (#5) |
+| P0-03 | Record the APK's identity (hash, version, splits). No decompilation. | Done (PR #17). Package and SDK fields wait for build-tools |
+| P0-04 | Install and pin the REA MCP server for both agents. No APK analysis. | Done (PR #18) |
 | P0-05 | Contract and lifecycle schemas, with no assistant submit path | Done (PR #13) |
 | P0-06 | Project-only database and collection names, and a production/RagBot block | Done (PR #15) |
 | P0-07 | Agent skills in `.agents/skills/` | Planned: owner lists the skills |
