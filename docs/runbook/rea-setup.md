@@ -40,7 +40,7 @@ tar -xJf node-v22.23.4-linux-x64.tar.xz -C $T/node --strip-components=1
 tar -xzf OpenJDK21U-jdk_x64_linux_hotspot_21.0.13_9.tar.gz -C $T/jdk --strip-components=1
 $T/jdk/bin/java --list-modules | grep jdk.compiler
 
-# jadx-headless-mcp and apktool are used as downloaded
+# jadx-headless-mcp is used as downloaded. apktool gets a launcher (section 3)
 $T/jdk/bin/java -jar $T/apktool/apktool_2.12.1.jar --version    # 2.12.1
 
 # Ghidra
@@ -61,10 +61,19 @@ REA, and every agent registration, uses exactly these values:
 | `JAVA_HOME` | `<repo>/local/toolchain/jdk` |
 | `REA_JADX_MCP_JAR` | `<repo>/local/toolchain/jadx/jadx-headless-mcp-0.7.1-all.jar` |
 | `GHIDRA_INSTALL_DIR` | `<repo>/local/toolchain/ghidra/ghidra_12.1.4_PUBLIC` |
+| `REA_APKTOOL_COMMAND` | `<repo>/local/toolchain/apktool/apktool` |
 
-- apktool is reached by its jar path, `java -jar <repo>/local/toolchain/apktool/apktool_2.12.1.jar`.
-  No variable is set for it. REA's own apktool provider reads `REA_APKTOOL_COMMAND`, which must be
-  an absolute path to an executable launcher, so it does not use the jar as set up here.
+- `REA_APKTOOL_COMMAND` must be an executable launcher, not the jar. Save this as
+  `local/toolchain/apktool/apktool` and `chmod +x` it. Run on its own, it prints `2.12.1`.
+
+  ```sh
+  #!/bin/sh
+  # apktool launcher for REA (REA_APKTOOL_COMMAND), using the project JDK.
+  dir=$(cd "$(dirname "$0")" && pwd)
+  exec "$dir/../jdk/bin/java" -jar "$dir/apktool_2.12.1.jar" "$@"
+  ```
+- When apktool decodes an APK it may keep framework files in `~/.local/share/apktool/`, outside
+  the checkout.
 - `ps` (procps) must be on `PATH`; Ghidra and JADX need it. It is `/usr/bin/ps`.
 - Ghidra keeps per-user settings in `~/.config/ghidra/`, outside the checkout.
 
@@ -75,10 +84,12 @@ T=$PWD/local/toolchain
 env -i HOME=$HOME PATH=$T/node/bin:$T/jdk/bin:/usr/bin:/bin JAVA_HOME=$T/jdk \
   REA_JADX_MCP_JAR=$T/jadx/jadx-headless-mcp-0.7.1-all.jar \
   GHIDRA_INSTALL_DIR=$T/ghidra/ghidra_12.1.4_PUBLIC \
+  REA_APKTOOL_COMMAND=$T/apktool/apktool \
   $T/rea/node_modules/.bin/rea doctor --json
 ```
 
-The `node`, `jadx`, `ghidra` and `ghidra-java` checks must pass. `doctor` still reports
+The `node`, `jadx`, `ghidra` and `ghidra-java` checks must pass. REA's `inspect_apktool_client`
+tool, which checks only the launcher, reports version 2.12.1. `doctor` still reports
 `healthy: false` because these stay unconfigured on purpose: `hopper`, `ida-registration`,
 `kuna-installation` and `skill:identity` (the REA skill comes with P0-07).
 
@@ -102,6 +113,7 @@ claude mcp add --scope local rea \
   -e JAVA_HOME=$T/jdk \
   -e REA_JADX_MCP_JAR=$T/jadx/jadx-headless-mcp-0.7.1-all.jar \
   -e GHIDRA_INSTALL_DIR=$T/ghidra/ghidra_12.1.4_PUBLIC \
+  -e REA_APKTOOL_COMMAND=$T/apktool/apktool \
   -- $T/rea/node_modules/.bin/rea mcp
 ```
 
@@ -118,6 +130,7 @@ PATH = "/root/projects/assistant/local/toolchain/node/bin:/root/projects/assista
 JAVA_HOME = "/root/projects/assistant/local/toolchain/jdk"
 REA_JADX_MCP_JAR = "/root/projects/assistant/local/toolchain/jadx/jadx-headless-mcp-0.7.1-all.jar"
 GHIDRA_INSTALL_DIR = "/root/projects/assistant/local/toolchain/ghidra/ghidra_12.1.4_PUBLIC"
+REA_APKTOOL_COMMAND = "/root/projects/assistant/local/toolchain/apktool/apktool"
 ```
 
 Check: `claude mcp list` shows `rea ... ✔ Connected`, and `codex mcp list` shows `rea` enabled.
