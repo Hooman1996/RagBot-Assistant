@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.jks
+*.keystore
+
+# Private evidence never enters git (see AGENTS.md rule 2)
+evidence/
+private/
+*.apk
+*.apks
+*.aab
+*.xapk
+*.dex
+jadx-output/
+rea-output/
+decompiled/
+
+# Android build output
+.gradle/
+local.properties
+android/**/build/
+
+# Editors and OS
+.idea/
+.vscode/
+.DS_Store

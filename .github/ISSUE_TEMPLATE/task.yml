@@ -1,0 +1,66 @@
+name: Implementation task
+description: One bounded task for a coding agent (plan §16). Public repo - sanitized content and evidence IDs only.
+title: "[P?-??] "
+labels: ["task"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This repository is public. Do not paste decompiled code, original endpoints, screenshots of the original app, code findings or credentials. Reference private evidence by ID.
+  - type: input
+    id: owner
+    attributes:
+      label: Implementation owner
+      description: Exactly one owner (for example Codex or Claude Code).
+    validations:
+      required: true
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: Observable behavior or concrete artifact.
+    validations:
+      required: true
+  - type: textarea
+    id: inputs
+    attributes:
+      label: Inputs
+      description: Exact source, profile and contract revisions, plus prerequisite issues.
+    validations:
+      required: true
+  - type: textarea
+    id: allowed_changes
+    attributes:
+      label: Allowed changes
+      description: Files or directories this task may modify.
+    validations:
+      required: true
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Boundaries, for example RagBot writes or production calls.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance_command
+    attributes:
+      label: Acceptance command
+      description: A reproducible command and its expected outcome.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: stop_condition
+    attributes:
+      label: Stop condition
+      description: Evidence that requires investigation instead of improvisation.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Commit, test result, known limits and relevant private evidence IDs (filled in on completion).
+    validations:
+      required: false
