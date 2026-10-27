@@ -9,6 +9,7 @@ Usage:
     python tools/project_checks.py contracts
     python tools/project_checks.py isolation
     python tools/project_checks.py apk-baseline
+    python tools/project_checks.py rea-environment
     python tools/project_checks.py all
     python tools/project_checks.py all --root path/to/checkout
 """
@@ -127,6 +128,42 @@ APK_RECORD = "docs/apk-baseline.md"
 EVIDENCE_DIR = "local/evidence"
 APK_DIR = "local/evidence/apk"
 APK_ROW = re.compile(r"^\| `\w+` \| (\d+) \| `([0-9a-f]{64})` \|$", flags=re.MULTILINE)
+
+# P0-04: the REA toolchain pins, recorded in docs/runbook/rea-setup.md.
+TOOLCHAIN_DIR = "local/toolchain"
+REA_PACKAGE = "rea/node_modules/rea-agents/package.json"
+# (tool, file under local/toolchain, pattern whose groups join with "." into the version, pin)
+TOOLCHAIN_VERSIONS = (
+    (
+        "Node.js",
+        "node/include/node/node_version.h",
+        r"NODE_MAJOR_VERSION (\d+)\n#define NODE_MINOR_VERSION (\d+)\n#define NODE_PATCH_VERSION (\d+)",
+        "22.23.4",
+    ),
+    ("JDK", "jdk/release", r'^JAVA_RUNTIME_VERSION="(.+)"$', "21.0.13+9-LTS"),
+    ("JDK module", "jdk/release", r'^MODULES=".*\b(jdk\.compiler)\b', "jdk.compiler"),
+    (
+        "Ghidra",
+        "ghidra/ghidra_12.1.4_PUBLIC/Ghidra/application.properties",
+        r"^application\.version=(.+)$",
+        "12.1.4",
+    ),
+    ("rea-agents", REA_PACKAGE, r'^  "version": "(.+)",$', "6.8.0"),
+    ("rea-agents source", REA_PACKAGE, r'^    "url": "(.+)"$', "git+https://github.com/morluto/rea.git"),
+)
+# (tool, file under local/toolchain, SHA-256)
+TOOLCHAIN_HASHES = (
+    (
+        "jadx-headless-mcp 0.7.1",
+        "jadx/jadx-headless-mcp-0.7.1-all.jar",
+        "6e5eacf500b64292bfb73c49797c1958f6ee44646e43e868039ae7feb573ff75",
+    ),
+    (
+        "apktool 2.12.1",
+        "apktool/apktool_2.12.1.jar",
+        "66cf4524a4a45a7f56567d08b2c9b6ec237bcdd78cee69fd4a59c8a0243aeafa",
+    ),
+)
 
 
 @dataclass
@@ -484,19 +521,37 @@ def check_apk_baseline(root: Path, report: Report) -> None:
     )
 
 
+def check_rea_environment(root: Path, report: Report) -> None:
+    if not (root / TOOLCHAIN_DIR).is_dir():
+        report.not_applicable.append(f"REA toolchain: {TOOLCHAIN_DIR}/ is absent")
+        return
+    for tool, rel, pattern, pin in TOOLCHAIN_VERSIONS:
+        match = re.search(pattern, read(root, f"{TOOLCHAIN_DIR}/{rel}") or "", flags=re.MULTILINE)
+        found = ".".join(match.groups()) if match else "nothing"
+        report.check(found == pin, f"{tool} is {pin}", f"found {found} in {TOOLCHAIN_DIR}/{rel}")
+    for tool, rel, pin in TOOLCHAIN_HASHES:
+        path = root / TOOLCHAIN_DIR / rel
+        found = "nothing"
+        if path.is_file():
+            with path.open("rb") as handle:
+                found = hashlib.file_digest(handle, "sha256").hexdigest()
+        report.check(found == pin, f"{tool} SHA-256 is {pin}", f"found {found} at {TOOLCHAIN_DIR}/{rel}")
+
+
 SUITES = {
     "foundation": (check_foundation,),
     "baseline": (check_baseline,),
     "contracts": (check_contracts,),
     "isolation": (check_isolation,),
     "apk-baseline": (check_apk_baseline, scan_forbidden),
+    "rea-environment": (check_rea_environment,),
 }
 SUITES["all"] = (
     SUITES["foundation"]
     + SUITES["baseline"]
     + SUITES["contracts"]
     + SUITES["isolation"]
-    + (check_apk_baseline,)
+    + (check_apk_baseline, check_rea_environment)
 )
 
 
