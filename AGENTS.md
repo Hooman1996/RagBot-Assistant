@@ -30,6 +30,18 @@ plan disagree, stop and ask the managers; do not improvise.
 7. **No fake green.** Do not add empty tests, permanently skipped tests or placeholder CI jobs.
    A component without code is "not yet applicable", never "tested".
 
+## Approval before implementation
+
+Nothing gets implemented without the owner's approval (hooman, 27 Oct 2026).
+
+1. **Propose.** A manager files the task as an issue with the `proposal` label and explains
+   in plain language what it will do.
+2. **Approve.** The owner approves it, and the issue's label changes from `proposal` to `approved`.
+3. **Implement.** Agents only start issues labelled `approved`. If an issue is labelled
+   `proposal` or `blocked`, do not start it, even if it looks ready.
+
+Phase status is tracked in `docs/status.md`. Phase specs are in `docs/phases/`.
+
 ## How work is organized
 
 - One shared backlog: GitHub issues using `.github/ISSUE_TEMPLATE/task.yml`.

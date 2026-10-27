@@ -7,6 +7,8 @@ user always authorizes the transaction themselves.
 - One-page overview: [`docs/overview.md`](docs/overview.md)
 - Master plan: [`docs/plan/RagBot_Assistant_Final_Project_Plan_v2.md`](docs/plan/RagBot_Assistant_Final_Project_Plan_v2.md)
 - Rules for contributors and coding agents: [`AGENTS.md`](AGENTS.md)
+- Current status: [`docs/status.md`](docs/status.md) · Phase specs: [`docs/phases/`](docs/phases/README.md)
+- Server setup: [`docs/runbook/server-setup.md`](docs/runbook/server-setup.md)
 
 ## Checks
 
@@ -16,4 +18,5 @@ python -m pytest
 ruff check .
 ```
 
-Status: P0 foundation. No backend, replica or mock services exist yet.
+Status: planning is complete, and P0-01/P0-02 are done. All further work waits on owner approval
+(see `AGENTS.md`). No backend, replica or mock services exist yet.
