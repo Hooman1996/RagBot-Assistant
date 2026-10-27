@@ -1,0 +1,14 @@
+{
+  "created": ["clarifying", "resolving", "paused", "failed", "cancelled"],
+  "clarifying": ["resolving", "paused", "failed", "cancelled"],
+  "resolving": ["clarifying", "preparing", "paused", "failed", "cancelling"],
+  "preparing": ["clarifying", "verifying_review", "paused", "reconciling", "failed", "cancelling"],
+  "verifying_review": ["ready_for_user", "preparing", "clarifying", "paused", "reconciling", "failed", "cancelling"],
+  "ready_for_user": ["resolving", "completed", "cancelled", "paused"],
+  "paused": ["resolving", "reconciling", "cancelled"],
+  "reconciling": ["resolving", "verifying_review", "ready_for_user", "paused", "failed", "cancelled"],
+  "cancelling": ["cancelled", "reconciling"],
+  "failed": [],
+  "cancelled": [],
+  "completed": []
+}

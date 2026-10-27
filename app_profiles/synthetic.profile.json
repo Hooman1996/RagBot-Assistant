@@ -1,0 +1,29 @@
+{
+  "profile_version": 1,
+  "screens": ["home", "example_menu", "example_form"],
+  "edges": [
+    { "from": "home", "to": "example_menu", "action": "open_example_menu" },
+    { "from": "example_menu", "to": "example_form", "action": "open_example_form" }
+  ],
+  "forms": [
+    {
+      "id": "example_form",
+      "fields": [
+        { "ref": "recipient", "type": "ref" },
+        { "ref": "amount", "type": "money" },
+        { "ref": "note", "type": "text" }
+      ]
+    }
+  ],
+  "features": [
+    {
+      "intent": "example_request",
+      "description": "A made-up feature for contract tests; not taken from any real app.",
+      "required_slots": ["recipient", "amount"],
+      "lookups": ["example_recipients"],
+      "destination": "example_form",
+      "form": "example_form"
+    }
+  ],
+  "user_only_actions": ["confirm_example"]
+}

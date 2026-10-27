@@ -1,0 +1,26 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "User-only mock app API",
+    "version": "1",
+    "description": "Called only by the user's own confirmation in the mock app. The assistant has no path to it."
+  },
+  "paths": {
+    "/mock-app/v1/drafts/{draft_id}/submit": {
+      "parameters": [{ "name": "draft_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "submitDraft",
+        "summary": "Simulate the user's final submission",
+        "responses": { "200": { "description": "The simulated transaction" } }
+      }
+    },
+    "/mock-app/v1/transactions/{transaction_id}/receipt": {
+      "parameters": [{ "name": "transaction_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": {
+        "operationId": "readReceipt",
+        "summary": "Read the receipt of a simulated transaction",
+        "responses": { "200": { "description": "The receipt" } }
+      }
+    }
+  }
+}

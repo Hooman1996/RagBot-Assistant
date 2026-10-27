@@ -1,0 +1,56 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Chatbot compatibility API",
+    "version": "1",
+    "description": "RagBot's existing mobile features in their own namespace. Answers only: no commands."
+  },
+  "paths": {
+    "/chatbot/v1/talk": {
+      "post": {
+        "operationId": "talk",
+        "summary": "Ask a question and get an answer",
+        "responses": { "200": { "description": "The answer" } }
+      }
+    },
+    "/chatbot/v1/history": {
+      "get": {
+        "operationId": "getHistory",
+        "summary": "Read conversation history",
+        "responses": { "200": { "description": "The history" } }
+      }
+    },
+    "/chatbot/v1/queries/{query_id}/feedback": {
+      "parameters": [{ "name": "query_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "postFeedback",
+        "summary": "Give feedback on an answer",
+        "responses": { "200": { "description": "Feedback recorded" } }
+      }
+    },
+    "/chatbot/v1/queries/{query_id}/comment": {
+      "parameters": [{ "name": "query_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "postComment",
+        "summary": "Comment on an answer",
+        "responses": { "200": { "description": "Comment recorded" } }
+      }
+    },
+    "/chatbot/v1/sessions/{session_id}/close": {
+      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "closeSession",
+        "summary": "Close a session",
+        "responses": { "200": { "description": "Session closed" } }
+      }
+    },
+    "/chatbot/v1/sessions/{session_id}/satisfaction": {
+      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "postSatisfaction",
+        "summary": "Rate satisfaction with a session",
+        "responses": { "200": { "description": "Satisfaction recorded" } }
+      }
+    }
+  }
+}
