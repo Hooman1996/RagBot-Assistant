@@ -51,14 +51,15 @@ versions.
 
 - **No internet installs:** any new package (Python, npm, JDK, Android SDK) needs a mirror or
   proxy, or an offline transfer, first. Tasks should prefer packages already in `assistant`.
-- **PyPI mirrors to try** (not yet tested from the server):
-  `https://package-mirror.liara.ir/repository/pypi/` and
-  `https://mirror-pypi.runflare.com/simple`. Test one first with a dry download into
-  `local/scratch/`, for example
-  `pip download --no-deps -d local/scratch --index-url <mirror> ruff==0.16.4`. A Nexus-style
-  URL like Liara's may need `simple/` appended. Once one works, set it **only for the
-  `assistant` env** with `pip config --site set global.index-url <mirror>`, never globally
-  and never in `faq`.
+- **Package sources** (probe of 27 Oct 2026; nothing was installed):
+  - PyPI: use `https://mirror-pypi.runflare.com/simple` (Liara's
+    `https://package-mirror.liara.ir/repository/pypi/simple` is the fallback). pypi.org's index
+    answers, but its file host times out. Pass the mirror per command
+    (`pip install --index-url <mirror> ...`), and only into the `assistant` env, never `faq`.
+  - npm: `registry.npmjs.org` works.
+  - Node.js (`nodejs.org/dist`), the Temurin JDK and JADX (GitHub releases) download fine.
+  - The system Node is 22.23.1, which is below REA's minimum, so P0-04 puts a project copy in
+    `local/toolchain/`.
 - **Editable packages copied from `faq`:** `snappbox_decision_support` points to
   `/root/projects/eda`, and `dots_ocr` / `dotsocr` point to a path that does not exist on this
   server. The project does not use any of them.
@@ -91,7 +92,17 @@ ruff check . && ruff format --check .
 | Access to the existing Docker-hosted vLLM and TEI endpoints (development use, after a capacity check) | Answering and task interpretation | P2 / P6 | P6-01 |
 | Appium | Independent UI checks | P5 | P5-07 |
 
-## 4. Working rhythm
+## 4. Git identity on the server
+
+Commits made on the server must use the owner's GitHub identity, never the machine's user and
+host name (the repository is public). Set it once inside the checkout:
+
+```bash
+git config user.name "Hooman Aghalou"
+git config user.email "67710406+Hooman1996@users.noreply.github.com"
+```
+
+## 5. Working rhythm
 
 The full git and running-service rules are in `AGENTS.md`. In short:
 
