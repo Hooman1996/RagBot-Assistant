@@ -1,0 +1,15 @@
+{
+  "kind": "clarification",
+  "question_id": "q-1",
+  "text": "Which recipient?",
+  "options": [
+    {
+      "ref": "candidate-1",
+      "label": "R*** (card ending 1111)"
+    },
+    {
+      "ref": "candidate-2",
+      "label": "R*** (card ending 2222)"
+    }
+  ]
+}

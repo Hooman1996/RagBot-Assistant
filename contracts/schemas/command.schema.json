@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Command",
+  "description": "One bounded operation the backend asks the in-app executor to perform.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "protocol_version",
+    "profile_version",
+    "task_id",
+    "task_revision",
+    "command_id",
+    "device_id",
+    "session_id",
+    "operation",
+    "arguments",
+    "expected_observation_version",
+    "expires_at"
+  ],
+  "properties": {
+    "protocol_version": { "type": "integer", "minimum": 0 },
+    "profile_version": { "type": "integer", "minimum": 0 },
+    "task_id": { "type": "string", "minLength": 1 },
+    "task_revision": { "type": "integer", "minimum": 0 },
+    "command_id": { "type": "string", "minLength": 1 },
+    "device_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "operation": { "$ref": "#/$defs/operation" },
+    "arguments": { "type": "object" },
+    "expected_observation_version": { "type": "integer", "minimum": 0 },
+    "expected_draft_version": {
+      "description": "0 means no draft yet.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "expires_at": {
+      "description": "Absolute UTC time.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d+)?Z$"
+    }
+  },
+  "allOf": [
+    {
+      "if": { "required": ["operation"], "properties": { "operation": { "const": "observe" } } },
+      "then": { "properties": { "arguments": { "$ref": "#/$defs/no_arguments" } } }
+    },
+    {
+      "if": { "required": ["operation"], "properties": { "operation": { "const": "navigate" } } },
+      "then": { "properties": { "arguments": { "$ref": "#/$defs/navigate_arguments" } } }
+    },
+    {
+      "if": { "required": ["operation"], "properties": { "operation": { "const": "fill_form" } } },
+      "then": {
+        "required": ["expected_draft_version"],
+        "properties": { "arguments": { "$ref": "#/$defs/fill_form_arguments" } }
+      }
+    },
+    {
+      "if": { "required": ["operation"], "properties": { "operation": { "const": "select_candidate" } } },
+      "then": { "properties": { "arguments": { "$ref": "#/$defs/select_candidate_arguments" } } }
+    },
+    {
+      "if": { "required": ["operation"], "properties": { "operation": { "const": "show_review" } } },
+      "then": {
+        "required": ["expected_draft_version"],
+        "properties": { "arguments": { "$ref": "#/$defs/no_arguments" } }
+      }
+    }
+  ],
+  "$defs": {
+    "operation": {
+      "description": "The only operations the executor accepts. None of them submits or authorizes.",
+      "enum": ["observe", "navigate", "fill_form", "select_candidate", "show_review"]
+    },
+    "money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["value", "unit"],
+      "properties": {
+        "value": { "type": "integer" },
+        "unit": { "const": "IRR" }
+      }
+    },
+    "no_arguments": {
+      "type": "object",
+      "additionalProperties": false
+    },
+    "navigate_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["destination"],
+      "properties": {
+        "destination": { "description": "A profile screen ID.", "type": "string", "minLength": 1 }
+      }
+    },
+    "fill_form_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["form", "values"],
+      "properties": {
+        "form": { "description": "A profile form ID.", "type": "string", "minLength": 1 },
+        "values": {
+          "description": "Field ref to value.",
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "oneOf": [{ "type": "string" }, { "$ref": "#/$defs/money" }]
+          }
+        }
+      }
+    },
+    "select_candidate_arguments": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ref"],
+      "properties": {
+        "ref": { "description": "An opaque reference to one returned candidate.", "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

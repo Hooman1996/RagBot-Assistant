@@ -1,0 +1,26 @@
+{
+  "expected_error": "1500000.0 is not of type 'integer'",
+  "instance": {
+    "protocol_version": 1,
+    "profile_version": 1,
+    "task_id": "task-1",
+    "task_revision": 1,
+    "command_id": "cmd-1",
+    "device_id": "device-1",
+    "session_id": "session-1",
+    "operation": "fill_form",
+    "arguments": {
+      "form": "example_form",
+      "values": {
+        "recipient": "candidate-2",
+        "amount": {
+          "value": 1500000.0,
+          "unit": "IRR"
+        }
+      }
+    },
+    "expected_observation_version": 3,
+    "expires_at": "2026-10-27T12:00:30Z",
+    "expected_draft_version": 0
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "expected_error": "'options' is a required property",
+  "instance": {
+    "kind": "clarification",
+    "question_id": "q-1",
+    "text": "Which recipient?"
+  }
+}
