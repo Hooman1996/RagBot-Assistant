@@ -11,7 +11,7 @@ detailed instructions for screens before the APK has been examined (Appendix B).
 | Phase | File |
 |---|---|
 | P0 Foundation | [P0-foundation.md](P0-foundation.md) |
-| P1a/P1b APK investigation | [P1-apk-investigation.md](P1-apk-investigation.md) |
+| P1a-P1d APK investigation, feature choice, navigation prototype | [P1-apk-investigation.md](P1-apk-investigation.md) |
 | P2 Backend extraction | [P2-backend-extraction.md](P2-backend-extraction.md) |
 | P3 Chatbot parity | [P3-chatbot-parity.md](P3-chatbot-parity.md) |
 | P4 Mock domain and manual replica | [P4-mock-domain-and-replica.md](P4-mock-domain-and-replica.md) |
@@ -24,14 +24,19 @@ detailed instructions for screens before the APK has been examined (Appendix B).
 
 ```mermaid
 flowchart LR
-    P0[P0 Foundation] --> P1a[P1a First workflow]
+    P0[P0 Foundation + readiness] --> P1a[P1a Catalogue + graph]
     P0 --> P2[P2 Backend extraction]
-    P1a --> P1b[P1b Whole-app catalogue]
+    P1a --> P1b[P1b Owner picks features]
+    P1b --> P1c[P1c Navigation prototype]
+    P1c --> P1d[P1d Picked features in detail]
     P2 --> P3[P3 Chatbot parity]
-    P1a --> P4[P4 Mock domain + manual replica]
+    P1d --> P4[P4 Mock domain + manual replica]
     P4 --> P5[P5 Executor + deterministic demo]
     P3 --> P6[P6 Conversational assistant]
     P5 --> P6
     P6 --> P7[P7 Hardening + presentation]
     P7 --> P8[P8 Integration, after the demo]
 ```
+
+The order P1a to P1d follows owner decision D-019: catalogue the whole app first, then choose
+features, then prototype, then go into detail.

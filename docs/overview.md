@@ -30,8 +30,8 @@ mocks with their services and integrate the in-app executor.
 
 | Phase | Goal |
 |---|---|
-| P0 | Foundation: conventions, CI, plan, source manifest, APK baseline, REA setup, contracts, isolation |
-| P1a / P1b | APK investigation: first workflow in detail, then the whole-app catalogue |
+| P0 | Foundation and readiness: conventions, CI, plan, source manifest, APK baseline, contracts, isolation, REA MCP install, agent skills, readiness check |
+| P1a to P1d | Reverse engineer and catalogue the whole app, owner picks features, navigation prototype, then the picked features in detail |
 | P2 | Extract the RagBot backend into a clean service |
 | P3 | Chatbot parity |
 | P4 | Mock domain and a manual replica journey from home to review |

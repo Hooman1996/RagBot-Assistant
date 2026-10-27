@@ -84,7 +84,7 @@ ruff check . && ruff format --check .
 | **A package mirror, proxy or offline transfer** (the server cannot reach PyPI, Anaconda or, likely, npm). PyPI mirror candidates are in section 2. | Every new tool below | P0-04 | P0-04 |
 | Node.js in a range REA supports (its README lists 22.x ≥ 22.23.4, 24.x ≥ 24.22.1, or ≥ 26.12.1) and npm | REA MCP server and CLI | P0-04 | P0-04 |
 | A JDK and JADX | REA's APK analysis | P0-04 | P0-04 |
-| Android SDK command-line tools, platform-tools (`adb`) and the emulator, with hardware acceleration (`/dev/kvm` must exist) | Emulator profile, replica builds, original-app observation | P1a | P1a-01 |
+| Android SDK command-line tools, platform-tools (`adb`) and the emulator, with hardware acceleration (`/dev/kvm` must exist) | Emulator profile, replica builds, original-app observation | P1a | P1a-02 |
 | A **new** project database and Qdrant collection inside the existing Docker-hosted PostgreSQL and Qdrant. Never RagBot's `hihelp_db`, `hihelp_embeddings` or `hihelp-documents`. | Project data and vector store | P0-06 / P2 | P0-06 |
 | Access to the existing Docker-hosted vLLM and TEI endpoints (development use, after a capacity check) | Answering and task interpretation | P2 / P6 | P6-01 |
 | Appium | Independent UI checks | P5 | P5-07 |
