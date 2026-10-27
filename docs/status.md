@@ -40,8 +40,8 @@ engineer the app (D-019). P0-05 and P0-06 are done.
 |---|---|---|
 | P0-01 | Agent rules, issue template, CI, check runner | Done (PR #1) |
 | P0-02 | Plan, overview, decision index, RagBot source manifest | Done (PR #1) |
-| P0-03 | Record the APK's identity (hash, version, splits). No decompilation. | Proposed (#4) |
-| P0-04 | Install and pin the REA MCP server for both agents. No APK analysis. | Blocked (#5): needs an npm, Node, JDK and JADX source |
+| P0-03 | Record the APK's identity (hash, version, splits). No decompilation. | Approved (#4), runs next |
+| P0-04 | Install and pin the REA MCP server for both agents. No APK analysis. | Proposed (#5) |
 | P0-05 | Contract and lifecycle schemas, with no assistant submit path | Done (PR #13) |
 | P0-06 | Project-only database and collection names, and a production/RagBot block | Done (PR #15) |
 | P0-07 | Agent skills in `.agents/skills/` | Planned: owner lists the skills |
@@ -54,6 +54,6 @@ engineer the app (D-019). P0-05 and P0-06 are done.
 | Original APK and any split files | P0-03 | Done: in `local/evidence/apk/` on the server |
 | Private evidence location reachable by both agents | P0-03 | Done: `local/evidence/` (mode 700), moved on 27 Oct 2026 |
 | Dev server checkout `/root/projects/assistant` and conda env `assistant` | Now | Done: checks, tests and lint pass on the server |
-| A package source for npm, Node.js, a JDK and JADX | P0-04 | Open: the server cannot reach PyPI or Anaconda, and npm is not yet tested. Two PyPI mirrors to test (runbook §2). |
+| A package source for npm, Node.js, a JDK and JADX | P0-04 | Done: all reachable (probe of 27 Oct 2026, runbook §2) |
 | The list of agent skills to add | P0-07 | Open |
 | Approval of each proposed issue | Every task | Ongoing |
