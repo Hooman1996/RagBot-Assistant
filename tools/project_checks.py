@@ -1,10 +1,12 @@
 """Project check runner (plan §16, Appendix B).
 
-Standard library only, so it runs the same way on Windows and Linux.
+Standard library only, so it runs the same way on Windows and Linux. The one exception is the
+contracts suite, which needs jsonschema.
 
 Usage:
     python tools/project_checks.py foundation
     python tools/project_checks.py baseline
+    python tools/project_checks.py contracts
     python tools/project_checks.py all
     python tools/project_checks.py all --root path/to/checkout
 """
@@ -12,6 +14,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -74,6 +77,23 @@ SECRET_PATTERNS = {
     "Slack token": re.compile(r"\bxox[abprs]-[A-Za-z0-9\-]{10,}\b"),
 }
 MAX_TEXT_SCAN_BYTES = 2_000_000
+
+SCHEMA_DIR = "contracts/schemas"
+EXAMPLE_DIR = "contracts/examples"
+OPENAPI_DIR = "contracts/openapi"
+OPENAPI_FILES = (
+    "assistant_mobile.json",
+    "chatbot_compat.json",
+    "mock_banking.json",
+    "user_only_app.json",
+    "test_harness.json",
+)
+USER_ONLY_API = "user_only_app.json"
+FINAL_ACTION_WORDS = ("submit", "authoriz", "confirm")
+HTTP_METHODS = ("get", "put", "post", "delete", "patch")
+COMMAND_OPERATIONS = ["observe", "navigate", "fill_form", "select_candidate", "show_review"]
+PROFILE_DIR = "app_profiles"
+PROFILE_SCHEMA = "app_profiles/profile.schema.json"
 
 
 @dataclass
@@ -239,8 +259,124 @@ def check_baseline(root: Path, report: Report) -> None:
     report.check(not dumps, "no database dumps under docs/", ", ".join(dumps))
 
 
-SUITES = {"foundation": (check_foundation,), "baseline": (check_baseline,)}
-SUITES["all"] = SUITES["foundation"] + SUITES["baseline"]
+def load_json(path: Path):
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def file_refs(node) -> list[str]:
+    """Every "$ref" in a JSON document that points to another file."""
+    if isinstance(node, list):
+        return [ref for item in node for ref in file_refs(item)]
+    if not isinstance(node, dict):
+        return []
+    refs = [ref for value in node.values() for ref in file_refs(value)]
+    ref = node.get("$ref")
+    if isinstance(ref, str) and not ref.startswith("#"):
+        refs.append(ref)
+    return refs
+
+
+def check_contracts(root: Path, report: Report) -> None:
+    # Imported here so the other suites stay standard library only.
+    from jsonschema import Draft202012Validator, validators
+    from jsonschema.exceptions import SchemaError, best_match
+    from referencing import Registry, Resource
+
+    # JSON Schema counts 1500.0 as an integer. Money and versions must be real integers (rule 6).
+    strict_types = Draft202012Validator.TYPE_CHECKER.redefine("integer", lambda _, value: type(value) is int)
+    Validator = validators.extend(Draft202012Validator, type_checker=strict_types)
+
+    schemas = {p.name: load_json(p) for p in sorted((root / SCHEMA_DIR).glob("*.schema.json"))}
+    report.check(bool(schemas), "contract schemas exist", SCHEMA_DIR)
+    for name, schema in {**schemas, PROFILE_SCHEMA: load_json(root / PROFILE_SCHEMA)}.items():
+        try:
+            Validator.check_schema(schema)
+            problem = ""
+        except SchemaError as exc:
+            problem = exc.message
+        report.check(not problem, f"{name} is a valid JSON Schema", problem)
+    registry = Registry().with_resources(
+        (name, Resource.from_contents(schema)) for name, schema in schemas.items()
+    )
+
+    covered = set()
+    for kind in ("valid", "invalid"):
+        for path in sorted((root / EXAMPLE_DIR / kind).glob("*.json")):
+            schema_name = path.name.split(".")[0] + ".schema.json"
+            if schema_name not in schemas:
+                report.check(False, f"{kind} example {path.name} names a known schema", schema_name)
+                continue
+            covered.add((schema_name, kind))
+            example = load_json(path)
+            instance = example if kind == "valid" else example["instance"]
+            errors = list(Validator(schemas[schema_name], registry=registry).iter_errors(instance))
+            if kind == "valid":
+                messages = "; ".join(e.message for e in errors)
+                report.check(not errors, f"valid example {path.name} passes", messages)
+            else:
+                expected = example["expected_error"]
+                found = best_match(errors).message if errors else "no error"
+                report.check(
+                    len(errors) == 1 and expected in found,
+                    f"invalid example {path.name} is rejected for its reason",
+                    f"expected one error containing {expected!r}, got {len(errors)}: {found}",
+                )
+    for name in schemas:
+        for kind in ("valid", "invalid"):
+            report.check((name, kind) in covered, f"{name} has {kind} examples")
+
+    operations = schemas.get("command.schema.json", {}).get("$defs", {}).get("operation", {}).get("enum")
+    report.check(
+        operations == COMMAND_OPERATIONS,
+        "command operations are exactly the five agreed ones",
+        f"found {operations}",
+    )
+
+    for name in OPENAPI_FILES:
+        path = root / OPENAPI_DIR / name
+        if not path.is_file():
+            report.check(False, f"OpenAPI file {name} exists")
+            continue
+        api = load_json(path)
+        report.check(api.get("openapi") == "3.1.0", f"{name} is OpenAPI 3.1.0")
+        missing = [ref for ref in file_refs(api) if not (path.parent / ref.split("#")[0]).is_file()]
+        report.check(not missing, f"{name} references existing schema files", ", ".join(missing))
+        final_actions = []
+        for route, item in api.get("paths", {}).items():
+            for method in HTTP_METHODS:
+                if method in item:
+                    label = f"{method.upper()} {route} ({item[method].get('operationId')})"
+                    if any(word in label.lower() for word in FINAL_ACTION_WORDS):
+                        final_actions.append(label)
+        if name == USER_ONLY_API:
+            report.check(bool(final_actions), f"{name} holds the submit operation")
+        else:
+            report.check(
+                not final_actions, f"{name} has no submit or authorize operation", "; ".join(final_actions)
+            )
+
+    profiles = sorted((root / PROFILE_DIR).glob("*.profile.json"))
+    report.check(bool(profiles), "an app profile exists", PROFILE_DIR)
+    profile_validator = Validator(load_json(root / PROFILE_SCHEMA))
+    for path in profiles:
+        profile = load_json(path)
+        messages = "; ".join(e.message for e in profile_validator.iter_errors(profile))
+        report.check(not messages, f"{path.name} matches the profile schema", messages)
+        user_only = set(profile.get("user_only_actions", []))
+        crossing = [
+            f"{edge['from']} -> {edge['to']} ({edge['action']})"
+            for edge in profile.get("edges", [])
+            if edge.get("action") in user_only
+        ]
+        report.check(not crossing, f"{path.name}: no edge uses a user-only action", "; ".join(crossing))
+
+
+SUITES = {
+    "foundation": (check_foundation,),
+    "baseline": (check_baseline,),
+    "contracts": (check_contracts,),
+}
+SUITES["all"] = SUITES["foundation"] + SUITES["baseline"] + SUITES["contracts"]
 
 
 def run(suite: str, root: Path) -> Report:

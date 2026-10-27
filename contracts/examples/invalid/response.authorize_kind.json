@@ -1,0 +1,7 @@
+{
+  "expected_error": "'authorize' is not one of",
+  "instance": {
+    "kind": "authorize",
+    "text": "Done."
+  }
+}

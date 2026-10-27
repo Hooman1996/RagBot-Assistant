@@ -1,0 +1,42 @@
+{
+  "expected_error": "does not match",
+  "instance": {
+    "command_id": "cmd-2",
+    "outcome": "blocked",
+    "postcondition": null,
+    "observation": {
+      "observation_version": 7,
+      "app_version": 1,
+      "profile_version": 1,
+      "screen": "example_form",
+      "modal": null,
+      "loading": false,
+      "fields": [
+        {
+          "ref": "recipient",
+          "value": "R***"
+        },
+        {
+          "ref": "amount",
+          "value": "1,500,000 IRR"
+        }
+      ],
+      "draft": {
+        "draft_id": "draft-1",
+        "draft_version": 2,
+        "review_version": 0
+      },
+      "supported_operations": [
+        "observe",
+        "navigate",
+        "fill_form",
+        "show_review"
+      ]
+    },
+    "draft_version": 2,
+    "needs": [
+      "amount"
+    ],
+    "error_code": "Something went wrong"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Result",
+  "description": "What the executor verified after a command, with a fresh observation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["command_id", "outcome", "postcondition", "observation", "draft_version"],
+  "properties": {
+    "command_id": { "type": "string", "minLength": 1 },
+    "outcome": {
+      "enum": [
+        "succeeded",
+        "blocked",
+        "failed",
+        "uncertain",
+        "not_executed",
+        "rejected_stale",
+        "rejected_expired",
+        "rejected_policy",
+        "cancelled"
+      ]
+    },
+    "postcondition": {
+      "description": "The postcondition the executor verified, or null when none was verified.",
+      "type": ["string", "null"]
+    },
+    "observation": { "$ref": "observation.schema.json" },
+    "draft_version": { "description": "0 means no draft.", "type": "integer", "minimum": 0 },
+    "needs": {
+      "description": "The information needed to continue. Only when the outcome is blocked.",
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "error_code": { "description": "A safe code, never free text.", "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+    "trace": {
+      "description": "The navigation steps taken, in order.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["from", "to", "action"],
+        "properties": {
+          "from": { "type": "string", "minLength": 1 },
+          "to": { "type": "string", "minLength": 1 },
+          "action": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  },
+  "if": { "required": ["outcome"], "properties": { "outcome": { "const": "blocked" } } },
+  "then": { "required": ["needs"] },
+  "else": { "not": { "required": ["needs"] } }
+}

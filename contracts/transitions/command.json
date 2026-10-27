@@ -1,0 +1,13 @@
+{
+  "issued": ["executing", "rejected_stale", "rejected_expired", "rejected_policy", "cancelled", "uncertain"],
+  "executing": ["succeeded", "blocked", "failed", "uncertain"],
+  "uncertain": ["succeeded", "failed", "not_executed"],
+  "rejected_stale": [],
+  "rejected_expired": [],
+  "rejected_policy": [],
+  "cancelled": [],
+  "succeeded": [],
+  "blocked": [],
+  "failed": [],
+  "not_executed": []
+}

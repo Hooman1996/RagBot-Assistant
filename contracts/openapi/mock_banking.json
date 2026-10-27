@@ -1,0 +1,54 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mock banking API",
+    "version": "1",
+    "description": "The generic draft lifecycle. Feature lookups are added with each chosen feature. No operation here submits or authorizes."
+  },
+  "paths": {
+    "/mock-bank/v1/drafts": {
+      "post": {
+        "operationId": "createDraft",
+        "summary": "Create a draft",
+        "responses": { "200": { "description": "The new draft" } }
+      }
+    },
+    "/mock-bank/v1/drafts/{draft_id}": {
+      "parameters": [{ "name": "draft_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": {
+        "operationId": "readDraft",
+        "summary": "Read a draft",
+        "responses": { "200": { "description": "The draft" } }
+      },
+      "patch": {
+        "operationId": "updateDraft",
+        "summary": "Update a draft at an expected draft version",
+        "responses": { "200": { "description": "The updated draft" } }
+      }
+    },
+    "/mock-bank/v1/drafts/{draft_id}/review": {
+      "parameters": [{ "name": "draft_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "reviewDraft",
+        "summary": "Validate a draft and return its review",
+        "responses": { "200": { "description": "The review" } }
+      }
+    },
+    "/mock-bank/v1/drafts/{draft_id}/cancel": {
+      "parameters": [{ "name": "draft_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "cancelDraft",
+        "summary": "Cancel a draft",
+        "responses": { "200": { "description": "The cancelled draft" } }
+      }
+    },
+    "/mock-bank/v1/drafts/{draft_id}/outcome": {
+      "parameters": [{ "name": "draft_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "get": {
+        "operationId": "readOutcome",
+        "summary": "Read the simulated outcome of a draft",
+        "responses": { "200": { "description": "The outcome" } }
+      }
+    }
+  }
+}

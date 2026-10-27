@@ -1,0 +1,111 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Assistant mobile API",
+    "version": "1",
+    "description": "The app talks to the assistant backend. No operation here submits or authorizes a transaction."
+  },
+  "paths": {
+    "/assistant/v1/messages": {
+      "post": {
+        "operationId": "sendMessage",
+        "summary": "Send a user message or a clarification answer",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "../schemas/conversation_request.schema.json" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "The next response",
+            "content": { "application/json": { "schema": { "$ref": "../schemas/response.schema.json" } } }
+          }
+        }
+      }
+    },
+    "/assistant/v1/results": {
+      "post": {
+        "operationId": "postResult",
+        "summary": "Post a command result with a fresh observation",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "../schemas/result.schema.json" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "The next response",
+            "content": { "application/json": { "schema": { "$ref": "../schemas/response.schema.json" } } }
+          }
+        }
+      }
+    },
+    "/assistant/v1/sessions/{session_id}/resume": {
+      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "resume",
+        "summary": "Resume after foreground or reconnect, with a fresh observation",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "../schemas/observation.schema.json" } } }
+        },
+        "responses": {
+          "200": {
+            "description": "The next response",
+            "content": { "application/json": { "schema": { "$ref": "../schemas/response.schema.json" } } }
+          }
+        }
+      }
+    },
+    "/assistant/v1/sessions/{session_id}/cancel": {
+      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "cancel",
+        "summary": "Cancel the current task",
+        "responses": {
+          "200": {
+            "description": "The task status after cancellation",
+            "content": { "application/json": { "schema": { "$ref": "../schemas/response.schema.json" } } }
+          }
+        }
+      }
+    },
+    "/assistant/v1/history": {
+      "get": {
+        "operationId": "getHistory",
+        "summary": "Read conversation history",
+        "responses": { "200": { "description": "The history" } }
+      }
+    },
+    "/assistant/v1/queries/{query_id}/feedback": {
+      "parameters": [{ "name": "query_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "postFeedback",
+        "summary": "Give feedback on an answer",
+        "responses": { "200": { "description": "Feedback recorded" } }
+      }
+    },
+    "/assistant/v1/queries/{query_id}/comment": {
+      "parameters": [{ "name": "query_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "postComment",
+        "summary": "Comment on an answer",
+        "responses": { "200": { "description": "Comment recorded" } }
+      }
+    },
+    "/assistant/v1/sessions/{session_id}/close": {
+      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "closeSession",
+        "summary": "Close a session",
+        "responses": { "200": { "description": "Session closed" } }
+      }
+    },
+    "/assistant/v1/sessions/{session_id}/satisfaction": {
+      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+      "post": {
+        "operationId": "postSatisfaction",
+        "summary": "Rate satisfaction with a session",
+        "responses": { "200": { "description": "Satisfaction recorded" } }
+      }
+    }
+  }
+}

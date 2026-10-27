@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Observation",
+  "description": "What the app shows right now, as reported by the app.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "observation_version",
+    "app_version",
+    "profile_version",
+    "screen",
+    "modal",
+    "loading",
+    "fields",
+    "draft",
+    "supported_operations"
+  ],
+  "properties": {
+    "observation_version": { "type": "integer", "minimum": 0 },
+    "app_version": { "type": "integer", "minimum": 0 },
+    "profile_version": { "type": "integer", "minimum": 0 },
+    "screen": { "description": "A profile screen ID, or \"unknown\".", "type": "string", "minLength": 1 },
+    "modal": { "description": "The open modal's ID, or null.", "type": ["string", "null"] },
+    "loading": { "type": "boolean" },
+    "fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["ref", "value"],
+        "properties": {
+          "ref": { "type": "string", "minLength": 1 },
+          "value": { "description": "Masked display value.", "type": "string" }
+        }
+      }
+    },
+    "draft": {
+      "description": "The current draft, or null when there is none.",
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["draft_id", "draft_version", "review_version"],
+      "properties": {
+        "draft_id": { "type": "string", "minLength": 1 },
+        "draft_version": { "type": "integer", "minimum": 1 },
+        "review_version": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "supported_operations": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "$ref": "command.schema.json#/$defs/operation" }
+    }
+  }
+}

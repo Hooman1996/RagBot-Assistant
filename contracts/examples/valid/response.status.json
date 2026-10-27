@@ -1,0 +1,14 @@
+{
+  "kind": "status",
+  "task_state": "ready_for_user",
+  "review_facts": [
+    {
+      "ref": "recipient",
+      "value": "R***"
+    },
+    {
+      "ref": "amount",
+      "value": "1,500,000 IRR"
+    }
+  ]
+}

@@ -21,6 +21,8 @@ COPIED = (
     "CLAUDE.md",
     ".gitignore",
     ".github",
+    "app_profiles",
+    "contracts",
     "docs",
     "tools",
 )

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Conversation request",
+  "description": "A user message or a clarification answer, sent by the app with its current observation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["request_id", "conversation_id", "session_id", "device_id", "user_context", "observation"],
+  "properties": {
+    "request_id": { "type": "string", "minLength": 1 },
+    "conversation_id": { "type": "string", "minLength": 1 },
+    "session_id": { "type": "string", "minLength": 1 },
+    "device_id": { "type": "string", "minLength": 1 },
+    "user_context": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["user_ref", "locale"],
+      "properties": {
+        "user_ref": { "type": "string", "minLength": 1 },
+        "locale": { "type": "string", "minLength": 1 }
+      }
+    },
+    "message": { "type": "string", "minLength": 1 },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question_id", "ref"],
+      "properties": {
+        "question_id": { "type": "string", "minLength": 1 },
+        "ref": { "type": "string", "minLength": 1 }
+      }
+    },
+    "observation": { "$ref": "observation.schema.json" }
+  },
+  "oneOf": [{ "required": ["message"] }, { "required": ["selection"] }]
+}
