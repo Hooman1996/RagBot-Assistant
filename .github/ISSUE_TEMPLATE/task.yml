@@ -1,7 +1,7 @@
 name: Implementation task
 description: One bounded task for a coding agent (plan §16). Public repo - sanitized content and evidence IDs only.
 title: "[P?-??] "
-labels: ["task"]
+labels: ["task", "proposal"]
 body:
   - type: markdown
     attributes:
