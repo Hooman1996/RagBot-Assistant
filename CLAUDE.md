@@ -61,19 +61,48 @@ goes under the git-ignored `local/` folder:
 
 ## Git workflow
 
-Keep the structure simple. **Agents commit, and the owner pushes and merges.**
+Agents run the git flow themselves: they create branches, commit, push, open PRs and merge.
+Keep the structure small. Only three kinds of branch exist:
 
-- `main` is the only long-lived branch. Agents never commit on `main`, never push and never merge.
-- **One task, one branch:** start `task/<issue>-<short-name>` from `main` (for example
-  `task/3-db-isolation`). It is merged back into `main`.
-- **Multi-step feature:** the owner creates `feature/<name>` from `main`. Its task branches start
-  from that branch and merge back into it, and the feature branch merges into `main` when the
-  feature is complete.
-- Keep one open branch per task. Delete it after it is merged.
-- Commit messages: `[P0-06] short summary (#3)`.
-- When a task is done, report the branch name, the commits, the acceptance command output and
-  a ready-to-paste PR description, so the owner can push and open the PR.
-- Never rewrite history on a branch someone else has pushed.
+| Branch | Created from | Merges into | Used for |
+|---|---|---|---|
+| `main` | n/a | n/a | The only long-lived branch. Always working. |
+| `feature/<issue>-<short-name>` | `main`, or a sub-main | Where it came from | One approved issue, for example `feature/3-db-isolation` |
+| `sub/<name>` (sub-main) | `main` | `main`, once the whole feature works | A feature that needs several issues, for example `sub/transfer-flow` |
+
+1. **Branch.** Start one `feature/` branch per approved issue. For a multi-step feature, create
+   its `sub/` branch once, then start each step's `feature/` branch from it.
+2. **Change and test on the branch.** Run the issue's acceptance command and the full checks
+   (Commands below) on the branch. If the change affects a running service, run that service
+   from the branch and check it (Running services below).
+3. **Commit and push** the branch. Commit messages: `[P0-06] short summary (#3)`.
+4. **Open a PR** into the branch it came from, using the PR template, with the acceptance
+   output pasted in.
+5. **Merge** only when CI is green and the acceptance command passed. Changes under `contracts/`
+   also need a manager's review first. Use squash-merge for `feature/` branches and a merge
+   commit for a `sub/` branch going into `main`.
+6. **Clean up.** Delete the merged branch, update the server checkout and the running services
+   to the new version, and update `docs/status.md`.
+
+- Never commit or push directly to `main` or to a `sub/` branch. Changes reach them only by a PR.
+- Never create other branch kinds, and never more than one branch per issue. Open branches
+  should be the few issues in progress, not a backlog.
+- Never force-push, rebase or amend a branch that has been pushed.
+- At the end of a task, report the PR link, the merge commit and the acceptance output.
+
+## Running services
+
+Whatever is running must be the latest version of the branch being used.
+
+- After a merge into `main`, pull `main` in `/root/projects/assistant` and restart every
+  running project process (for example the `uvicorn` backend, the mock services, the replica
+  on the emulator) from that checkout.
+- When testing a branch, run the services from that branch, and switch them back to `main`
+  when the test ends.
+- After a restart, confirm the running version is the checkout's `git rev-parse --short HEAD`
+  (once a service reports its version, check that; until then, check its start time).
+- This applies only to this project's own processes. Never stop, restart or reconfigure RagBot's
+  services or the Docker containers (PostgreSQL, Qdrant, vLLM, TEI, MinIO).
 
 ## How work is organized
 

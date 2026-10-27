@@ -91,8 +91,15 @@ ruff check . && ruff format --check .
 
 ## 4. Working rhythm
 
+The full git and running-service rules are in `AGENTS.md`. In short:
+
 1. A manager files a task as an issue labelled `proposal`.
 2. The owner approves it, and the label changes to `approved`.
-3. An agent implements only that issue on a branch and runs the acceptance command.
-4. The agent opens a PR. CI must be green, and the managers review it.
-5. Merge, then update `docs/status.md`.
+3. An agent starts a `feature/<issue>-<name>` branch from `main` (or from the feature's
+   `sub/<name>` sub-main), changes and tests it there, then commits and pushes.
+4. The agent opens a PR. Once CI is green and the acceptance command passed (and a manager has
+   reviewed any `contracts/` change), the agent merges it and deletes the branch.
+5. The agent pulls `main` in `/root/projects/assistant`, restarts the project's running
+   services from it, and updates `docs/status.md`.
+
+Recommended GitHub setting: protect `main` so that it only changes through a PR with green CI.
