@@ -15,7 +15,15 @@ pinned by the tasks in the last column of section 3, not guessed here.
     rea/          raw REA output
     captures/     original-app screenshots and traces
     findings/     private code-findings register
+/projects/ragbot-baseline/       <- read-only RagBot clone, detached at fc2f6a1, push disabled
 ```
+
+- **RagBot source:** P2 copies the retained modules from `/projects/ragbot-baseline`, never
+  from the checkout the running RagBot service uses. Its push URL is disabled, so the
+  read-only rule is enforced, not just promised.
+- **Running services:** PostgreSQL, Qdrant, vLLM and TEI already run as Docker containers
+  that RagBot uses. This project only connects to them as a client, with its own database,
+  role and collection (P0-06). It never stops, restarts or reconfigures a container.
 
 - **Skills:** add a skill once under `.agents/skills/`. Codex reads it there, and Claude Code
   reads it through the `.claude/skills` symlink. Both paths are listed in the checkout's
@@ -60,8 +68,8 @@ ruff check . && ruff format --check .
 | Node.js in a range REA supports (its README lists 22.x ≥ 22.23.4, 24.x ≥ 24.22.1, or ≥ 26.12.1) and npm | REA MCP server and CLI | P0-04 | P0-04 |
 | A JDK and JADX | REA's APK analysis | P0-04 | P0-04 |
 | Android SDK command-line tools, platform-tools (`adb`) and the emulator, with hardware acceleration (KVM) | Emulator profile, replica builds, original-app observation | P1a | P1a-01 |
-| A **new** project database and Qdrant collection on the existing servers. Never RagBot's `hihelp_db`, `hihelp_embeddings` or `hihelp-documents`. | Project data and vector store | P0-06 / P2 | P0-06 |
-| Access to the existing vLLM and TEI endpoints (development use, after a capacity check) | Answering and task interpretation | P2 / P6 | P6-01 |
+| A **new** project database and Qdrant collection inside the existing Docker-hosted PostgreSQL and Qdrant. Never RagBot's `hihelp_db`, `hihelp_embeddings` or `hihelp-documents`. | Project data and vector store | P0-06 / P2 | P0-06 |
+| Access to the existing Docker-hosted vLLM and TEI endpoints (development use, after a capacity check) | Answering and task interpretation | P2 / P6 | P6-01 |
 | Appium | Independent UI checks | P5 | P5-07 |
 
 ## 4. Working rhythm
