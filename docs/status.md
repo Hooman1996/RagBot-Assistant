@@ -47,7 +47,7 @@ approval or on an input.
 | Input | Needed by | Status |
 |---|---|---|
 | Original APK and any split files | P0-03 | Not yet provided |
-| Private evidence location reachable by both agents | P0-03 | Done: `/root/projects/assistant-evidence/` (mode 700, empty) |
+| Private evidence location reachable by both agents | P0-03 | Decided: `local/evidence/` inside the checkout, git-ignored (move pending on the server) |
 | Dev server checkout `/root/projects/assistant` and conda env `assistant` | Now | Done: checks, tests and lint pass on the server |
-| A package mirror, proxy or offline transfer (the server cannot reach PyPI or Anaconda) | P0-04 (REA, Node, JDK, JADX) and P1a (Android SDK) | Not yet arranged |
+| A package mirror, proxy or offline transfer (the server cannot reach PyPI or Anaconda) | P0-04 (REA, Node, JDK, JADX) and P1a (Android SDK) | Two PyPI mirrors to test (runbook §2). npm, JDK and Android SDK sources still open. |
 | Approval of each proposed issue | Every task | Ongoing |

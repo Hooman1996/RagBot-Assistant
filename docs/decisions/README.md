@@ -18,3 +18,7 @@ review recommendation is in Appendix A of the master plan. New decisions get a f
 | D-010 | One shared GitHub issue backlog, one owner per issue, and the bounded task template. | Plan §16; review B1, B4 |
 | D-011 | The assistant cannot authorize or submit a transaction through any path. | Plan §13 |
 | D-012 | Python 3.12 is the backend target, matching RagBot. | P0-01 |
+| D-013 | Every project file lives inside the checkout. Private and local-only files go in git-ignored `local/` (evidence, RagBot baseline, toolchain, scratch). This replaces plan §16's "evidence root outside the tree". Safeguards: `.gitignore`, a check runner that scans only committable files, and a ban on `git clean -x`. | Owner, 27 Oct 2026 |
+| D-014 | Git workflow: agents run it (branch, commit, push, PR, merge on green CI). Only `main`, one `feature/<issue>-<name>` branch per issue, and a `sub/<name>` sub-main for multi-step features. Nothing is pushed directly to `main`. | Owner, 27 Oct 2026 |
+| D-015 | The dev server has no direct PyPI or Anaconda access. Candidate PyPI mirrors are recorded in the runbook, to be tested before use and set only for the `assistant` env. | Owner, 27 Oct 2026 |
+| D-016 | Running project services (backend, mock services, replica) always run the latest version: restarted from `main` after each merge, or from the branch under test. RagBot's services and the Docker containers are never touched. | Owner, 27 Oct 2026 |

@@ -18,8 +18,9 @@ plan disagree, stop and ask the managers; do not improvise.
    `fc2f6a1dc85be71f782868f18833a895e502226a` (see `docs/source-manifest.md`).
 2. **This repository is public.** Never commit original or built APK/AAB files, decompiled
    source, raw REA output, original-app screenshots or traces, code findings, original
-   endpoint hosts, credentials or personal data. These live in the private evidence root,
-   referenced only by evidence IDs. Issues, PR bodies and CI logs follow the same rule.
+   endpoint hosts, credentials or personal data. These live in the git-ignored
+   `local/evidence/` folder, referenced only by evidence IDs. Issues, PR bodies and CI logs
+   follow the same rule.
 3. **No production banking calls.** The replica, mock services and adapters use explicit
    development addresses only. Do not copy endpoint defaults from the APK.
 4. **The assistant never authorizes or submits a transaction.** No tool, command, executor
@@ -41,6 +42,67 @@ Nothing gets implemented without the owner's approval (hooman, 27 Oct 2026).
    `proposal` or `blocked`, do not start it, even if it looks ready.
 
 Phase status is tracked in `docs/status.md`. Phase specs are in `docs/phases/`.
+
+## Local files
+
+Every file this project uses lives inside the checkout. Anything that must not be committed
+goes under the git-ignored `local/` folder:
+
+| Path | Holds |
+|---|---|
+| `local/evidence/` (mode 700) | APK and splits (`apk/`), raw REA output (`rea/`), original-app captures (`captures/`), the private code-findings register (`findings/`) |
+| `local/ragbot-baseline/` | Read-only RagBot clone at `fc2f6a1`, push disabled |
+| `local/toolchain/` | Downloaded tools (Node.js, JDK, JADX, Android SDK) and offline installers |
+| `local/scratch/` | Temporary files, logs and large archives. Safe to delete. |
+
+- Never put project files in `/tmp` or another folder outside the checkout.
+- Never run `git clean -x` or `git clean -X`. They delete `local/`, including the evidence.
+- `.agents/` (shared skills) and the `.claude/skills` symlink are also git-ignored.
+
+## Git workflow
+
+Agents run the git flow themselves: they create branches, commit, push, open PRs and merge.
+Keep the structure small. Only three kinds of branch exist:
+
+| Branch | Created from | Merges into | Used for |
+|---|---|---|---|
+| `main` | n/a | n/a | The only long-lived branch. Always working. |
+| `feature/<issue>-<short-name>` | `main`, or a sub-main | Where it came from | One approved issue, for example `feature/3-db-isolation` |
+| `sub/<name>` (sub-main) | `main` | `main`, once the whole feature works | A feature that needs several issues, for example `sub/transfer-flow` |
+
+1. **Branch.** Start one `feature/` branch per approved issue. For a multi-step feature, create
+   its `sub/` branch once, then start each step's `feature/` branch from it.
+2. **Change and test on the branch.** Run the issue's acceptance command and the full checks
+   (Commands below) on the branch. If the change affects a running service, run that service
+   from the branch and check it (Running services below).
+3. **Commit and push** the branch. Commit messages: `[P0-06] short summary (#3)`.
+4. **Open a PR** into the branch it came from, using the PR template, with the acceptance
+   output pasted in.
+5. **Merge** only when CI is green and the acceptance command passed. Changes under `contracts/`
+   also need a manager's review first. Use squash-merge for `feature/` branches and a merge
+   commit for a `sub/` branch going into `main`.
+6. **Clean up.** Delete the merged branch, update the server checkout and the running services
+   to the new version, and update `docs/status.md`.
+
+- Never commit or push directly to `main` or to a `sub/` branch. Changes reach them only by a PR.
+- Never create other branch kinds, and never more than one branch per issue. Open branches
+  should be the few issues in progress, not a backlog.
+- Never force-push, rebase or amend a branch that has been pushed.
+- At the end of a task, report the PR link, the merge commit and the acceptance output.
+
+## Running services
+
+Whatever is running must be the latest version of the branch being used.
+
+- After a merge into `main`, pull `main` in `/root/projects/assistant` and restart every
+  running project process (for example the `uvicorn` backend, the mock services, the replica
+  on the emulator) from that checkout.
+- When testing a branch, run the services from that branch, and switch them back to `main`
+  when the test ends.
+- After a restart, confirm the running version is the checkout's `git rev-parse --short HEAD`
+  (once a service reports its version, check that; until then, check its start time).
+- This applies only to this project's own processes. Never stop, restart or reconfigure RagBot's
+  services or the Docker containers (PostgreSQL, Qdrant, vLLM, TEI, MinIO).
 
 ## How work is organized
 
@@ -79,7 +141,8 @@ Folders appear when their phase starts; do not create empty placeholders.
 
 - Python target: **3.12** (matches RagBot).
 - Dev server: the checkout lives in `/root/projects/assistant`. Run everything inside
-  `conda activate assistant`, a clone of RagBot's `faq` env. Never install into `faq`.
+  `conda activate assistant`, a copy of RagBot's `faq` env. Never install into `faq`.
+  The server has no direct PyPI access, so prefer packages already in `assistant`.
   See `docs/runbook/server-setup.md`.
 - Foundation checks: `python tools/project_checks.py foundation`
 - Planning baseline checks: `python tools/project_checks.py baseline`
