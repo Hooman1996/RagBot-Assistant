@@ -4,7 +4,7 @@ Last updated: 27 October 2026. This page is updated whenever a task changes stat
 
 **Where we are:** getting the repo, server and tools ready (P0). The order of work is: finish
 P0, install the REA MCP server, add the agent skills, run a readiness check, then reverse
-engineer the app (D-019). P0-03, P0-05 and P0-06 are done.
+engineer the app (D-019). P0-03 to P0-06 are done.
 
 ## Status key
 
@@ -41,7 +41,7 @@ engineer the app (D-019). P0-03, P0-05 and P0-06 are done.
 | P0-01 | Agent rules, issue template, CI, check runner | Done (PR #1) |
 | P0-02 | Plan, overview, decision index, RagBot source manifest | Done (PR #1) |
 | P0-03 | Record the APK's identity (hash, version, splits). No decompilation. | Done (PR #17). Package and SDK fields wait for build-tools |
-| P0-04 | Install and pin the REA MCP server for both agents. No APK analysis. | Proposed (#5) |
+| P0-04 | Install and pin the REA MCP server for both agents. No APK analysis. | Done (PR #18) |
 | P0-05 | Contract and lifecycle schemas, with no assistant submit path | Done (PR #13) |
 | P0-06 | Project-only database and collection names, and a production/RagBot block | Done (PR #15) |
 | P0-07 | Agent skills in `.agents/skills/` | Planned: owner lists the skills |
