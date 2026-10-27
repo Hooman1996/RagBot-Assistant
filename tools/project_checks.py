@@ -8,6 +8,7 @@ Usage:
     python tools/project_checks.py baseline
     python tools/project_checks.py contracts
     python tools/project_checks.py isolation
+    python tools/project_checks.py apk-baseline
     python tools/project_checks.py all
     python tools/project_checks.py all --root path/to/checkout
 """
@@ -15,6 +16,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import subprocess
@@ -121,11 +123,17 @@ SECRET_SETTING_WORDS = ("PASSWORD", "SECRET", "TOKEN", "KEY")
 SECRET_PLACEHOLDER = "change-me"
 INIT_SQL = "deployment/init_project_db.sql"
 
+APK_RECORD = "docs/apk-baseline.md"
+EVIDENCE_DIR = "local/evidence"
+APK_DIR = "local/evidence/apk"
+APK_ROW = re.compile(r"^\| `\w+` \| (\d+) \| `([0-9a-f]{64})` \|$", flags=re.MULTILINE)
+
 
 @dataclass
 class Report:
     failures: list[str] = field(default_factory=list)
     passes: list[str] = field(default_factory=list)
+    not_applicable: list[str] = field(default_factory=list)
 
     def check(self, ok: bool, name: str, detail: str = "") -> None:
         if ok:
@@ -456,13 +464,40 @@ def check_isolation(root: Path, report: Report) -> None:
     )
 
 
+def check_apk_baseline(root: Path, report: Report) -> None:
+    record = read(root, APK_RECORD)
+    report.check(record is not None, f"{APK_RECORD} exists")
+    recorded = {digest: int(size) for size, digest in APK_ROW.findall(record or "")}
+    report.check(bool(recorded), "APK record lists the APK files")
+    if not (root / EVIDENCE_DIR).is_dir():
+        report.not_applicable.append(f"APK hashes: no local APK ({EVIDENCE_DIR}/ is absent)")
+        return
+    found = {}
+    for path in sorted(p for p in (root / APK_DIR).glob("*") if p.is_file()):
+        with path.open("rb") as handle:
+            found[hashlib.file_digest(handle, "sha256").hexdigest()] = path.stat().st_size
+    report.check(bool(found), f"APK found in {APK_DIR}/")
+    report.check(
+        found == recorded,
+        "local APK files match the recorded sizes and SHA-256 hashes",
+        f"found {found}, recorded {recorded}",
+    )
+
+
 SUITES = {
     "foundation": (check_foundation,),
     "baseline": (check_baseline,),
     "contracts": (check_contracts,),
     "isolation": (check_isolation,),
+    "apk-baseline": (check_apk_baseline, scan_forbidden),
 }
-SUITES["all"] = SUITES["foundation"] + SUITES["baseline"] + SUITES["contracts"] + SUITES["isolation"]
+SUITES["all"] = (
+    SUITES["foundation"]
+    + SUITES["baseline"]
+    + SUITES["contracts"]
+    + SUITES["isolation"]
+    + (check_apk_baseline,)
+)
 
 
 def run(suite: str, root: Path) -> Report:
@@ -485,7 +520,12 @@ def main(argv: list[str] | None = None) -> int:
         print(f"PASS  {name}")
     for failure in report.failures:
         print(f"FAIL  {failure}")
-    print(f"\n{args.suite}: {len(report.passes)} passed, {len(report.failures)} failed")
+    for item in report.not_applicable:
+        print(f"N/A   {item}")
+    print(
+        f"\n{args.suite}: {len(report.passes)} passed, {len(report.failures)} failed, "
+        f"{len(report.not_applicable)} not applicable"
+    )
     return 1 if report.failures else 0
 
 
