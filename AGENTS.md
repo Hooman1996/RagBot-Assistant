@@ -158,5 +158,7 @@ Folders appear when their phase starts; do not create empty placeholders.
 - All checks: `python tools/project_checks.py all`
 - Tests: `python -m pytest`
 - Lint: `ruff check .`
+- Contract checks: `python tools/project_checks.py contracts`
 
-The check runner uses only the Python standard library so it runs on Windows and Linux.
+The check runner uses only the Python standard library so it runs on Windows and Linux. The one
+exception is the `contracts` suite, which needs the pinned `jsonschema`.
