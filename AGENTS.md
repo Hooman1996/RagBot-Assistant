@@ -159,7 +159,7 @@ Folders appear when their phase starts; do not create empty placeholders.
 - Planning baseline checks: `python tools/project_checks.py baseline`
 - All checks: `python tools/project_checks.py all`
 - Tests: `python -m pytest`
-- Lint: `ruff check .`
+- Lint: `ruff check .` and `ruff format --check .` (CI runs both; an acceptance command that lints must run both).
 - Contract checks: `python tools/project_checks.py contracts`
 
 The check runner uses only the Python standard library so it runs on Windows and Linux. The one
