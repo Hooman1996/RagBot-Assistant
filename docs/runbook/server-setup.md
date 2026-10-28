@@ -51,6 +51,12 @@ versions.
 
 - **No internet installs:** any new package (Python, npm, JDK, Android SDK) needs a mirror or
   proxy, or an offline transfer, first. Tasks should prefer packages already in `assistant`.
+- **Mirrors are allowed (owner, 28 Oct 2026).** When an official source is blocked, a task may use
+  a reputable mirror without stopping to ask, as long as every file is verified: match each file's
+  size and a hash (SHA-1 or SHA-256) against an independent copy of the publisher's index, and
+  record the mirror, the versions and the hashes in the task's runbook. Android SDK downloads use
+  the Tencent Cloud mirror `https://mirrors.cloud.tencent.com/AndroidSDK/` (P1a-02), because
+  `dl.google.com`'s Android paths 404 and `developer.android.com` returns 403 from this server.
 - **Package sources** (probe of 27 Oct 2026; nothing was installed):
   - PyPI: use `https://mirror-pypi.runflare.com/simple` (Liara's
     `https://package-mirror.liara.ir/repository/pypi/simple` is the fallback). pypi.org's index
