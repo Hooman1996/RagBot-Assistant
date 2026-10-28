@@ -50,8 +50,8 @@ Last updated: 27 October 2026. This page is updated whenever a task changes stat
 | Task | What it does | Status |
 |---|---|---|
 | P1a-01 | Identify the UI toolkit and what REA can recover | Done (PR #26) |
-| P1a-02 | Fix and record the emulator profile | Next |
-| P1a-03 | Inventory every feature and entry point | Planned |
+| P1a-02 | Fix and record the emulator profile | Done (PR #29). Runbook: `docs/runbook/emulator-profile.md` |
+| P1a-03 | Inventory every feature and entry point | Next |
 | P1a-04 | Whole-app screen catalogue and navigation graph in `app_profiles/` | Planned |
 | P1a-05 | Start the private code-findings register | Planned |
 
