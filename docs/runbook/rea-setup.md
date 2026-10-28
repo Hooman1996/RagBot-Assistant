@@ -91,7 +91,9 @@ env -i HOME=$HOME PATH=$T/node/bin:$T/jdk/bin:/usr/bin:/bin JAVA_HOME=$T/jdk \
 The `node`, `jadx`, `ghidra` and `ghidra-java` checks must pass. REA's `inspect_apktool_client`
 tool, which checks only the launcher, reports version 2.12.1. `doctor` still reports
 `healthy: false` because these stay unconfigured on purpose: `hopper`, `ida-registration`,
-`kuna-installation` and `skill:identity` (the REA skill comes with P0-07).
+`kuna-installation` and `skill:identity` (the REA skill comes with P0-07). The `registration:*`
+checks report `config_drift` because the registrations in §5 are made by hand, not by
+`rea setup`; this is expected.
 
 `rea setup` is not run. Its dry run (`rea setup --dry-run --json --client claude_code --client codex`)
 would write user-scope registrations without `PATH` and install the REA skill into
