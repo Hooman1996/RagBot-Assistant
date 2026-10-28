@@ -28,8 +28,11 @@ AVD's user data, not in `config.ini`.
 **API level.** The app is `minSdk 24`, `targetSdk 37` (P1a-01, Observed). The issue assumed API 37
 is not a released Android version and asked for 35, else 34. API 35 is available, so it is used.
 However, the SDK index of 28 Oct 2026 also lists stable (`channel-0`) `google_apis` x86_64 images
-for API 36, 36.1 and 37.0. Whether to move the profile to API 37, to match `targetSdk`, is for the
-managers to decide.
+for API 36, 36.1 and 37.0, so the issue's assumption that API 37 is unreleased was out of date.
+Manager decision (28 Oct 2026): keep **API 35**. An app runs on any device at or above its
+`minSdk`; `targetSdk` does not require a matching device, and API 35 (Android 15) is closer to what
+real users run than the newest 37.0. If a later step meets behaviour gated to a newer API, add a 36
+or 37 image then.
 
 ## 2. Where the files are
 
@@ -45,7 +48,7 @@ managers to decide.
 
 From this server `dl.google.com` answers, but every Android path under it returns 404, and
 `developer.android.com` returns 403 (probe of 28 Oct 2026, recorded on issue #28). After that stop,
-the instruction for this task was changed on 28 Oct 2026 to allow a mirror, overriding the issue's
+the owner approved using a mirror on 28 Oct 2026, overriding the issue's
 "do not look for mirrors". The packages came from the Tencent Cloud mirror of the SDK
 repository, `https://mirrors.cloud.tencent.com/AndroidSDK/`, which serves Google's repository
 files and indexes.
