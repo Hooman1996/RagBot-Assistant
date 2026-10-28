@@ -10,6 +10,7 @@ Usage:
     python tools/project_checks.py isolation
     python tools/project_checks.py apk-baseline
     python tools/project_checks.py rea-environment
+    python tools/project_checks.py navgraph
     python tools/project_checks.py all
     python tools/project_checks.py all --root path/to/checkout
 """
@@ -99,6 +100,8 @@ HTTP_METHODS = ("get", "put", "post", "delete", "patch")
 COMMAND_OPERATIONS = ["observe", "navigate", "fill_form", "select_candidate", "show_review"]
 PROFILE_DIR = "app_profiles"
 PROFILE_SCHEMA = "app_profiles/profile.schema.json"
+NAV_GRAPH = "app_profiles/navigation-graph.json"
+NAV_LABELS = ("Observed", "Recovered", "Inferred", "Unknown")
 
 # Plan §12 and §15: the project's own resources on the shared dev PostgreSQL and Qdrant.
 PROJECT_TARGETS = {
@@ -501,6 +504,67 @@ def check_isolation(root: Path, report: Report) -> None:
     )
 
 
+def check_navgraph(root: Path, report: Report) -> None:
+    """Integrity of the P1a-04 navigation graph. Standard library only."""
+    text = read(root, NAV_GRAPH)
+    if text is None:
+        report.check(False, "navigation graph exists", NAV_GRAPH)
+        return
+    try:
+        graph = json.loads(text)
+    except json.JSONDecodeError as exc:
+        report.check(False, "navigation graph is valid JSON", str(exc))
+        return
+    report.check(True, "navigation graph is valid JSON")
+
+    nodes = graph.get("nodes") if isinstance(graph, dict) else None
+    edges = graph.get("edges") if isinstance(graph, dict) else None
+    if not (isinstance(nodes, list) and isinstance(edges, list)):
+        report.check(False, "navigation graph has node and edge lists")
+        return
+    report.check(True, "navigation graph has node and edge lists")
+
+    ids, bad_nodes, seen, dupes = [], [], set(), set()
+    for i, node in enumerate(nodes):
+        if not isinstance(node, dict) or not all(
+            isinstance(node.get(k), str) and node.get(k) for k in ("id", "name", "label")
+        ):
+            bad_nodes.append(str(i))
+            continue
+        node_id = node["id"]
+        (dupes if node_id in seen else seen).add(node_id)
+        ids.append(node_id)
+    report.check(not bad_nodes, "every node has id, name and label", f"nodes {bad_nodes}")
+    report.check(not dupes, "node IDs are unique", ", ".join(sorted(dupes)))
+
+    known = set(ids)
+    found_labels = {
+        n.get("label") for n in nodes if isinstance(n, dict) and n.get("label") not in NAV_LABELS
+    } | {e.get("label") for e in edges if isinstance(e, dict) and e.get("label") not in NAV_LABELS}
+    bad_labels = sorted((label for label in found_labels if label is not None), key=str)
+    report.check(not bad_labels, "every label is one of the four", ", ".join(map(str, bad_labels)))
+
+    dangling, null_not_dynamic = [], []
+    for edge in edges:
+        if not isinstance(edge, dict):
+            dangling.append("<non-object edge>")
+            continue
+        frm, to = edge.get("from"), edge.get("to")
+        if frm not in known:
+            dangling.append(f"from {frm!r}")
+        if to is None:
+            if edge.get("dynamic") is not True:
+                null_not_dynamic.append(f"{frm!r}->null")
+        elif to not in known:
+            dangling.append(f"to {to!r}")
+    report.check(not dangling, "every edge links known nodes (no dangling edges)", "; ".join(dangling))
+    report.check(
+        not null_not_dynamic,
+        "edges with no destination are marked dynamic",
+        "; ".join(null_not_dynamic),
+    )
+
+
 def check_apk_baseline(root: Path, report: Report) -> None:
     record = read(root, APK_RECORD)
     report.check(record is not None, f"{APK_RECORD} exists")
@@ -545,13 +609,14 @@ SUITES = {
     "isolation": (check_isolation,),
     "apk-baseline": (check_apk_baseline, scan_forbidden),
     "rea-environment": (check_rea_environment,),
+    "navgraph": (check_navgraph,),
 }
 SUITES["all"] = (
     SUITES["foundation"]
     + SUITES["baseline"]
     + SUITES["contracts"]
     + SUITES["isolation"]
-    + (check_apk_baseline, check_rea_environment)
+    + (check_apk_baseline, check_rea_environment, check_navgraph)
 )
 
 
