@@ -19,17 +19,17 @@ Recorded 27 October 2026 with `sha256sum`, Python `zipfile` (entry names only) a
 | Split files | None. `local/evidence/apk/` holds this one APK | Observed |
 | Complete without splits | Yes. It carries `resources.arsc`, 11 dex files and native libraries, and its manifest's string pool has no split attributes (`isSplitRequired`, `requiredSplitTypes`, `splitTypes`) | Inferred |
 | ABIs | `arm64-v8a`, `armeabi-v7a` (folders under `lib/`) | Observed |
-| Version name | 5.1.0, from the file name only | Inferred |
-| Package name | Not read | Unknown |
-| Version code | Not read | Unknown |
-| Minimum SDK | Not read | Unknown |
-| Target SDK | Not read | Unknown |
-| Signing schemes | v1 (`META-INF/CERT.SF`, `CERT.RSA`) and an APK Signing Block (v2 or later). Which later schemes, not read | Observed / Unknown |
+| Version name | 5.1.0, recorded in `local/evidence/findings/identity.md` (P1a-01 read it from the manifest, confirming the file name) | Observed |
+| Package name | recorded in `local/evidence/findings/identity.md` | Observed |
+| Version code | 510 | Observed |
+| Minimum SDK | 24 | Observed |
+| Target SDK | 37 | Observed |
+| Signing schemes | v1, v2 and v3 present; v3.1 absent; one signer (read with `inspect_apk_signature`, P1a-01) | Observed |
 | v1 signing certificate SHA-256 | `90b84a91e863603e9d22f6cb794ff9eb731e586fc8847865e33f0981ae3ff2f8` (one certificate) | Observed |
 
-## Missing tools
+## How the manifest rows were read
 
-The manifest is binary XML. Reading the package name, version code, minimum and target SDK needs
-`aapt2` or `apkanalyzer` (Android SDK build-tools or command-line tools). Reading the v2 and later
-signing schemes needs `apksigner` (build-tools, which needs a JDK). None of these are on the server and
-`local/toolchain/` is empty. Fill these rows once those tools are installed.
+The rows above were filled in P1a-01 (28 Oct 2026) with the REA MCP server: apktool 2.12.1
+decoded the binary manifest (package, version, min/target SDK), and `inspect_apk_signature` read
+the signing schemes. See `docs/reports/P1a-01-toolkit.md` for the toolkit and recoverability
+findings, and `local/evidence/findings/identity.md` for the private values.
