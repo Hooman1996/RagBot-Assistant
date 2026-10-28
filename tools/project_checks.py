@@ -11,6 +11,7 @@ Usage:
     python tools/project_checks.py apk-baseline
     python tools/project_checks.py rea-environment
     python tools/project_checks.py navgraph
+    python tools/project_checks.py api-structure
     python tools/project_checks.py all
     python tools/project_checks.py all --root path/to/checkout
 """
@@ -102,6 +103,7 @@ PROFILE_DIR = "app_profiles"
 PROFILE_SCHEMA = "app_profiles/profile.schema.json"
 NAV_GRAPH = "app_profiles/navigation-graph.json"
 NAV_LABELS = ("Observed", "Recovered", "Inferred", "Unknown")
+API_STRUCTURE = "app_profiles/api-structure.json"
 
 # Plan §12 and §15: the project's own resources on the shared dev PostgreSQL and Qdrant.
 PROJECT_TARGETS = {
@@ -565,6 +567,69 @@ def check_navgraph(root: Path, report: Report) -> None:
     )
 
 
+def check_api_structure(root: Path, report: Report) -> None:
+    """Integrity of the P1a-05 API-structure map. Standard library only."""
+    text = read(root, API_STRUCTURE)
+    if text is None:
+        report.check(False, "API-structure map exists", API_STRUCTURE)
+        return
+    try:
+        api = json.loads(text)
+    except json.JSONDecodeError as exc:
+        report.check(False, "API-structure map is valid JSON", str(exc))
+        return
+    report.check(True, "API-structure map is valid JSON")
+
+    endpoints = api.get("endpoints") if isinstance(api, dict) else None
+    models = api.get("models") if isinstance(api, dict) else None
+    if not (isinstance(endpoints, list) and isinstance(models, list)):
+        report.check(False, "API-structure map has endpoint and model lists")
+        return
+    report.check(True, "API-structure map has endpoint and model lists")
+
+    model_ids, dup_models = set(), set()
+    for model in models:
+        if not isinstance(model, dict):
+            continue
+        mid = model.get("id")
+        (dup_models if mid in model_ids else model_ids).add(mid)
+    report.check(not dup_models, "model IDs are unique", ", ".join(sorted(map(str, dup_models))))
+
+    bad_fields, seen_eps, dup_eps = [], set(), set()
+    bad_labels, bad_refs = set(), []
+    for i, ep in enumerate(endpoints):
+        if not isinstance(ep, dict) or not all(
+            isinstance(ep.get(k), str) and ep.get(k) for k in ("id", "name", "method", "label")
+        ):
+            bad_fields.append(str(i))
+            continue
+        eid = ep["id"]
+        (dup_eps if eid in seen_eps else seen_eps).add(eid)
+        if ep["label"] not in NAV_LABELS:
+            bad_labels.add(ep["label"])
+        refs = [ep.get("request_model"), ep.get("response_model")]
+        refs += [
+            p.get("type")
+            for p in ep.get("params", [])
+            if isinstance(p, dict) and isinstance(p.get("type"), str) and p["type"].startswith("M-")
+        ]
+        for ref in refs:
+            if ref is not None and ref not in model_ids:
+                bad_refs.append(f"{eid}->{ref}")
+    for model in models:
+        if isinstance(model, dict) and model.get("label") not in NAV_LABELS:
+            bad_labels.add(model.get("label"))
+
+    report.check(not bad_fields, "every endpoint has id, name, method and label", f"endpoints {bad_fields}")
+    report.check(not dup_eps, "endpoint IDs are unique", ", ".join(sorted(dup_eps)))
+    report.check(
+        not bad_labels,
+        "every label is one of the four",
+        ", ".join(sorted(str(label) for label in bad_labels)),
+    )
+    report.check(not bad_refs, "every model reference names a known model", "; ".join(bad_refs))
+
+
 def check_apk_baseline(root: Path, report: Report) -> None:
     record = read(root, APK_RECORD)
     report.check(record is not None, f"{APK_RECORD} exists")
@@ -610,13 +675,14 @@ SUITES = {
     "apk-baseline": (check_apk_baseline, scan_forbidden),
     "rea-environment": (check_rea_environment,),
     "navgraph": (check_navgraph,),
+    "api-structure": (check_api_structure,),
 }
 SUITES["all"] = (
     SUITES["foundation"]
     + SUITES["baseline"]
     + SUITES["contracts"]
     + SUITES["isolation"]
-    + (check_apk_baseline, check_rea_environment, check_navgraph)
+    + (check_apk_baseline, check_rea_environment, check_navgraph, check_api_structure)
 )
 
 
