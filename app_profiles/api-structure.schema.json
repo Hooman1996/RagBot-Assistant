@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "api-structure.schema.json",
+  "title": "App API-structure map",
+  "description": "The whole-app API-structure map (P1a-05): the HTTP calls recovered from the app's Retrofit service interfaces, grouped by feature area, with parameter and model shapes. Sanitized: semantic names and E-/M- IDs only; real paths, hosts, header names and classes live in local/evidence/.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["endpoints", "models"],
+  "properties": {
+    "endpoints": {
+      "description": "One per Retrofit interface method.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "area", "name", "method", "params", "request_model", "response_model", "auth", "label", "note"],
+        "properties": {
+          "id": {
+            "description": "Stable endpoint ID.",
+            "type": "string",
+            "pattern": "^E-[0-9]{3,}$"
+          },
+          "area": {
+            "description": "P1a-03 feature-area ID, or F-000 for cross-cutting/unresolved.",
+            "type": "string",
+            "pattern": "^F-[0-9]{3}$"
+          },
+          "name": { "description": "Semantic endpoint name (no class, package, path, host, header or brand strings).", "type": "string", "minLength": 1 },
+          "method": {
+            "description": "HTTP method.",
+            "enum": ["GET", "POST", "PUT", "DELETE", "PATCH", "HEAD", "OPTIONS"]
+          },
+          "params": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "in", "type", "label"],
+              "properties": {
+                "name": { "description": "Semantic parameter name (not the wire header/query string).", "type": "string", "minLength": 1 },
+                "in": {
+                  "description": "Where the parameter is carried.",
+                  "enum": ["url", "path", "query", "header", "body", "part", "field", "tag"]
+                },
+                "type": { "description": "Generic type keyword, or a models[].id (M-###) for a model-typed parameter.", "type": "string", "minLength": 1 },
+                "label": { "$ref": "#/$defs/label" }
+              }
+            }
+          },
+          "request_model": { "$ref": "#/$defs/modelRef" },
+          "response_model": { "$ref": "#/$defs/modelRef" },
+          "auth": {
+            "description": "High-level auth token (never the real header/token).",
+            "enum": ["bearer", "none"]
+          },
+          "label": { "$ref": "#/$defs/label" },
+          "note": { "description": "Sanitized basis / caveats.", "type": "string" }
+        }
+      }
+    },
+    "models": {
+      "description": "Request/response model shapes referenced by the endpoints.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "fields", "label", "note"],
+        "properties": {
+          "id": { "description": "Stable model ID.", "type": "string", "pattern": "^M-[0-9]{3,}$" },
+          "name": { "description": "Semantic model name (no class, package or brand strings).", "type": "string", "minLength": 1 },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "type", "label"],
+              "properties": {
+                "name": { "description": "Generic field name.", "type": "string", "minLength": 1 },
+                "type": { "description": "Generic type keyword (string, integer, long, number, boolean, array, map, object, file, binary, enum, none).", "type": "string", "minLength": 1 },
+                "label": { "$ref": "#/$defs/label" }
+              }
+            }
+          },
+          "label": { "$ref": "#/$defs/label" },
+          "note": { "description": "Sanitized basis / caveats.", "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "label": {
+      "description": "Evidence label. Observed is never used in static steps (the app was not run).",
+      "enum": ["Observed", "Recovered", "Inferred", "Unknown"]
+    },
+    "modelRef": {
+      "description": "A models[].id (M-###), or null when there is no model at this position.",
+      "type": ["string", "null"],
+      "pattern": "^M-[0-9]{3,}$"
+    }
+  }
+}
