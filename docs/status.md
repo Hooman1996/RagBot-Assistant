@@ -2,7 +2,7 @@
 
 Last updated: 27 October 2026. This page is updated whenever a task changes state.
 
-**Where we are:** P0 is done. Reverse engineering (P1a) starts when the owner asks.
+**Where we are:** P0 is done. Reverse engineering (P1a) is under way; P1a-01 (the UI toolkit and recoverability) is done.
 
 ## Status key
 
@@ -20,7 +20,7 @@ Last updated: 27 October 2026. This page is updated whenever a task changes stat
 |---|---|---|---|
 | Planning (plan v1, review v3, plan v2) | Done | `docs/plan/` | Plan v2 is the master; D-018 and D-019 change the P1 order |
 | P0: Foundation and readiness | Done | [P0](phases/P0-foundation.md) | 8 of 8 tasks done |
-| P1a: Reverse engineering and whole-app catalogue | Planned | [P1](phases/P1-apk-investigation.md) | Starts after the P0-08 readiness check, when the owner asks |
+| P1a: Reverse engineering and whole-app catalogue | In progress | [P1](phases/P1-apk-investigation.md) | P1a-01 done (PR #26): Jetpack Compose, Kotlin, Retrofit/OkHttp, selectively obfuscated |
 | P1b: Owner picks the features | Planned | [P1](phases/P1-apk-investigation.md) | After P1a |
 | P1c: Navigation prototype | Planned | [P1](phases/P1-apk-investigation.md) | Python simulator, no Android |
 | P1d: Picked features in detail | Planned | [P1](phases/P1-apk-investigation.md) | After P1c |
@@ -44,6 +44,16 @@ Last updated: 27 October 2026. This page is updated whenever a task changes stat
 | P0-06 | Project-only database and collection names, and a production/RagBot block | Done (PR #15) |
 | P0-07 | Agent skills in `.agents/skills/` | Done (PR #21). Runbook: `docs/runbook/agent-skills.md` |
 | P0-08 | Readiness check on the server | Done (PR #24). Report: `docs/reports/P0-08-readiness.md` |
+
+## P1a tasks
+
+| Task | What it does | Status |
+|---|---|---|
+| P1a-01 | Identify the UI toolkit and what REA can recover | Done (PR #26) |
+| P1a-02 | Fix and record the emulator profile | Next |
+| P1a-03 | Inventory every feature and entry point | Planned |
+| P1a-04 | Whole-app screen catalogue and navigation graph in `app_profiles/` | Planned |
+| P1a-05 | Start the private code-findings register | Planned |
 
 ## Inputs needed from the owner
 
