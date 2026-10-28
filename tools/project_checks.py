@@ -608,8 +608,11 @@ def check_api_structure(root: Path, report: Report) -> None:
         if ep["label"] not in NAV_LABELS:
             bad_labels.add(ep["label"])
         refs = [ep.get("request_model"), ep.get("response_model")]
-        refs += [p.get("type") for p in ep.get("params", []) if isinstance(p, dict)
-                 and isinstance(p.get("type"), str) and p["type"].startswith("M-")]
+        refs += [
+            p.get("type")
+            for p in ep.get("params", [])
+            if isinstance(p, dict) and isinstance(p.get("type"), str) and p["type"].startswith("M-")
+        ]
         for ref in refs:
             if ref is not None and ref not in model_ids:
                 bad_refs.append(f"{eid}->{ref}")
@@ -620,12 +623,11 @@ def check_api_structure(root: Path, report: Report) -> None:
     report.check(not bad_fields, "every endpoint has id, name, method and label", f"endpoints {bad_fields}")
     report.check(not dup_eps, "endpoint IDs are unique", ", ".join(sorted(dup_eps)))
     report.check(
-        not bad_labels, "every label is one of the four",
+        not bad_labels,
+        "every label is one of the four",
         ", ".join(sorted(str(label) for label in bad_labels)),
     )
-    report.check(
-        not bad_refs, "every model reference names a known model", "; ".join(bad_refs)
-    )
+    report.check(not bad_refs, "every model reference names a known model", "; ".join(bad_refs))
 
 
 def check_apk_baseline(root: Path, report: Report) -> None:
