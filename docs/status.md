@@ -2,7 +2,7 @@
 
 Last updated: 28 October 2026. This page is updated whenever a task changes state.
 
-**Where we are:** P0 is done. Reverse engineering (P1a) is under way; P1a-01 (UI toolkit), P1a-02 (emulator profile) and P1a-03 (whole-app feature and entry-point inventory) are done. P1a-04 (screen catalogue and navigation graph) is next.
+**Where we are:** P0 is done. Reverse engineering (P1a) is under way; P1a-01 (UI toolkit), P1a-02 (emulator profile), P1a-03 (whole-app feature and entry-point inventory) and P1a-04 (screen catalogue and navigation graph) are done. P1a-05 (private code-findings register) is next.
 
 ## Status key
 
@@ -20,7 +20,7 @@ Last updated: 28 October 2026. This page is updated whenever a task changes stat
 |---|---|---|---|
 | Planning (plan v1, review v3, plan v2) | Done | `docs/plan/` | Plan v2 is the master; D-018 and D-019 change the P1 order |
 | P0: Foundation and readiness | Done | [P0](phases/P0-foundation.md) | 8 of 8 tasks done |
-| P1a: Reverse engineering and whole-app catalogue | In progress | [P1](phases/P1-apk-investigation.md) | P1a-01 (PR #26) and P1a-03 (#31) done; inventory in `app_profiles/feature-inventory.md` |
+| P1a: Reverse engineering and whole-app catalogue | In progress | [P1](phases/P1-apk-investigation.md) | P1a-01/03/04 done; catalogue and graph in `app_profiles/` |
 | P1b: Owner picks the features | Planned | [P1](phases/P1-apk-investigation.md) | After P1a |
 | P1c: Navigation prototype | Planned | [P1](phases/P1-apk-investigation.md) | Python simulator, no Android |
 | P1d: Picked features in detail | Planned | [P1](phases/P1-apk-investigation.md) | After P1c |
@@ -52,8 +52,8 @@ Last updated: 28 October 2026. This page is updated whenever a task changes stat
 | P1a-01 | Identify the UI toolkit and what REA can recover | Done (PR #26) |
 | P1a-02 | Fix and record the emulator profile | Done (PR #29). Runbook: `docs/runbook/emulator-profile.md` |
 | P1a-03 | Inventory every feature and entry point | Done (#31) |
-| P1a-04 | Whole-app screen catalogue and navigation graph in `app_profiles/` | Next |
-| P1a-05 | Start the private code-findings register | Planned |
+| P1a-04 | Whole-app screen catalogue and navigation graph in `app_profiles/` | Done (#33) |
+| P1a-05 | Start the private code-findings register | Next |
 
 ## Inputs needed from the owner
 
