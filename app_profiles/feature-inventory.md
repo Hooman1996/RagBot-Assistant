@@ -15,10 +15,11 @@ the app, trace any journey, recover any API, or draw the screen catalogue / navi
 
 ## Summary of what the manifest declares
 
-- **274 activities** declared. Only **1** is an app-owned exported entry point (the launcher,
-  F-001); 32 further app-owned activities are `exported=false` internal destinations; the
-  remaining ~241 are UI-library classes repackaged by the obfuscator plus a few third-party SDK
-  activities.
+- **274 activities** declared. **1** is the app-owned exported entry point (the launcher, F-001).
+  The great majority (~266, resolved to screens in P1a-04) are **app-owned screens** — they extend
+  the app's own base activity, and the obfuscator only renamed them; it did not turn them into
+  library classes. Only a handful (~8) are third-party SDK or tooling activities. (An earlier draft
+  of this line miscounted the ~233 obfuscated app activities as repackaged UI-library classes.)
 - **10 services, 4 receivers, 7 providers** — all in library/SDK packages (push, analytics,
   crash reporting, file sharing, startup, baseline profile).
 - **8 intent-filters total.** `<data>` elements: **0**. URL schemes / hosts: **0**. App
