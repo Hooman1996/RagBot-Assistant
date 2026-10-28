@@ -2,7 +2,7 @@
 
 Last updated: 28 October 2026. This page is updated whenever a task changes state.
 
-**Where we are:** P0 is done. Reverse engineering (P1a) is under way; P1a-01 (UI toolkit), P1a-02 (emulator profile), P1a-03 (whole-app feature and entry-point inventory) and P1a-04 (screen catalogue and navigation graph) are done. P1a-05 (private code-findings register) is next.
+**Where we are:** P0 is done. Reverse engineering (P1a) is under way; P1a-01 (UI toolkit), P1a-02 (emulator profile), P1a-03 (whole-app feature and entry-point inventory), P1a-04 (screen catalogue and navigation graph) and P1a-05 (whole-app API-structure map) are done. Consolidating the private code-findings register is next.
 
 ## Status key
 
@@ -53,7 +53,11 @@ Last updated: 28 October 2026. This page is updated whenever a task changes stat
 | P1a-02 | Fix and record the emulator profile | Done (PR #29). Runbook: `docs/runbook/emulator-profile.md` |
 | P1a-03 | Inventory every feature and entry point | Done (#31) |
 | P1a-04 | Whole-app screen catalogue and navigation graph in `app_profiles/` | Done (#33) |
-| P1a-05 | Start the private code-findings register | Next |
+| P1a-05 | Whole-app API-structure map in `app_profiles/` (static + offline decryption) | Done (#36) |
+| P1a-06 | Consolidate the private code-findings register | Next |
+
+`api-private.md` (P1a-05) advances the private code-findings register alongside
+`inventory-private.md` and `navgraph-private.md`; P1a-06 consolidates them.
 
 ## Inputs needed from the owner
 
