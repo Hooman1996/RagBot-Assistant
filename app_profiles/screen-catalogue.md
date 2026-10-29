@@ -7,7 +7,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 - **Labels:** `Recovered` (precise code location), `Inferred` (reasoned from a view-model or surrounding content), `Unknown` (obfuscated/computed/server-driven, with the reason). Nothing is `Observed` — the app was not run.
 - **IDs:** `F-001`/`F-002`/`F-066` reuse the P1a-03 inventory IDs (launcher, internal router, dashboard-menu hub). Every other screen is `S-###` (stable, assigned in area then name order).
 
-**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 341, Inferred 117, Unknown 27, Observed 0.
+**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 343, Inferred 117, Unknown 25, Observed 0.
 
 ## F-001 — Launch
 
@@ -160,6 +160,8 @@ Every navigation destination the catalogued banking app declares, named at scree
 
 | ID | Name | Label | Basis |
 |---|---|---|---|
+| S-014 | Statement: statement details | Recovered | activity; content/caller identity recovered in FR-02 (AI-STATEMENT) |
+| S-016 | Statement: statement list | Recovered | activity; content/caller identity recovered in FR-02 (AI-STATEMENT) |
 | S-086 | Statement: request statement | Recovered | activity; named from its own screen content |
 
 ## F-030 — Transactions
@@ -756,9 +758,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-011 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-012 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-013 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
-| S-014 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-015 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
-| S-016 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-017 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-018 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-019 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |

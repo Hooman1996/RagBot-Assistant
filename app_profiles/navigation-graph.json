@@ -106,11 +106,11 @@
     },
     {
       "id": "S-014",
-      "name": "Unassigned: obfuscated screen",
-      "area": "F-000",
-      "label": "Unknown",
+      "name": "Statement: statement details",
+      "area": "F-029",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; obfuscated; no content or view-model recovered."
+      "note": "Activity content and caller identity recovered during FR-02 (AI-STATEMENT); original app not executed."
     },
     {
       "id": "S-015",
@@ -122,11 +122,11 @@
     },
     {
       "id": "S-016",
-      "name": "Unassigned: obfuscated screen",
-      "area": "F-000",
-      "label": "Unknown",
+      "name": "Statement: statement list",
+      "area": "F-029",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; obfuscated; no content or view-model recovered."
+      "note": "Activity content and caller identity recovered during FR-02 (AI-STATEMENT); original app not executed."
     },
     {
       "id": "S-017",
