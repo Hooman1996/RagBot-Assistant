@@ -40,6 +40,10 @@ jobs:
           distribution: temurin
           java-version: "21.0.13"
       - uses: android-actions/setup-android@v3
+        with:
+          cmdline-tools-version: "15859902"
+          packages: "platform-tools"
+          log-accepted-android-sdk-licenses: false
       - name: Project-local debug signing key
         run: |
           mkdir -p local/toolchain

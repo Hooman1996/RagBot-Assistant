@@ -16,6 +16,7 @@ No credentials, banking service, INTERNET permission, assistant or bridge is pre
 | JDK | Existing project Temurin 21.0.13+9; Java bytecode target 17 |
 | SDK platform | Android 37.0, revision 2; compile/target 37, min 24 |
 | Build tools | 36.0.0 |
+| SDK command-line tools | 22.0 (archive 15859902), also pinned in CI; no retired `tools` package |
 | Device | Existing `ragbot_investigation`, API 35; see [profile](emulator-profile.md) |
 | Tests | JUnit 4.13.2; AndroidX runner 1.6.2, ext JUnit 1.2.1; Compose UI test via BOM |
 
