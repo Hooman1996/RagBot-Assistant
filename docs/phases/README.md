@@ -40,3 +40,11 @@ flowchart LR
 
 The order P1a to P1d follows owner decision D-019: catalogue the whole app first, then choose
 features, then prototype, then go into detail.
+
+**Revised by D-020 (owner, 29 Oct 2026):** the replica and the in-app bridge are now built
+*before* feature selection, so the owner picks features by navigating a working replica; the
+whole app's frontend is reconstructed at full fidelity from the start; and the Python routing
+prototype (P1c) is dropped, its job done by the live replica plus bridge. The RagBot extraction
+and parity work (P2/P3) runs in parallel. The authoritative ordering is
+[`docs/plan/revised-build-sequence.md`](../plan/revised-build-sequence.md); the phase goals and
+gates below are unchanged.
