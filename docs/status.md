@@ -2,7 +2,7 @@
 
 Last updated: 29 October 2026. This page is updated whenever a task changes state.
 
-**Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1's Android foundation (#40), populated Home (#42), and accounts/statement/history inspection batch (#44) are complete: the replica launches without credentials, shows Home plus verified account selection/management, bank statement list/detail and separate legacy history/export previews with synthetic values, and passes server device acceptance. The [ordered frontend steps](plan/frontend-replication-steps.md) cover the remaining work; none starts without approval. D-020 and the [revised sequence](plan/revised-build-sequence.md) govern: replica and bridge precede feature selection. Whole-app reconstruction is not complete; original-app fidelity remains unscored pending owner comparison.
+**Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1's Android foundation (#40), populated Home (#42), accounts/statement/history inspection (#44) and cards inspection (#46) are complete: the replica launches without credentials, shows Home, verified account selection/management, bank statement list/detail, legacy history/export previews, and the Home card tab with read-only card information, list, credit and file-loan summaries and validate-only balance forms, all with synthetic values, and passes server device acceptance. The [ordered frontend steps](plan/frontend-replication-steps.md) cover the remaining work; none starts without approval. D-020 and the [revised sequence](plan/revised-build-sequence.md) govern: replica and bridge precede feature selection. Whole-app reconstruction is not complete; original-app fidelity remains unscored pending owner comparison.
 
 ## Status key
 
@@ -21,7 +21,7 @@ Last updated: 29 October 2026. This page is updated whenever a task changes stat
 | Planning (plan v1, review v3, plan v2) | Done | `docs/plan/` | Plan v2 is the master; D-018/D-019 change the P1 order; **D-020** revises it (replica-first, whole-app fidelity) |
 | P0: Foundation and readiness | Done | [P0](phases/P0-foundation.md) | 8 of 8 tasks done |
 | P1a: Reverse engineering and whole-app catalogue | Done | [P1](phases/P1-apk-investigation.md) | P1a-01…05 done; inventory, graph and API map in `app_profiles/` |
-| Reconstruct the frontend (whole app) | In progress | [sequence](plan/revised-build-sequence.md) | Stage 1 (D-020); #40 foundation, #42 Home and #44 FR-02 accounts/statement/history done; FR-03–FR-45 proposed; bridge pending |
+| Reconstruct the frontend (whole app) | In progress | [sequence](plan/revised-build-sequence.md) | Stage 1 (D-020); #40 foundation, #42 Home, #44 FR-02 accounts and #46 FR-03 cards done; FR-04–FR-45 proposed; bridge pending |
 | P1b: Owner picks the features | Planned | [P1](phases/P1-apk-investigation.md) | On a live replica (D-020) |
 | P1c: Navigation prototype | Dropped | [P1](phases/P1-apk-investigation.md) | Superseded by the live replica + bridge (D-020) |
 | P1d: Picked features in detail | Planned | [P1](phases/P1-apk-investigation.md) | After the features are picked |
@@ -40,6 +40,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 | Task | Status | Scope and remaining work |
 |---|---|---|
 | #40 Android foundation and first Home batch | Done | `S-026` and embedded empty `F-066`; 2 JVM / 4 device tests pass, lint passes. [Report](reports/replica-foundation.md), [runbook](runbook/replica-development.md). Historical first empty frame; populated Home follows in #42. Remaining screens are proposed; bridge has not started. |
+| #46 FR-03 cards tab, list and read-only details | Done | 10 JVM / 21 server device tests, build/lint and rendered QA pass; S-012 recovered and S-123 moved to FR-04 with owner approval, IDs preserved. [Report](reports/cards-inspection.md), [requirements](reports/cards-requirements.md). Card mutations, payment, PIN processing and original-app fidelity remain pending; FR-04 not started. |
 | #44 FR-02 accounts, statements and history inspection | Done | 6 JVM / 15 server device tests, build/lint and rendered QA pass; S-014/S-016 recovered with owner approval, IDs preserved. [Report](reports/accounts-inspection.md), [requirements](reports/accounts-requirements.md). Actual Home history hub, banking changes/export services and original-app fidelity remain pending; no later batch implemented. |
 | #42 Populated Home and ordered frontend steps | Done | 4 JVM / 8 device tests, build/lint and rendered QA pass; visual limits explicit. [Report](reports/home-completion.md), [requirements](reports/home-requirements.md), [ordered batches](plan/frontend-replication-steps.md). No later screens or bridge implemented. |
 
