@@ -1,8 +1,8 @@
 # Project Status
 
-Last updated: 28 October 2026. This page is updated whenever a task changes state.
+Last updated: 29 October 2026. This page is updated whenever a task changes state.
 
-**Where we are:** P0 is done. Reverse engineering (P1a) is under way; P1a-01 (UI toolkit), P1a-02 (emulator profile), P1a-03 (whole-app feature and entry-point inventory), P1a-04 (screen catalogue and navigation graph) and P1a-05 (whole-app API-structure map) are done. Consolidating the private code-findings register is next.
+**Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done — the feature inventory, navigation graph and API-structure map are in `app_profiles/`. The build sequence was revised on 29 Oct 2026 (**D-020**, [`docs/plan/revised-build-sequence.md`](plan/revised-build-sequence.md)): the replica and the in-app bridge are built *before* feature selection, with the whole app's frontend reconstructed at full fidelity. **Next: reconstruct the frontend (stage 1).**
 
 ## Status key
 
@@ -18,12 +18,13 @@ Last updated: 28 October 2026. This page is updated whenever a task changes stat
 
 | Phase | Status | Spec | Notes |
 |---|---|---|---|
-| Planning (plan v1, review v3, plan v2) | Done | `docs/plan/` | Plan v2 is the master; D-018 and D-019 change the P1 order |
+| Planning (plan v1, review v3, plan v2) | Done | `docs/plan/` | Plan v2 is the master; D-018/D-019 change the P1 order; **D-020** revises it (replica-first, whole-app fidelity) |
 | P0: Foundation and readiness | Done | [P0](phases/P0-foundation.md) | 8 of 8 tasks done |
-| P1a: Reverse engineering and whole-app catalogue | In progress | [P1](phases/P1-apk-investigation.md) | P1a-01/03/04 done; catalogue and graph in `app_profiles/` |
-| P1b: Owner picks the features | Planned | [P1](phases/P1-apk-investigation.md) | After P1a |
-| P1c: Navigation prototype | Planned | [P1](phases/P1-apk-investigation.md) | Python simulator, no Android |
-| P1d: Picked features in detail | Planned | [P1](phases/P1-apk-investigation.md) | After P1c |
+| P1a: Reverse engineering and whole-app catalogue | Done | [P1](phases/P1-apk-investigation.md) | P1a-01…05 done; inventory, graph and API map in `app_profiles/` |
+| Reconstruct the frontend (whole app) | Next | [sequence](plan/revised-build-sequence.md) | Stage 1 (D-020); replica + bridge before feature pick |
+| P1b: Owner picks the features | Planned | [P1](phases/P1-apk-investigation.md) | On a live replica (D-020) |
+| P1c: Navigation prototype | Dropped | [P1](phases/P1-apk-investigation.md) | Superseded by the live replica + bridge (D-020) |
+| P1d: Picked features in detail | Planned | [P1](phases/P1-apk-investigation.md) | After the features are picked |
 | P2: Backend extraction | Planned | [P2](phases/P2-backend-extraction.md) | Can start after P0 |
 | P3: Chatbot parity | Planned | [P3](phases/P3-chatbot-parity.md) | After P2 |
 | P4: Mock domain and manual replica | Planned | [P4](phases/P4-mock-domain-and-replica.md) | Needs P1d and the contracts |
@@ -54,7 +55,7 @@ Last updated: 28 October 2026. This page is updated whenever a task changes stat
 | P1a-03 | Inventory every feature and entry point | Done (#31) |
 | P1a-04 | Whole-app screen catalogue and navigation graph in `app_profiles/` | Done (#33) |
 | P1a-05 | Whole-app API-structure map in `app_profiles/` (static + offline decryption) | Done (#36) |
-| P1a-06 | Consolidate the private code-findings register | Next |
+| P1a-06 | Consolidate the private code-findings register | Planned (housekeeping; not blocking) |
 
 `api-private.md` (P1a-05) advances the private code-findings register alongside
 `inventory-private.md` and `navgraph-private.md`; P1a-06 consolidates them.

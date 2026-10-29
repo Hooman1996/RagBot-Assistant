@@ -5,6 +5,12 @@ graph. Then the owner picks the assistant's features, we test the navigation in 
 prototype, and only then study the picked features in detail (owner decision D-019). The
 evidence pack is also a showcase deliverable (plan §§7, 19).
 
+> **Revised by D-020 (owner, 29 Oct 2026).** The replica and the in-app bridge are now built
+> before feature selection: **P1b** happens on a *live replica* (the owner picks by navigating
+> it beside the interactive graph), and the Python routing prototype **P1c is dropped** — the
+> live replica plus bridge does its job. The authoritative ordering is
+> [`docs/plan/revised-build-sequence.md`](../plan/revised-build-sequence.md).
+
 **Rules:** all raw output (decompiled code, REA sessions, screenshots of the original app,
 traces) goes to `local/evidence/`. Git only gets sanitized specs that reference evidence IDs.
 Every finding carries one evidence label. Runtime observation uses only the observer's own
