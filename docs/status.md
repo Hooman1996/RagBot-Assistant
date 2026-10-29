@@ -2,7 +2,7 @@
 
 Last updated: 29 October 2026. This page is updated whenever a task changes state.
 
-**Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done — the feature inventory, navigation graph and API-structure map are in `app_profiles/`. The build sequence was revised on 29 Oct 2026 (**D-020**, [`docs/plan/revised-build-sequence.md`](plan/revised-build-sequence.md)): the replica and the in-app bridge are built *before* feature selection, with the whole app's frontend reconstructed at full fidelity. **Next: reconstruct the frontend (stage 1).**
+**Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1's Android foundation and first Home batch are complete (#40): the replica builds, launches without credentials and passes server device acceptance. D-020 and the [revised sequence](plan/revised-build-sequence.md) govern: replica and bridge precede feature selection. Whole-app reconstruction is not complete; original-app fidelity remains unscored pending owner comparison.
 
 ## Status key
 
@@ -21,7 +21,7 @@ Last updated: 29 October 2026. This page is updated whenever a task changes stat
 | Planning (plan v1, review v3, plan v2) | Done | `docs/plan/` | Plan v2 is the master; D-018/D-019 change the P1 order; **D-020** revises it (replica-first, whole-app fidelity) |
 | P0: Foundation and readiness | Done | [P0](phases/P0-foundation.md) | 8 of 8 tasks done |
 | P1a: Reverse engineering and whole-app catalogue | Done | [P1](phases/P1-apk-investigation.md) | P1a-01…05 done; inventory, graph and API map in `app_profiles/` |
-| Reconstruct the frontend (whole app) | Next | [sequence](plan/revised-build-sequence.md) | Stage 1 (D-020); replica + bridge before feature pick |
+| Reconstruct the frontend (whole app) | In progress | [sequence](plan/revised-build-sequence.md) | Stage 1 (D-020); #40 foundation/Home batch only; remaining screens and bridge pending |
 | P1b: Owner picks the features | Planned | [P1](phases/P1-apk-investigation.md) | On a live replica (D-020) |
 | P1c: Navigation prototype | Dropped | [P1](phases/P1-apk-investigation.md) | Superseded by the live replica + bridge (D-020) |
 | P1d: Picked features in detail | Planned | [P1](phases/P1-apk-investigation.md) | After the features are picked |
@@ -32,6 +32,12 @@ Last updated: 29 October 2026. This page is updated whenever a task changes stat
 | P6: Conversational assistant | Planned | [P6](phases/P6-conversational-assistant.md) | Needs P3, P5 and the model gate |
 | P7: Demo hardening and review | Planned | [P7](phases/P7-hardening-and-demo.md) | Presentation package |
 | P8: After-presentation integration | Planned | [P8](phases/P8-integration.md) | Only if the app team accepts |
+
+## Stage 1 batches
+
+| Task | Status | Scope and remaining work |
+|---|---|---|
+| #40 Android foundation and first Home batch | Done | `S-026` and embedded empty `F-066`; 2 JVM / 4 device tests pass, lint passes. [Report](reports/replica-foundation.md), [runbook](runbook/replica-development.md). Owner Home comparison and remaining screens are pending; bridge has not started. |
 
 ## P0 tasks
 

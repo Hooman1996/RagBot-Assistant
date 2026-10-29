@@ -41,6 +41,7 @@ decompiled/
 
 # Android build output
 .gradle/
+.kotlin/
 local.properties
 android/**/build/
 
