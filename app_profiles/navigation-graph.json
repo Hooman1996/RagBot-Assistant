@@ -90,11 +90,11 @@
     },
     {
       "id": "S-012",
-      "name": "Unassigned: obfuscated screen",
-      "area": "F-000",
-      "label": "Unknown",
+      "name": "Cards: card information",
+      "area": "F-033",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; obfuscated; no content or view-model recovered."
+      "note": "Activity content and caller identity recovered during FR-03 (CI-S012); original app not executed."
     },
     {
       "id": "S-013",

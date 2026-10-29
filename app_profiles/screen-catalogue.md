@@ -7,7 +7,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 - **Labels:** `Recovered` (precise code location), `Inferred` (reasoned from a view-model or surrounding content), `Unknown` (obfuscated/computed/server-driven, with the reason). Nothing is `Observed` — the app was not run.
 - **IDs:** `F-001`/`F-002`/`F-066` reuse the P1a-03 inventory IDs (launcher, internal router, dashboard-menu hub). Every other screen is `S-###` (stable, assigned in area then name order).
 
-**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 343, Inferred 117, Unknown 25, Observed 0.
+**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 344, Inferred 117, Unknown 24, Observed 0.
 
 ## F-001 — Launch
 
@@ -214,6 +214,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 
 | ID | Name | Label | Basis |
 |---|---|---|---|
+| S-012 | Cards: card information | Recovered | activity; content/caller identity recovered in FR-03 (CI-S012) |
 | S-118 | Cards: block card without source picker | Recovered | activity; name kept through obfuscation |
 | S-119 | Cards: bon card balance | Recovered | activity; named from its own screen content |
 | S-120 | Cards: card balance without source picker | Recovered | activity; name kept through obfuscation |
@@ -756,7 +757,6 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-009 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-010 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-011 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
-| S-012 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-013 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-015 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-017 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |

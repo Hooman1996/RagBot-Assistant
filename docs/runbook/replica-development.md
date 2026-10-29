@@ -1,6 +1,6 @@
-# Android replica development — Home and accounts
+# Android replica development — Home, accounts and cards
 
-Issues #40 (foundation), #42 (populated Home) and #44 (FR-02 accounts), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts) and #46 (FR-03 cards), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -132,21 +132,22 @@ Public builds show an explicit font/icon fidelity notice before Home. Their
 system font and text-symbol icons are functional development substitutes.
 They do not establish original-app visual fidelity.
 
-The Home build used 51 reviewed private inputs (HC-ASSETS). The current FR-02
-build uses 64 via neutral resource keys (AI-ASSETS), with the full manifest at
-`local/evidence/accounts-inspection/prepared-asset-manifest.json`. It records
+The Home build used 51 reviewed private inputs (HC-ASSETS) and FR-02 64
+(AI-ASSETS). The current FR-03 build uses 76 via neutral resource keys
+(CI-ASSETS), with the full manifest at
+`local/evidence/cards-inspection/prepared-asset-manifest.json`. It records
 the APK baseline, exact sources, transformations and SHA-256 for every input/output.
 Nothing is bulk-copied or committed.
 
 ```bash
-python local/evidence/accounts-inspection/prepare_assets.py
+python local/evidence/cards-inspection/prepare_assets.py
 python - <<'PYSETUP'
 import os
 from pathlib import Path
 settings = Path(os.environ["GRADLE_USER_HOME"]) / "gradle.properties"
 previous = settings.read_text().splitlines() if settings.exists() else []
 kept = [line for line in previous if not line.startswith("replicaPrivateResources=")]
-kept.append(f"replicaPrivateResources={Path.cwd()}/local/evidence/accounts-inspection/resources")
+kept.append(f"replicaPrivateResources={Path.cwd()}/local/evidence/cards-inspection/resources")
 settings.write_text("\n".join(kept) + "\n")
 PYSETUP
 ```
@@ -234,6 +235,25 @@ device tests cover accounts, date validation, statement/history list/detail,
 selection, draft cancellation, unavailable controls and Home state retention.
 The [FR-02 report](../reports/accounts-inspection.md) and
 [requirements](../reports/accounts-requirements.md) separate behavior from
+unscored visual fidelity.
+
+## FR-03 cards tab and review entries
+
+Open **ورود به خانه → کارت** for the hosted card tab. Swipe cards, switch the
+group chips and tap **مشاهده موجودی** on a debit card (hidden, shown, zero and
+missing balances are separate). Rows open card information `S-012`, the
+legacy list `S-125`, credit detail `S-131`, file-loan summary `S-134`, the
+bon-balance form `S-119` and, for credit cards, legacy history `S-091`. Issue,
+block, PIN, share, pay and file-detail controls explain that they are
+unavailable. The demo entry's **مدیریت کارت** (`S-126` → `S-068`),
+**نمایش کارت** (`S-130`) and **موجودی بدون ورود** (`S-120`) buttons are
+Designed-for-mock review entries for menus not built yet. Secure balance forms
+validate only; no PIN is processed and no balance is returned.
+
+CI-ASSETS verifies the previous 64 resources plus 12 card inputs (76) and keeps
+private bitmaps in their source density folder. Public builds show a plain
+colour behind the card face. The [FR-03 report](../reports/cards-inspection.md)
+and [requirements](../reports/cards-requirements.md) separate behavior from
 unscored visual fidelity.
 
 ## Desktop viewer and stopping the simulation

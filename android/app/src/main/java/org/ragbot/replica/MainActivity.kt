@@ -62,7 +62,10 @@ fun ReplicaApp() {
     val savedPages = rememberSaveableStateHolder()
     val homeScroll = rememberScrollState()
     var stack by rememberSaveable { mutableStateOf(listOf(HomeDestinations.HOME)) }
-    var accountTab by rememberSaveable { mutableStateOf(false) }
+    var tab by rememberSaveable { mutableStateOf(HomeControl.HOME) }
+    var cardKind by rememberSaveable { mutableStateOf(CardKind.DEBIT) }
+    var cardIndices by rememberSaveable { mutableStateOf(List(CardKind.entries.size) { 0 }) }
+    var shownBalances by rememberSaveable { mutableStateOf(listOf<String>()) }
     var accountKey by rememberSaveable { mutableStateOf("account-1") }
     var visibleAccounts by rememberSaveable {
         mutableStateOf<List<String>>(listOf("account-1", "account-2"))
@@ -106,7 +109,7 @@ fun ReplicaApp() {
                     when {
                         notice != null -> notice = null
                         stack.size > 1 -> goBack()
-                        accountTab -> accountTab = false
+                        tab != HomeControl.HOME -> tab = HomeControl.HOME
                         editing -> editing = false
                         expanded -> expanded = false
                         else -> entered = false
@@ -150,6 +153,24 @@ fun ReplicaApp() {
                                 Text("درخواست صورتحساب")
                             }
                         }
+                        Row {
+                            listOf(
+                                    CardDestinations.MANAGEMENT to "مدیریت کارت",
+                                    CardDestinations.VISIBILITY to "نمایش کارت",
+                                    CardDestinations.ANONYMOUS_BALANCE to "موجودی بدون ورود",
+                                )
+                                .forEach { (id, title) ->
+                                    TextButton(
+                                        {
+                                            entered = true
+                                            open(id)
+                                        },
+                                        Modifier.testTag("demo-$id"),
+                                    ) {
+                                        Text(title, fontSize = 12.sp)
+                                    }
+                                }
+                        }
 
                         Button(
                             onClick = { entered = navigation.navigate(HomeDestinations.HOME) },
@@ -174,31 +195,65 @@ fun ReplicaApp() {
                                 },
                                 { unavailable("جزئیات تراکنش خانه") },
                                 account,
-                                accountTab,
+                                tab,
                                 homeScroll,
                                 {
-                                    AccountTab(
-                                        account,
-                                        visibleAccounts.size,
-                                        balanceVisible,
-                                        scenario,
-                                        { open(AccountDestinations.LIST) },
-                                        { balanceVisible = !balanceVisible },
-                                        { scenario = "populated" },
-                                        ::unavailable,
-                                        ::open,
-                                    )
+                                    if (tab == HomeControl.CARD)
+                                        CardTab(
+                                            scenario,
+                                            cardKind,
+                                            cardIndices,
+                                            shownBalances,
+                                            { cardKind = it },
+                                            { kind, index ->
+                                                cardIndices =
+                                                    cardIndices.toMutableList().also {
+                                                        it[kind.ordinal] = index
+                                                    }
+                                            },
+                                            { key ->
+                                                shownBalances =
+                                                    if (key in shownBalances) shownBalances - key
+                                                    else shownBalances + key
+                                            },
+                                            { scenario = "populated" },
+                                            ::open,
+                                            ::unavailable,
+                                        )
+                                    else
+                                        AccountTab(
+                                            account,
+                                            visibleAccounts.size,
+                                            balanceVisible,
+                                            scenario,
+                                            { open(AccountDestinations.LIST) },
+                                            { balanceVisible = !balanceVisible },
+                                            { scenario = "populated" },
+                                            ::unavailable,
+                                            ::open,
+                                        )
                                 },
                             ) { control ->
                                 when (control) {
                                     HomeControl.BALANCE -> balanceVisible = !balanceVisible
-                                    HomeControl.ACCOUNT -> accountTab = true
-                                    HomeControl.HOME -> accountTab = false
+                                    HomeControl.HOME,
+                                    HomeControl.ACCOUNT,
+                                    HomeControl.CARD -> tab = control
                                     HomeControl.ACCOUNT_MANAGEMENT ->
                                         open(AccountDestinations.MANAGEMENT)
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in CardDestinations.implemented) {
+                            CardPage(
+                                page,
+                                cardKind,
+                                scenario,
+                                ::goBack,
+                                ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else {
                             AccountPage(
                                 page,
@@ -258,7 +313,7 @@ fun ReplicaApp() {
                         confirmButton = {
                             TextButton(onClick = { notice = null }) {
                                 Text(
-                                    if (page == HomeDestinations.HOME && !accountTab)
+                                    if (page == HomeDestinations.HOME && tab == HomeControl.HOME)
                                         "بازگشت به خانه"
                                     else "بستن"
                                 )
@@ -282,9 +337,9 @@ private fun HomeFrame(
     onMenu: (HomeMenuItem) -> Unit,
     onTransaction: () -> Unit,
     account: PreviewAccount?,
-    accountTab: Boolean,
+    tab: HomeControl,
     homeScroll: androidx.compose.foundation.ScrollState,
-    accountContent: @Composable () -> Unit,
+    tabContent: @Composable () -> Unit,
     onControl: (HomeControl) -> Unit,
 ) {
     Box(
@@ -346,8 +401,8 @@ private fun HomeFrame(
                 ControlIcon(HomeControl.LOGOUT, "replica_logout", onControl, Color.White)
                 Spacer(Modifier.width(4.dp))
             }
-            if (accountTab) {
-                Column(Modifier.weight(1f).fillMaxWidth()) { accountContent() }
+            if (tab != HomeControl.HOME) {
+                Column(Modifier.weight(1f).fillMaxWidth()) { tabContent() }
             } else {
                 Column(
                     Modifier.fillMaxWidth(),
@@ -483,15 +538,17 @@ private fun HomeFrame(
                 ) {
                     BottomTab(
                         HomeControl.HOME,
-                        if (accountTab) "replica_home_unselected" else "replica_home_selected",
-                        !accountTab,
+                        if (tab == HomeControl.HOME) "replica_home_selected"
+                        else "replica_home_unselected",
+                        tab == HomeControl.HOME,
                         medium,
                         onControl,
                     )
                     BottomTab(
                         HomeControl.ACCOUNT,
-                        if (accountTab) "replica_account_selected" else "replica_accounts",
-                        accountTab,
+                        if (tab == HomeControl.ACCOUNT) "replica_account_selected"
+                        else "replica_accounts",
+                        tab == HomeControl.ACCOUNT,
                         medium,
                         onControl,
                     )
@@ -505,7 +562,13 @@ private fun HomeFrame(
                     ) {
                         ReplicaIcon("replica_barcode", "▦", Modifier.size(50.dp), Color(0xFF308A48))
                     }
-                    BottomTab(HomeControl.CARD, "replica_cards", false, medium, onControl)
+                    BottomTab(
+                        HomeControl.CARD,
+                        if (tab == HomeControl.CARD) "replica_card_selected" else "replica_cards",
+                        tab == HomeControl.CARD,
+                        medium,
+                        onControl,
+                    )
                     BottomTab(HomeControl.PROFILE, "replica_profile", false, medium, onControl)
                 }
             }
@@ -614,7 +677,8 @@ internal fun ReplicaIcon(key: String, fallback: String, modifier: Modifier, tint
                 if (
                     key == "replica_barcode" ||
                         key == "replica_home_selected" ||
-                        key == "replica_account_selected"
+                        key == "replica_account_selected" ||
+                        key == "replica_card_selected"
                 )
                     Color.Unspecified
                 else tint,

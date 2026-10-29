@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -55,21 +55,21 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-03 — Cards tab, list and read-only details
 
-**Status:** proposed. **Families:** F-021, F-033. **Existing nodes:** S-068, S-119–S-120, S-123, S-125–S-126, S-130–S-131, S-134 (9 primary allocations). **Dependencies:** FR-02.
+**Status:** done (#46; 10 JVM / 21 server device tests, build/lint and rendered review). **Families:** F-021, F-033. **Existing nodes:** S-012, S-068, S-119–S-120, S-125–S-126, S-130–S-131, S-134 (9 primary allocations). **Dependencies:** FR-02.
 
-**What opens afterward:** Open the verified cards surface, switch a synthetic card, inspect balance/status/credit summary and return to its list.
+**What opens afterward:** Open Home → کارت, switch card group and card, show/hide a debit balance, and open card information, the legacy card list, credit summary, file-loan summary and the bon-balance form; review entries open card management/fetch, card display status and the pre-login balance form.
 
-**Frontend scope:** Combine card fetch/list, management overview, color/visibility presentation, balance and credit detail/summary; no card mutation.
+**Frontend scope:** The hosted card tab is content of S-026 (no new ID): card pager per group, group selector and configured action rows. Read-only destination pages with local fixtures; card mutations, payment, PIN processing and remote preferences stay unavailable.
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; The Home tab must be traced independently of S-125; card-type-dependent menus, masked/unmasked presentation and credit-summary availability remain unverified.
+**Evidence / specific gaps:** CI-TAB resolves the hosted tab independently of legacy S-125, which is a separate list reached by a tab action. Owner approved moving recovered card information S-012 from FR-45 to this batch and S-123 card color, reachable only inside card-operation steps, to FR-04; IDs are unchanged. S-126/S-068, S-130 and S-120 are reached from Profile, settings and pre-login menus that are not built yet, so they use labelled review entries. Server card-group menus, their order and card colours remain Unknown.
 
-**Requirements output:** Card types, masking, selected/default state and M-008/M-024/M-026/M-060 candidates; keep service-to-screen relationships unproven until traced.
+**Requirements output:** [Requirements matrix](../reports/cards-requirements.md) covers card groups, masking, selected/default state, distinct balance and credit amounts, caller-backed M-024/M-026/M-008 roles and the unconfirmed M-060; [acceptance and fidelity limits](../reports/cards-inspection.md) are separate.
 
-**Acceptance beyond the common contract:** Debit/credit/empty/error cases, selection restoration, masking and RTL render; action controls outside scope explain unavailable state. **Effort:** 3–5 days. **Evidence confidence:** medium.
+**Acceptance beyond the common contract:** Debit/credit/empty/loading/error cases, card and group restoration, known/hidden/zero/missing balances, masking pass-through and RTL render; out-of-scope actions explain the unavailable state on the current page. **Effort:** 3–5 days. **Evidence confidence:** medium-high identity, medium visuals/contracts.
 
 ### FR-04 — Card lifecycle and wallet-linked card journeys
 
-**Status:** proposed. **Families:** F-033, F-034. **Existing nodes:** S-118, S-121–S-122, S-124, S-127–S-129, S-132–S-133, S-135–S-141 (16 primary allocations). **Dependencies:** FR-03.
+**Status:** proposed. **Families:** F-033, F-034. **Existing nodes:** S-118, S-121–S-124, S-127–S-129, S-132–S-133, S-135–S-141 (17 primary allocations; S-123 card color moved from FR-03 with owner approval in #46). **Dependencies:** FR-03.
 
 **What opens afterward:** Inspect card issue/reissue, delivery/address choice, block and PIN/activation forms through locally simulated review/result states.
 
@@ -643,13 +643,13 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-45 — Unresolved destinations and shared-surface coverage closure
 
-**Status:** proposed. **Families:** F-000, F-035, F-039, F-045, F-069. **Existing nodes:** S-001–S-013, S-015, S-017–S-024, S-148, S-194–S-195, S-236–S-237 (27 primary allocations). **Dependencies:** FR-01–FR-44; recovery may run within each earlier approved issue.
+**Status:** proposed. **Families:** F-000, F-035, F-039, F-045, F-069. **Existing nodes:** S-001–S-011, S-013, S-015, S-017–S-024, S-148, S-194–S-195, S-236–S-237 (26 primary allocations). **Dependencies:** FR-01–FR-44; recovery may run within each earlier approved issue.
 
 **What opens afterward:** Open only additionally identified shared/image/menu/scanner or feature content after its identity and caller relationships are recovered; see an explicit unresolved ledger for everything else.
 
 **Frontend scope:** Focused REA caller/resource/content recovery for remaining unassigned/Unknown nodes; move proven content into its owning family batch rather than create generic placeholder pages.
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; 19 unassigned activities plus five feature activities have no recovered screen identity. Shared chooser/menu/scanner nodes also lack ownership; dynamic targets and 139 source-unattributed calls remain unresolved.
+**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; 18 unassigned activities plus five feature activities have no recovered screen identity. Shared chooser/menu/scanner nodes also lack ownership; dynamic targets and 139 source-unattributed calls remain unresolved.
 
 **Requirements output:** Per-node recovery result, callers/prerequisites, deduplication/ownership decision and explicit blocked reason; no API, page or route fabricated from a class name.
 
@@ -680,7 +680,7 @@ This is an exhaustive allocation of the current inventory, not an implementation
 | F-030 Transactions history | 5 | FR-02, FR-09 |
 | F-031 Receipts | 7 | FR-08, FR-09, FR-11, FR-12 |
 | F-032 Wallet | 19 | FR-13, FR-14 |
-| F-033 Bank cards | 19 | FR-03, FR-04 |
+| F-033 Bank cards | 20 | FR-03, FR-04 |
 | F-034 Wallet-linked card | 5 | FR-04 |
 | F-035 Cheques | 12 | FR-19, FR-20, FR-45 |
 | F-036 Chequebook management | 3 | FR-19 |
@@ -726,15 +726,15 @@ This is an exhaustive allocation of the current inventory, not an implementation
 | F-067 Compose hosts; F-068 app-named routes; F-070 nested graphs/dialogs | Cross-cutting evidence used by each owning batch. No separate implementation step per host/dialog/container. |
 | F-069 computed/obfuscated routes | Recovery gate within owning batch; remaining unresolved identity/targets are audited in FR-45. No guessed page or edge. |
 | F-071 absence of stock drawer/tab widgets | Preserve recovered custom shell; do not invent drawer or standard-widget navigation. |
-| F-000 remaining unassigned | S-025 is allocated to FR-05 with a caller-ownership gate; S-001–S-013, S-015 and S-017–S-024 remain in FR-45. S-014/S-016 were recovered as statement content and moved to FR-02 with owner approval. Allocation is not proof of reachability. |
+| F-000 remaining unassigned | S-025 is allocated to FR-05 with a caller-ownership gate; S-001–S-011, S-013, S-015 and S-017–S-024 remain in FR-45. S-014/S-016 were recovered as statement content and moved to FR-02, and S-012 as card information moved to FR-03, each with owner approval. Allocation is not proof of reachability. |
 | Dynamic edges / unattributed call sites | Explicitly unresolved: 43 null-target edges and 139 additional source-unattributed call sites. Recover within the owning approved batch; retain unresolved records where evidence is insufficient. No synthetic pages or invented transitions. |
 
 Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows assigned or explicitly deferred/excluded above; 485/485 graph nodes allocated exactly once; 0 missing/extra/duplicate IDs. This audit measures planning coverage only. It does not certify 485 reconstructed pages or recovered API contracts.
 
 ## Recommended next approval and stopping point
 
-Approve **FR-03 — Cards tab, list and read-only details** next. It reuses the verified shell and account context from FR-02 while requiring separate recovery of the actual cards tab, card selection and read-only detail states. No card mutation or payment journey is included. FR-03 remains proposed and does not start automatically.
+Approve **FR-04 — Card lifecycle and wallet-linked card journeys** next. It reuses the FR-03 card pager, card selection and unavailable-action handling, and now includes S-123 card color with its card-operation steps. FR-04 remains proposed and does not start automatically.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02 acceptance and rendered review are recorded in its report; only that approved batch is being delivered. FR-03–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02 and FR-03 acceptance and rendered review are recorded in their reports. FR-04–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.

@@ -23,12 +23,22 @@ class HomeNavigationTest {
                 "S-091",
                 "S-014",
                 "S-016",
+                "S-012",
+                "S-068",
+                "S-119",
+                "S-120",
+                "S-125",
+                "S-126",
+                "S-130",
+                "S-131",
+                "S-134",
             ),
             HomeDestinations.implemented,
         )
         assertTrue(ids.containsAll(HomeDestinations.implemented))
         HomeDestinations.implemented.forEach { assertTrue(navigation.navigate(it)) }
-        listOf("S-125", "unknown", "submit", "authorize").forEach {
+        // S-123 card color and S-132 credit payment belong to later card-operation work.
+        listOf("S-123", "S-124", "S-132", "unknown", "submit", "authorize").forEach {
             assertFalse(navigation.navigate(it))
             assertEquals("S-026", navigation.destination)
         }

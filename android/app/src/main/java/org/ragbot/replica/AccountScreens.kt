@@ -164,7 +164,7 @@ internal fun AccountTab(
     }
 }
 
-private fun copyPreview(context: Context, text: String) {
+internal fun copyPreview(context: Context, text: String) {
     (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
         ClipData.newPlainText("حساب نمایشی", text)
     )
@@ -195,7 +195,7 @@ private fun AccountValue(
 }
 
 @Composable
-private fun AccountAction(title: String, icon: String, tag: String, onClick: () -> Unit) {
+internal fun AccountAction(title: String, icon: String, tag: String, onClick: () -> Unit) {
     Surface(
         Modifier.fillMaxWidth()
             .padding(bottom = 8.dp)
@@ -263,6 +263,59 @@ internal fun AccountPage(
             AccountDestinations.HISTORY -> "سوابق تراکنش‌ها"
             else -> "جزئیات تراکنش"
         }
+    PageFrame(
+        page,
+        title,
+        onBack,
+        trailing = {
+            if (page == AccountDestinations.STATEMENT) {
+                Spacer(Modifier.weight(1f))
+                IconButton(
+                    { onUnavailable("درخواست‌های دریافت فایل") },
+                    Modifier.testTag("export-downloads").semantics {
+                        contentDescription = "درخواست‌های دریافت فایل"
+                    },
+                ) {
+                    ReplicaIcon("replica_export_download", "⇩", Modifier.size(28.dp), Color.White)
+                }
+            }
+        },
+    ) {
+        if (scenario != "populated") PreviewDataState(scenario, onRetry)
+        else
+            when (page) {
+                AccountDestinations.LIST,
+                AccountDestinations.MANAGEMENT,
+                AccountDestinations.FETCH ->
+                    AccountList(
+                        page,
+                        selectedKey,
+                        visibleKeys,
+                        onBack,
+                        onOpen,
+                        onSelect,
+                        onApply,
+                        onUnavailable,
+                    )
+                AccountDestinations.STATEMENT_LIST -> StatementListScreen(account, onStatement)
+                AccountDestinations.STATEMENT_DETAIL -> StatementDetailScreen(account, statementKey)
+                AccountDestinations.HISTORY -> HistoryScreen(onTransaction)
+                AccountDestinations.TRANSACTION ->
+                    TransactionDetail(transactionKey, onBack, onUnavailable)
+                AccountDestinations.STATEMENT -> StatementScreen(account, onBack, onUnavailable)
+            }
+    }
+}
+
+/** Shared child-page frame: green top bar with RTL Back, then the page content. */
+@Composable
+internal fun PageFrame(
+    page: String,
+    title: String,
+    onBack: () -> Unit,
+    trailing: @Composable RowScope.() -> Unit = {},
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Column(
         Modifier.fillMaxSize()
             .background(Color(0xFFFBFBFB))
@@ -286,43 +339,9 @@ internal fun AccountPage(
                 )
             }
             Text(title, color = Color.White, fontSize = 18.sp)
-            if (page == AccountDestinations.STATEMENT) {
-                Spacer(Modifier.weight(1f))
-                IconButton(
-                    { onUnavailable("درخواست‌های دریافت فایل") },
-                    Modifier.testTag("export-downloads").semantics {
-                        contentDescription = "درخواست‌های دریافت فایل"
-                    },
-                ) {
-                    ReplicaIcon("replica_export_download", "⇩", Modifier.size(28.dp), Color.White)
-                }
-            }
+            trailing()
         }
-        if (scenario != "populated") {
-            PreviewDataState(scenario, onRetry)
-            return
-        }
-        when (page) {
-            AccountDestinations.LIST,
-            AccountDestinations.MANAGEMENT,
-            AccountDestinations.FETCH ->
-                AccountList(
-                    page,
-                    selectedKey,
-                    visibleKeys,
-                    onBack,
-                    onOpen,
-                    onSelect,
-                    onApply,
-                    onUnavailable,
-                )
-            AccountDestinations.STATEMENT_LIST -> StatementListScreen(account, onStatement)
-            AccountDestinations.STATEMENT_DETAIL -> StatementDetailScreen(account, statementKey)
-            AccountDestinations.HISTORY -> HistoryScreen(onTransaction)
-            AccountDestinations.TRANSACTION ->
-                TransactionDetail(transactionKey, onBack, onUnavailable)
-            AccountDestinations.STATEMENT -> StatementScreen(account, onBack, onUnavailable)
-        }
+        content()
     }
 }
 
