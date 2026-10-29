@@ -32,13 +32,18 @@ class HomeNavigationTest {
                 "S-130",
                 "S-131",
                 "S-134",
+                "S-123",
+                "S-124",
+                "S-127",
+                "S-128",
+                "S-129",
             ),
             HomeDestinations.implemented,
         )
         assertTrue(ids.containsAll(HomeDestinations.implemented))
         HomeDestinations.implemented.forEach { assertTrue(navigation.navigate(it)) }
-        // S-123 card color and S-132 credit payment belong to later card-operation work.
-        listOf("S-123", "S-124", "S-132", "unknown", "submit", "authorize").forEach {
+        // Blocking, PIN (FR-04b) and credit repayment (FR-11) are not implemented.
+        listOf("S-118", "S-135", "S-132", "unknown", "submit", "authorize").forEach {
             assertFalse(navigation.navigate(it))
             assertEquals("S-026", navigation.destination)
         }

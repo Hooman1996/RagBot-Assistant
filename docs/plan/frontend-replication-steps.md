@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48 and FR-04a is done; FR-04b, FR-04c and FR-05–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -67,19 +67,47 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 **Acceptance beyond the common contract:** Debit/credit/empty/loading/error cases, card and group restoration, known/hidden/zero/missing balances, masking pass-through and RTL render; out-of-scope actions explain the unavailable state on the current page. **Effort:** 3–5 days. **Evidence confidence:** medium-high identity, medium visuals/contracts.
 
-### FR-04 — Card lifecycle and wallet-linked card journeys
+### FR-04a — Card operation requests
 
-**Status:** proposed. **Families:** F-033, F-034. **Existing nodes:** S-118, S-121–S-124, S-127–S-129, S-132–S-133, S-135–S-141 (17 primary allocations; S-123 card color moved from FR-03 with owner approval in #46). **Dependencies:** FR-03.
+**Status:** done (#48; 12 JVM / 24 server device tests, build/lint and rendered review). **Families:** F-033. **Existing nodes:** S-123–S-124, S-127–S-129 (5 primary allocations). **Dependencies:** FR-03.
 
-**What opens afterward:** Inspect card issue/reissue, delivery/address choice, block and PIN/activation forms through locally simulated review/result states.
+**What opens afterward:** From the card tab, request a new card or extend, reissue or recolour a debit card: choose source and delivery, an address for postal delivery, a colour, review and register, and see a labelled local result.
 
-**Frontend scope:** Reuse one reviewed card-form/OTP/state pattern for related lifecycle flows and wallet-linked card issue/send-type/PIN content; containers are not extra pages.
+**Frontend scope:** Issue (S-124) and modify (S-127) first pages, address (S-129), colour (S-123) and confirm (S-128) with one shared draft. In-person delivery skips the address page, as recovered.
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Anonymous/block authentication variants and card-type gates require caller traces. PIN/OTP results are local simulation, not actual issuance or security activation.
+**Evidence / specific gaps:** CR-FLOW traces the card-tab routes, the delivery branch and the confirm/status step. The recovered confirm has no OTP. Owner approved a labelled synthetic result. Server notices, fees, colour lists, branch data, the insufficient-balance top-up branch and the shared operations menu list (S-002, FR-45) are not reproduced; adding an address (S-463) belongs to FR-05.
 
-**Requirements output:** Per-operation inputs, address prerequisites, OTP state, M-005/M-011 candidates, authorization boundary and synthetic result provenance.
+**Requirements output:** [Requirements matrix](../reports/card-requests-requirements.md); [acceptance and fidelity limits](../reports/card-requests-inspection.md).
 
-**Acceptance beyond the common contract:** Invalid fields, cancellation, address selection and interrupted OTP states work; no real secret, card write or network operation occurs. **Effort:** 4–6 days; split if recovery exposes distinct large flows. **Evidence confidence:** medium-low.
+**Acceptance beyond the common contract:** Delivery branch, required address/colour, Back draft restoration, recreation, Cancel leaving the flow and a labelled result that changes nothing. **Effort:** 2–3 days. **Evidence confidence:** medium-high flow, medium visuals/contracts.
+
+### FR-04b — Card blocking, PIN and second-password activation
+
+**Status:** proposed (split from FR-04 with owner approval in #48). **Families:** F-033. **Existing nodes:** S-118, S-121–S-122, S-135–S-136 (5 primary allocations). **Dependencies:** FR-04a.
+
+**What opens afterward:** Inspect block and PIN/second-password activation forms through locally simulated review/result states.
+
+**Frontend scope:** Reuse the FR-04a form/result pattern for blocking (authenticated and anonymous variants) and PIN or second-password activation.
+
+**Evidence / specific gaps:** Anonymous/block authentication variants, OTP steps and card-type gates require caller traces. PIN/OTP results are local simulation, not security activation.
+
+**Requirements output:** Per-operation inputs, OTP state, authorization boundary and synthetic result provenance.
+
+**Acceptance beyond the common contract:** Invalid fields, cancellation and interrupted OTP states work; no real secret, card write or network operation occurs. **Effort:** 2–3 days. **Evidence confidence:** medium-low.
+
+### FR-04c — Wallet-linked card journeys
+
+**Status:** proposed (split from FR-04 with owner approval in #48). **Families:** F-034. **Existing nodes:** S-137–S-141 (5 primary allocations). **Dependencies:** FR-04a.
+
+**What opens afterward:** Inspect wallet-linked card issue, send type, address and PIN content through locally simulated states.
+
+**Frontend scope:** Wallet card issue host and its destinations; containers are not extra pages.
+
+**Evidence / specific gaps:** Wallet-card tab presentation and eligibility gates require caller traces.
+
+**Requirements output:** Per-step inputs, address prerequisites, M-005/M-011 candidates and synthetic result provenance.
+
+**Acceptance beyond the common contract:** Invalid fields, cancellation and address selection work; no wallet or card write occurs. **Effort:** 2–3 days. **Evidence confidence:** medium-low.
 
 ### FR-05 — Profile, settings and saved addresses
 
@@ -167,7 +195,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-11 — Bill and insurance installment payments
 
-**Status:** proposed. **Families:** F-031, F-043, F-054. **Existing nodes:** S-092, S-205–S-210, S-401–S-405 (12 primary allocations). **Dependencies:** FR-02, FR-03.
+**Status:** proposed. **Families:** F-031, F-043, F-054. **Existing nodes:** S-092, S-132–S-133, S-205–S-210, S-401–S-405 (14 primary allocations; credit-card repayment confirm/receipt S-132–S-133 moved from FR-04 with owner approval in #48). **Dependencies:** FR-02, FR-03.
 
 **What opens afterward:** Inspect bill entry/inquiry, insurance policy/installment lists and their amount/source/review/receipt previews.
 
@@ -680,8 +708,8 @@ This is an exhaustive allocation of the current inventory, not an implementation
 | F-030 Transactions history | 5 | FR-02, FR-09 |
 | F-031 Receipts | 7 | FR-08, FR-09, FR-11, FR-12 |
 | F-032 Wallet | 19 | FR-13, FR-14 |
-| F-033 Bank cards | 20 | FR-03, FR-04 |
-| F-034 Wallet-linked card | 5 | FR-04 |
+| F-033 Bank cards | 20 | FR-03, FR-04a, FR-04b, FR-11 |
+| F-034 Wallet-linked card | 5 | FR-04c |
 | F-035 Cheques | 12 | FR-19, FR-20, FR-45 |
 | F-036 Chequebook management | 3 | FR-19 |
 | F-037 National digital-cheque integration | 3 | FR-20 |
@@ -733,8 +761,8 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-Approve **FR-04 — Card lifecycle and wallet-linked card journeys** next. It reuses the FR-03 card pager, card selection and unavailable-action handling, and now includes S-123 card color with its card-operation steps. FR-04 remains proposed and does not start automatically.
+Approve **FR-04b — Card blocking, PIN and second-password activation** next. It reuses the FR-04a request draft, confirm and labelled-result pattern. FR-04b remains proposed and does not start automatically.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02 and FR-03 acceptance and rendered review are recorded in their reports. FR-04–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02, FR-03 and FR-04a acceptance and rendered review are recorded in their reports. FR-04b, FR-04c and FR-05–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.

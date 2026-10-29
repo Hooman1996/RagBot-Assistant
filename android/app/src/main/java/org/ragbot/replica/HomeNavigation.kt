@@ -5,7 +5,10 @@ object HomeDestinations {
     const val HOME = "S-026"
     const val MENU = "F-066"
     val implemented =
-        setOf(HOME, MENU) + AccountDestinations.implemented + CardDestinations.implemented
+        setOf(HOME, MENU) +
+            AccountDestinations.implemented +
+            CardDestinations.implemented +
+            CardRequestDestinations.implemented
 }
 
 enum class HomeControl(val title: String) {

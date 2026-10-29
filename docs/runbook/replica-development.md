@@ -1,6 +1,6 @@
 # Android replica development — Home, accounts and cards
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts) and #46 (FR-03 cards), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards) and #48 (FR-04a card requests), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -255,6 +255,16 @@ private bitmaps in their source density folder. Public builds show a plain
 colour behind the card face. The [FR-03 report](../reports/cards-inspection.md)
 and [requirements](../reports/cards-requirements.md) separate behavior from
 unscored visual fidelity.
+
+## FR-04a card operation requests
+
+On the card tab's debit group, **درخواست کارت** opens issue `S-124`;
+**تمدید کارت**, **المثنی کارت** and **تغییر رنگ کارت** open modify `S-127`.
+In-person delivery goes to colour `S-123`; postal goes to address `S-129`
+first. Confirm `S-128` ends in a labelled Designed-for-mock result: nothing is
+issued, changed or charged. Cancel returns to the card tab; Back keeps the
+draft. Adding an address is unavailable (FR-05). No new private assets.
+See the [FR-04a report](../reports/card-requests-inspection.md).
 
 ## Desktop viewer and stopping the simulation
 

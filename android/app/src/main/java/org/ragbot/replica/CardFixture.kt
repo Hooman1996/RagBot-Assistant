@@ -163,7 +163,10 @@ object CardFixture {
                 listOf(
                     CardAction("info", "اطلاعات کارت", CardDestinations.INFO),
                     CardAction("list", "لیست کارت‌ها", CardDestinations.LIST),
-                    CardAction("issue", "درخواست کارت", null),
+                    CardAction("issue", "درخواست کارت", CardRequestDestinations.ISSUE),
+                    CardAction("extend", "تمدید کارت", CardRequestDestinations.MODIFY),
+                    CardAction("replicate", "المثنی کارت", CardRequestDestinations.MODIFY),
+                    CardAction("recolor", "تغییر رنگ کارت", CardRequestDestinations.MODIFY),
                     CardAction("block", "مسدودسازی کارت", null),
                     CardAction("pin", "رمز کارت", null),
                 ),

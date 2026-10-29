@@ -47,7 +47,7 @@ internal fun CardTab(
     onIndex: (CardKind, Int) -> Unit,
     onBalance: (String) -> Unit,
     onRetry: () -> Unit,
-    onOpen: (String) -> Unit,
+    onAction: (CardAction) -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
     val context = LocalContext.current
@@ -127,7 +127,8 @@ internal fun CardTab(
                         "replica_account_list",
                         "card-action-${action.key}",
                     ) {
-                        action.destination?.let(onOpen) ?: onUnavailable(action.title)
+                        if (action.destination != null) onAction(action)
+                        else onUnavailable(action.title)
                     }
                 }
             }
@@ -357,7 +358,7 @@ internal fun CardPage(
 }
 
 @Composable
-private fun InfoRow(
+internal fun InfoRow(
     label: String,
     value: String,
     ltr: Boolean = false,

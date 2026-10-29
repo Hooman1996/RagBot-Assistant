@@ -66,6 +66,7 @@ fun ReplicaApp() {
     var cardKind by rememberSaveable { mutableStateOf(CardKind.DEBIT) }
     var cardIndices by rememberSaveable { mutableStateOf(List(CardKind.entries.size) { 0 }) }
     var shownBalances by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var cardRequest by rememberSaveable { mutableStateOf<CardRequest?>(null) }
     var accountKey by rememberSaveable { mutableStateOf("account-1") }
     var visibleAccounts by rememberSaveable {
         mutableStateOf<List<String>>(listOf("account-1", "account-2"))
@@ -82,6 +83,12 @@ fun ReplicaApp() {
     fun goBack() {
         savedPages.removeState(stack.last())
         stack = stack.dropLast(1)
+    }
+    // Cancel leaves the whole request flow, as the recovered pages return to Home.
+    fun leaveRequest() {
+        stack.filter { it in CardRequestDestinations.implemented }.forEach(savedPages::removeState)
+        stack = stack.filter { it !in CardRequestDestinations.implemented }
+        cardRequest = null
     }
     fun unavailable(title: String) {
         notice = "$title در این پیش‌نمایش آماده نیست. در همین صفحه می‌مانید."
@@ -217,7 +224,23 @@ fun ReplicaApp() {
                                                     else shownBalances + key
                                             },
                                             { scenario = "populated" },
-                                            ::open,
+                                            { action ->
+                                                val id = checkNotNull(action.destination)
+                                                if (id in CardRequestDestinations.implemented)
+                                                    cardRequest =
+                                                        CardRequest(
+                                                            CardOperation.valueOf(
+                                                                action.key.uppercase()
+                                                            ),
+                                                            if (id == CardRequestDestinations.ISSUE)
+                                                                accountKey
+                                                            else
+                                                                CardFixture.of(CardKind.DEBIT)[
+                                                                        cardIndices[0]]
+                                                                    .key,
+                                                        )
+                                                open(id)
+                                            },
                                             ::unavailable,
                                         )
                                     else
@@ -244,6 +267,18 @@ fun ReplicaApp() {
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in CardRequestDestinations.implemented) {
+                            CardRequestPage(
+                                page,
+                                checkNotNull(cardRequest),
+                                scenario,
+                                { cardRequest = it },
+                                ::goBack,
+                                ::open,
+                                ::leaveRequest,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else if (page in CardDestinations.implemented) {
                             CardPage(
                                 page,
