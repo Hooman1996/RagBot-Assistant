@@ -80,11 +80,13 @@ object HomeFixture {
 }
 
 fun persianNumber(value: Long): String =
-    value
-        .toString()
-        .reversed()
-        .chunked(3)
-        .joinToString("٬")
-        .reversed()
-        .map { if (it in '0'..'9') "۰۱۲۳۴۵۶۷۸۹"[it - '0'] else it }
-        .joinToString("")
+    (if (value < 0) "−" else "") +
+        value
+            .toString()
+            .removePrefix("-")
+            .reversed()
+            .chunked(3)
+            .joinToString("٬")
+            .reversed()
+            .map { if (it in '0'..'9') "۰۱۲۳۴۵۶۷۸۹"[it - '0'] else it }
+            .joinToString("")

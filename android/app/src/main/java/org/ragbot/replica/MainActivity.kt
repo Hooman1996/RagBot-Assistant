@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -58,8 +59,32 @@ fun ReplicaApp() {
     }
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
     val navigation = remember { HomeNavigation() }
+    val savedPages = rememberSaveableStateHolder()
+    val homeScroll = rememberScrollState()
+    var stack by rememberSaveable { mutableStateOf(listOf(HomeDestinations.HOME)) }
+    var accountTab by rememberSaveable { mutableStateOf(false) }
+    var accountKey by rememberSaveable { mutableStateOf("account-1") }
+    var visibleAccounts by rememberSaveable {
+        mutableStateOf<List<String>>(listOf("account-1", "account-2"))
+    }
+    var scenario by rememberSaveable { mutableStateOf("populated") }
+    var transactionKey by rememberSaveable { mutableStateOf("preview-1") }
+    var statementKey by rememberSaveable { mutableStateOf("statement-1") }
+    val account = AccountFixture.accounts.firstOrNull { it.key == accountKey }
+    val page = stack.last()
+    fun open(id: String) {
+        check(id in HomeDestinations.implemented)
+        stack = stack + id
+    }
+    fun goBack() {
+        savedPages.removeState(stack.last())
+        stack = stack.dropLast(1)
+    }
+    fun unavailable(title: String) {
+        notice = "$title در این پیش‌نمایش آماده نیست. در همین صفحه می‌مانید."
+    }
     val activity = checkNotNull(LocalActivity.current)
-    val homeVisible = entered
+    val homeVisible = entered && page == HomeDestinations.HOME
     SideEffect {
         val bars = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
         bars.isAppearanceLightStatusBars = !homeVisible
@@ -68,11 +93,20 @@ fun ReplicaApp() {
     val regular = replicaFont("replica_regular")
     val medium = replicaFont("replica_medium")
     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-        MaterialTheme(colorScheme = lightColorScheme(primary = Color(0xFF308A48))) {
+        MaterialTheme(
+            colorScheme =
+                lightColorScheme(
+                    primary = Color(0xFF308A48),
+                    secondaryContainer = Color(0xFFE3F4E9),
+                    onSecondaryContainer = Color(0xFF145D32),
+                )
+        ) {
             ProvideTextStyle(LocalTextStyle.current.copy(fontFamily = regular)) {
                 BackHandler(entered || notice != null) {
                     when {
                         notice != null -> notice = null
+                        stack.size > 1 -> goBack()
+                        accountTab -> accountTab = false
                         editing -> editing = false
                         expanded -> expanded = false
                         else -> entered = false
@@ -91,6 +125,32 @@ fun ReplicaApp() {
                             else "قلم، نمادها، بنر و عنوان عمومی؛ تطابق ظاهری تأیید نشده است."
                         )
                         Text("ساخت: ${BuildConfig.SOURCE_REVISION}", Modifier.testTag("source"))
+                        PreviewScenarios(scenario) { scenario = it }
+                        Text(
+                            "ورود مستقل برای بازبینی؛ مسیر اصلی هنوز بازیابی نشده",
+                            fontSize = 11.sp,
+                        )
+                        Row {
+                            TextButton(
+                                {
+                                    entered = true
+                                    open(AccountDestinations.HISTORY)
+                                },
+                                Modifier.testTag("demo-history"),
+                            ) {
+                                Text("سوابق قدیمی")
+                            }
+                            TextButton(
+                                {
+                                    entered = true
+                                    open(AccountDestinations.STATEMENT)
+                                },
+                                Modifier.testTag("demo-statement"),
+                            ) {
+                                Text("درخواست صورتحساب")
+                            }
+                        }
+
                         Button(
                             onClick = { entered = navigation.navigate(HomeDestinations.HOME) },
                             Modifier.testTag("demo-entry"),
@@ -99,19 +159,82 @@ fun ReplicaApp() {
                         }
                     }
                 } else {
-                    HomeFrame(
-                        expanded,
-                        balanceVisible,
-                        serviceOrder,
-                        medium,
-                        { expanded = !expanded },
-                        { editing = true },
-                        { title ->
-                            notice = "$title در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
-                        },
-                    ) { control ->
-                        if (control == HomeControl.BALANCE) balanceVisible = !balanceVisible
-                        else notice = navigation.unavailable(control)
+                    savedPages.SaveableStateProvider(page) {
+                        if (page == HomeDestinations.HOME) {
+                            HomeFrame(
+                                expanded,
+                                balanceVisible,
+                                serviceOrder,
+                                medium,
+                                { expanded = !expanded },
+                                { editing = true },
+                                { item ->
+                                    notice =
+                                        "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
+                                },
+                                { unavailable("جزئیات تراکنش خانه") },
+                                account,
+                                accountTab,
+                                homeScroll,
+                                {
+                                    AccountTab(
+                                        account,
+                                        visibleAccounts.size,
+                                        balanceVisible,
+                                        scenario,
+                                        { open(AccountDestinations.LIST) },
+                                        { balanceVisible = !balanceVisible },
+                                        { scenario = "populated" },
+                                        ::unavailable,
+                                        ::open,
+                                    )
+                                },
+                            ) { control ->
+                                when (control) {
+                                    HomeControl.BALANCE -> balanceVisible = !balanceVisible
+                                    HomeControl.ACCOUNT -> accountTab = true
+                                    HomeControl.HOME -> accountTab = false
+                                    HomeControl.ACCOUNT_MANAGEMENT ->
+                                        open(AccountDestinations.MANAGEMENT)
+                                    else -> notice = navigation.unavailable(control)
+                                }
+                            }
+                        } else {
+                            AccountPage(
+                                page,
+                                account,
+                                accountKey,
+                                visibleAccounts,
+                                scenario,
+                                transactionKey,
+                                statementKey,
+                                ::goBack,
+                                ::open,
+                                { key ->
+                                    accountKey = key
+                                    balanceVisible = false
+                                    goBack()
+                                },
+                                { keys ->
+                                    visibleAccounts = keys.toList()
+                                    if (accountKey !in keys) {
+                                        accountKey = keys.first()
+                                        balanceVisible = false
+                                    }
+                                    goBack()
+                                },
+                                { key ->
+                                    transactionKey = key
+                                    open(AccountDestinations.TRANSACTION)
+                                },
+                                { key ->
+                                    statementKey = key
+                                    open(AccountDestinations.STATEMENT_DETAIL)
+                                },
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        }
                     }
                     if (editing) {
                         HomeMenuEditor(
@@ -133,7 +256,13 @@ fun ReplicaApp() {
                         title = { Text("پیش‌نمایش محدود") },
                         text = { Text(message, Modifier.testTag("unavailable")) },
                         confirmButton = {
-                            TextButton(onClick = { notice = null }) { Text("بازگشت به خانه") }
+                            TextButton(onClick = { notice = null }) {
+                                Text(
+                                    if (page == HomeDestinations.HOME && !accountTab)
+                                        "بازگشت به خانه"
+                                    else "بستن"
+                                )
+                            }
                         },
                     )
                 }
@@ -150,7 +279,12 @@ private fun HomeFrame(
     medium: FontFamily,
     toggleHeader: () -> Unit,
     onEdit: () -> Unit,
-    onUnavailable: (String) -> Unit,
+    onMenu: (HomeMenuItem) -> Unit,
+    onTransaction: () -> Unit,
+    account: PreviewAccount?,
+    accountTab: Boolean,
+    homeScroll: androidx.compose.foundation.ScrollState,
+    accountContent: @Composable () -> Unit,
     onControl: (HomeControl) -> Unit,
 ) {
     Box(
@@ -212,109 +346,125 @@ private fun HomeFrame(
                 ControlIcon(HomeControl.LOGOUT, "replica_logout", onControl, Color.White)
                 Spacer(Modifier.width(4.dp))
             }
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(
-                    Modifier.testTag("balance")
-                        .clickable(role = Role.Button) { onControl(HomeControl.BALANCE) }
-                        .padding(horizontal = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    ReplicaIcon("replica_eye", "◉", Modifier.size(24.dp), HomeGreen)
-                    Spacer(Modifier.width(4.dp))
-                    Text(
-                        if (balanceVisible)
-                            "${persianNumber(HomeFixture.balanceRial)} ریال · عدم نمایش"
-                        else HomeControl.BALANCE.title,
-                        color = HomeGreen,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = replicaFont("replica_bold"),
-                    )
-                }
-                Row(
-                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+            if (accountTab) {
+                Column(Modifier.weight(1f).fillMaxWidth()) { accountContent() }
+            } else {
+                Column(
+                    Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Row(
-                        Modifier.clickable(role = Role.Button) { onControl(HomeControl.INCREASE) },
+                        Modifier.testTag("balance")
+                            .clickable(role = Role.Button) { onControl(HomeControl.BALANCE) }
+                            .padding(horizontal = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        ReplicaIcon("replica_add", "⊕", Modifier.size(24.dp), HomeGreen)
-                        Spacer(Modifier.width(2.dp))
-                        Text("افزایش موجودی", color = HomeGreen, fontSize = 14.sp)
+                        ReplicaIcon("replica_eye", "◉", Modifier.size(24.dp), HomeGreen)
+                        Spacer(Modifier.width(4.dp))
+                        Text(
+                            if (balanceVisible)
+                                "${account?.balance?.let(::persianNumber) ?: "نامشخص"} ریال · عدم نمایش"
+                            else HomeControl.BALANCE.title,
+                            color = HomeGreen,
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = replicaFont("replica_bold"),
+                        )
                     }
-                    Text(
-                        "شماره حساب ${HomeFixture.accountNumber}",
-                        Modifier.testTag("account-number"),
-                        color = Color.White,
-                        fontSize = 14.sp,
-                    )
-                }
-                if (expanded) {
-                    Column(
-                        Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 24.dp)
+                    Row(
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        listOf(
-                                "صاحب حساب: ${HomeFixture.accountOwner}",
-                                "نوع حساب: ${HomeFixture.accountType}",
-                                "شماره شبا: ${HomeFixture.accountIban}",
-                            )
-                            .forEach {
-                                Text(
-                                    it,
-                                    color = Color.White,
-                                    modifier = Modifier.padding(vertical = 6.dp),
-                                )
-                            }
                         Row(
-                            Modifier.fillMaxWidth(),
+                            Modifier.clickable(role = Role.Button) {
+                                onControl(HomeControl.INCREASE)
+                            },
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            TextButton(onClick = { onControl(HomeControl.ACCOUNT_MANAGEMENT) }) {
-                                Text(HomeControl.ACCOUNT_MANAGEMENT.title, color = Color.White)
+                            ReplicaIcon("replica_add", "⊕", Modifier.size(24.dp), HomeGreen)
+                            Spacer(Modifier.width(2.dp))
+                            Text("افزایش موجودی", color = HomeGreen, fontSize = 14.sp)
+                        }
+                        Text(
+                            "شماره حساب ${account?.number ?: "انتخاب نشده"}",
+                            Modifier.testTag("account-number"),
+                            color = Color.White,
+                            fontSize = 14.sp,
+                        )
+                    }
+                    if (expanded) {
+                        Column(
+                            Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 24.dp)
+                        ) {
+                            listOf(
+                                    "صاحب حساب: ${account?.owner ?: "—"}",
+                                    "نوع حساب: ${account?.type ?: "—"}",
+                                    "شماره شبا: ${account?.iban ?: "—"}",
+                                )
+                                .forEach {
+                                    Text(
+                                        it,
+                                        color = Color.White,
+                                        modifier = Modifier.padding(vertical = 6.dp),
+                                    )
+                                }
+                            Row(
+                                Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                TextButton(
+                                    onClick = { onControl(HomeControl.ACCOUNT_MANAGEMENT) }
+                                ) {
+                                    Text(HomeControl.ACCOUNT_MANAGEMENT.title, color = Color.White)
+                                }
+                                Spacer(Modifier.weight(1f))
+                                ControlIcon(
+                                    HomeControl.SHARE,
+                                    "replica_share",
+                                    onControl,
+                                    Color.White,
+                                )
                             }
-                            Spacer(Modifier.weight(1f))
-                            ControlIcon(HomeControl.SHARE, "replica_share", onControl, Color.White)
                         }
                     }
+                    Spacer(Modifier.height(16.dp))
+                    Box(
+                        Modifier.size(48.dp, 6.dp)
+                            .testTag("expand-account")
+                            .semantics {
+                                contentDescription = "جزئیات حساب"
+                                stateDescription = if (expanded) "باز" else "بسته"
+                            }
+                            .clickable(role = Role.Button, onClick = toggleHeader),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        // Tapping this chevron is a deliberate preview affordance; see the report.
+                        ReplicaIcon(
+                            "replica_down_arrow",
+                            "⌄",
+                            Modifier.size(12.dp, 6.dp).rotate(if (expanded) 180f else 0f),
+                            Color.White,
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
                 }
-                Spacer(Modifier.height(16.dp))
-                Box(
-                    Modifier.size(48.dp, 6.dp)
-                        .testTag("expand-account")
-                        .semantics {
-                            contentDescription = "جزئیات حساب"
-                            stateDescription = if (expanded) "باز" else "بسته"
-                        }
-                        .clickable(role = Role.Button, onClick = toggleHeader),
-                    contentAlignment = Alignment.Center,
+                Column(
+                    Modifier.weight(1f)
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                        .background(Color(0xFFFBFBFB))
+                        .verticalScroll(homeScroll)
+                        .testTag("home-scroll")
+                        .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 40.dp)
                 ) {
-                    // Tapping this chevron is a deliberate preview affordance; see the report.
-                    ReplicaIcon(
-                        "replica_down_arrow",
-                        "⌄",
-                        Modifier.size(12.dp, 6.dp).rotate(if (expanded) 180f else 0f),
-                        Color.White,
+                    HomeContent(
+                        serviceOrder.map { key -> HomeFixture.services.first { it.key == key } },
+                        onMenu,
+                        onEdit,
+                        onTransaction,
                     )
                 }
-                Spacer(Modifier.height(12.dp))
-            }
-            Column(
-                Modifier.weight(1f)
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
-                    .background(Color(0xFFFBFBFB))
-                    .verticalScroll(rememberScrollState())
-                    .testTag("home-scroll")
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 40.dp)
-            ) {
-                HomeContent(
-                    serviceOrder.map { key -> HomeFixture.services.first { it.key == key } },
-                    { onUnavailable(it.title) },
-                    onEdit,
-                    { onUnavailable("جزئیات تراکنش") },
-                )
             }
             Surface(
                 modifier =
@@ -331,8 +481,20 @@ private fun HomeFrame(
                     horizontalArrangement = Arrangement.SpaceAround,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    BottomTab(HomeControl.HOME, "replica_home_selected", true, medium, onControl)
-                    BottomTab(HomeControl.ACCOUNT, "replica_accounts", false, medium, onControl)
+                    BottomTab(
+                        HomeControl.HOME,
+                        if (accountTab) "replica_home_unselected" else "replica_home_selected",
+                        !accountTab,
+                        medium,
+                        onControl,
+                    )
+                    BottomTab(
+                        HomeControl.ACCOUNT,
+                        if (accountTab) "replica_account_selected" else "replica_accounts",
+                        accountTab,
+                        medium,
+                        onControl,
+                    )
                     Box(
                         Modifier.size(56.dp)
                             .background(Color.White, CircleShape)
@@ -449,7 +611,12 @@ internal fun ReplicaIcon(key: String, fallback: String, modifier: Modifier, tint
             contentDescription = null,
             modifier = modifier,
             tint =
-                if (key == "replica_barcode" || key == "replica_home_selected") Color.Unspecified
+                if (
+                    key == "replica_barcode" ||
+                        key == "replica_home_selected" ||
+                        key == "replica_account_selected"
+                )
+                    Color.Unspecified
                 else tint,
         )
     else

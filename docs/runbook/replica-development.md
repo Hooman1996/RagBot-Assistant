@@ -1,6 +1,6 @@
-# Android replica development — Home
+# Android replica development — Home and accounts
 
-Issues #40 (foundation) and #42 (populated Home), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home) and #44 (FR-02 accounts), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -132,15 +132,23 @@ Public builds show an explicit font/icon fidelity notice before Home. Their
 system font and text-symbol icons are functional development substitutes.
 They do not establish original-app visual fidelity.
 
-The current local comparison build uses 51 reviewed private inputs via neutral resource
-keys. Nothing is bulk-copied or committed. Evidence HC-ASSETS records the APK
-baseline, exact sources, transformations and SHA-256 for every input/output in
-`local/evidence/home-completion/prepared-asset-manifest.json`.
+The Home build used 51 reviewed private inputs (HC-ASSETS). The current FR-02
+build uses 64 via neutral resource keys (AI-ASSETS), with the full manifest at
+`local/evidence/accounts-inspection/prepared-asset-manifest.json`. It records
+the APK baseline, exact sources, transformations and SHA-256 for every input/output.
+Nothing is bulk-copied or committed.
 
 ```bash
-python local/evidence/home-completion/prepare_assets.py
-printf 'replicaPrivateResources=%s/local/evidence/home-completion/resources\n' "$PWD" \
-  > "$GRADLE_USER_HOME/gradle.properties"
+python local/evidence/accounts-inspection/prepare_assets.py
+python - <<'PYSETUP'
+import os
+from pathlib import Path
+settings = Path(os.environ["GRADLE_USER_HOME"]) / "gradle.properties"
+previous = settings.read_text().splitlines() if settings.exists() else []
+kept = [line for line in previous if not line.startswith("replicaPrivateResources=")]
+kept.append(f"replicaPrivateResources={Path.cwd()}/local/evidence/accounts-inspection/resources")
+settings.write_text("\n".join(kept) + "\n")
+PYSETUP
 ```
 
 This private preparation script/mapping is a required local comparison-build
@@ -197,3 +205,63 @@ services, recent history, unavailable notices and editor states to the private
 batch evidence folder. Use current UI-tree coordinates for taps. Keep PID-scoped
 logs and crash evidence. Forwarding the optional local viewer on port 6080 does
 not affect app state, emulator profile or guest networking.
+
+
+## FR-02 accounts, statement and legacy review entries
+
+Open **ورود به خانه → حساب** for the embedded account tab. **لیست و تغییر حساب**
+opens the separate picker; **مدیریت حساب** opens management, then
+**فراخوانی حساب های جدید** opens the local candidate fixture. Apply affects
+only local visibility; Cancel/Back discards the draft. No banking account is
+created, changed or activated. **صورتحساب** opens recovered bank-statement
+list `S-016`; tapping a line opens `S-014`. Use the Persian date inputs/calendar,
+apply, scroll and show-more/refresh to inspect the finite local fixture.
+
+The demo entry separately offers **سوابق قدیمی** (`S-091` → `S-090`) and
+**درخواست صورتحساب** (`S-086`). These explicit review entries are Designed for
+mock; they do not claim current Home routes. Home history remains unavailable
+because its actual hub is outside this batch. Export requests, downloads,
+receipts, authenticated mutations and external sharing remain honest notices.
+Scenario chips on the demo entry select populated/empty/loading/error fixture
+states; they stay outside replicated content.
+
+FR-02 assets are prepared with the command above. AI-ASSETS verifies the prior
+51 resources and 13 newly reviewed inputs, including the export-file control;
+`local/evidence/accounts-inspection/prepared-asset-manifest.json` records all
+64 source/output hashes. Public builds need none of these files and disclose
+substitutes. Run the full Android command from the environment section; server
+device tests cover accounts, date validation, statement/history list/detail,
+selection, draft cancellation, unavailable controls and Home state retention.
+The [FR-02 report](../reports/accounts-inspection.md) and
+[requirements](../reports/accounts-requirements.md) separate behavior from
+unscored visual fidelity.
+
+## Desktop viewer and stopping the simulation
+
+The optional viewer is loopback-only. In VS Code Remote SSH, forward **6080**
+privately, then open `http://127.0.0.1:6080/vnc.html?autoconnect=1&resize=scale&path=websockify`
+(using the local port VS Code assigns). The private operational README is
+`local/toolchain/replica-viewer/README.md`; the password stays in
+`local/scratch/replica-viewer/password.txt`.
+
+From the SSH terminal, start/stop the already-installed viewer with:
+
+```bash
+local/toolchain/replica-viewer/start.sh
+local/toolchain/replica-viewer/stop.sh
+```
+
+Stopping the viewer leaves the emulator running. To stop only the replica, or
+then shut down this project's emulator when finished reviewing:
+
+```bash
+source android/env.sh
+adb -s emulator-5554 shell am force-stop org.ragbot.replica
+adb -s emulator-5554 emu kill
+```
+
+To restart the emulator, use the pinned profile's boot command with both
+`restrict=on` flags in [emulator profile §5](emulator-profile.md#5-commands),
+then install/launch with the commands above and start the viewer. There is no
+permanent service or public ADB listener. Do not use these commands against any
+other device, original banking app or shared infrastructure.

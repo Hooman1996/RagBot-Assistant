@@ -11,10 +11,24 @@ class HomeNavigationTest {
         val ids =
             Regex("\"id\"\\s*:\\s*\"([^\"]+)\"").findAll(graph).map { it.groupValues[1] }.toSet()
         val navigation = HomeNavigation()
-        assertEquals(setOf("S-026", "F-066"), HomeDestinations.implemented)
+        assertEquals(
+            setOf(
+                "S-026",
+                "F-066",
+                "S-063",
+                "S-067",
+                "S-085",
+                "S-086",
+                "S-090",
+                "S-091",
+                "S-014",
+                "S-016",
+            ),
+            HomeDestinations.implemented,
+        )
         assertTrue(ids.containsAll(HomeDestinations.implemented))
         HomeDestinations.implemented.forEach { assertTrue(navigation.navigate(it)) }
-        listOf("S-085", "S-125", "unknown", "submit", "authorize").forEach {
+        listOf("S-125", "unknown", "submit", "authorize").forEach {
             assertFalse(navigation.navigate(it))
             assertEquals("S-026", navigation.destination)
         }
