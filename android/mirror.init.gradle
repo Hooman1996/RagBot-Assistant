@@ -1,0 +1,14 @@
+// Opt-in server bootstrap only. Public builds and CI use the official repositories.
+settingsEvaluated { settings ->
+    def cacheUrl = System.getenv('REPLICA_MAVEN_CACHE') ?: 'http://127.0.0.1:8766'
+    settings.pluginManagement.repositories.clear()
+    settings.pluginManagement.repositories.maven {
+        url = uri(cacheUrl)
+        allowInsecureProtocol = cacheUrl == 'http://127.0.0.1:8766'
+    }
+    settings.dependencyResolutionManagement.repositories.clear()
+    settings.dependencyResolutionManagement.repositories.maven {
+        url = uri(cacheUrl)
+        allowInsecureProtocol = cacheUrl == 'http://127.0.0.1:8766'
+    }
+}
