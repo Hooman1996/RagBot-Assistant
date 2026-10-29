@@ -16,6 +16,8 @@ enum class HomeControl(val title: String) {
     SEARCH("جستجو"),
     SHORTCUTS("نشان‌شده‌ها"),
     LOGOUT("خروج"),
+    NOTIFICATIONS("اعلان‌ها"),
+    SUPPORT("پیام پشتیبانی"),
     BALANCE("مشاهده موجودی"),
     INCREASE("افزایش موجودی"),
     ACCOUNT_MANAGEMENT("مدیریت حساب"),

@@ -1,6 +1,6 @@
-# Android replica development — first Home batch
+# Android replica development — Home
 
-Issue #40, D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation) and #42 (populated Home), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -132,14 +132,14 @@ Public builds show an explicit font/icon fidelity notice before Home. Their
 system font and text-symbol icons are functional development substitutes.
 They do not establish original-app visual fidelity.
 
-The local comparison build uses 18 reviewed private assets via neutral resource
-keys. Nothing is bulk-copied or committed. Evidence RF-ASSETS records the APK
+The current local comparison build uses 51 reviewed private inputs via neutral resource
+keys. Nothing is bulk-copied or committed. Evidence HC-ASSETS records the APK
 baseline, exact sources, transformations and SHA-256 for every input/output in
-`local/evidence/replica-foundation/prepared-asset-manifest.json`.
+`local/evidence/home-completion/prepared-asset-manifest.json`.
 
 ```bash
-python local/evidence/replica-foundation/prepare_assets.py
-printf 'replicaPrivateResources=%s/local/evidence/replica-foundation/resources\n' "$PWD" \
+python local/evidence/home-completion/prepare_assets.py
+printf 'replicaPrivateResources=%s/local/evidence/home-completion/resources\n' "$PWD" \
   > "$GRADLE_USER_HOME/gradle.properties"
 ```
 
@@ -163,3 +163,37 @@ the hierarchy, not from screenshots. Keep logs scoped to the replica PID and
 check its crash records. Device tests run on this server; CI runs build, unit
 tests and lint. Original-app fidelity remains unscored until the owner compares
 matching states; our own screenshots are not goldens proving equivalence.
+
+## Populated Home and the next batches
+
+Issue #42 completes the configured Home from the two owner references. On demo
+entry, all account/history values are explicitly synthetic. Tap **ورود به خانه**,
+scroll the white content panel, and use **ویرایش چیدمان** to open the recovered
+service-order editor. Drag services, then **اعمال تغییرات**; **انصراف** or Back
+leaves the current order unchanged. Accessibility move-before/move-after actions
+are an explicitly designed preview alternative. Applied order is local saved UI
+state, not a banking save. Fixed and quick groups are unaffected. Unimplemented
+controls show a notice while retaining Home state and scroll position.
+
+The banner has one evidenced slide only. The private illustration is extracted
+from the owner's visual reference; its original server asset is not recovered.
+The rest of the banner, its text and indicators are Compose. Public fallback
+builds disclose substituted fonts/icons/banner/heading on the demo entry.
+The 51-input private preparation manifest pins every source/output hash and the
+reference-art crop. Keep that manifest/script/resources local; never commit them.
+
+Home acceptance adds menu membership/group/RTL ordering, lower-service/history
+reachability above the bottom bar, real drag Apply/Cancel, editor tile notices,
+scroll/header restoration and recreation. The Home requirements are in
+[the batch matrix](../reports/home-requirements.md); results and fidelity limits
+are in [Home completion](../reports/home-completion.md).
+The only remaining frontend tracker is
+[frontend replication steps](../plan/frontend-replication-steps.md). These are
+proposals; neither opening Home nor this runbook approves their implementation.
+
+After device tests (which may uninstall the tested package), explicitly install
+the comparison APK and launch it using the commands above. Capture top, lower
+services, recent history, unavailable notices and editor states to the private
+batch evidence folder. Use current UI-tree coordinates for taps. Keep PID-scoped
+logs and crash evidence. Forwarding the optional local viewer on port 6080 does
+not affect app state, emulator profile or guest networking.
