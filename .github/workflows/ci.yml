@@ -31,10 +31,14 @@ jobs:
     env:
       GRADLE_USER_HOME: ${{ github.workspace }}/local/toolchain/gradle-home
       TMPDIR: ${{ github.workspace }}/local/scratch/android-ci
+      ANDROID_HOME: ${{ github.workspace }}/local/toolchain/android-sdk
+      ANDROID_SDK_ROOT: ${{ github.workspace }}/local/toolchain/android-sdk
+      ANDROID_USER_HOME: ${{ github.workspace }}/local/toolchain/android-user
+      JAVA_TOOL_OPTIONS: -Djava.io.tmpdir=${{ github.workspace }}/local/scratch/android-ci
     steps:
       - uses: actions/checkout@v4
-      - name: Project-local temporary directory
-        run: mkdir -p "$TMPDIR"
+      - name: Project-local build directories
+        run: mkdir -p "$TMPDIR" "$ANDROID_HOME" "$ANDROID_USER_HOME"
       - uses: actions/setup-java@v4
         with:
           distribution: temurin

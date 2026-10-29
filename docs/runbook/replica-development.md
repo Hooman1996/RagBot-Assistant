@@ -51,6 +51,8 @@ record also identifies the tested tree, and final installation uses merged sourc
 Android debug alias/password; never a release signing key). CI creates its own
 ephemeral key at that same project-local path. It never changes `HOME` or `CODEX_HOME`.
 Build outputs stay in ignored `android/**/build/`. No global install is needed.
+CI also installs its SDK and keeps its Gradle/Android user caches and temporary
+files under the checkout's `local/`, using its pre-provided JDK through setup-java.
 
 If the existing emulator is stopped, use section 5 of the emulator profile with
 both `restrict=on` options. Keep its existing AVD path; do not recreate it or
