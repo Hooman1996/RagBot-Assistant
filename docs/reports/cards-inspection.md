@@ -57,4 +57,4 @@ Rendered review on emulator-5554 covers: the debit tab (hidden, shown, zero, mis
 
 Open **RagBot Replica → ورود به خانه → کارت**. Use the group chips and swipe cards; tap **مشاهده موجودی** on a debit card; open the action rows. The demo entry's **مدیریت کارت**, **نمایش کارت** and **موجودی بدون ورود** buttons open the review entries.
 
-Only FR-03 is implemented. [FR-04, card lifecycle and wallet-linked card journeys](../plan/frontend-replication-steps.md#fr-04--card-lifecycle-and-wallet-linked-card-journeys) is the recommended next approval. It remains proposed.
+This report records FR-03 as delivered. The owner later split FR-04; [FR-04a card operation requests](card-requests-inspection.md) now opens the card-request rows that FR-03 showed as unavailable. Blocking and PIN rows remain unavailable.

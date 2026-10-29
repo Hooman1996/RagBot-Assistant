@@ -1,5 +1,6 @@
 package org.ragbot.replica
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -130,22 +131,13 @@ class CardsTest {
     @Test
     fun cardMutationsAndSecureInquiriesStayUnavailableOnTheCurrentPage() {
         enterCards()
-        listOf("issue" to "درخواست کارت", "block" to "مسدودسازی", "pin" to "رمز کارت").forEach {
-            (key, title) ->
-            compose.onNodeWithTag("card-action-$key").performClick()
+        listOf("block" to "مسدودسازی", "pin" to "رمز کارت").forEach { (key, title) ->
+            compose.onNodeWithTag("card-action-$key").performScrollTo().performClick()
             unavailable(title)
             compose.onNodeWithTag("card-tab").assertIsDisplayed()
         }
-        compose.onNodeWithTag("card-action-list").performClick()
-        compose.onNodeWithTag("S-125").assertIsDisplayed()
-        compose.onNodeWithTag("row-card-1").assertHasNoClickAction()
-        compose.onNodeWithText("۳٬۷۵۰٬۰۰۰ ریال").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("card-search").performTextReplacement("0002")
-        compose.onNodeWithTag("row-card-1").assertDoesNotExist()
-        compose.onNodeWithTag("row-card-3").assertDoesNotExist()
-        back()
-        compose.onNodeWithTag("card-kind-BON").performClick()
-        compose.onNodeWithTag("card-action-bon").performClick()
+        compose.onNodeWithTag("card-kind-BON").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("card-action-bon").performScrollTo().performClick()
         compose.onNodeWithTag("S-119").assertIsDisplayed()
         compose.onNodeWithTag("secure-ok").performClick()
         compose.onNodeWithText("وارد کردن CVV2 الزامی است.").assertIsDisplayed()
@@ -157,8 +149,17 @@ class CardsTest {
         compose.onNodeWithText("ریال", substring = true).assertDoesNotExist()
         compose.onNodeWithTag("card-kind-GIFT").assertDoesNotExist()
         back()
-        compose.onNodeWithTag("card-kind-GIFT").performClick()
+        compose.onNodeWithTag("card-kind-GIFT").performSemanticsAction(SemanticsActions.OnClick)
         compose.onNodeWithTag("card-empty").assertIsDisplayed()
+        // The legacy list search runs last because its soft keyboard stays open.
+        compose.onNodeWithTag("card-kind-DEBIT").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("card-action-list").performScrollTo().performClick()
+        compose.onNodeWithTag("S-125").assertIsDisplayed()
+        compose.onNodeWithTag("row-card-1").assertHasNoClickAction()
+        compose.onNodeWithText("۳٬۷۵۰٬۰۰۰ ریال").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("card-search").performTextReplacement("0002")
+        compose.onNodeWithTag("row-card-1").assertDoesNotExist()
+        compose.onNodeWithTag("row-card-3").assertDoesNotExist()
     }
 
     @Test
