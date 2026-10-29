@@ -134,16 +134,11 @@ Repository checks after implementation: 131 passed; pytest: 112 passed; Ruff
 lint and format checks passed. Only this batch is complete; visual fidelity and
 the rest of Stage 1 are pending.
 
-## Owner comparison and next proposed batch
+## Subsequent Home work
 
-Compare the private Home screenshot against the real app on equivalent state:
-toolbar visibility, account header/empty state, fonts, bottom-bar spacing,
-system insets, menu sections and recent-history empty state. Supply reviewed
-references for authenticated menu configuration and expandable account details
-before those portions can pass fidelity review. Original-app material stays
-private; this environment must not obtain credentials or run the original.
-
-Next proposed batch: refine Home against those owner references, then reconstruct
-the account-tab frame and its verified empty/selection states. First establish
-its graph identity and data requirements; do not assume a legacy account-list
-activity is the tab. That batch needs its own approved issue. It has not started.
+This report records the initial empty-frame foundation. The later populated
+Home work is recorded in [Home completion](home-completion.md). Its requirements
+are in [Home requirements](home-requirements.md). The single canonical ordered
+tracker is [frontend replication steps](../plan/frontend-replication-steps.md);
+use that list for future proposals. This historical report does not maintain a
+second next-batch list.

@@ -25,7 +25,7 @@ class HomeNavigationTest {
         val navigation = HomeNavigation()
         assertNull(navigation.unavailable(HomeControl.HOME))
         HomeControl.entries
-            .filter { it != HomeControl.HOME }
+            .filter { it != HomeControl.HOME && it != HomeControl.BALANCE }
             .forEach {
                 assertTrue(navigation.unavailable(it)!!.contains(it.title))
                 assertTrue(navigation.unavailable(it)!!.contains("در خانه می‌مانید"))

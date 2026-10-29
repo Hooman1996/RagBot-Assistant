@@ -21,6 +21,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -50,6 +51,11 @@ class MainActivity : ComponentActivity() {
 fun ReplicaApp() {
     var entered by rememberSaveable { mutableStateOf(false) }
     var expanded by rememberSaveable { mutableStateOf(false) }
+    var balanceVisible by rememberSaveable { mutableStateOf(false) }
+    var editing by rememberSaveable { mutableStateOf(false) }
+    var serviceOrder by rememberSaveable {
+        mutableStateOf<List<String>>(HomeFixture.services.map { it.key })
+    }
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
     val navigation = remember { HomeNavigation() }
     val activity = checkNotNull(LocalActivity.current)
@@ -67,6 +73,7 @@ fun ReplicaApp() {
                 BackHandler(entered || notice != null) {
                     when {
                         notice != null -> notice = null
+                        editing -> editing = false
                         expanded -> expanded = false
                         else -> entered = false
                     }
@@ -78,10 +85,10 @@ fun ReplicaApp() {
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         Text("نسخه نمایشی", fontSize = 24.sp)
-                        Text("داده‌ها محلی و خالی هستند. ورود بانکی لازم نیست.")
+                        Text("داده‌ها ساختگی و محلی هستند. ورود بانکی لازم نیست.")
                         Text(
                             if (BuildConfig.PRIVATE_RESOURCES) "دارایی‌های خصوصی محلی"
-                            else "قلم و نمادهای عمومی؛ تطابق ظاهری تأیید نشده است."
+                            else "قلم، نمادها، بنر و عنوان عمومی؛ تطابق ظاهری تأیید نشده است."
                         )
                         Text("ساخت: ${BuildConfig.SOURCE_REVISION}", Modifier.testTag("source"))
                         Button(
@@ -92,8 +99,32 @@ fun ReplicaApp() {
                         }
                     }
                 } else {
-                    HomeFrame(expanded, medium, { expanded = !expanded }) { control ->
-                        notice = navigation.unavailable(control)
+                    HomeFrame(
+                        expanded,
+                        balanceVisible,
+                        serviceOrder,
+                        medium,
+                        { expanded = !expanded },
+                        { editing = true },
+                        { title ->
+                            notice = "$title در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
+                        },
+                    ) { control ->
+                        if (control == HomeControl.BALANCE) balanceVisible = !balanceVisible
+                        else notice = navigation.unavailable(control)
+                    }
+                    if (editing) {
+                        HomeMenuEditor(
+                            serviceOrder,
+                            {
+                                serviceOrder = it.toList()
+                                editing = false
+                            },
+                            { editing = false },
+                            { title ->
+                                notice = "$title در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
+                            },
+                        )
                     }
                 }
                 notice?.let { message ->
@@ -114,8 +145,12 @@ fun ReplicaApp() {
 @Composable
 private fun HomeFrame(
     expanded: Boolean,
+    balanceVisible: Boolean,
+    serviceOrder: List<String>,
     medium: FontFamily,
     toggleHeader: () -> Unit,
+    onEdit: () -> Unit,
+    onUnavailable: (String) -> Unit,
     onControl: (HomeControl) -> Unit,
 ) {
     Box(
@@ -129,7 +164,7 @@ private fun HomeFrame(
             )
     ) {
         if (BuildConfig.PRIVATE_RESOURCES) {
-            Row(Modifier.fillMaxWidth().alpha(.6f)) {
+            Row(Modifier.fillMaxWidth().statusBarsPadding().alpha(.6f)) {
                 PrivatePattern("replica_pattern_start")
                 Spacer(Modifier.weight(1f))
                 PrivatePattern("replica_pattern_end")
@@ -164,23 +199,33 @@ private fun HomeFrame(
                         }
                     }
                 }
+                ControlIcon(
+                    HomeControl.NOTIFICATIONS,
+                    "replica_notification",
+                    onControl,
+                    Color.White,
+                )
                 Spacer(Modifier.weight(1f))
                 ControlIcon(HomeControl.SHORTCUTS, "replica_bookmark", onControl, Color.White)
                 ControlIcon(HomeControl.SEARCH, "replica_search", onControl, Color.White)
+                ControlIcon(HomeControl.SUPPORT, "replica_message", onControl, Color.White)
                 ControlIcon(HomeControl.LOGOUT, "replica_logout", onControl, Color.White)
                 Spacer(Modifier.width(4.dp))
             }
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(
-                    Modifier.clickable(role = Role.Button) { onControl(HomeControl.BALANCE) }
+                    Modifier.testTag("balance")
+                        .clickable(role = Role.Button) { onControl(HomeControl.BALANCE) }
                         .padding(horizontal = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    ReplicaIcon("replica_eye", "◉", Modifier.size(24.dp), Color.White)
+                    ReplicaIcon("replica_eye", "◉", Modifier.size(24.dp), HomeGreen)
                     Spacer(Modifier.width(4.dp))
                     Text(
-                        HomeControl.BALANCE.title,
-                        color = Color.White,
+                        if (balanceVisible)
+                            "${persianNumber(HomeFixture.balanceRial)} ریال · عدم نمایش"
+                        else HomeControl.BALANCE.title,
+                        color = HomeGreen,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         fontFamily = replicaFont("replica_bold"),
@@ -191,27 +236,37 @@ private fun HomeFrame(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("شماره حساب —", color = Color.White, fontSize = 14.sp)
                     Row(
                         Modifier.clickable(role = Role.Button) { onControl(HomeControl.INCREASE) },
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        ReplicaIcon("replica_add", "⊕", Modifier.size(24.dp), Color.White)
+                        ReplicaIcon("replica_add", "⊕", Modifier.size(24.dp), HomeGreen)
                         Spacer(Modifier.width(2.dp))
-                        Text("افزایش موجودی", color = Color.White, fontSize = 14.sp)
+                        Text("افزایش موجودی", color = HomeGreen, fontSize = 14.sp)
                     }
+                    Text(
+                        "شماره حساب ${HomeFixture.accountNumber}",
+                        Modifier.testTag("account-number"),
+                        color = Color.White,
+                        fontSize = 14.sp,
+                    )
                 }
                 if (expanded) {
                     Column(
                         Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 24.dp)
                     ) {
-                        listOf("صاحب حساب", "نوع حساب", "شماره شبا").forEach {
-                            Text(
-                                "$it: —",
-                                color = Color.White,
-                                modifier = Modifier.padding(vertical = 6.dp),
+                        listOf(
+                                "صاحب حساب: ${HomeFixture.accountOwner}",
+                                "نوع حساب: ${HomeFixture.accountType}",
+                                "شماره شبا: ${HomeFixture.accountIban}",
                             )
-                        }
+                            .forEach {
+                                Text(
+                                    it,
+                                    color = Color.White,
+                                    modifier = Modifier.padding(vertical = 6.dp),
+                                )
+                            }
                         Row(
                             Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically,
@@ -248,21 +303,18 @@ private fun HomeFrame(
             Column(
                 Modifier.weight(1f)
                     .fillMaxWidth()
-                    .background(
-                        Color(0xFFFBFBFB),
-                        RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-                    )
+                    .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                    .background(Color(0xFFFBFBFB))
                     .verticalScroll(rememberScrollState())
+                    .testTag("home-scroll")
                     .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 40.dp)
             ) {
-                // No server menu records are known. Empty hub has no invented tiles or edges.
-                Box(
-                    Modifier.fillMaxWidth().height(1.dp).testTag(HomeDestinations.MENU).semantics {
-                        contentDescription = "خدمات؛ فهرست پیش‌نمایش خالی است"
-                    }
+                HomeContent(
+                    serviceOrder.map { key -> HomeFixture.services.first { it.key == key } },
+                    { onUnavailable(it.title) },
+                    onEdit,
+                    { onUnavailable("جزئیات تراکنش") },
                 )
-                Spacer(Modifier.height(24.dp))
-                Text("آخرین تراکنش‌ها", fontFamily = medium, fontSize = 16.sp)
             }
             Surface(
                 modifier =
@@ -347,7 +399,9 @@ private fun ControlIcon(
         when (control) {
             HomeControl.SHORTCUTS -> 28.dp
             HomeControl.SEARCH,
+            HomeControl.NOTIFICATIONS,
             HomeControl.LOGOUT -> 32.dp
+            HomeControl.SUPPORT -> 28.dp
             HomeControl.SHARE -> 20.dp
             else -> 24.dp
         }
@@ -358,22 +412,31 @@ private fun ControlIcon(
                 contentDescription = control.title
             },
     ) {
-        ReplicaIcon(
-            icon,
-            when (control) {
-                HomeControl.SEARCH -> "⌕"
-                HomeControl.SHORTCUTS -> "☆"
-                HomeControl.LOGOUT -> "↪"
-                else -> "○"
-            },
-            Modifier.size(iconSize),
-            tint,
-        )
+        Box {
+            ReplicaIcon(
+                icon,
+                when (control) {
+                    HomeControl.SEARCH -> "⌕"
+                    HomeControl.SHORTCUTS -> "☆"
+                    HomeControl.LOGOUT -> "↪"
+                    else -> "○"
+                },
+                Modifier.size(iconSize),
+                tint,
+            )
+            if (control == HomeControl.NOTIFICATIONS) {
+                Box(
+                    Modifier.align(Alignment.TopEnd)
+                        .size(8.dp)
+                        .background(Color(0xFFFF8A17), CircleShape)
+                )
+            }
+        }
     }
 }
 
 @Composable
-private fun ReplicaIcon(key: String, fallback: String, modifier: Modifier, tint: Color) {
+internal fun ReplicaIcon(key: String, fallback: String, modifier: Modifier, tint: Color) {
     val context = LocalContext.current
     val id =
         if (BuildConfig.PRIVATE_RESOURCES)
@@ -400,14 +463,28 @@ private fun PrivatePattern(key: String) {
     val context = LocalContext.current
     val id = context.resources.getIdentifier(key, "drawable", context.packageName)
     check(id != 0) { "Missing private pattern: $key" }
-    Image(painterResource(id), contentDescription = null)
+    Image(
+        painterResource(id),
+        contentDescription = null,
+        modifier = Modifier.size(if (key == "replica_pattern_start") 215.dp else 105.dp, 254.dp),
+    )
 }
 
 @Composable
-private fun replicaFont(key: String): FontFamily {
+internal fun replicaFont(key: String): FontFamily {
     val context = LocalContext.current
     if (!BuildConfig.PRIVATE_RESOURCES) return FontFamily.SansSerif
     val id = context.resources.getIdentifier(key, "font", context.packageName)
     check(id != 0) { "Missing private font: $key" }
     return remember(id) { FontFamily(Font(id)) }
+}
+
+@Composable
+internal fun replicaRecentHeading(): String {
+    if (!BuildConfig.PRIVATE_RESOURCES) return "آخرین تراکنش‌ها"
+    val context = LocalContext.current
+    val id =
+        context.resources.getIdentifier("replica_recent_heading", "string", context.packageName)
+    check(id != 0) { "Missing private recent-history title" }
+    return context.getString(id)
 }
