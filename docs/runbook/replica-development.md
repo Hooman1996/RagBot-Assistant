@@ -1,6 +1,6 @@
 # Android replica development — Home, accounts and cards
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards) #48 (FR-04a card requests) and #50 (FR-04b card blocking/PIN), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards) #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN) and #52 (FR-04c wallet cards), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -276,6 +276,14 @@ is the fixed local code `12345`; every valid confirm ends in a labelled
 Designed-for-mock result and nothing is changed. PIN, OTP, CVV2 and second
 password values are never kept in saved state. See the
 [FR-04b report](../reports/card-security-inspection.md).
+
+## FR-04c wallet-linked cards
+
+The card tab's **کیف کارت** group shows the wallet card with its own balance.
+**اولین کیف کارت** opens send type `S-140` → address `S-137` → confirm `S-139`
+(hosted by container `S-138`) and ends in a labelled result; **دریافت و تغییر
+رمز** opens wallet PIN `S-141` (OTP `12345`). See the
+[FR-04c report](../reports/wallet-card-inspection.md).
 
 ## Desktop viewer and stopping the simulation
 

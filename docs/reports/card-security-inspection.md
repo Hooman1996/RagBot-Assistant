@@ -49,4 +49,4 @@ During this batch a second assistant session also began working in the same chec
 
 Open **RagBot Replica → ورود به خانه → کارت** and use **مسدودسازی کارت**, **رمز کارت** or **فعال‌سازی رمز پویا**. The demo page's **مسدودی بدون ورود** buttons open the pre-login forms. The OTP code is `12345`.
 
-Only FR-04b is implemented. [FR-04c, wallet-linked card journeys](../plan/frontend-replication-steps.md#fr-04c--wallet-linked-card-journeys) is the recommended next approval. It remains proposed.
+This report records FR-04b as delivered. FR-04c, [wallet-linked card journeys](wallet-card-inspection.md), followed in #52.

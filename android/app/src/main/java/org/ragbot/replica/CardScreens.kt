@@ -238,7 +238,7 @@ private fun CardFace(
             CardNumber(card.number, Color.White, 20)
             Spacer(Modifier.height(4.dp))
             Text(card.owner, color = Color.White, fontSize = 14.sp)
-            if (card.kind == CardKind.DEBIT) {
+            if (card.kind == CardKind.DEBIT || card.kind == CardKind.WALLET) {
                 Spacer(Modifier.height(8.dp))
                 CardBalance(card, shown, onBalance, onUnavailable)
             }
