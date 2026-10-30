@@ -388,7 +388,7 @@ internal fun InfoRow(
 }
 
 @Composable
-private fun CardChooser(cards: List<PreviewCard>, selected: String, onSelect: (String) -> Unit) {
+internal fun CardChooser(cards: List<PreviewCard>, selected: String, onSelect: (String) -> Unit) {
     cards.forEach { card ->
         Surface(
             Modifier.fillMaxWidth().testTag("pick-${card.key}").selectable(

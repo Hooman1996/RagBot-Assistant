@@ -50,6 +50,5 @@ class CardFixtureTest {
             assertTrue(it.destination == null || it.destination in implemented)
         }
         assertEquals(CardKind.entries.toSet(), CardFixture.actions.keys)
-        assertTrue(CardFixture.actions.values.flatten().any { it.destination == null })
     }
 }

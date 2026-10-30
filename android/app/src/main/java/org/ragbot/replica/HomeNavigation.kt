@@ -8,7 +8,8 @@ object HomeDestinations {
         setOf(HOME, MENU) +
             AccountDestinations.implemented +
             CardDestinations.implemented +
-            CardRequestDestinations.implemented
+            CardRequestDestinations.implemented +
+            CardSecurityDestinations.implemented
 }
 
 enum class HomeControl(val title: String) {

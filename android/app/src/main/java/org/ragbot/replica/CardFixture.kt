@@ -167,20 +167,25 @@ object CardFixture {
                     CardAction("extend", "تمدید کارت", CardRequestDestinations.MODIFY),
                     CardAction("replicate", "المثنی کارت", CardRequestDestinations.MODIFY),
                     CardAction("recolor", "تغییر رنگ کارت", CardRequestDestinations.MODIFY),
-                    CardAction("block", "مسدودسازی کارت", null),
-                    CardAction("pin", "رمز کارت", null),
+                    CardAction("block", "مسدودسازی کارت", CardSecurityDestinations.BLOCK),
+                    CardAction("pin", "رمز کارت", CardSecurityDestinations.PIN),
+                    CardAction(
+                        "activation",
+                        "فعال‌سازی رمز پویا",
+                        CardSecurityDestinations.ACTIVATION,
+                    ),
                 ),
             CardKind.CREDIT to
                 listOf(
                     CardAction("credit", "جزئیات و بازپرداخت", CardDestinations.CREDIT),
                     CardAction("loan", "خلاصه پرونده تسهیلات", CardDestinations.FILE_LOAN),
                     CardAction("history", "سوابق کارت اعتباری", AccountDestinations.HISTORY),
-                    CardAction("block", "مسدودسازی کارت", null),
+                    CardAction("block", "مسدودسازی کارت", CardSecurityDestinations.BLOCK),
                 ),
             CardKind.BON to
                 listOf(
                     CardAction("bon", "موجودی بن کارت", CardDestinations.BON_BALANCE),
-                    CardAction("block", "مسدودسازی کارت", null),
+                    CardAction("block", "مسدودسازی کارت", CardSecurityDestinations.BLOCK),
                 ),
             CardKind.GIFT to listOf(CardAction("info", "اطلاعات کارت", CardDestinations.INFO)),
         )

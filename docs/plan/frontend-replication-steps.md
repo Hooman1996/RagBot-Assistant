@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48 and FR-04a is done; FR-04b, FR-04c and FR-05–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48) and FR-04b (#50) are done; FR-04c and FR-05–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -83,17 +83,17 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-04b — Card blocking, PIN and second-password activation
 
-**Status:** proposed (split from FR-04 with owner approval in #48). **Families:** F-033. **Existing nodes:** S-118, S-121–S-122, S-135–S-136 (5 primary allocations). **Dependencies:** FR-04a.
+**Status:** done (#50; 14 JVM / 28 server device tests, build/lint and rendered review). **Families:** F-033. **Existing nodes:** S-118, S-121–S-122, S-135–S-136 (5 primary allocations). **Dependencies:** FR-04a.
 
-**What opens afterward:** Inspect block and PIN/second-password activation forms through locally simulated review/result states.
+**What opens afterward:** From the card tab, block a card of the current group, assign or change a first or second PIN, or activate the dynamic second PIN; review entries open the two pre-login block forms. Every valid confirm ends in a labelled local result.
 
-**Frontend scope:** Reuse the FR-04a form/result pattern for blocking (authenticated and anonymous variants) and PIN or second-password activation.
+**Frontend scope:** Signed-in block list with the recovered warning (S-121, no OTP); PIN sections with confirm and OTP (S-135); activation with OTP (S-136); pre-login block forms (S-118 legacy, S-122 flag-gated v2). One shared OTP and result pattern.
 
-**Evidence / specific gaps:** Anonymous/block authentication variants, OTP steps and card-type gates require caller traces. PIN/OTP results are local simulation, not security activation.
+**Evidence / specific gaps:** CS-ROUTES traces the tab and pre-login routes; CS-PAGES the warning, PIN rules and OTP sheet. The OTP is a fixed local code and the dynamic-PIN SMS request is unavailable. Exact pre-login field rules, OTP timers and failure texts are not recovered.
 
-**Requirements output:** Per-operation inputs, OTP state, authorization boundary and synthetic result provenance.
+**Requirements output:** [Requirements matrix](../reports/card-security-requirements.md); [acceptance and fidelity limits](../reports/card-security-inspection.md).
 
-**Acceptance beyond the common contract:** Invalid fields, cancellation and interrupted OTP states work; no real secret, card write or network operation occurs. **Effort:** 2–3 days. **Evidence confidence:** medium-low.
+**Acceptance beyond the common contract:** Invalid fields, wrong and cancelled OTP, Back/recreation without restoring secrets, and labelled results that change nothing. **Effort:** 2–3 days. **Evidence confidence:** medium-high flows, medium pre-login rules.
 
 ### FR-04c — Wallet-linked card journeys
 
@@ -761,8 +761,8 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-Approve **FR-04b — Card blocking, PIN and second-password activation** next. It reuses the FR-04a request draft, confirm and labelled-result pattern. FR-04b remains proposed and does not start automatically.
+Approve **FR-04c — Wallet-linked card journeys** next. It completes the card family with the wallet card issue, send type, address and PIN content, reusing the FR-04a/FR-04b request, OTP and labelled-result patterns. FR-04c remains proposed and does not start automatically.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02, FR-03 and FR-04a acceptance and rendered review are recorded in their reports. FR-04b, FR-04c and FR-05–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02, FR-03, FR-04a and FR-04b acceptance and rendered review are recorded in their reports. FR-04c and FR-05–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
