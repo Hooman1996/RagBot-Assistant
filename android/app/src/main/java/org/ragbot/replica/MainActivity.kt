@@ -71,6 +71,10 @@ fun ReplicaApp() {
     var profileInfo by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     var savedAddresses by rememberSaveable { mutableStateOf(CardRequestFixture.addresses) }
     var profileToggles by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var readNotifications by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var deletedNotifications by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var selectedTicket by rememberSaveable { mutableStateOf(SupportFixture.firstTicket) }
+    var supportDrafts by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     var accountKey by rememberSaveable { mutableStateOf("account-1") }
     var visibleAccounts by rememberSaveable {
         mutableStateOf<List<String>>(listOf("account-1", "account-2"))
@@ -130,7 +134,10 @@ fun ReplicaApp() {
                 }
                 if (!entered) {
                     Column(
-                        Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp),
+                        Modifier.fillMaxSize()
+                            .safeDrawingPadding()
+                            .verticalScroll(rememberScrollState())
+                            .padding(24.dp),
                         verticalArrangement = Arrangement.Center,
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
@@ -143,7 +150,7 @@ fun ReplicaApp() {
                         Text("ساخت: ${BuildConfig.SOURCE_REVISION}", Modifier.testTag("source"))
                         PreviewScenarios(scenario) { scenario = it }
                         Text(
-                            "ورود مستقل برای بازبینی؛ مسیر اصلی هنوز بازیابی نشده",
+                            "ورود مستقل برای بازبینی؛ مسیر یا منوی ورودی در این نسخه تنظیم نشده",
                             fontSize = 11.sp,
                         )
                         Row {
@@ -171,14 +178,21 @@ fun ReplicaApp() {
                                 CardDestinations.ANONYMOUS_BALANCE to "موجودی بدون ورود",
                                 CardSecurityDestinations.LEGACY_BLOCK to "مسدودی بدون ورود",
                                 CardSecurityDestinations.ANONYMOUS_BLOCK to "مسدودی بدون ورود ۲",
+                                SupportDestinations.CHATBOT to "پرسش از چت‌بات",
+                                SupportDestinations.FAQ_NO_LOGIN to "پرسش‌های متداول بدون ورود",
+                                SupportDestinations.SUGGESTION to "پیشنهاد",
+                                SupportDestinations.TICKETS to "لیست تیکت‌ها",
+                                SupportDestinations.TICKET to "پیام جدید بدون تیکت",
                             )
-                            .chunked(3)
+                            .chunked(2)
                             .forEach { row ->
                                 Row {
                                     row.forEach { (id, title) ->
                                         TextButton(
                                             {
                                                 entered = true
+                                                if (id == SupportDestinations.TICKET)
+                                                    selectedTicket = ""
                                                 open(id)
                                             },
                                             Modifier.testTag("demo-$id"),
@@ -207,13 +221,21 @@ fun ReplicaApp() {
                                 { expanded = !expanded },
                                 { editing = true },
                                 { item ->
-                                    notice =
-                                        "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
+                                    if (item.key == "support") open(SupportDestinations.FAQ)
+                                    else
+                                        notice =
+                                            "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
                                 },
                                 { unavailable("جزئیات تراکنش خانه") },
                                 account,
                                 tab,
                                 homeScroll,
+                                if (scenario == "populated")
+                                    NotificationFixture.unreadCount(
+                                        readNotifications,
+                                        deletedNotifications,
+                                    )
+                                else 0,
                                 {
                                     if (tab == HomeControl.PROFILE)
                                         ProfileTab(
@@ -287,9 +309,36 @@ fun ReplicaApp() {
                                     HomeControl.PROFILE -> tab = control
                                     HomeControl.ACCOUNT_MANAGEMENT ->
                                         open(AccountDestinations.MANAGEMENT)
+                                    HomeControl.NOTIFICATIONS -> open("S-075")
+                                    HomeControl.SUPPORT -> open(SupportDestinations.FAQ)
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page == "S-075") {
+                            NotificationPage(
+                                scenario,
+                                readNotifications,
+                                deletedNotifications,
+                                { readNotifications = it },
+                                { deletedNotifications = it },
+                                ::goBack,
+                                { scenario = "populated" },
+                                ::unavailable,
+                                notice != null,
+                            )
+                        } else if (page in SupportDestinations.implemented) {
+                            SupportPage(
+                                page,
+                                scenario,
+                                selectedTicket,
+                                supportDrafts,
+                                { key, value -> supportDrafts = supportDrafts + (key to value) },
+                                { selectedTicket = it },
+                                ::open,
+                                ::goBack,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else if (page in WalletDestinations.implemented) {
                             WalletPage(
                                 page,
@@ -434,6 +483,7 @@ private fun HomeFrame(
     account: PreviewAccount?,
     tab: HomeControl,
     homeScroll: androidx.compose.foundation.ScrollState,
+    notificationCount: Int,
     tabContent: @Composable () -> Unit,
     onControl: (HomeControl) -> Unit,
 ) {
@@ -488,6 +538,7 @@ private fun HomeFrame(
                     "replica_notification",
                     onControl,
                     Color.White,
+                    notificationCount,
                 )
                 Spacer(Modifier.weight(1f))
                 ControlIcon(HomeControl.SHORTCUTS, "replica_bookmark", onControl, Color.White)
@@ -720,6 +771,7 @@ private fun ControlIcon(
     icon: String,
     onControl: (HomeControl) -> Unit,
     tint: Color,
+    unreadCount: Int = 0,
 ) {
     val iconSize =
         when (control) {
@@ -736,6 +788,8 @@ private fun ControlIcon(
         modifier =
             Modifier.size(48.dp).testTag("header-${control.name}").semantics {
                 contentDescription = control.title
+                if (control == HomeControl.NOTIFICATIONS)
+                    stateDescription = "$unreadCount اعلان خوانده‌نشده"
             },
     ) {
         Box {
@@ -750,9 +804,10 @@ private fun ControlIcon(
                 Modifier.size(iconSize),
                 tint,
             )
-            if (control == HomeControl.NOTIFICATIONS) {
+            if (control == HomeControl.NOTIFICATIONS && unreadCount > 0) {
                 Box(
                     Modifier.align(Alignment.TopEnd)
+                        .testTag("notification-marker")
                         .size(8.dp)
                         .background(Color(0xFFFF8A17), CircleShape)
                 )

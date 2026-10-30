@@ -1,6 +1,6 @@
-# Android replica development — Home, accounts and cards
+# Android replica development
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards) #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards) and #54 (FR-05 profile/settings), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings) and #56 (FR-06 notifications/support), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -133,21 +133,22 @@ system font and text-symbol icons are functional development substitutes.
 They do not establish original-app visual fidelity.
 
 The Home build used 51 reviewed private inputs (HC-ASSETS) and FR-02 64
-(AI-ASSETS). The current FR-03 build uses 76 via neutral resource keys
-(CI-ASSETS), with the full manifest at
-`local/evidence/cards-inspection/prepared-asset-manifest.json`. It records
+(AI-ASSETS), then FR-03 used 76 (CI-ASSETS). FR-06 reuses that verified chain
+and adds four recovered rating vectors: 80 neutral resource keys (NS-ASSETS).
+The current full manifest is
+`local/evidence/notifications-support/prepared-asset-manifest.json`. It records
 the APK baseline, exact sources, transformations and SHA-256 for every input/output.
 Nothing is bulk-copied or committed.
 
 ```bash
-python local/evidence/cards-inspection/prepare_assets.py
+python local/evidence/notifications-support/prepare_assets.py
 python - <<'PYSETUP'
 import os
 from pathlib import Path
 settings = Path(os.environ["GRADLE_USER_HOME"]) / "gradle.properties"
 previous = settings.read_text().splitlines() if settings.exists() else []
 kept = [line for line in previous if not line.startswith("replicaPrivateResources=")]
-kept.append(f"replicaPrivateResources={Path.cwd()}/local/evidence/cards-inspection/resources")
+kept.append(f"replicaPrivateResources={Path.cwd()}/local/evidence/notifications-support/resources")
 settings.write_text("\n".join(kept) + "\n")
 PYSETUP
 ```
@@ -297,6 +298,32 @@ additional information `S-064`, account management `S-063`, card management
 toggle changes stay in the app's saved UI state only. The card-request and
 wallet address steps now open add address `S-463`. See the
 [FR-05 report](../reports/profile-inspection.md).
+
+## FR-06 notifications and support
+
+From Home, the notification header button opens **اعلان‌ها** (`S-075`):
+type filters, item detail/copy, selection and read/delete controls affect only
+synthetic preview state. Deleting asks first; dismissing cancels. Both the
+support/message header button and **پشتیبانی** menu tile open authenticated
+FAQ (`S-077`) through independently recovered handlers. Expand each FAQ item
+to inspect its synthetic answer.
+
+The demo page's explicitly independent entries open chatbot question `S-076`,
+FAQ without login `S-078`, suggestion `S-079`, ticket list `S-080` and the
+no-ticket new-message variant of `S-082`. The ticket list opens the selected
+ticket in `S-082`; **پیام جدید بدون تیکت** instead opens an empty composer.
+In `S-078`, **ارسال/مشاهده پیام** uses a labelled local phone/OTP gate
+(code `12345`, never saved) before `S-081` with compose/history tabs.
+Suggestions show a local result; sending/editing/closing and chatbot answers
+show unavailable notices. No message, SMS or answer request leaves the app.
+
+Scenario controls remain on the demo page. The unanswered/answered/closed
+fixture tickets exercise editing, a long thread with continuation controls,
+and read-only closed state. No server support-menu snapshot, ticket delivery,
+attachment control, session-expiry service or real authentication is claimed.
+S-071 remains independent. See the [inspection](../reports/notifications-support-inspection.md)
+and [requirements](../reports/notifications-support-requirements.md). Stop after
+FR-06; FR-07 requires new owner approval.
 
 ## Desktop viewer and stopping the simulation
 

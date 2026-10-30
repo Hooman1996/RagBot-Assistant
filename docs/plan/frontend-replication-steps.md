@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -125,15 +125,15 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-06 — Notifications and support inbox
 
-**Status:** proposed. **Families:** F-025, F-026. **Existing nodes:** S-075–S-082 (8 primary allocations). **Dependencies:** FR-05.
+**Status:** done (issue #56; 21 JVM / 48 server device tests, build/lint and rendered QA passed). **Families:** F-025, F-026. **Existing nodes:** S-075–S-082 (8 primary allocations). **Dependencies:** FR-05.
 
 **What opens afterward:** Inspect notifications and FAQ, open a synthetic ticket/thread, and compose a local suggestion or reply.
 
 **Frontend scope:** Combine inbox/list/detail/delete sheets and support thread forms using deterministic unread/read/empty/error and local draft states; chatbot screen is a visual shell with unavailable answering.
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Notification types, unauthenticated ticket OTP and server-provided FAQ content require recovery. No RagBot answering integration belongs in this step.
+**Evidence / specific gaps:** NS-NOTIFICATIONS/NS-SUPPORT recover the three Home controls independently: notification → S-075, support header and generic support tile → S-077. FAQ expansion, suggestion rules, ticket/status/nullable-ticket variants and local OTP gate are implemented. Runtime menu children, server notification types/count rules, encrypted envelopes, session expiry and original-app fidelity remain Unknown. S-071 stays independent. No answering or delivery service is integrated.
 
-**Requirements output:** Unread counts, pagination, FAQ/ticket/reply fields and M-012/M-014/M-016–M-020/M-030/M-032/M-040/M-041/M-048/M-049/M-058 candidates with caller evidence.
+**Requirements output:** Unread counts, pagination, FAQ/ticket/reply fields and M-012/M-014/M-016–M-020/M-030/M-032/M-040/M-041/M-048/M-049/M-058 candidates assessed with caller evidence in the [inspection](../reports/notifications-support-inspection.md) and [requirements](../reports/notifications-support-requirements.md); M-020 receives a narrow evidence-supported field correction.
 
 **Acceptance beyond the common contract:** Read/delete/dismiss and draft restoration are tested locally; FAQ/login variants are distinguishable; no message is transmitted and no assistant is implemented. **Effort:** 3–5 days. **Evidence confidence:** medium.
 
@@ -761,8 +761,8 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-Approve **FR-06 — Notifications and support inbox** next. It builds the Home notification and support controls that are still unavailable. FR-06 remains proposed and does not start automatically.
+Review completed FR-06 first. The next proposed batch is **FR-07 — Saved destinations and quick-action configuration**. It remains proposed and does not start without explicit owner approval.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02 to FR-05 acceptance and rendered review are recorded in their reports. FR-06–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02 to FR-06 acceptance and rendered review are recorded in their reports. FR-07–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.

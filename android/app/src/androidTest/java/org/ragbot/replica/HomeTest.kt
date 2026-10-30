@@ -148,8 +148,6 @@ class HomeTest {
                 "header-SEARCH",
                 "header-SHORTCUTS",
                 "header-LOGOUT",
-                "header-SUPPORT",
-                "header-NOTIFICATIONS",
             )
             .forEach {
                 compose.onNodeWithTag(it).performClick()
