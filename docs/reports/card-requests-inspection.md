@@ -54,4 +54,4 @@ Rendered review on emulator-5554 covers both first pages, the address, colour an
 
 Open **RagBot Replica → ورود به خانه → کارت** and use **درخواست کارت**, **تمدید کارت**, **المثنی کارت** or **تغییر رنگ کارت**.
 
-Only FR-04a is implemented. [FR-04b, card blocking, PIN and second-password activation](../plan/frontend-replication-steps.md#fr-04b--card-blocking-pin-and-second-password-activation) is the recommended next approval. It remains proposed.
+This report records FR-04a as delivered. FR-04b, [card blocking, PIN and second-password activation](card-security-inspection.md), followed in #50.

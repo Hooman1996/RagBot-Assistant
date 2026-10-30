@@ -37,13 +37,18 @@ class HomeNavigationTest {
                 "S-127",
                 "S-128",
                 "S-129",
+                "S-118",
+                "S-121",
+                "S-122",
+                "S-135",
+                "S-136",
             ),
             HomeDestinations.implemented,
         )
         assertTrue(ids.containsAll(HomeDestinations.implemented))
         HomeDestinations.implemented.forEach { assertTrue(navigation.navigate(it)) }
-        // Blocking, PIN (FR-04b) and credit repayment (FR-11) are not implemented.
-        listOf("S-118", "S-135", "S-132", "unknown", "submit", "authorize").forEach {
+        // Wallet-linked cards (FR-04c) and credit repayment (FR-11) are not implemented.
+        listOf("S-137", "S-141", "S-132", "unknown", "submit", "authorize").forEach {
             assertFalse(navigation.navigate(it))
             assertEquals("S-026", navigation.destination)
         }

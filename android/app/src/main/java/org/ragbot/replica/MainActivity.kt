@@ -160,24 +160,29 @@ fun ReplicaApp() {
                                 Text("درخواست صورتحساب")
                             }
                         }
-                        Row {
-                            listOf(
-                                    CardDestinations.MANAGEMENT to "مدیریت کارت",
-                                    CardDestinations.VISIBILITY to "نمایش کارت",
-                                    CardDestinations.ANONYMOUS_BALANCE to "موجودی بدون ورود",
-                                )
-                                .forEach { (id, title) ->
-                                    TextButton(
-                                        {
-                                            entered = true
-                                            open(id)
-                                        },
-                                        Modifier.testTag("demo-$id"),
-                                    ) {
-                                        Text(title, fontSize = 12.sp)
+                        listOf(
+                                CardDestinations.MANAGEMENT to "مدیریت کارت",
+                                CardDestinations.VISIBILITY to "نمایش کارت",
+                                CardDestinations.ANONYMOUS_BALANCE to "موجودی بدون ورود",
+                                CardSecurityDestinations.LEGACY_BLOCK to "مسدودی بدون ورود",
+                                CardSecurityDestinations.ANONYMOUS_BLOCK to "مسدودی بدون ورود ۲",
+                            )
+                            .chunked(3)
+                            .forEach { row ->
+                                Row {
+                                    row.forEach { (id, title) ->
+                                        TextButton(
+                                            {
+                                                entered = true
+                                                open(id)
+                                            },
+                                            Modifier.testTag("demo-$id"),
+                                        ) {
+                                            Text(title, fontSize = 12.sp)
+                                        }
                                     }
                                 }
-                        }
+                            }
 
                         Button(
                             onClick = { entered = navigation.navigate(HomeDestinations.HOME) },
@@ -267,6 +272,15 @@ fun ReplicaApp() {
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in CardSecurityDestinations.implemented) {
+                            CardSecurityPage(
+                                page,
+                                cardKind,
+                                scenario,
+                                ::goBack,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else if (page in CardRequestDestinations.implemented) {
                             CardRequestPage(
                                 page,

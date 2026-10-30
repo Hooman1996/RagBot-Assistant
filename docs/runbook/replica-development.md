@@ -1,6 +1,6 @@
 # Android replica development — Home, accounts and cards
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards) and #48 (FR-04a card requests), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards) #48 (FR-04a card requests) and #50 (FR-04b card blocking/PIN), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -265,6 +265,17 @@ first. Confirm `S-128` ends in a labelled Designed-for-mock result: nothing is
 issued, changed or charged. Cancel returns to the card tab; Back keeps the
 draft. Adding an address is unavailable (FR-05). No new private assets.
 See the [FR-04a report](../reports/card-requests-inspection.md).
+
+## FR-04b card blocking and PIN
+
+On the card tab, **مسدودسازی کارت** (every group) opens block `S-121` for the
+current group's cards; **رمز کارت** opens PIN `S-135`; **فعال‌سازی رمز پویا**
+opens activation `S-136`. The demo entry's **مسدودی بدون ورود** and
+**مسدودی بدون ورود ۲** open the pre-login block forms `S-118`/`S-122`. The OTP
+is the fixed local code `12345`; every valid confirm ends in a labelled
+Designed-for-mock result and nothing is changed. PIN, OTP, CVV2 and second
+password values are never kept in saved state. See the
+[FR-04b report](../reports/card-security-inspection.md).
 
 ## Desktop viewer and stopping the simulation
 

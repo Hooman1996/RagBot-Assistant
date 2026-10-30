@@ -131,11 +131,9 @@ class CardsTest {
     @Test
     fun cardMutationsAndSecureInquiriesStayUnavailableOnTheCurrentPage() {
         enterCards()
-        listOf("block" to "مسدودسازی", "pin" to "رمز کارت").forEach { (key, title) ->
-            compose.onNodeWithTag("card-action-$key").performScrollTo().performClick()
-            unavailable(title)
-            compose.onNodeWithTag("card-tab").assertIsDisplayed()
-        }
+        compose.onNodeWithContentDescription("اشتراک‌گذاری کارت").performClick()
+        unavailable("اشتراک‌گذاری کارت")
+        compose.onNodeWithTag("card-tab").assertIsDisplayed()
         compose.onNodeWithTag("card-kind-BON").performSemanticsAction(SemanticsActions.OnClick)
         compose.onNodeWithTag("card-action-bon").performScrollTo().performClick()
         compose.onNodeWithTag("S-119").assertIsDisplayed()
