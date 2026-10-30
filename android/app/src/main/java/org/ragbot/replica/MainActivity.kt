@@ -79,6 +79,18 @@ fun ReplicaApp() {
     var deletedNotifications by rememberSaveable { mutableStateOf(listOf<String>()) }
     var selectedTicket by rememberSaveable { mutableStateOf(SupportFixture.firstTicket) }
     var supportDrafts by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
+    var cardTransferForm by rememberSaveable {
+        mutableStateOf(CardTransferDestinations.WITHOUT_SOURCE)
+    }
+    var cardTransferDrafts by rememberSaveable {
+        mutableStateOf(mapOf<String, CardTransferDraft>())
+    }
+    var accountTransferMode by rememberSaveable {
+        mutableStateOf(AccountTransferDestinations.INTERNAL)
+    }
+    var accountTransferDrafts by rememberSaveable {
+        mutableStateOf(mapOf<String, AccountTransferDraft>())
+    }
     var savedDestinations by rememberSaveable { mutableStateOf(SavedDestinationFixture.records) }
     var pinnedServices by rememberSaveable { mutableStateOf(ShortcutFixture.initialPinnedIds) }
     var pickerReview by rememberSaveable { mutableStateOf(false) }
@@ -95,6 +107,16 @@ fun ReplicaApp() {
     val page = stack.last()
     fun open(id: String) {
         check(id in HomeDestinations.implemented)
+        if (
+            id in setOf(CardTransferDestinations.ANONYMOUS, CardTransferDestinations.WITHOUT_SOURCE)
+        )
+            cardTransferForm = id
+        if (
+            id in setOf(AccountTransferDestinations.INTERNAL, AccountTransferDestinations.INTERBANK)
+        )
+            accountTransferMode = id
+        focus.clearFocus()
+        keyboard?.hide()
         stack = stack + id
     }
     fun goBack() {
@@ -264,6 +286,31 @@ fun ReplicaApp() {
                         ) {
                             Text("انتخاب مقصد تسهیلات — بازبینی مستقل")
                         }
+                        Text("بازبینی مستقل انتقال‌ها — فقط پیش‌نمایش محلی", fontSize = 12.sp)
+                        listOf(
+                                CardTransferDestinations.ANONYMOUS to
+                                    "کارت به کارت بدون ورود با انتخاب مبدا",
+                                CardTransferDestinations.WITHOUT_SOURCE to
+                                    "کارت به کارت بدون انتخابگر مبدا",
+                                CardTransferDestinations.RECEIPT to
+                                    "رسید مستقل کارت به کارت — نمونه",
+                                AccountTransferDestinations.MENU to "منوی انتقال — نمونهٔ مستقل",
+                                AccountTransferDestinations.INTERNAL_RECEIPT to
+                                    "رسید مستقل انتقال داخلی — نمونه",
+                                AccountTransferDestinations.IBAN_RECEIPT to
+                                    "رسید مستقل انتقال شبا — نمونه",
+                            )
+                            .forEach { (id, title) ->
+                                TextButton(
+                                    {
+                                        entered = true
+                                        open(id)
+                                    },
+                                    Modifier.testTag("demo-$id"),
+                                ) {
+                                    Text(title, fontSize = 12.sp)
+                                }
+                            }
                     }
                 } else {
                     savedPages.SaveableStateProvider(page) {
@@ -370,6 +417,38 @@ fun ReplicaApp() {
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in CardTransferDestinations.implemented) {
+                            CardTransferPage(
+                                page,
+                                scenario,
+                                cardTransferDrafts[cardTransferForm] ?: CardTransferDraft(),
+                                {
+                                    cardTransferDrafts =
+                                        cardTransferDrafts + (cardTransferForm to it)
+                                },
+                                ::goBack,
+                                { open(CardTransferDestinations.CONFIRM) },
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (page in AccountTransferDestinations.implemented) {
+                            AccountTransferPage(
+                                page,
+                                scenario,
+                                accountTransferDrafts[accountTransferMode]
+                                    ?: AccountTransferDraft(
+                                        mode = accountTransferMode,
+                                        sourceId = accountKey,
+                                    ),
+                                {
+                                    accountTransferDrafts =
+                                        accountTransferDrafts + (accountTransferMode to it)
+                                },
+                                ::goBack,
+                                ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else if (page in SavedDestinationRoutes.implemented) {
                             SavedDestinationScreen(
                                 page,

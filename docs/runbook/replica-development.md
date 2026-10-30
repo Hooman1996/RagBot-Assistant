@@ -1,6 +1,6 @@
 # Android replica development
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support) and #58 (FR-07 saved destinations/shortcuts), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts) and #60 (FR-08 individual transfers), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -370,3 +370,25 @@ All edits/pins/results are local preview state. Service inquiry and synthetic
 shortcut launches are unavailable. See the [inspection report](../reports/saved-destinations-inspection.md)
 and [requirements](../reports/saved-destinations-requirements.md). Private captures,
 raw evidence and acceptance logs are under `local/evidence/saved-destinations/`.
+
+## Individual transfer previews (FR-08)
+
+Scroll the demo page past saved destinations to **بازبینی مستقل انتقال‌ها**.
+The two card entries open S-174/S-175; local review opens S-176. The independent
+transfer-menu entry opens S-193, then S-192 internal or S-191 interbank;
+Continue opens S-173 local review. Separate receipt entries open S-093/S-098/S-097.
+Use source card `0000000000000001`, destination `0000000000000002`, or internal
+account destination `0000000000002`; synthetic checksum-valid IBAN is
+`IR220000000000000000000001`. Amounts are positive integers in rial (IRR).
+Choose a synthetic reason for account forms. None of these identifies a bank
+account, performs an inquiry or submits money. OTP, submission, attachments,
+remote favorites and sharing remain unavailable. Card secrets reset on recreation.
+
+Home fixed transfer quick tiles stay unavailable: the recovered all-services
+menu caller is separate and its current UI is absent. S-194/S-195 remain
+unresolved. See [inspection](../reports/individual-transfers-inspection.md) and
+[requirements](../reports/individual-transfers-requirements.md). Captures,
+failed baseline and acceptance output, caller ledgers and merged installation
+verification remain in `local/evidence/individual-transfers/`. No new assets:
+the existing 84-resource private overlay and public substitutes are reused.
+Stop before FR-09.
