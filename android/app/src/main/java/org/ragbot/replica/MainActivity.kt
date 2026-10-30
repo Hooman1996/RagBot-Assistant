@@ -91,6 +91,10 @@ fun ReplicaApp() {
     var accountTransferDrafts by rememberSaveable {
         mutableStateOf(mapOf<String, AccountTransferDraft>())
     }
+    var groupDraft by rememberSaveable { mutableStateOf(GroupTransferDraft()) }
+    var groupCancel by rememberSaveable { mutableStateOf(false) }
+    var groupTrace by rememberSaveable { mutableStateOf("") }
+    var groupDestination by rememberSaveable { mutableLongStateOf(0L) }
     var savedDestinations by rememberSaveable { mutableStateOf(SavedDestinationFixture.records) }
     var pinnedServices by rememberSaveable { mutableStateOf(ShortcutFixture.initialPinnedIds) }
     var pickerReview by rememberSaveable { mutableStateOf(false) }
@@ -138,6 +142,28 @@ fun ReplicaApp() {
         cardRequest = null
         walletRequest = null
     }
+    // Recovered processing pages finish when they hand over to the next step.
+    fun openGroup(id: String) {
+        if (stack.last() in GroupTransferDestinations.guarded) {
+            savedPages.removeState(stack.last())
+            stack = stack.dropLast(1)
+        }
+        open(id)
+    }
+    // Cancel returns to the first page, keeping its inputs, as the recovered flow does.
+    fun leaveGroup() {
+        stack.filter { it in GroupTransferDestinations.flow }.forEach(savedPages::removeState)
+        stack = stack.filter { it !in GroupTransferDestinations.flow }
+        groupDraft =
+            GroupTransferDraft(
+                groupDraft.sourceId,
+                groupDraft.total,
+                groupDraft.byFile,
+                groupDraft.withdrawId,
+                groupDraft.sourceDescription,
+            )
+        groupCancel = false
+    }
     fun unavailable(title: String) {
         notice = "$title در این پیش‌نمایش آماده نیست. در همین صفحه می‌مانید."
     }
@@ -163,6 +189,8 @@ fun ReplicaApp() {
                 BackHandler(entered || notice != null) {
                     when {
                         notice != null -> notice = null
+                        groupCancel -> groupCancel = false
+                        stack.last() in GroupTransferDestinations.guarded -> groupCancel = true
                         stack.size > 1 -> goBack()
                         tab != HomeControl.HOME -> tab = HomeControl.HOME
                         editing -> editing = false
@@ -299,6 +327,9 @@ fun ReplicaApp() {
                                     "رسید مستقل انتقال داخلی — نمونه",
                                 AccountTransferDestinations.IBAN_RECEIPT to
                                     "رسید مستقل انتقال شبا — نمونه",
+                                GroupTransferDestinations.HISTORY to "سوابق تراکنش گروهی — نمونه",
+                                GroupTransferDestinations.RECEIPT to
+                                    "رسید مستقل انتقال گروهی — نمونه",
                             )
                             .forEach { (id, title) ->
                                 TextButton(
@@ -446,6 +477,32 @@ fun ReplicaApp() {
                                 },
                                 ::goBack,
                                 ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (page in GroupTransferDestinations.implemented) {
+                            GroupTransferPage(
+                                page,
+                                scenario,
+                                groupDraft,
+                                groupTrace,
+                                groupDestination,
+                                groupCancel,
+                                { groupDraft = it },
+                                if (page in GroupTransferDestinations.guarded) {
+                                    { groupCancel = true }
+                                } else ::goBack,
+                                ::openGroup,
+                                {
+                                    groupTrace = it
+                                    open(GroupTransferDestinations.DESTINATIONS)
+                                },
+                                {
+                                    groupDestination = it
+                                    open(GroupTransferDestinations.DESTINATION)
+                                },
+                                { groupCancel = it },
+                                ::leaveGroup,
                                 { scenario = "populated" },
                                 ::unavailable,
                             )

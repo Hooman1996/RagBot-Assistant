@@ -40,16 +40,7 @@ internal object AccountTransferFixture {
             if (destination == latinDigits(source.number)) return "مبدأ و مقصد یکسان است."
         } else {
             val digits = ibanDigits(destination)
-            if (
-                digits.length != 24 ||
-                    digits.any { it !in '0'..'9' } ||
-                    digits.all { it == digits[0] } ||
-                    (digits.drop(2) + "1827" + digits.take(2)).fold(0) { remainder, ch ->
-                        (remainder * 10 + ch.digitToInt()) % 97
-                    } != 1
-            ) {
-                return "شماره شبا معتبر نیست."
-            }
+            if (!validIban(digits)) return "شماره شبا معتبر نیست."
             if (digits == ibanDigits(source.iban)) {
                 return "مبدأ و مقصد یکسان است."
             }
@@ -59,6 +50,15 @@ internal object AccountTransferFixture {
         if (draft.reason !in reasons) return "بابت را انتخاب کنید."
         return null
     }
+
+    /** 24 IBAN digits without IR: recovered arithmetic only; no bank or recipient is implied. */
+    fun validIban(digits: String): Boolean =
+        digits.length == 24 &&
+            digits.all { it in '0'..'9' } &&
+            !digits.all { it == digits[0] } &&
+            (digits.drop(2) + "1827" + digits.take(2)).fold(0) { remainder, ch ->
+                (remainder * 10 + ch.digitToInt()) % 97
+            } == 1
 
     private fun ibanDigits(value: String): String =
         latinDigits(value).trim().uppercase().removePrefix("IR").trim()

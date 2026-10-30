@@ -7,7 +7,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 - **Labels:** `Recovered` (precise code location), `Inferred` (reasoned from a view-model or surrounding content), `Unknown` (obfuscated/computed/server-driven, with the reason). Nothing is `Observed` — the app was not run.
 - **IDs:** `F-001`/`F-002`/`F-066` reuse the P1a-03 inventory IDs (launcher, internal router, dashboard-menu hub). Every other screen is `S-###` (stable, assigned in area then name order).
 
-**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 344, Inferred 117, Unknown 24, Observed 0.
+**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 345, Inferred 116, Unknown 24, Observed 0.
 
 ## F-001 — Launch
 
@@ -311,7 +311,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-180 | Transfer: continuous transfer menu | Recovered | activity; named from its own screen content |
 | S-181 | Transfer: continuous transfer request details | Recovered | activity; named from its own screen content |
 | S-182 | Transfer: excel dest list | Recovered | activity; named from its own screen content |
-| S-183 | Transfer: group transfer dest list | Inferred | activity; feature read from its view-model |
+| S-183 | Wage advance: request receipt | Recovered | activity; content/caller identity recovered in FR-09 (GT-RECOVERY); area/batch move pending owner approval |
 | S-184 | Transfer: group transfer dest list | Recovered | activity; named from its own screen content |
 | S-185 | Transfer: group transfer errors | Recovered | activity; named from its own screen content |
 | S-186 | Transfer: group transfer file pick | Recovered | activity; named from its own screen content |

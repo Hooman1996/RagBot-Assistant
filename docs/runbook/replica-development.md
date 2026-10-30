@@ -1,6 +1,6 @@
 # Android replica development
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts) and #60 (FR-08 individual transfers), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers) and #62 (FR-09 group transfers), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -391,4 +391,26 @@ unresolved. See [inspection](../reports/individual-transfers-inspection.md) and
 failed baseline and acceptance output, caller ledgers and merged installation
 verification remain in `local/evidence/individual-transfers/`. No new assets:
 the existing 84-resource private overlay and public substitutes are reused.
-Stop before FR-09.
+FR-09 was subsequently approved in #62; later batches still require owner approval.
+
+## Group transfer previews (FR-09)
+
+Open the demo page's **منوی انتقال — نمونهٔ مستقل** (S-193) and choose
+**انتقال وجه گروهی** (S-187). Pick a source, enter a total in rial and choose
+manual entry (S-184, up to 30 rows) or file entry (S-186). File entry offers only
+built-in synthetic sheets; no device or desktop file is read. Applying a valid
+sheet opens S-182. Accept checks rows, needs more than one destination and offers
+the row total when it differs from the entered total. S-190 waiting then opens
+S-188 validation; **به‌روزرسانی** is a deterministic local exit, not a status
+check. The **نمونه-رد-ثبت-ساختگی** sheet routes through S-185 errors. The second
+waiting step opens S-189 local verify, where OTP and confirmation are unavailable.
+Back on waiting/validation/errors asks to cancel; **ابطال** returns to S-187 with
+its inputs kept. Valid synthetic destination IBANs (without IR) include
+`920000000000000000000002` and `650000000000000000000003`.
+
+Separate demo entries open group history S-089 (→ destinations S-087 → detail
+S-088) and an independent labelled receipt S-096. S-183 is a wage-advance receipt
+and is not registered. See [inspection](../reports/group-transfers-inspection.md)
+and [requirements](../reports/group-transfers-requirements.md). Recovery ledger,
+captures, acceptance output and merged installation verification remain in
+`local/evidence/group-transfers/`. No new assets. Stop before FR-10.

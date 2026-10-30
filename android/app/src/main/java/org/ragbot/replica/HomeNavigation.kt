@@ -17,7 +17,8 @@ object HomeDestinations {
             SavedDestinationRoutes.implemented +
             ShortcutDestinations.implemented +
             CardTransferDestinations.implemented +
-            AccountTransferDestinations.implemented
+            AccountTransferDestinations.implemented +
+            GroupTransferDestinations.implemented
 }
 
 enum class HomeControl(val title: String) {

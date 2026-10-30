@@ -64,6 +64,12 @@ internal fun AccountTransferPage(
                         ) {
                             Text("انتقال بین بانکی")
                         }
+                        Button(
+                            { onOpen(GroupTransferDestinations.FIRST) },
+                            Modifier.fillMaxWidth().testTag("transfer-group"),
+                        ) {
+                            Text("انتقال وجه گروهی")
+                        }
                     }
                     AccountTransferDestinations.INTERNAL,
                     AccountTransferDestinations.INTERBANK ->
@@ -351,7 +357,7 @@ private fun AccountTransferReceipt(
 }
 
 @Composable
-private fun TransferValue(label: String, value: String) {
+internal fun TransferValue(label: String, value: String) {
     OutlinedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium)
@@ -361,7 +367,7 @@ private fun TransferValue(label: String, value: String) {
 }
 
 @Composable
-private fun TransferInput(
+internal fun TransferInput(
     tag: String,
     label: String,
     value: String,
