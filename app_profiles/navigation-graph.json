@@ -194,11 +194,11 @@
     },
     {
       "id": "S-025",
-      "name": "Unassigned: settings menu",
-      "area": "F-000",
+      "name": "Settings: app settings menu",
+      "area": "F-022",
       "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; named from its own UI content."
+      "note": "Activity content and caller identity recovered during FR-05 (PF-ROUTES); original app not executed."
     },
     {
       "id": "F-001",

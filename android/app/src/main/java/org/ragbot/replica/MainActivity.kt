@@ -68,6 +68,9 @@ fun ReplicaApp() {
     var shownBalances by rememberSaveable { mutableStateOf(listOf<String>()) }
     var cardRequest by rememberSaveable { mutableStateOf<CardRequest?>(null) }
     var walletRequest by rememberSaveable { mutableStateOf<WalletRequest?>(null) }
+    var profileInfo by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
+    var savedAddresses by rememberSaveable { mutableStateOf(CardRequestFixture.addresses) }
+    var profileToggles by rememberSaveable { mutableStateOf(listOf<String>()) }
     var accountKey by rememberSaveable { mutableStateOf("account-1") }
     var visibleAccounts by rememberSaveable {
         mutableStateOf<List<String>>(listOf("account-1", "account-2"))
@@ -164,8 +167,7 @@ fun ReplicaApp() {
                             }
                         }
                         listOf(
-                                CardDestinations.MANAGEMENT to "مدیریت کارت",
-                                CardDestinations.VISIBILITY to "نمایش کارت",
+                                ProfileDestinations.NOTIFICATIONS to "تنظیمات اعلان‌ها",
                                 CardDestinations.ANONYMOUS_BALANCE to "موجودی بدون ورود",
                                 CardSecurityDestinations.LEGACY_BLOCK to "مسدودی بدون ورود",
                                 CardSecurityDestinations.ANONYMOUS_BLOCK to "مسدودی بدون ورود ۲",
@@ -213,7 +215,12 @@ fun ReplicaApp() {
                                 tab,
                                 homeScroll,
                                 {
-                                    if (tab == HomeControl.CARD)
+                                    if (tab == HomeControl.PROFILE)
+                                        ProfileTab(
+                                            { action -> open(checkNotNull(action.destination)) },
+                                            ::unavailable,
+                                        )
+                                    else if (tab == HomeControl.CARD)
                                         CardTab(
                                             scenario,
                                             cardKind,
@@ -276,7 +283,8 @@ fun ReplicaApp() {
                                     HomeControl.BALANCE -> balanceVisible = !balanceVisible
                                     HomeControl.HOME,
                                     HomeControl.ACCOUNT,
-                                    HomeControl.CARD -> tab = control
+                                    HomeControl.CARD,
+                                    HomeControl.PROFILE -> tab = control
                                     HomeControl.ACCOUNT_MANAGEMENT ->
                                         open(AccountDestinations.MANAGEMENT)
                                     else -> notice = navigation.unavailable(control)
@@ -286,11 +294,26 @@ fun ReplicaApp() {
                             WalletPage(
                                 page,
                                 walletRequest,
+                                savedAddresses,
                                 scenario,
                                 { walletRequest = it },
                                 ::goBack,
                                 ::open,
                                 ::leaveRequest,
+                                { scenario = "populated" },
+                            )
+                        } else if (page in ProfileDestinations.implemented) {
+                            ProfilePage(
+                                page,
+                                scenario,
+                                profileInfo,
+                                savedAddresses,
+                                profileToggles,
+                                { profileInfo = it },
+                                { savedAddresses = it },
+                                { profileToggles = it },
+                                ::goBack,
+                                ::open,
                                 { scenario = "populated" },
                                 ::unavailable,
                             )
@@ -307,6 +330,7 @@ fun ReplicaApp() {
                             CardRequestPage(
                                 page,
                                 checkNotNull(cardRequest),
+                                savedAddresses,
                                 scenario,
                                 { cardRequest = it },
                                 ::goBack,
@@ -640,7 +664,13 @@ private fun HomeFrame(
                         medium,
                         onControl,
                     )
-                    BottomTab(HomeControl.PROFILE, "replica_profile", false, medium, onControl)
+                    BottomTab(
+                        HomeControl.PROFILE,
+                        "replica_profile",
+                        tab == HomeControl.PROFILE,
+                        medium,
+                        onControl,
+                    )
                 }
             }
         }

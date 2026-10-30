@@ -144,7 +144,6 @@ class HomeTest {
     fun shellControlsNeverPretendToNavigate() {
         enter()
         listOf(
-                "control-PROFILE",
                 "control-QR",
                 "header-SEARCH",
                 "header-SHORTCUTS",

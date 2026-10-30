@@ -36,13 +36,13 @@ data class WalletRequest(val walletKey: String, val addressKey: String? = null) 
 internal fun WalletPage(
     page: String,
     request: WalletRequest?,
+    addresses: List<PreviewAddress>,
     scenario: String,
     onChange: (WalletRequest) -> Unit,
     onBack: () -> Unit,
     onOpen: (String) -> Unit,
     onCancel: () -> Unit,
     onRetry: () -> Unit,
-    onUnavailable: (String) -> Unit,
 ) {
     val title =
         when (page) {
@@ -64,8 +64,8 @@ internal fun WalletPage(
                     val draft = checkNotNull(request)
                     when (page) {
                         WalletDestinations.ADDRESS ->
-                            WalletAddress(draft, onChange, onOpen, onCancel, onUnavailable)
-                        WalletDestinations.CONFIRM -> WalletConfirm(draft, onCancel)
+                            WalletAddress(draft, addresses, onChange, onOpen, onCancel)
+                        WalletDestinations.CONFIRM -> WalletConfirm(draft, addresses, onCancel)
                         else -> SendType(draft, onChange, onOpen, onCancel)
                     }
                 }
@@ -111,13 +111,13 @@ private fun SendType(
 @Composable
 private fun WalletAddress(
     request: WalletRequest,
+    addresses: List<PreviewAddress>,
     onChange: (WalletRequest) -> Unit,
     onOpen: (String) -> Unit,
     onCancel: () -> Unit,
-    onUnavailable: (String) -> Unit,
 ) {
     Text("آدرس محل مورد نظر را انتخاب نمایید", fontSize = 14.sp)
-    CardRequestFixture.addresses.forEach { item ->
+    addresses.forEach { item ->
         Choice(
             item.key == request.addressKey,
             "wallet-address-${item.key}",
@@ -129,7 +129,12 @@ private fun WalletAddress(
             }
         }
     }
-    TextButton({ onUnavailable("افزودن آدرس") }) { Text("افزودن آدرس") }
+    TextButton(
+        { onOpen(ProfileDestinations.ADD_ADDRESS) },
+        Modifier.testTag("wallet-add-address"),
+    ) {
+        Text("افزودن آدرس")
+    }
     Buttons(
         request.addressKey != null,
         "wallet-address-ok",
@@ -140,10 +145,14 @@ private fun WalletAddress(
 
 /** S-139: review and register; the result is a labelled local outcome. */
 @Composable
-private fun WalletConfirm(request: WalletRequest, onClose: () -> Unit) {
+private fun WalletConfirm(
+    request: WalletRequest,
+    addresses: List<PreviewAddress>,
+    onClose: () -> Unit,
+) {
     var done by rememberSaveable { mutableStateOf(false) }
     val wallet = CardFixture.cards.first { it.key == request.walletKey }
-    val address = CardRequestFixture.addresses.firstOrNull { it.key == request.addressKey }
+    val address = addresses.firstOrNull { it.key == request.addressKey }
     Text("اطلاعات نهایی را جهت تایید بررسی نمایید", fontSize = 14.sp)
     Column(
         Modifier.fillMaxWidth()
