@@ -41,4 +41,4 @@ Final results are in the PR. Android: 15 JVM tests and 31/31 server device tests
 
 Open **RagBot Replica → ورود به خانه → کارت → کیف کارت**, then **اولین کیف کارت** or **دریافت و تغییر رمز**.
 
-This completes FR-04. [FR-05, profile, settings and saved addresses](../plan/frontend-replication-steps.md#fr-05--profile-settings-and-saved-addresses) is the recommended next approval. It remains proposed.
+This completes FR-04. FR-05, [profile, settings and saved addresses](profile-inspection.md), followed in #54 and made the add-address control work.

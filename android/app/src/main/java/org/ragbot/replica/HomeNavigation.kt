@@ -10,7 +10,8 @@ object HomeDestinations {
             CardDestinations.implemented +
             CardRequestDestinations.implemented +
             CardSecurityDestinations.implemented +
-            WalletDestinations.implemented
+            WalletDestinations.implemented +
+            ProfileDestinations.implemented
 }
 
 enum class HomeControl(val title: String) {

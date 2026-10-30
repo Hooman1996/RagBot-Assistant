@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50) and FR-04c (#52) are done; FR-05–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -111,17 +111,17 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-05 — Profile, settings and saved addresses
 
-**Status:** proposed. **Families:** F-021–F-024, F-062. **Existing nodes:** S-025, S-064–S-065, S-069–S-074, S-463–S-464 (11 primary allocations). **Dependencies:** FR-02.
+**Status:** done (#54; 17 JVM / 36 server device tests, build/lint and rendered review). **Families:** F-021–F-024, F-062. **Existing nodes:** S-025, S-064–S-065, S-069–S-074, S-463–S-464 (11 primary allocations). **Dependencies:** FR-02.
 
-**What opens afterward:** Open profile, inspect/edit a synthetic profile, inspect preferences/change history and select or edit a local saved address.
+**What opens afterward:** Open Home → پروفایل, edit additional information, change credentials through OTP and a labelled result, manage saved addresses, open the app settings menu and its service/storefront/card-display settings, the invitation and the changelog.
 
-**Frontend scope:** Combine small profile/preferences/address screens and shared validation/dialogs; storefront settings are recovered before enabling controls.
+**Frontend scope:** Hosted Profile tab content of S-026 (no new ID); S-025 settings menu, settings, financial-facility toggles, notification toggles, changelog, invitation, address list/add. Profile, address and toggle changes stay application-local; credential changes reuse the FR-04 OTP/result pattern.
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Profile tab has no separate catalogue node; S-025 remains an unassigned settings menu until its caller relationship is proved. Storefront semantics and mutation persistence are uncertain.
+**Evidence / specific gaps:** PF-ROUTES proves S-025 as the profile app-settings menu (catalogue identity corrected, ID unchanged). Profile and settings menus now reach card management S-126 and card display status S-130, replacing their FR-03 review entries. S-071's caller is not statically recoverable and keeps a labelled review entry. Biometric enrollment, profile photo, invitation sharing/history (S-013) and server menus/storefront semantics remain Unknown or unavailable.
 
-**Requirements output:** Profile/address fields, preference scope, notification/biometric prerequisites and changelog data; synthetic changes stay application-local.
+**Requirements output:** [Requirements matrix](../reports/profile-requirements.md); [acceptance and fidelity limits](../reports/profile-inspection.md).
 
-**Acceptance beyond the common contract:** Editing, cancellation, local persistence, address validation, Back and recreation behave consistently; unsupported platform settings are explicit. **Effort:** 3–5 days. **Evidence confidence:** medium; storefront low.
+**Acceptance beyond the common contract:** Editing, cancellation, local persistence, address validation, toggles, Back and recreation; unsupported platform settings explicit. **Effort:** 3–5 days. **Evidence confidence:** medium-high identity, medium visuals/storefront.
 
 ### FR-06 — Notifications and support inbox
 
@@ -754,15 +754,15 @@ This is an exhaustive allocation of the current inventory, not an implementation
 | F-067 Compose hosts; F-068 app-named routes; F-070 nested graphs/dialogs | Cross-cutting evidence used by each owning batch. No separate implementation step per host/dialog/container. |
 | F-069 computed/obfuscated routes | Recovery gate within owning batch; remaining unresolved identity/targets are audited in FR-45. No guessed page or edge. |
 | F-071 absence of stock drawer/tab widgets | Preserve recovered custom shell; do not invent drawer or standard-widget navigation. |
-| F-000 remaining unassigned | S-025 is allocated to FR-05 with a caller-ownership gate; S-001–S-011, S-013, S-015 and S-017–S-024 remain in FR-45. S-014/S-016 were recovered as statement content and moved to FR-02, and S-012 as card information moved to FR-03, each with owner approval. Allocation is not proof of reachability. |
+| F-000 remaining unassigned | S-025 was recovered as the profile app-settings menu (F-022) and implemented in FR-05; S-001–S-011, S-013, S-015 and S-017–S-024 remain in FR-45. S-014/S-016 were recovered as statement content and moved to FR-02, and S-012 as card information moved to FR-03, each with owner approval. Allocation is not proof of reachability. |
 | Dynamic edges / unattributed call sites | Explicitly unresolved: 43 null-target edges and 139 additional source-unattributed call sites. Recover within the owning approved batch; retain unresolved records where evidence is insufficient. No synthetic pages or invented transitions. |
 
 Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows assigned or explicitly deferred/excluded above; 485/485 graph nodes allocated exactly once; 0 missing/extra/duplicate IDs. This audit measures planning coverage only. It does not certify 485 reconstructed pages or recovered API contracts.
 
 ## Recommended next approval and stopping point
 
-Approve **FR-05 — Profile, settings and saved addresses** next. It builds the Profile and settings menus that currently reach card management, card display status and address management only through labelled review entries, and the add-address screen the card flows point to. FR-05 remains proposed and does not start automatically.
+Approve **FR-06 — Notifications and support inbox** next. It builds the Home notification and support controls that are still unavailable. FR-06 remains proposed and does not start automatically.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02, FR-03 and FR-04a–FR-04c acceptance and rendered review are recorded in their reports. FR-05–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02 to FR-05 acceptance and rendered review are recorded in their reports. FR-06–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.

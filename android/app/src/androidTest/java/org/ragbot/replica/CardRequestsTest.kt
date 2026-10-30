@@ -58,7 +58,7 @@ class CardRequestsTest {
         compose.onNodeWithTag("S-129").assertIsDisplayed()
         compose.onNodeWithTag("address-ok").performScrollTo().assertIsNotEnabled()
         compose.onNodeWithTag("add-address").performClick()
-        compose.onNodeWithTag("unavailable").assertTextContains("افزودن آدرس", substring = true)
+        compose.onNodeWithTag("S-463").assertIsDisplayed()
         back()
         compose.onNodeWithTag("address-address-2").performClick()
         compose.activityRule.scenario.recreate()

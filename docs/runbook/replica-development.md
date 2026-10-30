@@ -1,6 +1,6 @@
 # Android replica development — Home, accounts and cards
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards) #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN) and #52 (FR-04c wallet cards), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards) #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards) and #54 (FR-05 profile/settings), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -284,6 +284,19 @@ The card tab's **کیف کارت** group shows the wallet card with its own bala
 (hosted by container `S-138`) and ends in a labelled result; **دریافت و تغییر
 رمز** opens wallet PIN `S-141` (OTP `12345`). See the
 [FR-04c report](../reports/wallet-card-inspection.md).
+
+## FR-05 profile, settings and addresses
+
+**ورود به خانه → پروفایل** opens the hosted Profile tab. Its rows open edit
+profile `S-065` (credential changes use OTP `12345` and a labelled result),
+additional information `S-064`, account management `S-063`, card management
+`S-126`, saved addresses `S-464` → add `S-463`, the settings menu `S-025`
+(biometric `S-070`, services `S-072`, storefront `S-073`, card display
+`S-130`), invitation `S-069` and changelog `S-074`. Notification settings
+`S-071` has a labelled review entry on the demo page. Profile, address and
+toggle changes stay in the app's saved UI state only. The card-request and
+wallet address steps now open add address `S-463`. See the
+[FR-05 report](../reports/profile-inspection.md).
 
 ## Desktop viewer and stopping the simulation
 

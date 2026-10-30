@@ -43,7 +43,7 @@ data class PreviewAddress(
     val title: String,
     val address: String,
     val postalCode: String,
-)
+) : java.io.Serializable
 
 data class PreviewCardColor(val key: String, val title: String, val color: Long)
 
@@ -120,6 +120,7 @@ internal fun Buttons(
 internal fun CardRequestPage(
     page: String,
     request: CardRequest,
+    addresses: List<PreviewAddress>,
     scenario: String,
     onChange: (CardRequest) -> Unit,
     onBack: () -> Unit,
@@ -145,7 +146,7 @@ internal fun CardRequestPage(
                 when (page) {
                     CardRequestDestinations.ADDRESS -> {
                         Text("آدرس محل مورد نظر را انتخاب نمایید", fontSize = 14.sp)
-                        CardRequestFixture.addresses.forEach { item ->
+                        addresses.forEach { item ->
                             Choice(
                                 item.key == request.addressKey,
                                 "address-${item.key}",
@@ -163,7 +164,7 @@ internal fun CardRequestPage(
                             }
                         }
                         TextButton(
-                            { onUnavailable("افزودن آدرس") },
+                            { onOpen(ProfileDestinations.ADD_ADDRESS) },
                             Modifier.testTag("add-address"),
                         ) {
                             Text("افزودن آدرس")
@@ -199,7 +200,7 @@ internal fun CardRequestPage(
                             onCancel,
                         )
                     }
-                    CardRequestDestinations.CONFIRM -> RequestConfirm(request, onCancel)
+                    CardRequestDestinations.CONFIRM -> RequestConfirm(request, addresses, onCancel)
                     else -> FirstPage(page, request, onChange, onOpen, onCancel)
                 }
             }
@@ -257,11 +258,15 @@ private fun FirstPage(
 }
 
 @Composable
-private fun RequestConfirm(request: CardRequest, onClose: () -> Unit) {
+private fun RequestConfirm(
+    request: CardRequest,
+    addresses: List<PreviewAddress>,
+    onClose: () -> Unit,
+) {
     var tracking by rememberSaveable { mutableStateOf<String?>(null) }
     val account = AccountFixture.accounts.firstOrNull { it.key == request.sourceKey }
     val card = CardFixture.cards.firstOrNull { it.key == request.sourceKey }
-    val address = CardRequestFixture.addresses.firstOrNull { it.key == request.addressKey }
+    val address = addresses.firstOrNull { it.key == request.addressKey }
     val color = CardRequestFixture.colors.firstOrNull { it.key == request.colorKey }
     Text("اطلاعات نهایی را جهت تایید بررسی نمایید", fontSize = 14.sp)
     Column(

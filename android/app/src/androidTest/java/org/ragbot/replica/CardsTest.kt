@@ -179,8 +179,10 @@ class CardsTest {
     }
 
     @Test
-    fun labelledReviewEntriesOpenManagementVisibilityAndAnonymousBalance() {
-        compose.onNodeWithTag("demo-S-126").performClick()
+    fun profileMenusOpenManagementAndVisibilityAndReviewEntryOpensAnonymousBalance() {
+        compose.onNodeWithTag("demo-entry").performClick()
+        compose.onNodeWithTag("control-PROFILE").performClick()
+        compose.onNodeWithTag("profile-cards").performScrollTo().performClick()
         compose.onNodeWithTag("S-126").assertIsDisplayed()
         compose.onNodeWithTag("manage-search").performTextReplacement("0003")
         compose.onNodeWithTag("row-card-3").assertTextContains("قفل شده", substring = true)
@@ -198,11 +200,14 @@ class CardsTest {
         back()
         compose.onNodeWithTag("manage-search").assertTextContains("0003")
         back()
-        back()
-        compose.onNodeWithTag("demo-S-130").performClick()
+        compose.onNodeWithTag("profile-settings").performScrollTo().performClick()
+        compose.onNodeWithTag("settings-cards").performClick()
         compose.onNodeWithTag("card-visible").performClick()
         unavailable("وضعیت نمایش کارت")
         compose.onNodeWithTag("card-visible").assertIsOn()
+        back()
+        back()
+        compose.onNodeWithTag("control-PROFILE").assertIsSelected()
         back()
         back()
         compose.onNodeWithTag("demo-S-120").performClick()

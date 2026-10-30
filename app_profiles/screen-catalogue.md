@@ -109,6 +109,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 
 | ID | Name | Label | Basis |
 |---|---|---|---|
+| S-025 | Settings: app settings menu | Recovered | activity; content/caller identity recovered in FR-05 (PF-ROUTES) |
 | S-070 | Settings | Recovered | activity; named from its own screen content |
 | S-071 | Settings: notification settings | Recovered | activity; named from its own screen content |
 | S-072 | Settings: service settings | Recovered | activity; named from its own screen content |
@@ -767,7 +768,6 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-022 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-023 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-024 | Unassigned: qr code scanner | Recovered | activity; named from its own screen content |
-| S-025 | Unassigned: settings menu | Recovered | activity; named from its own screen content |
 
 ## Navigation edges
 
