@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58) is done; FR-08–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -139,15 +139,15 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-07 — Saved destinations and quick-action configuration
 
-**Status:** proposed. **Families:** F-021, F-027, F-040. **Existing nodes:** S-066, S-083–S-084, S-196–S-198 (6 primary allocations). **Dependencies:** FR-02, FR-03.
+**Status:** done (#58; 26 JVM / 57 server device tests, build/lint and rendered review). **Families:** F-021, F-027, F-040. **Existing nodes:** S-066, S-083–S-084, S-196–S-198 (6 primary allocations). **Dependencies:** FR-02, FR-03.
 
-**What opens afterward:** Open saved destination list/picker, inspect/edit a synthetic favorite and choose recovered shortcut configuration.
+**What opens afterward:** Open Home search for synthetic service search/pins; use labelled independent entries for legacy saved destinations and current loan management/picker, with local edits and selection results.
 
-**Frontend scope:** Combine related favorite/picker/configuration screens and their local order/selection state; preserve caller result semantics.
+**Frontend scope:** S-066 has four type segments, conditional search, swipe actions, local editor/delete and long-press reorder with Apply/Cancel. S-197/S-198 are loan-only; S-084 has search/pin controls. S-083/S-196 are hosts and are not registered as extra pages. The independent picker review preserves its originating note and result/cancel semantics.
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Shortcut eligibility and edit/reorder gestures need code evidence; no drag interaction or Home server identifier is inferred from a label.
+**Evidence / specific gaps:** SD-FAVORITES/SD-SHORTCUTS distinguish Home search → shortcuts from bookmark → out-of-batch recurring transfers. Legacy vertical drag is recovered; no shortcut drag is invented. Loan edit is a recovered no-op. Current incoming destination menus, legacy card/IBAN validation and inquiry/service payloads remain unresolved; no server menu ID is inferred from a label.
 
-**Requirements output:** M-010 candidate fields, supported destination types, duplicate/order rules and caller-result contracts; exact encrypted endpoint payloads remain Unknown.
+**Requirements output:** [Requirements matrix](../reports/saved-destinations-requirements.md) covers M-010, actual types, partial validation, order/duplicate rules, E-419/E-421 caller joins and unknown encrypted payloads; [inspection](../reports/saved-destinations-inspection.md) separates technical acceptance from unscored visual fidelity.
 
 **Acceptance beyond the common contract:** Filtering, selection/cancel, local edits and Back/recreation preserve the originating form and do not navigate to an invented target. **Effort:** 2–4 days. **Evidence confidence:** medium.
 
@@ -761,8 +761,8 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-Review completed FR-06 first. The next proposed batch is **FR-07 — Saved destinations and quick-action configuration**. It remains proposed and does not start without explicit owner approval.
+Review completed FR-07 (#58). Stop after this batch. The next proposed batch is **FR-08 — Individual card/account transfers**, which requires explicit owner approval.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02 to FR-06 acceptance and rendered review are recorded in their reports. FR-07–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02 to FR-07 acceptance and rendered review are recorded in their reports; FR-08–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.

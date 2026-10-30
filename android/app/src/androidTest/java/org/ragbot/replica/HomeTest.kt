@@ -143,19 +143,13 @@ class HomeTest {
     @Test
     fun shellControlsNeverPretendToNavigate() {
         enter()
-        listOf(
-                "control-QR",
-                "header-SEARCH",
-                "header-SHORTCUTS",
-                "header-LOGOUT",
-            )
-            .forEach {
-                compose.onNodeWithTag(it).performClick()
-                compose.onNodeWithTag("unavailable").assertIsDisplayed()
-                back()
-                compose.onNodeWithTag("unavailable").assertDoesNotExist()
-                compose.onNodeWithTag("control-HOME").assertIsSelected()
-            }
+        listOf("control-QR", "header-SHORTCUTS", "header-LOGOUT").forEach {
+            compose.onNodeWithTag(it).performClick()
+            compose.onNodeWithTag("unavailable").assertIsDisplayed()
+            back()
+            compose.onNodeWithTag("unavailable").assertDoesNotExist()
+            compose.onNodeWithTag("control-HOME").assertIsSelected()
+        }
         compose.onNodeWithTag("control-HOME").performClick()
         compose.onNodeWithTag("unavailable").assertDoesNotExist()
     }

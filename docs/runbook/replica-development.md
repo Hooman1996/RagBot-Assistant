@@ -1,6 +1,6 @@
 # Android replica development
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings) and #56 (FR-06 notifications/support), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support) and #58 (FR-07 saved destinations/shortcuts), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -135,20 +135,21 @@ They do not establish original-app visual fidelity.
 The Home build used 51 reviewed private inputs (HC-ASSETS) and FR-02 64
 (AI-ASSETS), then FR-03 used 76 (CI-ASSETS). FR-06 reuses that verified chain
 and adds four recovered rating vectors: 80 neutral resource keys (NS-ASSETS).
+FR-07 adds four caller-backed shortcut vectors, for 84 keys (SD-ASSETS).
 The current full manifest is
-`local/evidence/notifications-support/prepared-asset-manifest.json`. It records
+`local/evidence/saved-destinations/prepared-asset-manifest.json`. It records
 the APK baseline, exact sources, transformations and SHA-256 for every input/output.
 Nothing is bulk-copied or committed.
 
 ```bash
-python local/evidence/notifications-support/prepare_assets.py
+python local/evidence/saved-destinations/prepare_assets.py
 python - <<'PYSETUP'
 import os
 from pathlib import Path
 settings = Path(os.environ["GRADLE_USER_HOME"]) / "gradle.properties"
 previous = settings.read_text().splitlines() if settings.exists() else []
 kept = [line for line in previous if not line.startswith("replicaPrivateResources=")]
-kept.append(f"replicaPrivateResources={Path.cwd()}/local/evidence/notifications-support/resources")
+kept.append(f"replicaPrivateResources={Path.cwd()}/local/evidence/saved-destinations/resources")
 settings.write_text("\n".join(kept) + "\n")
 PYSETUP
 ```
@@ -322,8 +323,8 @@ fixture tickets exercise editing, a long thread with continuation controls,
 and read-only closed state. No server support-menu snapshot, ticket delivery,
 attachment control, session-expiry service or real authentication is claimed.
 S-071 remains independent. See the [inspection](../reports/notifications-support-inspection.md)
-and [requirements](../reports/notifications-support-requirements.md). Stop after
-FR-06; FR-07 requires new owner approval.
+and [requirements](../reports/notifications-support-requirements.md). FR-07 was
+subsequently approved in #58; later batches still require owner approval.
 
 ## Desktop viewer and stopping the simulation
 
@@ -354,3 +355,18 @@ To restart the emulator, use the pinned profile's boot command with both
 then install/launch with the commands above and start the viewer. There is no
 permanent service or public ADB listener. Do not use these commands against any
 other device, original banking app or shared infrastructure.
+
+## Saved destinations and shortcuts (FR-07)
+
+Home's **جستجو** header opens service search and local pins (S-084); its bookmark
+is the separate recurring-transfer entry and remains unavailable. On the demo
+page, scroll below Home entry to independent **مقصدهای ذخیره‌شده قدیمی** (S-066),
+**مدیریت مقصد تسهیلات** (S-197) and **انتخاب مقصد تسهیلات — بازبینی مستقل**
+(S-198). The last entry returns to a labelled local review form; it is not a
+transfer route. Swipe a destination row to reveal controls. Legacy **ویرایش ترتیب**
+enables long-press vertical drag with local Apply/Cancel.
+
+All edits/pins/results are local preview state. Service inquiry and synthetic
+shortcut launches are unavailable. See the [inspection report](../reports/saved-destinations-inspection.md)
+and [requirements](../reports/saved-destinations-requirements.md). Private captures,
+raw evidence and acceptance logs are under `local/evidence/saved-destinations/`.

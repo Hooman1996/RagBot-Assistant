@@ -65,16 +65,21 @@ class HomeNavigationTest {
                 "S-080",
                 "S-081",
                 "S-082",
+                "S-066",
+                "S-084",
+                "S-197",
+                "S-198",
             ),
             HomeDestinations.implemented,
         )
         assertTrue(ids.containsAll(HomeDestinations.implemented))
         HomeDestinations.implemented.forEach { assertTrue(navigation.navigate(it)) }
         // Host container S-138, received-card confirmation S-004 and repayment S-132 are not pages.
-        listOf("S-138", "S-004", "S-132", "unknown", "submit", "authorize").forEach {
-            assertFalse(navigation.navigate(it))
-            assertEquals("S-026", navigation.destination)
-        }
+        listOf("S-138", "S-083", "S-196", "S-004", "S-132", "unknown", "submit", "authorize")
+            .forEach {
+                assertFalse(navigation.navigate(it))
+                assertEquals("S-026", navigation.destination)
+            }
     }
 
     @Test
@@ -89,6 +94,7 @@ class HomeNavigationTest {
                         HomeControl.BALANCE,
                         HomeControl.NOTIFICATIONS,
                         HomeControl.SUPPORT,
+                        HomeControl.SEARCH,
                     )
             }
             .forEach {
