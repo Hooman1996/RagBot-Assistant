@@ -81,7 +81,7 @@ internal fun nextAfterFirstPage(request: CardRequest): String =
     if (request.inPerson) CardRequestDestinations.COLOR else CardRequestDestinations.ADDRESS
 
 @Composable
-private fun Choice(
+internal fun Choice(
     selected: Boolean,
     tag: String,
     onClick: () -> Unit,
@@ -103,7 +103,7 @@ private fun Choice(
 }
 
 @Composable
-private fun Buttons(
+internal fun Buttons(
     enabled: Boolean,
     tag: String,
     onApply: () -> Unit,

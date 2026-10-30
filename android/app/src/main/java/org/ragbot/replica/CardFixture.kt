@@ -6,6 +6,7 @@ enum class CardKind(val title: String) {
     CREDIT("کارت اعتباری"),
     BON("بن کارت"),
     GIFT("کارت هدیه"),
+    WALLET("کیف کارت"),
 }
 
 /** CI-FIXTURE: invented local records. Card balance and account balance are separate fields. */
@@ -120,6 +121,17 @@ object CardFixture {
                 "۰۰۰۰۰۰۰۰۰۶",
                 iban = "IR000000000000000000000006",
             ),
+            // Wallet-linked card: the account field holds the synthetic wallet account number.
+            PreviewCard(
+                "card-8",
+                CardKind.WALLET,
+                "0000000000000008",
+                HomeFixture.accountOwner,
+                2_400_000L,
+                null,
+                "۰۰۰۰۰۰۰۰۰۸",
+                iban = "IR000000000000000000000008",
+            ),
         )
 
     /** Candidate cards offered by the fetch-card review page; never added to any profile. */
@@ -188,6 +200,11 @@ object CardFixture {
                     CardAction("block", "مسدودسازی کارت", CardSecurityDestinations.BLOCK),
                 ),
             CardKind.GIFT to listOf(CardAction("info", "اطلاعات کارت", CardDestinations.INFO)),
+            CardKind.WALLET to
+                listOf(
+                    CardAction("wallet-issue", "اولین کیف کارت", WalletDestinations.SEND_TYPE),
+                    CardAction("wallet-pin", "دریافت و تغییر رمز", WalletDestinations.PIN),
+                ),
         )
 
     fun of(kind: CardKind) = cards.filter { it.kind == kind }

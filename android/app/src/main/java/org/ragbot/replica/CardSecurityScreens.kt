@@ -67,7 +67,7 @@ internal fun pinErrors(
 
 /** Labelled local outcome: nothing is blocked, assigned or activated. */
 @Composable
-private fun MockResult(text: String, onDone: () -> Unit) {
+internal fun MockResult(text: String, onDone: () -> Unit) {
     AlertDialog(
         onDismissRequest = {},
         title = { Text("نتیجه نمایشی") },
@@ -86,7 +86,7 @@ private fun MockResult(text: String, onDone: () -> Unit) {
 
 /** Recovered OTP sheet; the entered code is never saved. Cancel leaves the form unchanged. */
 @Composable
-private fun OtpStep(onVerified: () -> Unit, onCancel: () -> Unit) {
+internal fun OtpStep(onVerified: () -> Unit, onCancel: () -> Unit) {
     var code by remember { mutableStateOf("") }
     var wrong by remember { mutableStateOf(false) }
     AlertDialog(
@@ -146,7 +146,7 @@ internal fun CardSecurityPage(
             ) {
                 when (page) {
                     CardSecurityDestinations.BLOCK -> BlockCard(kind, onBack)
-                    CardSecurityDestinations.PIN -> PinSections(kind, onBack)
+                    CardSecurityDestinations.PIN -> PinSections(CardFixture.of(kind), onBack)
                     CardSecurityDestinations.ACTIVATION -> Activation(kind, onBack)
                     else -> NoLoginBlock(page, onBack, onUnavailable)
                 }
@@ -201,8 +201,7 @@ private fun BlockCard(kind: CardKind, onDone: () -> Unit) {
 
 /** S-135: card picker and four expandable sections, then confirm, OTP and result. */
 @Composable
-private fun PinSections(kind: CardKind, onDone: () -> Unit) {
-    val cards = CardFixture.of(kind)
+internal fun PinSections(cards: List<PreviewCard>, onDone: () -> Unit) {
     var card by rememberSaveable { mutableStateOf(cards.firstOrNull()?.key.orEmpty()) }
     var open by rememberSaveable { mutableStateOf<PinOperation?>(null) }
     var stage by rememberSaveable { mutableStateOf("form") }

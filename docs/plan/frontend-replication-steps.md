@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48) and FR-04b (#50) are done; FR-04c and FR-05–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50) and FR-04c (#52) are done; FR-05–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -97,17 +97,17 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-04c — Wallet-linked card journeys
 
-**Status:** proposed (split from FR-04 with owner approval in #48). **Families:** F-034. **Existing nodes:** S-137–S-141 (5 primary allocations). **Dependencies:** FR-04a.
+**Status:** done (#52; 15 JVM / 31 server device tests, build/lint and rendered review). **Families:** F-034. **Existing nodes:** S-137–S-141 (5 primary allocations). **Dependencies:** FR-04a.
 
-**What opens afterward:** Inspect wallet-linked card issue, send type, address and PIN content through locally simulated states.
+**What opens afterward:** On the card tab's wallet group, inspect the wallet card and its own balance, request a first wallet card (send type, address, confirm, labelled result) and assign or change wallet-card PINs with OTP.
 
-**Frontend scope:** Wallet card issue host and its destinations; containers are not extra pages.
+**Frontend scope:** Issue host S-138 is a container (no page of its own) for send type S-140, address S-137 and confirm S-139; wallet PIN S-141 reuses the FR-04b PIN sections, OTP and result.
 
-**Evidence / specific gaps:** Wallet-card tab presentation and eligibility gates require caller traces.
+**Evidence / specific gaps:** WC-ROUTES traces the wallet router and tab; WC-FLOW the send type → address → confirm graph, with the first card design chosen automatically. The generic wallet issue key opens shared menu list S-002 and the delivered-card confirmation is unassigned S-004 (both FR-45, not built). Wallet card artwork, server notice, fee and in-person availability are fixtures.
 
-**Requirements output:** Per-step inputs, address prerequisites, M-005/M-011 candidates and synthetic result provenance.
+**Requirements output:** [Requirements matrix](../reports/wallet-card-requirements.md); [acceptance and fidelity limits](../reports/wallet-card-inspection.md).
 
-**Acceptance beyond the common contract:** Invalid fields, cancellation and address selection work; no wallet or card write occurs. **Effort:** 2–3 days. **Evidence confidence:** medium-low.
+**Acceptance beyond the common contract:** Required address, Back draft restoration, recreation, Cancel leaving the flow, wrong/cancelled OTP and labelled results that change nothing. **Effort:** 2 days. **Evidence confidence:** medium-high flow, medium visuals.
 
 ### FR-05 — Profile, settings and saved addresses
 
@@ -761,8 +761,8 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-Approve **FR-04c — Wallet-linked card journeys** next. It completes the card family with the wallet card issue, send type, address and PIN content, reusing the FR-04a/FR-04b request, OTP and labelled-result patterns. FR-04c remains proposed and does not start automatically.
+Approve **FR-05 — Profile, settings and saved addresses** next. It builds the Profile and settings menus that currently reach card management, card display status and address management only through labelled review entries, and the add-address screen the card flows point to. FR-05 remains proposed and does not start automatically.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02, FR-03, FR-04a and FR-04b acceptance and rendered review are recorded in their reports. FR-04c and FR-05–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02, FR-03 and FR-04a–FR-04c acceptance and rendered review are recorded in their reports. FR-05–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.

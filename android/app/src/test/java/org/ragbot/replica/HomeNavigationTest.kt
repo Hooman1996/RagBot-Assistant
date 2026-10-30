@@ -42,13 +42,17 @@ class HomeNavigationTest {
                 "S-122",
                 "S-135",
                 "S-136",
+                "S-137",
+                "S-139",
+                "S-140",
+                "S-141",
             ),
             HomeDestinations.implemented,
         )
         assertTrue(ids.containsAll(HomeDestinations.implemented))
         HomeDestinations.implemented.forEach { assertTrue(navigation.navigate(it)) }
-        // Wallet-linked cards (FR-04c) and credit repayment (FR-11) are not implemented.
-        listOf("S-137", "S-141", "S-132", "unknown", "submit", "authorize").forEach {
+        // Host container S-138, received-card confirmation S-004 and repayment S-132 are not pages.
+        listOf("S-138", "S-004", "S-132", "unknown", "submit", "authorize").forEach {
             assertFalse(navigation.navigate(it))
             assertEquals("S-026", navigation.destination)
         }

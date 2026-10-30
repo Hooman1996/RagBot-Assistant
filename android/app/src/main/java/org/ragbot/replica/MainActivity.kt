@@ -67,6 +67,7 @@ fun ReplicaApp() {
     var cardIndices by rememberSaveable { mutableStateOf(List(CardKind.entries.size) { 0 }) }
     var shownBalances by rememberSaveable { mutableStateOf(listOf<String>()) }
     var cardRequest by rememberSaveable { mutableStateOf<CardRequest?>(null) }
+    var walletRequest by rememberSaveable { mutableStateOf<WalletRequest?>(null) }
     var accountKey by rememberSaveable { mutableStateOf("account-1") }
     var visibleAccounts by rememberSaveable {
         mutableStateOf<List<String>>(listOf("account-1", "account-2"))
@@ -86,9 +87,11 @@ fun ReplicaApp() {
     }
     // Cancel leaves the whole request flow, as the recovered pages return to Home.
     fun leaveRequest() {
-        stack.filter { it in CardRequestDestinations.implemented }.forEach(savedPages::removeState)
-        stack = stack.filter { it !in CardRequestDestinations.implemented }
+        val flow = CardRequestDestinations.implemented + WalletDestinations.implemented
+        stack.filter { it in flow }.forEach(savedPages::removeState)
+        stack = stack.filter { it !in flow }
         cardRequest = null
+        walletRequest = null
     }
     fun unavailable(title: String) {
         notice = "$title در این پیش‌نمایش آماده نیست. در همین صفحه می‌مانید."
@@ -244,6 +247,13 @@ fun ReplicaApp() {
                                                                         cardIndices[0]]
                                                                     .key,
                                                         )
+                                                if (id == WalletDestinations.SEND_TYPE)
+                                                    walletRequest =
+                                                        WalletRequest(
+                                                            CardFixture.of(CardKind.WALLET)
+                                                                .first()
+                                                                .key
+                                                        )
                                                 open(id)
                                             },
                                             ::unavailable,
@@ -272,6 +282,18 @@ fun ReplicaApp() {
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in WalletDestinations.implemented) {
+                            WalletPage(
+                                page,
+                                walletRequest,
+                                scenario,
+                                { walletRequest = it },
+                                ::goBack,
+                                ::open,
+                                ::leaveRequest,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else if (page in CardSecurityDestinations.implemented) {
                             CardSecurityPage(
                                 page,
