@@ -1474,11 +1474,11 @@
     },
     {
       "id": "S-183",
-      "name": "Transfer: group transfer dest list",
+      "name": "Wage advance: request receipt",
       "area": "F-039",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity content and wage-advance caller identity recovered during FR-09 (GT-RECOVERY); area F-039 retained until the owner approves moving it; original app not executed."
     },
     {
       "id": "S-184",
