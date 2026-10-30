@@ -73,7 +73,11 @@ class SavedDestinationsTest {
     }
 
     private fun review(id: String) {
-        compose.onNodeWithTag("demo-$id").performScrollTo().performClick()
+        compose.onNodeWithTag("demo-$id").performScrollTo().performSemanticsAction(
+            SemanticsActions.OnClick
+        ) {
+            it()
+        }
         compose.waitUntil(5_000) { compose.onNodeWithTag(id).isDisplayed() }
         compose.onNodeWithTag(id).assertIsDisplayed()
     }
