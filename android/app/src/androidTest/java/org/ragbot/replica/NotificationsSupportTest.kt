@@ -240,6 +240,8 @@ class NotificationsSupportTest {
         compose.onNodeWithTag("S-081").assertDoesNotExist()
         compose.onNodeWithTag("support-otp").performTextReplacement("12345")
         compose.onNodeWithTag("support-otp-continue").performClick()
+        // The identity sheet owns a native window until its dismissal finishes.
+        compose.waitUntil(5_000) { compose.activity.hasWindowFocus() }
         compose.onNodeWithTag("S-081").assertIsDisplayed()
         compose.onNodeWithTag("support-send").assertIsNotEnabled()
         compose.onNodeWithTag("support-draft").performTextReplacement("پیش‌نویس پیام نمونه")

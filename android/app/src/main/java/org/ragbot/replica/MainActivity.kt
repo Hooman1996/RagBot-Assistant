@@ -27,7 +27,9 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.*
@@ -59,6 +61,8 @@ fun ReplicaApp() {
     }
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
     val navigation = remember { HomeNavigation() }
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val savedPages = rememberSaveableStateHolder()
     val homeScroll = rememberScrollState()
     var stack by rememberSaveable { mutableStateOf(listOf(HomeDestinations.HOME)) }
@@ -75,6 +79,11 @@ fun ReplicaApp() {
     var deletedNotifications by rememberSaveable { mutableStateOf(listOf<String>()) }
     var selectedTicket by rememberSaveable { mutableStateOf(SupportFixture.firstTicket) }
     var supportDrafts by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
+    var savedDestinations by rememberSaveable { mutableStateOf(SavedDestinationFixture.records) }
+    var pinnedServices by rememberSaveable { mutableStateOf(ShortcutFixture.initialPinnedIds) }
+    var pickerReview by rememberSaveable { mutableStateOf(false) }
+    var pickerDraft by rememberSaveable { mutableStateOf("") }
+    var pickerResult by rememberSaveable { mutableStateOf<String?>(null) }
     var accountKey by rememberSaveable { mutableStateOf("account-1") }
     var visibleAccounts by rememberSaveable {
         mutableStateOf<List<String>>(listOf("account-1", "account-2"))
@@ -89,8 +98,15 @@ fun ReplicaApp() {
         stack = stack + id
     }
     fun goBack() {
+        val leavingPickerReview = pickerReview && stack.last() == SavedDestinationRoutes.PICKER
         savedPages.removeState(stack.last())
         stack = stack.dropLast(1)
+        if (leavingPickerReview) {
+            focus.clearFocus()
+            keyboard?.hide()
+            pickerReview = false
+            entered = false
+        }
     }
     // Cancel leaves the whole request flow, as the recovered pages return to Home.
     fun leaveRequest() {
@@ -209,6 +225,45 @@ fun ReplicaApp() {
                         ) {
                             Text("ورود به خانه")
                         }
+                        Text("بازبینی مستقل مقصدهای ذخیره‌شده — طراحی برای ماک", fontSize = 12.sp)
+                        listOf(
+                                SavedDestinationRoutes.LEGACY to "مقصدهای ذخیره‌شده قدیمی",
+                                SavedDestinationRoutes.MANAGEMENT to "مدیریت مقصد تسهیلات",
+                            )
+                            .forEach { (id, title) ->
+                                TextButton(
+                                    {
+                                        entered = true
+                                        open(id)
+                                    },
+                                    Modifier.testTag("demo-$id"),
+                                ) {
+                                    Text(title)
+                                }
+                            }
+                        Text("فرم آزمایشی انتخاب تسهیلات؛ مسیر بانکی نیست.", fontSize = 12.sp)
+                        OutlinedTextField(
+                            pickerDraft,
+                            { pickerDraft = it },
+                            label = { Text("یادداشت فرم آزمایشی") },
+                            modifier = Modifier.testTag("picker-review-draft"),
+                        )
+                        Text(
+                            "نتیجه محلی: ${pickerResult ?: "انتخاب نشده"}",
+                            Modifier.testTag("picker-review-result"),
+                        )
+                        TextButton(
+                            {
+                                focus.clearFocus()
+                                keyboard?.hide()
+                                pickerReview = true
+                                entered = true
+                                open(SavedDestinationRoutes.PICKER)
+                            },
+                            Modifier.testTag("demo-S-198"),
+                        ) {
+                            Text("انتخاب مقصد تسهیلات — بازبینی مستقل")
+                        }
                     }
                 } else {
                     savedPages.SaveableStateProvider(page) {
@@ -311,9 +366,34 @@ fun ReplicaApp() {
                                         open(AccountDestinations.MANAGEMENT)
                                     HomeControl.NOTIFICATIONS -> open("S-075")
                                     HomeControl.SUPPORT -> open(SupportDestinations.FAQ)
+                                    HomeControl.SEARCH -> open(ShortcutDestinations.SCREEN)
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in SavedDestinationRoutes.implemented) {
+                            SavedDestinationScreen(
+                                page,
+                                scenario,
+                                savedDestinations,
+                                { savedDestinations = it },
+                                ::goBack,
+                                { key ->
+                                    pickerResult = key
+                                    goBack()
+                                },
+                                { scenario = "populated" },
+                                ::unavailable,
+                                notice != null,
+                            )
+                        } else if (page == ShortcutDestinations.SCREEN) {
+                            ShortcutPage(
+                                scenario,
+                                pinnedServices,
+                                { pinnedServices = it },
+                                ::goBack,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else if (page == "S-075") {
                             NotificationPage(
                                 scenario,
