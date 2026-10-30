@@ -672,7 +672,7 @@ The third whole-app map: the HTTP calls the app makes, grouped by the P1a-03 fea
 | M-017 | req ticketing edit | id:long, uuid:string, mobileNumber:string, traceId:string, question:string | Recovered |
 | M-018 | req ticketing history | uuid:string, mobileNumber:string, traceId:string | Recovered |
 | M-019 | req ticketing pagination | offset:integer, count:integer, uuid:string, mobileNumber:string | Recovered |
-| M-020 | req verify otp | payload:string | Recovered |
+| M-020 | req verify otp | otp:string, identificationCode:string, referenceNumber:string | Recovered |
 | M-021 | charity | id:long, version:integer, name:string, desc:string, key:string, accountNo:string, website:string, icon:integer | Recovered |
 | M-022 | res attachment | attachment:string | Recovered |
 | M-023 | res balance | actualBalance:number, availableBalance:number, currency:string, currencyDescription:string, date:string, ledgerBalance:number, pledgeAmount:number | Recovered |

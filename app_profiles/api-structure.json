@@ -14243,13 +14243,23 @@
       "name": "req verify otp",
       "fields": [
         {
-          "name": "payload",
+          "name": "otp",
+          "type": "string",
+          "label": "Recovered"
+        },
+        {
+          "name": "identificationCode",
+          "type": "string",
+          "label": "Recovered"
+        },
+        {
+          "name": "referenceNumber",
           "type": "string",
           "label": "Recovered"
         }
       ],
       "label": "Recovered",
-      "note": "fields from smali"
+      "note": "NS-SUPPORT: corrected direct model fields; encrypted wrapping remains separate and Unknown"
     },
     {
       "id": "M-021",

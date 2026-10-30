@@ -11,7 +11,9 @@ object HomeDestinations {
             CardRequestDestinations.implemented +
             CardSecurityDestinations.implemented +
             WalletDestinations.implemented +
-            ProfileDestinations.implemented
+            ProfileDestinations.implemented +
+            setOf("S-075") +
+            SupportDestinations.implemented
 }
 
 enum class HomeControl(val title: String) {

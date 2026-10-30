@@ -57,6 +57,14 @@ class HomeNavigationTest {
                 "S-074",
                 "S-463",
                 "S-464",
+                "S-075",
+                "S-076",
+                "S-077",
+                "S-078",
+                "S-079",
+                "S-080",
+                "S-081",
+                "S-082",
             ),
             HomeDestinations.implemented,
         )
@@ -74,7 +82,15 @@ class HomeNavigationTest {
         val navigation = HomeNavigation()
         assertNull(navigation.unavailable(HomeControl.HOME))
         HomeControl.entries
-            .filter { it != HomeControl.HOME && it != HomeControl.BALANCE }
+            .filter {
+                it !in
+                    setOf(
+                        HomeControl.HOME,
+                        HomeControl.BALANCE,
+                        HomeControl.NOTIFICATIONS,
+                        HomeControl.SUPPORT,
+                    )
+            }
             .forEach {
                 assertTrue(navigation.unavailable(it)!!.contains(it.title))
                 assertTrue(navigation.unavailable(it)!!.contains("در خانه می‌مانید"))
