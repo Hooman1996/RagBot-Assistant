@@ -7,7 +7,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 - **Labels:** `Recovered` (precise code location), `Inferred` (reasoned from a view-model or surrounding content), `Unknown` (obfuscated/computed/server-driven, with the reason). Nothing is `Observed` — the app was not run.
 - **IDs:** `F-001`/`F-002`/`F-066` reuse the P1a-03 inventory IDs (launcher, internal router, dashboard-menu hub). Every other screen is `S-###` (stable, assigned in area then name order).
 
-**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 346, Inferred 115, Unknown 24, Observed 0.
+**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 352, Inferred 109, Unknown 24, Observed 0.
 
 ## F-001 — Launch
 
@@ -231,7 +231,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-130 | Cards: card status visibility | Recovered | activity; named from its own screen content |
 | S-131 | Cards: credit card detail | Recovered | activity; named from its own screen content |
 | S-132 | Cards: credit card detail confirmation | Recovered | activity; named from its own screen content |
-| S-133 | Cards: credit card detail receipt | Inferred | activity; feature read from its view-model |
+| S-133 | Cards: credit card detail receipt | Recovered | activity; identity and callers recovered in FR-11 (BP-RECOVERY) |
 | S-134 | Cards: credit card file loan summary | Recovered | activity; named from its own screen content |
 | S-135 | Cards: get or change pass | Recovered | activity; named from its own screen content |
 | S-136 | Cards: second pass activation | Recovered | activity; named from its own screen content |
@@ -355,10 +355,10 @@ Every navigation destination the catalogued banking app declares, named at scree
 |---|---|---|---|
 | S-205 | Bills: bill card info | Recovered | activity; named from its own screen content |
 | S-206 | Bills: bill card info no login | Recovered | activity; named from its own screen content |
-| S-207 | Bills: bill confirmation | Inferred | activity; feature read from its view-model |
-| S-208 | Bills: bill transfer | Inferred | activity; feature read from its view-model |
-| S-209 | Bills: bill transfer | Inferred | activity; feature read from its view-model |
-| S-210 | Bills: bill transfer | Inferred | activity; feature read from its view-model |
+| S-207 | Bills: bill confirmation | Recovered | activity; identity and callers recovered in FR-11 (BP-RECOVERY) |
+| S-208 | Bills: bill payment by typed card (no source picker) | Recovered | activity; identity and callers recovered in FR-11 (BP-RECOVERY) |
+| S-209 | Bills: bill payment from account | Recovered | activity; identity and callers recovered in FR-11 (BP-RECOVERY) |
+| S-210 | Bills: bill payment by card | Recovered | activity; identity and callers recovered in FR-11 (BP-RECOVERY) |
 
 ## F-044 — Mobile top-up
 
@@ -608,7 +608,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-402 | Insurance: insurance list | Recovered | activity; named from its own screen content |
 | S-403 | Insurance: insurance menu | Recovered | activity; named from its own screen content |
 | S-404 | Insurance: insurance payment confirmation | Recovered | activity; named from its own screen content |
-| S-405 | Insurance: insurance payment receipt | Inferred | activity; feature read from its view-model |
+| S-405 | Insurance: insurance payment receipt | Recovered | activity; identity and callers recovered in FR-11 (BP-RECOVERY) |
 
 ## F-055 — Credit product
 

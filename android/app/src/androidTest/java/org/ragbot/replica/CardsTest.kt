@@ -102,7 +102,7 @@ class CardsTest {
     }
 
     @Test
-    fun creditDetailAndFileLoanUseTheFirstCreditCardAndKeepPaymentUnavailable() {
+    fun creditDetailAndFileLoanUseTheFirstCreditCardAndRepaymentCanBeCancelled() {
         enterCards()
         compose.onNodeWithTag("card-kind-CREDIT").performClick()
         nextCard()
@@ -113,7 +113,9 @@ class CardsTest {
         compose.onNodeWithText("۵۰۰٬۰۰۰٬۰۰۰ ریال").assertIsDisplayed()
         compose.onNodeWithText("۳۲۰٬۰۰۰٬۰۰۰ ریال").assertIsDisplayed()
         compose.onNodeWithTag("credit-pay").performScrollTo().performClick()
-        unavailable("پرداخت")
+        compose.onNodeWithTag("credit-amount").assertIsDisplayed()
+        compose.onNodeWithTag("credit-amount-cancel").performClick()
+        compose.onNodeWithTag("credit-amount").assertDoesNotExist()
         back()
         compose.onNodeWithTag("card-card-5").assertIsDisplayed()
         compose.onNodeWithTag("card-action-loan").performClick()

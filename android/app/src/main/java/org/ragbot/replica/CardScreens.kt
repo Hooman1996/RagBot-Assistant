@@ -323,6 +323,7 @@ internal fun CardPage(
     onOpen: (String) -> Unit,
     onRetry: () -> Unit,
     onUnavailable: (String) -> Unit,
+    onRepay: (CreditRepayment) -> Unit = {},
 ) {
     val title =
         when (page) {
@@ -349,7 +350,7 @@ internal fun CardPage(
                     CardDestinations.MANAGEMENT -> CardManagement(onOpen, onUnavailable)
                     CardDestinations.FETCH -> FetchCards(onBack, onUnavailable)
                     CardDestinations.VISIBILITY -> CardVisibility(onUnavailable)
-                    CardDestinations.CREDIT -> CreditDetail(onBack, onUnavailable)
+                    CardDestinations.CREDIT -> CreditDetail(onBack, onRepay)
                     CardDestinations.FILE_LOAN -> FileLoans(onUnavailable)
                     else -> SecureBalanceForm(page, onBack, onUnavailable)
                 }
@@ -613,7 +614,12 @@ private fun firstCredit() = CardFixture.of(CardKind.CREDIT).firstOrNull()
 
 /** S-131: recovered behavior reads the first credit card, not the tab's current card. */
 @Composable
-private fun CreditDetail(onBack: () -> Unit, onUnavailable: (String) -> Unit) {
+private fun CreditDetail(onBack: () -> Unit, onRepay: (CreditRepayment) -> Unit) {
+    // BP-RECOVERY: Pay asks for the repayment amount, then the source account, then opens S-132.
+    var amountDialog by rememberSaveable { mutableStateOf(false) }
+    var amount by rememberSaveable { mutableStateOf("") }
+    var error by rememberSaveable { mutableStateOf<String?>(null) }
+    var sourceDialog by rememberSaveable { mutableStateOf(false) }
     val card = firstCredit()
     val summary = card?.let { CardFixture.credit[it.key] }
     if (card == null || summary == null) {
@@ -638,13 +644,78 @@ private fun CreditDetail(onBack: () -> Unit, onUnavailable: (String) -> Unit) {
     }
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Button(
-            { onUnavailable("پرداخت بدهی کارت اعتباری") },
+            { amountDialog = true },
             Modifier.weight(1f).testTag("credit-pay"),
             enabled = summary.totalPayable > 0,
         ) {
             Text("پرداخت")
         }
         OutlinedButton(onBack, Modifier.weight(1f)) { Text("انصراف") }
+    }
+    if (amountDialog) {
+        AlertDialog(
+            onDismissRequest = { amountDialog = false },
+            title = { Text("مبلغ بازپرداخت") },
+            text = {
+                OutlinedTextField(
+                    amount,
+                    {
+                        amount = it
+                        error = null
+                    },
+                    Modifier.fillMaxWidth().testTag("credit-amount"),
+                    label = { Text("مبلغ (ریال)") },
+                    singleLine = true,
+                    textStyle =
+                        androidx.compose.ui.text.TextStyle(textDirection = TextDirection.Ltr),
+                    isError = error != null,
+                    supportingText = error?.let { { Text(it) } },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    {
+                        error = PaymentRules.repaymentError(amount, summary.totalPayable)
+                        if (error == null) {
+                            amountDialog = false
+                            sourceDialog = true
+                        }
+                    },
+                    Modifier.testTag("credit-amount-pay"),
+                ) {
+                    Text("پرداخت")
+                }
+            },
+            dismissButton = {
+                TextButton({ amountDialog = false }, Modifier.testTag("credit-amount-cancel")) {
+                    Text("انصراف")
+                }
+            },
+        )
+    }
+    if (sourceDialog) {
+        AlertDialog(
+            onDismissRequest = { sourceDialog = false },
+            title = { Text("انتخاب حساب مبدا") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AccountFixture.accounts.forEach { account ->
+                        TextButton(
+                            {
+                                sourceDialog = false
+                                onRepay(CreditRepayment(latinDigits(amount).toLong(), account.key))
+                            },
+                            Modifier.testTag("credit-source-${account.key}"),
+                        ) {
+                            Text("${account.type}\n${account.number}")
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = { TextButton({ sourceDialog = false }) { Text("انصراف") } },
+        )
     }
 }
 

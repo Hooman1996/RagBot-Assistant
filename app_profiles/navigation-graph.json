@@ -1076,9 +1076,9 @@
       "id": "S-133",
       "name": "Cards: credit card detail receipt",
       "area": "F-033",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-11 (BP-RECOVERY)."
     },
     {
       "id": "S-134",
@@ -1668,33 +1668,33 @@
       "id": "S-207",
       "name": "Bills: bill confirmation",
       "area": "F-043",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-11 (BP-RECOVERY)."
     },
     {
       "id": "S-208",
-      "name": "Bills: bill transfer",
+      "name": "Bills: bill payment by typed card (no source picker)",
       "area": "F-043",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-11 (BP-RECOVERY)."
     },
     {
       "id": "S-209",
-      "name": "Bills: bill transfer",
+      "name": "Bills: bill payment from account",
       "area": "F-043",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-11 (BP-RECOVERY)."
     },
     {
       "id": "S-210",
-      "name": "Bills: bill transfer",
+      "name": "Bills: bill payment by card",
       "area": "F-043",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-11 (BP-RECOVERY)."
     },
     {
       "id": "S-211",
@@ -3252,9 +3252,9 @@
       "id": "S-405",
       "name": "Insurance: insurance payment receipt",
       "area": "F-054",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-11 (BP-RECOVERY)."
     },
     {
       "id": "S-406",
