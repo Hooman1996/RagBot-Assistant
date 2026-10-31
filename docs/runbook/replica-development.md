@@ -1,6 +1,6 @@
 # Android replica development
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers), #62 (FR-09 group transfers), #64 (FR-10 recurring/continuous transfers) and #66 (FR-11 bill/insurance payments), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers), #62 (FR-09 group transfers), #64 (FR-10 recurring/continuous transfers), #66 (FR-11 bill/insurance payments) and #68 (FR-12 mobile top-up/charity), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -430,7 +430,7 @@ to the recovered rule; changes are local only.
 
 Home's bookmark opens saved repetitive transactions (S-200; S-199 is only its
 host). **تکرار تراکنش** opens FR-08's S-176 or S-173 review prefilled without
-pre-validation; charge repeat is unavailable. See
+pre-validation; charge repeat opens S-212 since FR-12. See
 [inspection](../reports/recurring-transfers-inspection.md) and
 [requirements](../reports/recurring-transfers-requirements.md). Recovery ledger,
 captures, acceptance output and merged installation verification remain in
@@ -452,4 +452,21 @@ entries open independent receipts S-092, S-405 and S-133. Nothing is inquired,
 paid or sent. See [inspection](../reports/bill-payments-inspection.md) and
 [requirements](../reports/bill-payments-requirements.md). Recovery ledger,
 captures, acceptance output and merged installation verification remain in
-`local/evidence/bill-payments/`. No new assets. Stop before FR-12.
+`local/evidence/bill-payments/`. No new assets. FR-12 was subsequently
+approved in #68; later batches still require owner approval.
+
+## Mobile top-up and charity (FR-12)
+
+Demo entries open the three top-up source modes: **خرید شارژ با حساب** (S-211),
+**خرید شارژ با کارت** (S-213) and **خرید شارژ بدون ورود** (S-214, typed card).
+Mobile numbers need 11 digits starting with `09`; synthetic prefixes select the
+operator (`0900` همراه اول, `0901` ایرانسل, `0902` رایتل). Amounts follow each
+operator's synthetic minimum, maximum and multiplier, or a listed default. S-212
+confirms; account purchase is unavailable and card modes open S-215/S-216 card
+info, whose fields are never kept. **کمک به خیریه** opens the S-283 picker →
+S-284 (amount 10,000–100,000,000 IRR) → S-282. Separate entries open receipts
+S-094 and S-095. Nothing is bought or donated. See
+[inspection](../reports/mobile-charity-inspection.md) and
+[requirements](../reports/mobile-charity-requirements.md). Recovery ledger,
+captures, acceptance output and merged installation verification remain in
+`local/evidence/mobile-charity/`. No new assets. Stop before FR-13.

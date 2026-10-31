@@ -7,7 +7,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 - **Labels:** `Recovered` (precise code location), `Inferred` (reasoned from a view-model or surrounding content), `Unknown` (obfuscated/computed/server-driven, with the reason). Nothing is `Observed` — the app was not run.
 - **IDs:** `F-001`/`F-002`/`F-066` reuse the P1a-03 inventory IDs (launcher, internal router, dashboard-menu hub). Every other screen is `S-###` (stable, assigned in area then name order).
 
-**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 352, Inferred 109, Unknown 24, Observed 0.
+**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 356, Inferred 105, Unknown 24, Observed 0.
 
 ## F-001 — Launch
 
@@ -364,10 +364,10 @@ Every navigation destination the catalogued banking app declares, named at scree
 
 | ID | Name | Label | Basis |
 |---|---|---|---|
-| S-211 | Mobile top-up: charge by account | Inferred | activity; feature read from its view-model |
-| S-212 | Mobile top-up: charge by account confirmation | Inferred | activity; feature read from its view-model |
-| S-213 | Mobile top-up: charge by card | Inferred | activity; feature read from its view-model |
-| S-214 | Mobile top-up: charge by card | Inferred | activity; feature read from its view-model |
+| S-211 | Mobile top-up: charge by account | Recovered | activity; identity and callers recovered in FR-12 (MC-RECOVERY) |
+| S-212 | Mobile top-up: charge confirmation | Recovered | activity; identity and callers recovered in FR-12 (MC-RECOVERY) |
+| S-213 | Mobile top-up: charge by card | Recovered | activity; identity and callers recovered in FR-12 (MC-RECOVERY) |
+| S-214 | Mobile top-up: charge by typed card (no source picker) | Recovered | activity; identity and callers recovered in FR-12 (MC-RECOVERY) |
 | S-215 | Mobile top-up: charge card info | Recovered | activity; named from its own screen content |
 | S-216 | Mobile top-up: charge card info no login | Recovered | activity; named from its own screen content |
 

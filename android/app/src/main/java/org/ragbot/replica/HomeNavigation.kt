@@ -22,7 +22,9 @@ object HomeDestinations {
             RecurringTransferDestinations.implemented +
             BillPaymentDestinations.implemented +
             InsuranceDestinations.implemented +
-            CreditRepaymentDestinations.implemented
+            CreditRepaymentDestinations.implemented +
+            TopUpDestinations.implemented +
+            CharityDestinations.implemented
 }
 
 enum class HomeControl(val title: String) {
