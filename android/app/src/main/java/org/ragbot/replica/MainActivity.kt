@@ -108,6 +108,9 @@ fun ReplicaApp() {
     var insuranceInstallment by rememberSaveable { mutableIntStateOf(-1) }
     var insuranceSource by rememberSaveable { mutableStateOf("") }
     var creditRepayment by rememberSaveable { mutableStateOf<CreditRepayment?>(null) }
+    var topUpForm by rememberSaveable { mutableStateOf(TopUpDestinations.ACCOUNT) }
+    var topUpDrafts by rememberSaveable { mutableStateOf(mapOf<String, TopUpDraft>()) }
+    var charityDraft by rememberSaveable { mutableStateOf<CharityDraft?>(null) }
     var savedDestinations by rememberSaveable { mutableStateOf(SavedDestinationFixture.records) }
     var pinnedServices by rememberSaveable { mutableStateOf(ShortcutFixture.initialPinnedIds) }
     var pickerReview by rememberSaveable { mutableStateOf(false) }
@@ -142,6 +145,7 @@ fun ReplicaApp() {
         )
             accountTransferMode = id
         if (id in BillPaymentDestinations.forms) billForm = id
+        if (id in TopUpDestinations.forms) topUpForm = id
         focus.clearFocus()
         keyboard?.hide()
         stack = stack + id
@@ -209,7 +213,20 @@ fun ReplicaApp() {
                             ))
                 open(CardTransferDestinations.CONFIRM)
             }
-            "CHARGE" -> unavailable("تکرار خرید شارژ")
+            // MC-RECOVERY: a charge repeat opens the account top-up confirmation.
+            "CHARGE" -> {
+                topUpForm = TopUpDestinations.ACCOUNT
+                topUpDrafts =
+                    topUpDrafts +
+                        (topUpForm to
+                            TopUpDraft(
+                                record.source,
+                                record.destination,
+                                TopUpRules.detect(record.destination, ""),
+                                record.amount.toString(),
+                            ))
+                open(TopUpDestinations.CONFIRM)
+            }
             else -> {
                 accountTransferMode =
                     if (record.type == "INTERNAL") AccountTransferDestinations.INTERNAL
@@ -402,6 +419,12 @@ fun ReplicaApp() {
                                 InsuranceDestinations.RECEIPT to "رسید مستقل قسط بیمه — نمونه",
                                 CreditRepaymentDestinations.RECEIPT to
                                     "رسید مستقل بازپرداخت کارت اعتباری — نمونه",
+                                TopUpDestinations.ACCOUNT to "خرید شارژ با حساب",
+                                TopUpDestinations.CARD to "خرید شارژ با کارت",
+                                TopUpDestinations.WITHOUT_SOURCE to "خرید شارژ بدون ورود",
+                                TopUpDestinations.RECEIPT to "رسید مستقل شارژ — نمونه",
+                                CharityDestinations.PICKER to "کمک به خیریه",
+                                CharityDestinations.RECEIPT to "رسید مستقل خیریه — نمونه",
                             )
                             .forEach { (id, title) ->
                                 TextButton(
@@ -619,6 +642,30 @@ fun ReplicaApp() {
                                     insuranceInstallment = -1
                                     open(InsuranceDestinations.INSTALLMENTS)
                                 },
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (
+                            page in TopUpDestinations.implemented + CharityDestinations.implemented
+                        ) {
+                            TopUpCharityPage(
+                                page,
+                                scenario,
+                                topUpForm,
+                                topUpDrafts[topUpForm]
+                                    ?: TopUpDraft(
+                                        when (topUpForm) {
+                                            TopUpDestinations.ACCOUNT -> accountKey
+                                            TopUpDestinations.CARD ->
+                                                CardFixture.of(CardKind.DEBIT).first().key
+                                            else -> ""
+                                        }
+                                    ),
+                                { topUpDrafts = topUpDrafts + (topUpForm to it) },
+                                charityDraft ?: CharityDraft(sourceId = accountKey),
+                                { charityDraft = it },
+                                ::goBack,
+                                ::open,
                                 { scenario = "populated" },
                                 ::unavailable,
                             )

@@ -310,51 +310,66 @@ private fun BillCardInfo(
     onBack: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
+    PaymentRules.inquiry(draft).first?.let {
+        TransferValue("مقصد", it.company)
+        TransferValue("مبلغ (ریال)", persianNumber(it.amount))
+    }
+    CardPaymentInfo(page == BillPaymentDestinations.CARD_INFO, "پرداخت قبض", onBack, onUnavailable)
+}
+
+/** Recovered card-info fields; the login variant adds the password type and save choice. */
+@Composable
+internal fun CardPaymentInfo(
+    login: Boolean,
+    title: String,
+    onBack: () -> Unit,
+    onUnavailable: (String) -> Unit,
+) {
     // Credentials reset through recreation and Back. They never enter SavedState or a fixture.
     var cvv2 by remember { mutableStateOf("") }
     var expiry by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var dynamic by remember { mutableStateOf(true) }
     var keep by remember { mutableStateOf(false) }
-    PaymentRules.inquiry(draft).first?.let {
-        TransferValue("مقصد", it.company)
-        TransferValue("مبلغ (ریال)", persianNumber(it.amount))
-    }
-    if (page == BillPaymentDestinations.CARD_INFO) {
+    if (login) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             RadioButton(
                 dynamic,
                 { dynamic = true },
-                Modifier.testTag("bill-card-dynamic").semantics { contentDescription = "رمز پویا" },
+                Modifier.testTag("payment-card-dynamic").semantics {
+                    contentDescription = "رمز پویا"
+                },
             )
             Text("رمز پویا")
             RadioButton(
                 !dynamic,
                 { dynamic = false },
-                Modifier.testTag("bill-card-static").semantics { contentDescription = "رمز ثابت" },
+                Modifier.testTag("payment-card-static").semantics {
+                    contentDescription = "رمز ثابت"
+                },
             )
             Text("رمز ثابت")
         }
     }
-    CardTransferSecret("CVV2", cvv2, "bill-card-cvv2") { cvv2 = it }
-    CardTransferSecret("تاریخ انقضا", expiry, "bill-card-expiry") { expiry = it }
-    CardTransferSecret("رمز دوم", password, "bill-card-password") { password = it }
+    CardTransferSecret("CVV2", cvv2, "payment-card-cvv2") { cvv2 = it }
+    CardTransferSecret("تاریخ انقضا", expiry, "payment-card-expiry") { expiry = it }
+    CardTransferSecret("رمز دوم", password, "payment-card-password") { password = it }
     if (dynamic)
-        OutlinedButton({ onUnavailable("دریافت رمز پویا") }, Modifier.testTag("bill-card-otp")) {
+        OutlinedButton({ onUnavailable("دریافت رمز پویا") }, Modifier.testTag("payment-card-otp")) {
             Text("درخواست رمز پویا — غیرفعال")
         }
-    if (page == BillPaymentDestinations.CARD_INFO)
+    if (login)
         Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(
                 keep,
                 { keep = it },
-                Modifier.testTag("bill-card-keep").semantics {
+                Modifier.testTag("payment-card-keep").semantics {
                     contentDescription = "ذخیره اطلاعات کارت فقط در پیش‌نمایش"
                 },
             )
             Text("ذخیره اطلاعات کارت • فقط انتخاب محلی، چیزی ذخیره نمی‌شود")
         }
-    PaymentActions("پرداخت", "پرداخت قبض", onBack, onUnavailable)
+    PaymentActions("پرداخت", title, onBack, onUnavailable)
 }
 
 @Composable
@@ -504,13 +519,13 @@ private fun PaymentReceipt(page: String, onBack: () -> Unit, onUnavailable: (Str
 }
 
 @Composable
-private fun PaymentSource(accountKey: String) {
+internal fun PaymentSource(accountKey: String) {
     val account = AccountFixture.accounts.find { it.key == accountKey }
     TransferValue("مبدا", account?.let { "${it.type} · ${it.number}" } ?: "")
 }
 
 @Composable
-private fun PaymentActions(
+internal fun PaymentActions(
     label: String,
     title: String,
     onBack: () -> Unit,
@@ -523,7 +538,7 @@ private fun PaymentActions(
 }
 
 @Composable
-private fun PaymentRow(label: String, value: String) {
+internal fun PaymentRow(label: String, value: String) {
     Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.labelMedium)
         Text(value, style = TextStyle(textDirection = TextDirection.Content))
@@ -531,7 +546,7 @@ private fun PaymentRow(label: String, value: String) {
 }
 
 @Composable
-private fun PaymentInput(
+internal fun PaymentInput(
     tag: String,
     label: String,
     value: String,

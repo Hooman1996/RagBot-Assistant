@@ -1700,33 +1700,33 @@
       "id": "S-211",
       "name": "Mobile top-up: charge by account",
       "area": "F-044",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-12 (MC-RECOVERY)."
     },
     {
       "id": "S-212",
-      "name": "Mobile top-up: charge by account confirmation",
+      "name": "Mobile top-up: charge confirmation",
       "area": "F-044",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-12 (MC-RECOVERY)."
     },
     {
       "id": "S-213",
       "name": "Mobile top-up: charge by card",
       "area": "F-044",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-12 (MC-RECOVERY)."
     },
     {
       "id": "S-214",
-      "name": "Mobile top-up: charge by card",
+      "name": "Mobile top-up: charge by typed card (no source picker)",
       "area": "F-044",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "Activity identity, callers and arguments recovered during FR-12 (MC-RECOVERY)."
     },
     {
       "id": "S-215",
