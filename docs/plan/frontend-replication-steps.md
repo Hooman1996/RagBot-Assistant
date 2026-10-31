@@ -1,5 +1,11 @@
 # Frontend replication steps
 
+> **D-021 (owner, 31 Oct 2026):** Stage 1 ends after FR-01 to FR-13 plus, in order, FR-35, FR-23,
+> FR-14 (without the QR scanner), FR-15, FR-19, FR-20, FR-16 and FR-17. Every other batch is
+> deferred. From now on a batch writes no separate inspection or requirements report: it adds its
+> result to its row here and pastes its acceptance output in the PR. Where the text below asks for
+> a per-batch requirements matrix, that matrix is now written in Stage 5a for supported features.
+
 Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-14–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
@@ -237,7 +243,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-14 — Wallet purchases, transfers and QR scanner shell
 
-**Status:** proposed. **Families:** F-032. **Existing nodes:** S-099–S-109, S-116–S-117 (13 primary allocations). **Dependencies:** FR-12, FR-13.
+**Status:** in scope under D-021 (order 3 of 8); needs its own approved issue. **Families:** F-032. **Existing nodes:** S-099–S-109, S-116–S-117 (13 primary allocations). **Dependencies:** FR-12, FR-13.
 
 **What opens afterward:** Inspect wallet charge/withdrawal, wallet-to-wallet, bill/top-up/purchase and fast-payment scan forms through local review states.
 
@@ -251,7 +257,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-15 — Account/wallet funding and gateway states
 
-**Status:** proposed. **Families:** F-045. **Existing nodes:** S-217–S-235 (19 primary allocations). **Dependencies:** FR-02, FR-13.
+**Status:** in scope under D-021 (order 4 of 8); needs its own approved issue. **Families:** F-045. **Existing nodes:** S-217–S-235 (19 primary allocations). **Dependencies:** FR-02, FR-13.
 
 **What opens afterward:** Inspect account/wallet increase-balance entry, in-flow/standalone waiting, result and receipt previews.
 
@@ -265,7 +271,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-16 — Vehicle-service hub and saved vehicle/contact records
 
-**Status:** proposed. **Families:** F-046. **Existing nodes:** S-246, S-248, S-252–S-254, S-256, S-259–S-260, S-262–S-273 (20 primary allocations). **Dependencies:** FR-05.
+**Status:** in scope under D-021 (order 7 of 8); needs its own approved issue. **Families:** F-046. **Existing nodes:** S-246, S-248, S-252–S-254, S-256, S-259–S-260, S-262–S-273 (20 primary allocations). **Dependencies:** FR-05.
 
 **What opens afterward:** Open the recovered vehicle-service hub, manage synthetic plates/contacts/license selections and inspect inquiry history.
 
@@ -279,7 +285,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-17 — Road toll inquiry and payment previews
 
-**Status:** proposed. **Families:** F-046. **Existing nodes:** S-240–S-242, S-249–S-251, S-257–S-258, S-261, S-274–S-276 (12 primary allocations). **Dependencies:** FR-11, FR-16.
+**Status:** in scope under D-021 (order 8 of 8); needs its own approved issue. **Families:** F-046. **Existing nodes:** S-240–S-242, S-249–S-251, S-257–S-258, S-261, S-274–S-276 (12 primary allocations). **Dependencies:** FR-11, FR-16.
 
 **What opens afterward:** Inspect annual/freeway/traffic/pollution inquiry and charge rows, then recovered confirmation and receipt previews.
 
@@ -293,7 +299,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-18 — Vehicle status, violations, tax and document inquiries
 
-**Status:** proposed. **Families:** F-046. **Existing nodes:** S-238–S-239, S-243–S-245, S-247, S-255, S-277–S-281 (12 primary allocations). **Dependencies:** FR-16, FR-17.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-046. **Existing nodes:** S-238–S-239, S-243–S-245, S-247, S-255, S-277–S-281 (12 primary allocations). **Dependencies:** FR-16, FR-17.
 
 **What opens afterward:** Inspect active-plate/license/negative-point/document queries and violation/transfer-tax charge previews.
 
@@ -307,7 +313,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-19 — Cheque overview, tracking and chequebook requests
 
-**Status:** proposed. **Families:** F-035, F-036. **Existing nodes:** S-142–S-147, S-149–S-150, S-153–S-156 (12 primary allocations). **Dependencies:** FR-02.
+**Status:** in scope under D-021 (order 5 of 8); needs its own approved issue. **Families:** F-035, F-036. **Existing nodes:** S-142–S-147, S-149–S-150, S-153–S-156 (12 primary allocations). **Dependencies:** FR-02.
 
 **What opens afterward:** Open cheque menu/list/tracking, inspect chequebook/request details and walk issue inquiry/fee/review states.
 
@@ -321,7 +327,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-20 — Digital cheque activation, cartable and transfer
 
-**Status:** proposed. **Families:** F-035, F-037. **Existing nodes:** S-151–S-152, S-157–S-159 (5 primary allocations). **Dependencies:** FR-19.
+**Status:** in scope under D-021 (order 6 of 8); needs its own approved issue. **Families:** F-035, F-037. **Existing nodes:** S-151–S-152, S-157–S-159 (5 primary allocations). **Dependencies:** FR-19.
 
 **What opens afterward:** Inspect digital-cheque activation requirements, cartable list/detail and transfer review with synthetic records.
 
@@ -335,7 +341,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-21 — Cheque acceptance, payment and agent flows
 
-**Status:** proposed. **Families:** F-038. **Existing nodes:** S-160–S-172 (13 primary allocations). **Dependencies:** FR-19, FR-20.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-038. **Existing nodes:** S-160–S-172 (13 primary allocations). **Dependencies:** FR-19, FR-20.
 
 **What opens afterward:** Inspect cheque-ID/type/receiver/agent entry, inquiry/validation, preview and history/detail states.
 
@@ -349,7 +355,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-22 — Guarantee lists, details and authenticity inquiries
 
-**Status:** proposed. **Families:** F-050, F-059. **Existing nodes:** S-363–S-365, S-446–S-451 (9 primary allocations). **Dependencies:** FR-02.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-050, F-059. **Existing nodes:** S-363–S-365, S-446–S-451 (9 primary allocations). **Dependencies:** FR-02.
 
 **What opens afterward:** Inspect guarantee records/detail and own-bank/all-bank authenticity inquiry forms/results.
 
@@ -363,7 +369,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-23 — Bank identifier conversion
 
-**Status:** proposed. **Families:** F-042. **Existing nodes:** S-201–S-204 (4 primary allocations). **Dependencies:** FR-02, FR-03.
+**Status:** in scope under D-021 (order 2 of 8); needs its own approved issue. **Families:** F-042. **Existing nodes:** S-201–S-204 (4 primary allocations). **Dependencies:** FR-02, FR-03.
 
 **What opens afterward:** Inspect account/card/IBAN conversion variants, synthetic ownership result and any recovered paid-query review.
 
@@ -377,7 +383,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-24 — Credit and bounced-cheque inquiries
 
-**Status:** proposed. **Families:** F-059. **Existing nodes:** S-440–S-445, S-452–S-453 (8 primary allocations). **Dependencies:** FR-02, FR-13, FR-22.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-059. **Existing nodes:** S-440–S-445, S-452–S-453 (8 primary allocations). **Dependencies:** FR-02, FR-13, FR-22.
 
 **What opens afterward:** Inspect inquiry menu/fee, bounced-cheque and credit-report/rating results with their detail and unsuccessful states.
 
@@ -391,7 +397,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-25 — Rewards, referral and agent history
 
-**Status:** proposed. **Families:** F-057, F-060, F-061. **Existing nodes:** S-426–S-433, S-454–S-462 (17 primary allocations). **Dependencies:** FR-02, FR-07.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-057, F-060, F-061. **Existing nodes:** S-426–S-433, S-454–S-462 (17 primary allocations). **Dependencies:** FR-02, FR-07.
 
 **What opens afterward:** Inspect points/reward detail/history, local coin-transfer request review and referral/proxy-plan/agent history.
 
@@ -405,7 +411,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-26 — Personal finance dashboard, budgets and stories
 
-**Status:** proposed. **Families:** F-058. **Existing nodes:** S-434–S-439 (6 primary allocations). **Dependencies:** FR-02.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-058. **Existing nodes:** S-434–S-439 (6 primary allocations). **Dependencies:** FR-02.
 
 **What opens afterward:** Open financial-performance detail, inspect synthetic budgets/category detail and recovered story/list presentation.
 
@@ -419,7 +425,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-27 — Brokerage and fund management
 
-**Status:** proposed. **Families:** F-052. **Existing nodes:** S-383–S-394 (12 primary allocations). **Dependencies:** FR-02, FR-05.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-052. **Existing nodes:** S-383–S-394 (12 primary allocations). **Dependencies:** FR-02, FR-05.
 
 **What opens afterward:** Inspect broker list/inquiry/agreement, credential-form presentation, fund detail/orders and subscription/redemption review states.
 
@@ -433,7 +439,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-28 — Crowdfunding plans and participation preview
 
-**Status:** proposed. **Families:** F-053. **Existing nodes:** S-395–S-400 (6 primary allocations). **Dependencies:** FR-02, FR-27.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-053. **Existing nodes:** S-395–S-400 (6 primary allocations). **Dependencies:** FR-02, FR-27.
 
 **What opens afterward:** Inspect plan list/detail/agreement and participation amount/review previews.
 
@@ -447,7 +453,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-29 — Digital-signature enrollment and document states
 
-**Status:** proposed. **Families:** F-051. **Existing nodes:** S-366–S-382 (17 primary allocations). **Dependencies:** FR-05.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-051. **Existing nodes:** S-366–S-382 (17 primary allocations). **Dependencies:** FR-05.
 
 **What opens afterward:** Inspect certificate/menu/document lists, enrollment conditions/information/agreement, video/sign capture presentation and pending/result/detail states.
 
@@ -461,7 +467,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-30 — Promissory-note inventory and details
 
-**Status:** proposed. **Families:** F-049. **Existing nodes:** S-340–S-344, S-359–S-362 (9 primary allocations). **Dependencies:** FR-29.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-049. **Existing nodes:** S-340–S-344, S-359–S-362 (9 primary allocations). **Dependencies:** FR-29.
 
 **What opens afterward:** Inspect promissory menu, owned-note entry/list/result/detail and the recovered sub-flow boundaries.
 
@@ -475,7 +481,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-31 — Promissory-note issue and guarantee preview
 
-**Status:** proposed. **Families:** F-049. **Existing nodes:** S-345–S-358 (14 primary allocations). **Dependencies:** FR-05, FR-15, FR-29, FR-30.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-049. **Existing nodes:** S-345–S-358 (14 primary allocations). **Dependencies:** FR-05, FR-15, FR-29, FR-30.
 
 **What opens afterward:** Inspect note issue/guarantee amount, party/address, agreements, prevalidation, draft/payment and result states.
 
@@ -489,7 +495,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-32 — Wage-advance onboarding and dashboard
 
-**Status:** proposed. **Families:** F-056. **Existing nodes:** S-410–S-416, S-420, S-423–S-425 (11 primary allocations). **Dependencies:** FR-02.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-056. **Existing nodes:** S-410–S-416, S-420, S-423–S-425 (11 primary allocations). **Dependencies:** FR-02.
 
 **What opens afterward:** Inspect service entry, activation conditions/account/agreement/rating, dashboard and history.
 
@@ -503,7 +509,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-33 — Wage-advance request and settlement previews
 
-**Status:** proposed. **Families:** F-056. **Existing nodes:** S-417–S-419, S-421–S-422 (5 primary allocations). **Dependencies:** FR-32.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-056. **Existing nodes:** S-417–S-419, S-421–S-422 (5 primary allocations). **Dependencies:** FR-32.
 
 **What opens afterward:** Inspect advance amount/agreement/review and settlement amount/receipt preview.
 
@@ -517,7 +523,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-34 — Credit-product guide and onboarding
 
-**Status:** proposed. **Families:** F-055. **Existing nodes:** S-406–S-409 (4 primary allocations). **Dependencies:** FR-02, FR-13.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-055. **Existing nodes:** S-406–S-409 (4 primary allocations). **Dependencies:** FR-02, FR-13.
 
 **What opens afterward:** Inspect product guide/onboarding and recovered main state with explicit eligibility/error fixtures.
 
@@ -531,7 +537,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-35 — Loan overview, details and repayment preview
 
-**Status:** proposed. **Families:** F-048. **Existing nodes:** S-288, S-306–S-307, S-309, S-324, S-330–S-331, S-338 (8 primary allocations). **Dependencies:** FR-02, FR-11.
+**Status:** in scope under D-021 (order 1 of 8); needs its own approved issue. **Families:** F-048. **Existing nodes:** S-288, S-306–S-307, S-309, S-324, S-330–S-331, S-338 (8 primary allocations). **Dependencies:** FR-02, FR-11.
 
 **What opens afterward:** Open loan menu/list/group/summary/detail and inspect repayment confirmation variants.
 
@@ -545,7 +551,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-36 — Child-loan application and guarantor preview
 
-**Status:** proposed. **Families:** F-048. **Existing nodes:** S-289–S-301 (13 primary allocations). **Dependencies:** FR-29, FR-31, FR-35.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-048. **Existing nodes:** S-289–S-301 (13 primary allocations). **Dependencies:** FR-29, FR-31, FR-35.
 
 **What opens afterward:** Inspect conditions/calculator, applicant/guarantor/document inputs, inquiry/prevalidation, promissory selection and result preview.
 
@@ -559,7 +565,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-37 — Marriage-loan application and spouse/guarantor preview
 
-**Status:** proposed. **Families:** F-048. **Existing nodes:** S-310–S-323 (14 primary allocations). **Dependencies:** FR-29, FR-31, FR-35, FR-36.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-048. **Existing nodes:** S-310–S-323 (14 primary allocations). **Dependencies:** FR-29, FR-31, FR-35, FR-36.
 
 **What opens afterward:** Inspect marriage-specific conditions/calculator/spouse/customer/guarantor, inquiry/prevalidation, note selection and review/result previews.
 
@@ -573,7 +579,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-38 — Company and hub loan requests
 
-**Status:** proposed. **Families:** F-048. **Existing nodes:** S-287, S-302–S-305, S-336–S-337, S-339 (8 primary allocations). **Dependencies:** FR-35.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-048. **Existing nodes:** S-287, S-302–S-305, S-336–S-337, S-339 (8 primary allocations). **Dependencies:** FR-35.
 
 **What opens afterward:** Inspect company loan list/request/review/receipt and recovered hub/welcome/request confirmation/result states.
 
@@ -587,7 +593,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-39 — Other loans, calculation and promissory/guarantor states
 
-**Status:** proposed. **Families:** F-048. **Existing nodes:** S-285–S-286, S-308, S-325–S-329, S-332–S-335 (12 primary allocations). **Dependencies:** FR-31, FR-35, FR-38.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-048. **Existing nodes:** S-285–S-286, S-308, S-325–S-329, S-332–S-335 (12 primary allocations). **Dependencies:** FR-31, FR-35, FR-38.
 
 **What opens afterward:** Inspect remaining loan type/detail/entry/confirmation/result, shared agreement/customer/calculator and loan-note guarantor states.
 
@@ -601,7 +607,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-40 — Merchant terminal requests and management
 
-**Status:** proposed. **Families:** F-064. **Existing nodes:** S-469–S-482 (14 primary allocations). **Dependencies:** FR-02, FR-05.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-064. **Existing nodes:** S-469–S-482 (14 primary allocations). **Dependencies:** FR-02, FR-05.
 
 **What opens afterward:** Inspect terminal menu/list, installation/business/document requirements, request review/tracking, account change and deactivate preview.
 
@@ -615,7 +621,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-41 — Intro, launcher/router and login presentation
 
-**Status:** proposed. **Families:** F-001, F-002, F-015, F-017, F-018. **Existing nodes:** F-001, F-002, S-027–S-029, S-048–S-050 (8 primary allocations). **Dependencies:** FR-02, FR-05.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-001, F-002, F-015, F-017, F-018. **Existing nodes:** F-001, F-002, S-027–S-029, S-048–S-050 (8 primary allocations). **Dependencies:** FR-02, FR-05.
 
 **What opens afterward:** Inspect recovered welcome/login/activation/first-run account selection and return to the replica demo identity.
 
@@ -629,7 +635,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-42 — Registration, recovery and identity-check presentation
 
-**Status:** proposed. **Families:** F-016, F-019. **Existing nodes:** S-030–S-047, S-051 (19 primary allocations). **Dependencies:** FR-05, FR-41.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-016, F-019. **Existing nodes:** S-030–S-047, S-051 (19 primary allocations). **Dependencies:** FR-05, FR-41.
 
 **What opens afterward:** Inspect registration/recovery stepper, agreements/auth methods/card/national-ID/user-password forms and identity/camera states.
 
@@ -643,7 +649,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-43 — Account-opening applications
 
-**Status:** proposed. **Families:** F-020. **Existing nodes:** S-052–S-062 (11 primary allocations). **Dependencies:** FR-02, FR-05, FR-41, FR-42.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-020. **Existing nodes:** S-052–S-062 (11 primary allocations). **Dependencies:** FR-02, FR-05, FR-41, FR-42.
 
 **What opens afterward:** Inspect account type/information/agreement, branch/contact/additional/document selection and application result preview.
 
@@ -657,7 +663,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-44 — Postal correspondence and delivery selection
 
-**Status:** proposed. **Families:** F-063. **Existing nodes:** S-465–S-468 (4 primary allocations). **Dependencies:** FR-05.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-063. **Existing nodes:** S-465–S-468 (4 primary allocations). **Dependencies:** FR-05.
 
 **What opens afterward:** Inspect letter list, selected delivery address and sending-type preview.
 
@@ -671,7 +677,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-45 — Unresolved destinations and shared-surface coverage closure
 
-**Status:** proposed. **Families:** F-000, F-035, F-039, F-045, F-069. **Existing nodes:** S-001–S-011, S-013, S-015, S-017–S-024, S-148, S-194–S-195, S-236–S-237 (26 primary allocations). **Dependencies:** FR-01–FR-44; recovery may run within each earlier approved issue.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-000, F-035, F-039, F-045, F-069. **Existing nodes:** S-001–S-011, S-013, S-015, S-017–S-024, S-148, S-194–S-195, S-236–S-237 (26 primary allocations). **Dependencies:** FR-01–FR-44; recovery may run within each earlier approved issue.
 
 **What opens afterward:** Open only additionally identified shared/image/menu/scanner or feature content after its identity and caller relationships are recovered; see an explicit unresolved ledger for everything else.
 
@@ -761,7 +767,7 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-Review completed FR-13 (#70). Stop after this batch. The next proposed batch is **FR-14 — Wallet purchases, transfers and QR scanner shell**, which requires explicit owner approval.
+FR-13 (#70) is done. Under D-021 the next batch is **FR-35 — Loan overview, details and repayment preview**, then FR-23, FR-14 (without the QR scanner), FR-15, FR-19, FR-20, FR-16 and FR-17. Each still needs its own approved issue. Stage 1 closes after FR-17.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
