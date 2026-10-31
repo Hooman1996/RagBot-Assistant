@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60) and FR-09 (#62) are done; FR-10–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62) and FR-10 (#64) are done; FR-11–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -181,7 +181,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-10 — Recurring and continuous transfer management
 
-**Status:** proposed. **Families:** F-039, F-041. **Existing nodes:** S-177–S-181, S-199–S-200 (7 primary allocations). **Dependencies:** FR-08.
+**Status:** done in #64. **Families:** F-039, F-041. **Existing nodes:** S-177–S-181, S-199–S-200 (7 primary allocations; S-199 is the host of S-200 and is not registered separately). **Dependencies:** FR-08.
 
 **What opens afterward:** Inspect recurring/continuous schedules, request/history details and edit a local schedule through review.
 
@@ -189,7 +189,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 **Evidence / specific gaps:** Catalogue/graph and existing private route/content map; The two recurring families may have different business semantics; start/end/count/calendar rules and cancel/execution states need independent caller evidence.
 
-**Requirements output:** M-045/M-046 candidates, Persian date rules, integer amount/unit, source/recipient and future schedule service proposal.
+**Requirements output:** [Requirements matrix](../reports/recurring-transfers-requirements.md) separates automatic (standing-order) transfers from saved repetitive transactions, and records Jalali date/span rules, frequencies and days, the delete/cancel/back rule, repeat targets, M-045/M-046 callers, exact IRR integers and future schedule services. [Inspection](../reports/recurring-transfers-inspection.md) records routes, the continuous mode of FR-08 forms, local-only cancel/delete and the Home bookmark route.
 
 **Acceptance beyond the common contract:** Schedule validation, correction, read-only execution states and Back restore inputs; no background transfer or success event occurs. **Effort:** 3–5 days. **Evidence confidence:** medium.
 
@@ -761,8 +761,8 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-Review completed FR-09 (#62). Stop after this batch. The next proposed batch is **FR-10 — Recurring and continuous transfer management**, which requires explicit owner approval.
+Review completed FR-10 (#64). Stop after this batch. The next proposed batch is **FR-11 — Bill and insurance installment payments**, which requires explicit owner approval.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02 to FR-09 acceptance and rendered review are recorded in their reports; FR-10–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02 to FR-10 acceptance and rendered review are recorded in their reports; FR-11–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.

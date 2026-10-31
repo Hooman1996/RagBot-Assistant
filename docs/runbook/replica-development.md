@@ -1,6 +1,6 @@
 # Android replica development
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers) and #62 (FR-09 group transfers), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers), #62 (FR-09 group transfers) and #64 (FR-10 recurring/continuous transfers), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -359,7 +359,7 @@ other device, original banking app or shared infrastructure.
 ## Saved destinations and shortcuts (FR-07)
 
 Home's **جستجو** header opens service search and local pins (S-084); its bookmark
-is the separate recurring-transfer entry and remains unavailable. On the demo
+is the separate repetitive-transactions entry (S-200 since FR-10). On the demo
 page, scroll below Home entry to independent **مقصدهای ذخیره‌شده قدیمی** (S-066),
 **مدیریت مقصد تسهیلات** (S-197) and **انتخاب مقصد تسهیلات — بازبینی مستقل**
 (S-198). The last entry returns to a labelled local review form; it is not a
@@ -413,4 +413,25 @@ S-088) and an independent labelled receipt S-096. S-183 is a wage-advance receip
 and is not registered. See [inspection](../reports/group-transfers-inspection.md)
 and [requirements](../reports/group-transfers-requirements.md). Recovery ledger,
 captures, acceptance output and merged installation verification remain in
-`local/evidence/group-transfers/`. No new assets. Stop before FR-10.
+`local/evidence/group-transfers/`. No new assets. FR-10 was subsequently
+approved in #64; later batches still require owner approval.
+
+## Recurring and continuous transfers (FR-10)
+
+The demo page's **منوی انتقال — نمونهٔ مستقل** (S-193) has a fourth child,
+**انتقال وجه خودکار** (S-180). It opens a new request (S-181) or history (S-178).
+Enter a title, Jalali dates such as `1405/09/01` and `1405/12/01`, and a
+frequency (weekly and monthly ask for a day; days 30/31 show the month-end
+warning). Continue asks for internal or interbank, then S-177 summarizes the
+request (execution dates are not computed) and opens FR-08's S-192/S-191 form in
+continuous mode, marked by a banner. Confirmation stays unavailable; nothing is
+scheduled. History rows open S-179, which offers cancel, delete or back according
+to the recovered rule; changes are local only.
+
+Home's bookmark opens saved repetitive transactions (S-200; S-199 is only its
+host). **تکرار تراکنش** opens FR-08's S-176 or S-173 review prefilled without
+pre-validation; charge repeat is unavailable. See
+[inspection](../reports/recurring-transfers-inspection.md) and
+[requirements](../reports/recurring-transfers-requirements.md). Recovery ledger,
+captures, acceptance output and merged installation verification remain in
+`local/evidence/recurring-transfers/`. No new assets. Stop before FR-11.

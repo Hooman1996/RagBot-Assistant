@@ -30,6 +30,7 @@ internal fun AccountTransferPage(
     onOpen: (String) -> Unit,
     onRetry: () -> Unit,
     onUnavailable: (String) -> Unit,
+    schedule: String? = null,
 ) {
     val title =
         when (page) {
@@ -49,6 +50,12 @@ internal fun AccountTransferPage(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(AccountTransferFixture.NOTICE, style = MaterialTheme.typography.bodySmall)
+                // RT-RECOVERY: S-177 opens these forms in continuous mode with its schedule.
+                if (schedule != null && page != AccountTransferDestinations.MENU)
+                    Text(
+                        "انتقال وجه خودکار — $schedule. زمان‌بندی ثبت یا اجرا نمی‌شود.",
+                        Modifier.testTag("account-transfer-schedule"),
+                    )
                 when (page) {
                     AccountTransferDestinations.MENU -> {
                         Text("فهرست نمونهٔ خدمات؛ ترتیب و دسترسی محلی است.")
@@ -69,6 +76,12 @@ internal fun AccountTransferPage(
                             Modifier.fillMaxWidth().testTag("transfer-group"),
                         ) {
                             Text("انتقال وجه گروهی")
+                        }
+                        Button(
+                            { onOpen(RecurringTransferDestinations.MENU) },
+                            Modifier.fillMaxWidth().testTag("transfer-continuous"),
+                        ) {
+                            Text("انتقال وجه خودکار")
                         }
                     }
                     AccountTransferDestinations.INTERNAL,

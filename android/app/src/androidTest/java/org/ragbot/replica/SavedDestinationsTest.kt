@@ -40,7 +40,7 @@ class SavedDestinationsTest {
         back()
         compose.onNodeWithTag("control-CARD").assertIsSelected()
         compose.onNodeWithTag("header-SHORTCUTS").performClick()
-        compose.onNodeWithTag("unavailable").assertIsDisplayed()
+        compose.onNodeWithTag("S-200").assertIsDisplayed()
         back()
         compose.onNodeWithTag("header-SEARCH").performClick()
         compose.onNodeWithTag("shortcut-item-preview-cards").assertIsDisplayed()
