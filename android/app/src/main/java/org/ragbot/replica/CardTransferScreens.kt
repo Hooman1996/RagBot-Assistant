@@ -251,7 +251,7 @@ private fun CardTransferConfirmation(
 }
 
 @Composable
-private fun CardTransferSecret(
+internal fun CardTransferSecret(
     label: String,
     value: String,
     tag: String,

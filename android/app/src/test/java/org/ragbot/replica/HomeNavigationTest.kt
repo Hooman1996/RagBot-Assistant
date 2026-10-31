@@ -97,12 +97,26 @@ class HomeNavigationTest {
                 "S-180",
                 "S-181",
                 "S-200",
+                "S-092",
+                "S-132",
+                "S-133",
+                "S-205",
+                "S-206",
+                "S-207",
+                "S-208",
+                "S-209",
+                "S-210",
+                "S-401",
+                "S-402",
+                "S-403",
+                "S-404",
+                "S-405",
             ),
             HomeDestinations.implemented,
         )
         assertTrue(ids.containsAll(HomeDestinations.implemented))
         HomeDestinations.implemented.forEach { assertTrue(navigation.navigate(it)) }
-        // Host container S-138, received-card confirmation S-004 and repayment S-132 are not pages.
+        // Host container S-138 and received-card confirmation S-004 are not pages.
         // S-183 is a wage-advance receipt, not part of the group-transfer journey.
         listOf(
                 "S-183",
@@ -114,7 +128,6 @@ class HomeNavigationTest {
                 "S-083",
                 "S-196",
                 "S-004",
-                "S-132",
                 "unknown",
                 "submit",
                 "authorize",

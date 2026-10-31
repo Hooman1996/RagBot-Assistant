@@ -1,6 +1,6 @@
 # Android replica development
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers), #62 (FR-09 group transfers) and #64 (FR-10 recurring/continuous transfers), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers), #62 (FR-09 group transfers), #64 (FR-10 recurring/continuous transfers) and #66 (FR-11 bill/insurance payments), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -434,4 +434,22 @@ pre-validation; charge repeat is unavailable. See
 [inspection](../reports/recurring-transfers-inspection.md) and
 [requirements](../reports/recurring-transfers-requirements.md). Recovery ledger,
 captures, acceptance output and merged installation verification remain in
-`local/evidence/recurring-transfers/`. No new assets. Stop before FR-11.
+`local/evidence/recurring-transfers/`. No new assets. FR-11 was subsequently
+approved in #66; later batches still require owner approval.
+
+## Bill, insurance and credit repayment (FR-11)
+
+Demo entries open the three bill source modes: **پرداخت قبض با حساب** (S-209),
+**پرداخت قبض با کارت** (S-210) and **پرداخت قبض بدون ورود** (S-208, typed
+16-digit card). Bill and payment IDs need 6–13 digits. Bill ID `9000000000001`
+with payment ID `1250001` opens S-207; `9000000000002`/`430002` is a paid fixture
+bill. From S-207, account payment is unavailable and card modes open S-205/S-206,
+whose card fields are never kept. **منوی بیمه — نمونهٔ مستقل** opens S-403 →
+S-402 → S-401; only due or postponed installments can be chosen, then a source
+account opens S-404. Credit repayment starts at Home → card tab → credit card →
+**جزئیات و بازپرداخت** → **پرداخت** (amount, then source → S-132). Separate
+entries open independent receipts S-092, S-405 and S-133. Nothing is inquired,
+paid or sent. See [inspection](../reports/bill-payments-inspection.md) and
+[requirements](../reports/bill-payments-requirements.md). Recovery ledger,
+captures, acceptance output and merged installation verification remain in
+`local/evidence/bill-payments/`. No new assets. Stop before FR-12.

@@ -19,7 +19,10 @@ object HomeDestinations {
             CardTransferDestinations.implemented +
             AccountTransferDestinations.implemented +
             GroupTransferDestinations.implemented +
-            RecurringTransferDestinations.implemented
+            RecurringTransferDestinations.implemented +
+            BillPaymentDestinations.implemented +
+            InsuranceDestinations.implemented +
+            CreditRepaymentDestinations.implemented
 }
 
 enum class HomeControl(val title: String) {

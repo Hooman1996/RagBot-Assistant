@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62) and FR-10 (#64) are done; FR-11–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64) and FR-11 (#66) are done; FR-12–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -195,7 +195,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-11 — Bill and insurance installment payments
 
-**Status:** proposed. **Families:** F-031, F-043, F-054. **Existing nodes:** S-092, S-132–S-133, S-205–S-210, S-401–S-405 (14 primary allocations; credit-card repayment confirm/receipt S-132–S-133 moved from FR-04 with owner approval in #48). **Dependencies:** FR-02, FR-03.
+**Status:** done in #66. **Families:** F-031, F-043, F-054. **Existing nodes:** S-092, S-132–S-133, S-205–S-210, S-401–S-405 (14 primary allocations; credit-card repayment confirm/receipt S-132–S-133 moved from FR-04 with owner approval in #48). **Dependencies:** FR-02, FR-03.
 
 **What opens afterward:** Inspect bill entry/inquiry, insurance policy/installment lists and their amount/source/review/receipt previews.
 
@@ -203,7 +203,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 **Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Repeated bill-transfer nodes may represent distinct source modes, not duplicate screens; insurance eligibility, partial-payment rules and anonymous card forms require recovery.
 
-**Requirements output:** Bill identifiers, installment status/due dates, integer currency units, OTP and receipt data; M-031 candidate and caller-backed E joins only.
+**Requirements output:** [Requirements matrix](../reports/bill-payments-requirements.md) records the three bill source modes (account, card, typed card), bill/payment ID rules, the fixture inquiry, installment selectability and Pay visibility, repayment amount limits, caller-backed models and exact IRR integers. [Inspection](../reports/bill-payments-inspection.md) records routes, demo entries, the S-131 repayment entry and catalogue corrections.
 
 **Acceptance beyond the common contract:** Input errors, paid/unpaid/empty fixtures, source modes, cancellation and review correction pass; no payment or policy request is sent. **Effort:** 4–6 days. **Evidence confidence:** medium.
 
@@ -761,8 +761,8 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-Review completed FR-10 (#64). Stop after this batch. The next proposed batch is **FR-11 — Bill and insurance installment payments**, which requires explicit owner approval.
+Review completed FR-11 (#66). Stop after this batch. The next proposed batch is **FR-12 — Mobile top-up and charity payment previews**, which requires explicit owner approval.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02 to FR-10 acceptance and rendered review are recorded in their reports; FR-11–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02 to FR-11 acceptance and rendered review are recorded in their reports; FR-12–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.

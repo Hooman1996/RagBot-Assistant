@@ -102,6 +102,12 @@ fun ReplicaApp() {
     var repetitiveRecords by rememberSaveable {
         mutableStateOf(RecurringTransferFixture.repetitive)
     }
+    var billForm by rememberSaveable { mutableStateOf(BillPaymentDestinations.ACCOUNT) }
+    var billDrafts by rememberSaveable { mutableStateOf(mapOf<String, BillDraft>()) }
+    var insurancePolicy by rememberSaveable { mutableStateOf("") }
+    var insuranceInstallment by rememberSaveable { mutableIntStateOf(-1) }
+    var insuranceSource by rememberSaveable { mutableStateOf("") }
+    var creditRepayment by rememberSaveable { mutableStateOf<CreditRepayment?>(null) }
     var savedDestinations by rememberSaveable { mutableStateOf(SavedDestinationFixture.records) }
     var pinnedServices by rememberSaveable { mutableStateOf(ShortcutFixture.initialPinnedIds) }
     var pickerReview by rememberSaveable { mutableStateOf(false) }
@@ -135,6 +141,7 @@ fun ReplicaApp() {
             id in setOf(AccountTransferDestinations.INTERNAL, AccountTransferDestinations.INTERBANK)
         )
             accountTransferMode = id
+        if (id in BillPaymentDestinations.forms) billForm = id
         focus.clearFocus()
         keyboard?.hide()
         stack = stack + id
@@ -368,7 +375,10 @@ fun ReplicaApp() {
                         ) {
                             Text("انتخاب مقصد تسهیلات — بازبینی مستقل")
                         }
-                        Text("بازبینی مستقل انتقال‌ها — فقط پیش‌نمایش محلی", fontSize = 12.sp)
+                        Text(
+                            "بازبینی مستقل انتقال‌ها و پرداخت‌ها — فقط پیش‌نمایش محلی",
+                            fontSize = 12.sp,
+                        )
                         listOf(
                                 CardTransferDestinations.ANONYMOUS to
                                     "کارت به کارت بدون ورود با انتخاب مبدا",
@@ -384,6 +394,14 @@ fun ReplicaApp() {
                                 GroupTransferDestinations.HISTORY to "سوابق تراکنش گروهی — نمونه",
                                 GroupTransferDestinations.RECEIPT to
                                     "رسید مستقل انتقال گروهی — نمونه",
+                                BillPaymentDestinations.ACCOUNT to "پرداخت قبض با حساب",
+                                BillPaymentDestinations.CARD to "پرداخت قبض با کارت",
+                                BillPaymentDestinations.WITHOUT_SOURCE to "پرداخت قبض بدون ورود",
+                                BillPaymentDestinations.RECEIPT to "رسید مستقل قبض — نمونه",
+                                InsuranceDestinations.MENU to "منوی بیمه — نمونهٔ مستقل",
+                                InsuranceDestinations.RECEIPT to "رسید مستقل قسط بیمه — نمونه",
+                                CreditRepaymentDestinations.RECEIPT to
+                                    "رسید مستقل بازپرداخت کارت اعتباری — نمونه",
                             )
                             .forEach { (id, title) ->
                                 TextButton(
@@ -568,6 +586,42 @@ fun ReplicaApp() {
                                 { scenario = "populated" },
                                 ::unavailable,
                             )
+                        } else if (
+                            page in
+                                BillPaymentDestinations.implemented +
+                                    InsuranceDestinations.implemented +
+                                    CreditRepaymentDestinations.implemented
+                        ) {
+                            PaymentPage(
+                                page,
+                                scenario,
+                                billForm,
+                                billDrafts[billForm]
+                                    ?: BillDraft(
+                                        when (billForm) {
+                                            BillPaymentDestinations.ACCOUNT -> accountKey
+                                            BillPaymentDestinations.CARD ->
+                                                CardFixture.of(CardKind.DEBIT).first().key
+                                            else -> ""
+                                        }
+                                    ),
+                                { billDrafts = billDrafts + (billForm to it) },
+                                PaymentFixture.policies.find { it.id == insurancePolicy },
+                                insuranceInstallment,
+                                insuranceSource,
+                                { insuranceInstallment = it },
+                                { insuranceSource = it },
+                                creditRepayment,
+                                ::goBack,
+                                ::open,
+                                {
+                                    insurancePolicy = it
+                                    insuranceInstallment = -1
+                                    open(InsuranceDestinations.INSTALLMENTS)
+                                },
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else if (page in GroupTransferDestinations.implemented) {
                             GroupTransferPage(
                                 page,
@@ -701,6 +755,10 @@ fun ReplicaApp() {
                                 ::open,
                                 { scenario = "populated" },
                                 ::unavailable,
+                                {
+                                    creditRepayment = it
+                                    open(CreditRepaymentDestinations.CONFIRM)
+                                },
                             )
                         } else {
                             AccountPage(
