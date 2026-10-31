@@ -113,6 +113,11 @@ fun ReplicaApp() {
     var charityDraft by rememberSaveable { mutableStateOf<CharityDraft?>(null) }
     var walletNumber by rememberSaveable { mutableStateOf(WalletFixture.wallets.first().number) }
     var walletRow by rememberSaveable { mutableStateOf("") }
+    var loanId by rememberSaveable { mutableStateOf(LoanFixture.loans.first().id) }
+    var loanSelected by rememberSaveable { mutableStateOf(listOf<Int>()) }
+    var loanSource by rememberSaveable { mutableStateOf("") }
+    var loanPaymentId by rememberSaveable { mutableStateOf("") }
+    var loanGroup by rememberSaveable { mutableStateOf("standard") }
     var savedDestinations by rememberSaveable { mutableStateOf(SavedDestinationFixture.records) }
     var pinnedServices by rememberSaveable { mutableStateOf(ShortcutFixture.initialPinnedIds) }
     var pickerReview by rememberSaveable { mutableStateOf(false) }
@@ -429,6 +434,9 @@ fun ReplicaApp() {
                                 CharityDestinations.RECEIPT to "رسید مستقل خیریه — نمونه",
                                 WalletOverviewDestinations.MAIN to "کیف پول",
                                 WalletOverviewDestinations.RECEIPT to "رسید مستقل کیف پول — نمونه",
+                                LoanDestinations.MENU to "منوی تسهیلات — نمونهٔ مستقل",
+                                LoanDestinations.SUMMARY to "تسهیلات جاری و پرداخت اقساط",
+                                LoanDestinations.GROUP to "گروه‌های تسهیلات — فقط مشاهده",
                             )
                             .forEach { (id, title) ->
                                 TextButton(
@@ -671,6 +679,31 @@ fun ReplicaApp() {
                                 { topUpDrafts = topUpDrafts + (topUpForm to it) },
                                 charityDraft ?: CharityDraft(sourceId = accountKey),
                                 { charityDraft = it },
+                                ::goBack,
+                                ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (page in LoanDestinations.implemented) {
+                            LoanPage(
+                                page,
+                                scenario,
+                                loanId,
+                                loanSelected,
+                                loanSource,
+                                loanPaymentId,
+                                loanGroup,
+                                {
+                                    loanId = it
+                                    loanSelected = emptyList()
+                                    loanSource = ""
+                                    loanPaymentId = ""
+                                    open(LoanDestinations.DETAIL)
+                                },
+                                { loanSelected = it },
+                                { loanSource = it },
+                                { loanPaymentId = it },
+                                { loanGroup = it },
                                 ::goBack,
                                 ::open,
                                 { scenario = "populated" },

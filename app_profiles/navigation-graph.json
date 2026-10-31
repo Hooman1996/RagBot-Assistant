@@ -2314,11 +2314,11 @@
     },
     {
       "id": "S-288",
-      "name": "Loans: loan",
+      "name": "Loans: loan application host",
       "area": "F-048",
       "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; named from its own UI content."
+      "note": "GL-01: host container starts S-307; no separate visible page."
     },
     {
       "id": "S-289",
@@ -2650,11 +2650,11 @@
     },
     {
       "id": "S-330",
-      "name": "Loans: loan payment confirmation",
+      "name": "Loans: saved destination picker",
       "area": "F-048",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; inferred from its view-model."
+      "note": "LN-IDENTITY: recovered picker identity; not a repayment confirmation. Kept unregistered."
     },
     {
       "id": "S-331",
