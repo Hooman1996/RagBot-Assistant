@@ -507,3 +507,9 @@ unproved. Server eligibility, validation outcomes and exact E/M joins remain
 Unknown. Recovery IDs and limits are in the [tracker](../plan/frontend-replication-steps.md#fr-35--loan-overview-details-and-repayment-preview);
 private ledgers, captures and acceptance logs are in `local/evidence/loans/`.
 No new assets. Stop before FR-23.
+
+## FR-23 identifier conversion (#74, D-021)
+
+From the demo screen, open **تبدیل شناسه با ورود — نمونه** (S-201) or **تبدیل شناسه بدون ورود — نمونه** (S-202). Expand a direction and enter the synthetic account/card/IBAN printed above the sections; account→IBAN also requires **بانک داخلی ساختگی**. Calculate opens the shared result S-011, with copy and Back; IBAN→card shows two distinct card groups. Each direction keeps its own non-secret draft. The other-bank fixture opens an unavailable notice; it cannot start payment.
+
+The two **استعلام کارمزدی … نمونهٔ مستقل** demo entries preview S-203/S-204 with picker or typed source. OTP/final payment remain unavailable, and credentials reset on recreation/Back. Scenario controls cover loading, empty and error/retry. Real fees/eligibility, original menu configuration, ownership/conversion algorithms and exact E/M joins remain Unknown. Clipboard feedback and formatted-input normalization are local mock choices; original fidelity remains unscored. Only S-201–S-204/S-011 are registered. Private IDENTIFIER-RECOVERY evidence and QA: `local/evidence/identifier-conversion/`. Acceptance: 73 JVM / 96 device tests, 0 skipped; lint 0 errors / 117 warnings, unchanged from clean-main baseline 66 / 90 tests. Stop before FR-14.

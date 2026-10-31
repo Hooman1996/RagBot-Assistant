@@ -12,7 +12,7 @@ This list consolidates the earlier proposed “Home refinement, then account tab
 
 ## Evidence and interpretation
 
-- **Recovered:** the [feature inventory](../../app_profiles/feature-inventory.md), [screen catalogue](../../app_profiles/screen-catalogue.md), [navigation graph](../../app_profiles/navigation-graph.json) and [API/model inventory](../../app_profiles/api-structure.md) cover the pinned extracted artifact. The graph has **485 nodes / 590 edges**: 266 activities, 199 Compose destinations, 19 subgraphs and one menu hub. A host, lifecycle wrapper, nested graph or duplicate legacy/current implementation is not automatically a separate visible page.
+- **Recovered:** the [feature inventory](../../app_profiles/feature-inventory.md), [screen catalogue](../../app_profiles/screen-catalogue.md), [navigation graph](../../app_profiles/navigation-graph.json) and [API/model inventory](../../app_profiles/api-structure.md) cover the pinned extracted artifact. The graph has **485 nodes / 592 edges**: 266 activities, 199 Compose destinations, 19 subgraphs and one menu hub. A host, lifecycle wrapper, nested graph or duplicate legacy/current implementation is not automatically a separate visible page.
 - **Owner-supplied visual evidence:** HC-REF contains upper/lower scroll positions of the same original Home and the earlier replica capture. It establishes the visible Home configuration only. It does not observe other screens or prove their navigation.
 - **Recovered with limits:** 357 graph nodes are Recovered, 104 Inferred and 24 Unknown. There are **43 dynamic edges with null targets** and **139 additional call sites with unattributed source screens**. A destination declaration, feature package or named service method is insufficient proof of reachability, content fidelity or an exact contract.
 - **Inferred / Designed for mock:** batching, dependencies, day estimates and future records below are our implementation proposals. They are not new recovered graph edges, bank tables, menu identifiers or business rules. Local synthetic fixtures provide UI states; no mock HTTP service or database is authorized by this list.
@@ -369,17 +369,17 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-23 — Bank identifier conversion
 
-**Status:** in scope under D-021 (order 2 of 8); needs its own approved issue. **Families:** F-042. **Existing nodes:** S-201–S-204 (4 primary allocations). **Dependencies:** FR-02, FR-03.
+**Status:** implemented under approved #74, D-021 order 2 of 8. **Families:** F-042. **Existing nodes:** S-201–S-204 plus S-011 recovered as the shared ownership result (5 allocations). **Dependencies:** FR-02, FR-03.
 
-**What opens afterward:** Inspect account/card/IBAN conversion variants, synthetic ownership result and any recovered paid-query review.
+**Reachable:** Demo entries open logged-in/no-login forms (S-201/S-202), each with account→IBAN, card→IBAN, IBAN→account, IBAN→card and card→account sections. Exact synthetic fixture matches open S-011 with ownership, bank and direction-specific values; IBAN→card demonstrates two distinct cards. Separate labelled demo entries open the paid source-picker/typed-source variants (S-203/S-204). Paid queries, OTP, final payment and external sharing show unavailable notices. No paid result is fabricated.
 
-**Frontend scope:** Combine four small conversion/source/authentication variants with shared identifier validation and result presentation.
+**Recovered:** IDENTIFIER-RECOVERY; ev_a6d2d5763c636084aec58e339220e4fe02a367fc75fdbdbf3bb3015f41d20bc5 (shared form), ev_2b618c5b6e974e18452997a0cce080e09f6d572eee6f06e10de721635313d3a2 with ev_988b9ffb71581acaffac6bec9c0f67a9b9cc106549673035b52531b2ab9df143 (concrete free-form result callers), ev_e6f3e9b0b0162bcb2c9018ddee95090752b5e2210a6383514cc632190692f5fb (S-011 identity), ev_ac0c6e0e8a6b1ffbef27fe74ae85c1baa308845b1bec2984fc38d20dd661f9fc (IBAN integer checksum). Card validation uses length and recognized bank, with no recovered Luhn check. Account input is bounded to 30 characters and requires a bank; IBAN directions require the synthetic internal bank. The existing IBAN validator and card-information component are reused unchanged.
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Exact available conversion directions, no-login fee gates and call-to-model mapping need traces; unknown payment dependencies remain unavailable.
+**Designed for mock:** Synthetic bank namespace, menu availability, exact fixture ownership lookup, normalized formatted input, independent paid demo contexts and local clipboard feedback. Separate direction drafts survive mode changes, Back and recreation; favorite selection is local only. PIN/OTP/password/CVV/expiry never enter saved state. Loading/empty/error/retry use the existing scenario controls.
 
-**Requirements output:** M-034/M-042/M-043/M-050–M-054 candidates, identifier normalization, ownership fields, fee/unit and result prerequisites.
+**Acceptance:** 73 JVM / 96 device tests, 0 failures/errors/skips; lint 0 errors / 117 warnings versus baseline 66 / 90 and 0 / 117, with identical lint diagnostics. Full issue command and rendered RTL/top/result/error/paid-form QA pass; output belongs in the PR body.
 
-**Acceptance beyond the common contract:** Invalid checksums/formats, mode changes, paid-query unavailable notice, copy/display and Back pass using synthetic identifiers. **Effort:** 2–3 days. **Evidence confidence:** medium.
+**Unknown / stopped:** Real bank catalogue/visibility, conversion algorithms, ownership, fee amount/unit, paid eligibility/review, server source-picker flag and exact E/M joins remain Unknown. Original end-to-end formatted input, copy/share presentation and fidelity are unscored; no original-app execution. Only five proved graph IDs are registered, with no Home tile/deep-link alias, account→card direction or payment-result path. Paid success handlers remain unreachable. Private recovery/captures/logs: `local/evidence/identifier-conversion/`. Stop before FR-14.
 
 ### FR-24 — Credit and bounced-cheque inquiries
 
@@ -675,7 +675,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-45 — Unresolved destinations and shared-surface coverage closure
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-000, F-035, F-039, F-045, F-069. **Existing nodes:** S-001–S-011, S-013, S-015, S-017–S-024, S-148, S-194–S-195, S-236–S-237 (26 primary allocations). **Dependencies:** FR-01–FR-44; recovery may run within each earlier approved issue.
+**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-000, F-035, F-039, F-045, F-069. **Existing nodes:** S-001–S-010, S-013, S-015, S-017–S-024, S-148, S-194–S-195, S-236–S-237 (25 primary allocations). **Dependencies:** FR-01–FR-44; recovery may run within each earlier approved issue.
 
 **What opens afterward:** Open only additionally identified shared/image/menu/scanner or feature content after its identity and caller relationships are recovered; see an explicit unresolved ledger for everything else.
 
@@ -721,7 +721,7 @@ This is an exhaustive allocation of the current inventory, not an implementation
 | F-039 Money transfer | 23 | FR-08, FR-09, FR-10, FR-45 |
 | F-040 Saved/trusted destinations | 3 | FR-07 |
 | F-041 Recurring transfers | 2 | FR-10 |
-| F-042 IBAN / account-number conversion | 4 | FR-23 |
+| F-042 IBAN / account-number conversion | 5 | FR-23 |
 | F-043 Bill payment | 6 | FR-11 |
 | F-044 Mobile top-up | 6 | FR-12 |
 | F-045 Payment gateway / balance top-up | 21 | FR-15, FR-45 |
@@ -758,14 +758,14 @@ This is an exhaustive allocation of the current inventory, not an implementation
 | F-067 Compose hosts; F-068 app-named routes; F-070 nested graphs/dialogs | Cross-cutting evidence used by each owning batch. No separate implementation step per host/dialog/container. |
 | F-069 computed/obfuscated routes | Recovery gate within owning batch; remaining unresolved identity/targets are audited in FR-45. No guessed page or edge. |
 | F-071 absence of stock drawer/tab widgets | Preserve recovered custom shell; do not invent drawer or standard-widget navigation. |
-| F-000 remaining unassigned | S-025 was recovered as the profile app-settings menu (F-022) and implemented in FR-05; S-001–S-011, S-013, S-015 and S-017–S-024 remain in FR-45. S-014/S-016 were recovered as statement content and moved to FR-02, and S-012 as card information moved to FR-03, each with owner approval. Allocation is not proof of reachability. |
+| F-000 remaining unassigned | S-025 was recovered as the profile app-settings menu (F-022) and implemented in FR-05; S-001–S-010, S-013, S-015 and S-017–S-024 remain in FR-45. S-011 was recovered as the shared conversion result and moved to FR-23 under #74. S-014/S-016 were recovered as statement content and moved to FR-02, and S-012 as card information moved to FR-03, each with owner approval. Allocation is not proof of reachability. |
 | Dynamic edges / unattributed call sites | Explicitly unresolved: 43 null-target edges and 139 additional source-unattributed call sites. Recover within the owning approved batch; retain unresolved records where evidence is insufficient. No synthetic pages or invented transitions. |
 
 Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows assigned or explicitly deferred/excluded above; 485/485 graph nodes allocated exactly once; 0 missing/extra/duplicate IDs. This audit measures planning coverage only. It does not certify 485 reconstructed pages or recovered API contracts.
 
 ## Recommended next approval and stopping point
 
-FR-13 (#70) is done. Under D-021 the next batch is **FR-35 — Loan overview, details and repayment preview**, then FR-23, FR-14 (without the QR scanner), FR-15, FR-19, FR-20, FR-16 and FR-17. Each still needs its own approved issue. Stage 1 closes after FR-17.
+FR-35 (#73) and FR-23 (#74) are done. Under D-021 the next batch is **FR-14 — Wallet purchases and transfers (without the QR scanner)** (#75), then FR-15, FR-19, FR-20, FR-16 and FR-17. These issues are approved; each requires its own implementation handover. Stage 1 closes after FR-17.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
