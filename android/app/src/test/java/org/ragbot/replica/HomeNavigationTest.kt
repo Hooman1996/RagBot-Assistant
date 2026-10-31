@@ -128,6 +128,12 @@ class HomeNavigationTest {
                 "S-113",
                 "S-114",
                 "S-115",
+                "S-324",
+                "S-338",
+                "S-306",
+                "S-331",
+                "S-307",
+                "S-309",
             ),
             HomeDestinations.implemented,
         )
@@ -145,6 +151,11 @@ class HomeNavigationTest {
                 "S-083",
                 "S-196",
                 "S-004",
+                // Loan application host, recovered picker and deferred calculation are not pages
+                // here.
+                "S-288",
+                "S-330",
+                "S-308",
                 "unknown",
                 "submit",
                 "authorize",

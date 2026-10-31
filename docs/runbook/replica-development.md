@@ -484,3 +484,26 @@ export are unavailable. See [inspection](../reports/wallet-inspection.md) and
 [requirements](../reports/wallet-requirements.md). Recovery ledger, captures,
 acceptance output and merged installation verification remain in
 `local/evidence/wallet/`. No new assets. Stop before FR-14.
+
+## Loans and repayment review (FR-35)
+
+Scroll the demo page to **منوی تسهیلات — نمونهٔ مستقل** (S-324), then choose
+**تسهیلات جاری و پرداخت اقساط** (S-338), or use its independent entry. Individual
+and corporate tabs show synthetic loans. A row opens S-306. Choose unpaid
+installments in due-date order; overdue debt has priority, and deselection starts
+at the last chosen installment. **پرداخت — بازبینی محلی** opens the source-account
+dialog with individual/shared categories and optional withdrawal ID. Select a
+source, then **تایید** opens S-331; full-debt selection shows the supplied early
+settlement discount. **اصلاح انتخاب اقساط و مبدا** returns with the draft retained.
+Final payment is unavailable; no OTP or payment handler is installed.
+
+The menu's **گروه‌های تسهیلات — فقط مشاهده** (or its independent entry) opens
+S-307. The active eligible group opens read-only S-309 options; inactive,
+account-age and credit-inquiry examples stop at their local gate. Calculation and
+all application steps remain unavailable. S-288 is only the host, and S-330 was
+recovered as a destination picker, not another repayment review; neither is
+registered. The fixed Home loan tile stays unavailable because its caller is
+unproved. Server eligibility, validation outcomes and exact E/M joins remain
+Unknown. Recovery IDs and limits are in the [tracker](../plan/frontend-replication-steps.md#fr-35--loan-overview-details-and-repayment-preview);
+private ledgers, captures and acceptance logs are in `local/evidence/loans/`.
+No new assets. Stop before FR-23.

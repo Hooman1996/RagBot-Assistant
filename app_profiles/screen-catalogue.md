@@ -461,7 +461,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-285 | Loans: agreement | Recovered | activity; named from its own screen content |
 | S-286 | Loans: customer info content | Recovered | Compose destination; route and screen recovered |
 | S-287 | Loans: hub request | Recovered | activity; named from its own screen content |
-| S-288 | Loans: loan | Recovered | activity; named from its own screen content |
+| S-288 | Loans: loan application host | Recovered | container for S-307; GL-01, no separate page |
 | S-289 | Loans: loan child | Recovered | activity; named from its own screen content |
 | S-290 | Loans: loan child agreement | Recovered | Compose destination; route and screen recovered |
 | S-291 | Loans: loan child calculate | Inferred | Compose destination; screen recovered, route obfuscated |
@@ -503,7 +503,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-327 | Loans: loan others details | Recovered | Compose destination; route and screen recovered |
 | S-328 | Loans: loan others entry | Recovered | Compose destination; route and screen recovered |
 | S-329 | Loans: loan others receipt | Inferred | activity; feature read from its view-model |
-| S-330 | Loans: loan payment confirmation | Inferred | activity; feature read from its view-model |
+| S-330 | Loans: saved destination picker | Recovered | identity corrected by LN-IDENTITY; not a repayment confirmation |
 | S-331 | Loans: loan payment confirmation | Recovered | activity; named from its own screen content |
 | S-332 | Loans: loan promissory draft | Recovered | Compose destination; route and screen recovered |
 | S-333 | Loans: loan promissory guarantor inquiry | Recovered | Compose destination; route and screen recovered |
