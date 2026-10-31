@@ -1,5 +1,10 @@
 # Revised build sequence (approved)
 
+> **Revised by D-021 (owner, 31 Oct 2026).** Stage 1 builds core journeys, not the whole app:
+> FR-01 to FR-13 plus eight named batches, with the rest built only if picked. Stage 2 covers only
+> the built journeys, and every built journey becomes an assistant feature (Stage 4 is replaced).
+> See `docs/decisions/0021-core-journeys-first.md`.
+
 **Approved by the owner, 29 Oct 2026.** This revises the order and scope set by decision
 **D-019** and is recorded as decision **D-020**. The master plan
 (`RagBot_Assistant_Final_Project_Plan_v2.md`) stays the reference for goals and gates; where
