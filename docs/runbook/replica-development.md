@@ -469,4 +469,18 @@ S-094 and S-095. Nothing is bought or donated. See
 [inspection](../reports/mobile-charity-inspection.md) and
 [requirements](../reports/mobile-charity-requirements.md). Recovery ledger,
 captures, acceptance output and merged installation verification remain in
-`local/evidence/mobile-charity/`. No new assets. Stop before FR-13.
+`local/evidence/mobile-charity/`. No new assets. FR-13 was subsequently
+approved in #70; later batches still require owner approval.
+
+## Wallet overview, QR and history (FR-13)
+
+Home → **کیف پول** (or the demo entry) opens S-111 with three synthetic wallets;
+**مشاهده موجودی** shows a balance. **صورتحساب کیف** opens S-115 (active-wallet
+picker, date range, pages of 10) and a row opens S-114. **سوابق تراکنش‌ها** opens
+S-110, whose items open the S-091 list. **دریافت با بارکد** opens S-112, which
+shows the recovered QR payload as local text and can add an amount or copy the
+wallet ID. A separate entry opens the S-113 receipt. Wallet operations, share and
+export are unavailable. See [inspection](../reports/wallet-inspection.md) and
+[requirements](../reports/wallet-requirements.md). Recovery ledger, captures,
+acceptance output and merged installation verification remain in
+`local/evidence/wallet/`. No new assets. Stop before FR-14.

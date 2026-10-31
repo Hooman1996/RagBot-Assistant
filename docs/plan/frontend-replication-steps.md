@@ -1,6 +1,6 @@
 # Frontend replication steps
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66) and FR-12 (#68) are done; FR-13–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-14–FR-45 remain proposed.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -223,7 +223,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-13 — Wallet overview, QR display and history
 
-**Status:** proposed. **Families:** F-032. **Existing nodes:** S-110–S-115 (6 primary allocations). **Dependencies:** FR-02.
+**Status:** done in #70. **Families:** F-032. **Existing nodes:** S-110–S-115 (6 primary allocations). **Dependencies:** FR-02.
 
 **What opens afterward:** Open a synthetic wallet, inspect its balance/history/detail and recoverable QR display state.
 
@@ -231,7 +231,7 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 **Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Wallet creation/eligibility and QR payload semantics are not proved by the node names. QR must remain unavailable until its format is recovered.
 
-**Requirements output:** M-055/M-056 candidates, wallet identifier/masking, balance units, history pagination and QR display prerequisites.
+**Requirements output:** [Requirements matrix](../reports/wallet-requirements.md) records the router targets, wallet card fields and cap, active-wallet pickers, the recovered QR payload, statement paging and date checks, detail rules, caller-backed models and exact IRR integers. [Inspection](../reports/wallet-inspection.md) records routes, the Home wallet entry and the local QR boundary.
 
 **Acceptance beyond the common contract:** Wallet/empty/error states, detail navigation and Back preserve selection; QR content is clearly local and cannot initiate payment. **Effort:** 2–4 days. **Evidence confidence:** medium.
 
@@ -761,8 +761,8 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-Review completed FR-12 (#68). Stop after this batch. The next proposed batch is **FR-13 — Wallet overview, QR display and history**, which requires explicit owner approval.
+Review completed FR-13 (#70). Stop after this batch. The next proposed batch is **FR-14 — Wallet purchases, transfers and QR scanner shell**, which requires explicit owner approval.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02 to FR-12 acceptance and rendered review are recorded in their reports; FR-13–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02 to FR-13 acceptance and rendered review are recorded in their reports; FR-14–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.

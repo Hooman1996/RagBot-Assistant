@@ -24,7 +24,8 @@ object HomeDestinations {
             InsuranceDestinations.implemented +
             CreditRepaymentDestinations.implemented +
             TopUpDestinations.implemented +
-            CharityDestinations.implemented
+            CharityDestinations.implemented +
+            WalletOverviewDestinations.implemented
 }
 
 enum class HomeControl(val title: String) {

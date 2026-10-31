@@ -111,6 +111,8 @@ fun ReplicaApp() {
     var topUpForm by rememberSaveable { mutableStateOf(TopUpDestinations.ACCOUNT) }
     var topUpDrafts by rememberSaveable { mutableStateOf(mapOf<String, TopUpDraft>()) }
     var charityDraft by rememberSaveable { mutableStateOf<CharityDraft?>(null) }
+    var walletNumber by rememberSaveable { mutableStateOf(WalletFixture.wallets.first().number) }
+    var walletRow by rememberSaveable { mutableStateOf("") }
     var savedDestinations by rememberSaveable { mutableStateOf(SavedDestinationFixture.records) }
     var pinnedServices by rememberSaveable { mutableStateOf(ShortcutFixture.initialPinnedIds) }
     var pickerReview by rememberSaveable { mutableStateOf(false) }
@@ -425,6 +427,8 @@ fun ReplicaApp() {
                                 TopUpDestinations.RECEIPT to "رسید مستقل شارژ — نمونه",
                                 CharityDestinations.PICKER to "کمک به خیریه",
                                 CharityDestinations.RECEIPT to "رسید مستقل خیریه — نمونه",
+                                WalletOverviewDestinations.MAIN to "کیف پول",
+                                WalletOverviewDestinations.RECEIPT to "رسید مستقل کیف پول — نمونه",
                             )
                             .forEach { (id, title) ->
                                 TextButton(
@@ -450,6 +454,9 @@ fun ReplicaApp() {
                                 { editing = true },
                                 { item ->
                                     if (item.key == "support") open(SupportDestinations.FAQ)
+                                    // Recovered AUTHENTICATED_HOMEFIX_WALLET opens S-111.
+                                    else if (item.key == "wallet")
+                                        open(WalletOverviewDestinations.MAIN)
                                     else
                                         notice =
                                             "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
@@ -664,6 +671,22 @@ fun ReplicaApp() {
                                 { topUpDrafts = topUpDrafts + (topUpForm to it) },
                                 charityDraft ?: CharityDraft(sourceId = accountKey),
                                 { charityDraft = it },
+                                ::goBack,
+                                ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (page in WalletOverviewDestinations.implemented) {
+                            WalletPage(
+                                page,
+                                scenario,
+                                walletNumber,
+                                walletRow,
+                                { walletNumber = it },
+                                {
+                                    walletRow = it
+                                    open(WalletOverviewDestinations.STATEMENT_DETAIL)
+                                },
                                 ::goBack,
                                 ::open,
                                 { scenario = "populated" },
