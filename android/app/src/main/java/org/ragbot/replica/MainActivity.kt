@@ -95,6 +95,13 @@ fun ReplicaApp() {
     var groupCancel by rememberSaveable { mutableStateOf(false) }
     var groupTrace by rememberSaveable { mutableStateOf("") }
     var groupDestination by rememberSaveable { mutableLongStateOf(0L) }
+    var scheduleDraft by rememberSaveable { mutableStateOf(ScheduleDraft()) }
+    var continuousSchedule by rememberSaveable { mutableStateOf<String?>(null) }
+    var continuousRecords by rememberSaveable { mutableStateOf(RecurringTransferFixture.records) }
+    var continuousSelected by rememberSaveable { mutableStateOf("") }
+    var repetitiveRecords by rememberSaveable {
+        mutableStateOf(RecurringTransferFixture.repetitive)
+    }
     var savedDestinations by rememberSaveable { mutableStateOf(SavedDestinationFixture.records) }
     var pinnedServices by rememberSaveable { mutableStateOf(ShortcutFixture.initialPinnedIds) }
     var pickerReview by rememberSaveable { mutableStateOf(false) }
@@ -111,6 +118,15 @@ fun ReplicaApp() {
     val page = stack.last()
     fun open(id: String) {
         check(id in HomeDestinations.implemented)
+        // Only S-177 opens the account forms in continuous mode.
+        if (
+            id in
+                setOf(
+                    AccountTransferDestinations.INTERNAL,
+                    AccountTransferDestinations.INTERBANK,
+                ) && stack.last() != RecurringTransferDestinations.EXECUTION
+        )
+            continuousSchedule = null
         if (
             id in setOf(CardTransferDestinations.ANONYMOUS, CardTransferDestinations.WITHOUT_SOURCE)
         )
@@ -166,6 +182,44 @@ fun ReplicaApp() {
     }
     fun unavailable(title: String) {
         notice = "$title در این پیش‌نمایش آماده نیست. در همین صفحه می‌مانید."
+    }
+    // Continuous-mode forms keep drafts apart from normal transfers of the same type.
+    val accountDraftKey =
+        accountTransferMode + if (continuousSchedule != null) "-continuous" else ""
+    // Recovered repeat targets: card review, account/IBAN review; mobile charge is not built.
+    fun repeat(record: RepetitiveRecord) {
+        continuousSchedule = null
+        when (record.type) {
+            "CARD_TO_CARD" -> {
+                cardTransferForm = CardTransferDestinations.WITHOUT_SOURCE
+                cardTransferDrafts =
+                    cardTransferDrafts +
+                        (cardTransferForm to
+                            CardTransferDraft(
+                                record.source,
+                                record.destination,
+                                record.amount.toString(),
+                            ))
+                open(CardTransferDestinations.CONFIRM)
+            }
+            "CHARGE" -> unavailable("تکرار خرید شارژ")
+            else -> {
+                accountTransferMode =
+                    if (record.type == "INTERNAL") AccountTransferDestinations.INTERNAL
+                    else AccountTransferDestinations.INTERBANK
+                accountTransferDrafts =
+                    accountTransferDrafts +
+                        (accountTransferMode to
+                            AccountTransferDraft(
+                                accountTransferMode,
+                                record.source,
+                                record.destination,
+                                record.amount.toString(),
+                                AccountTransferFixture.reasons.first(),
+                            ))
+                open(AccountTransferDestinations.CONFIRM)
+            }
+        }
     }
     val activity = checkNotNull(LocalActivity.current)
     val homeVisible = entered && page == HomeDestinations.HOME
@@ -445,6 +499,8 @@ fun ReplicaApp() {
                                     HomeControl.NOTIFICATIONS -> open("S-075")
                                     HomeControl.SUPPORT -> open(SupportDestinations.FAQ)
                                     HomeControl.SEARCH -> open(ShortcutDestinations.SCREEN)
+                                    HomeControl.SHORTCUTS ->
+                                        open(RecurringTransferDestinations.REPETITIVE)
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
@@ -466,17 +522,49 @@ fun ReplicaApp() {
                             AccountTransferPage(
                                 page,
                                 scenario,
-                                accountTransferDrafts[accountTransferMode]
+                                accountTransferDrafts[accountDraftKey]
                                     ?: AccountTransferDraft(
                                         mode = accountTransferMode,
                                         sourceId = accountKey,
                                     ),
                                 {
                                     accountTransferDrafts =
-                                        accountTransferDrafts + (accountTransferMode to it)
+                                        accountTransferDrafts + (accountDraftKey to it)
                                 },
                                 ::goBack,
                                 ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                                continuousSchedule,
+                            )
+                        } else if (page in RecurringTransferDestinations.implemented) {
+                            RecurringTransferPage(
+                                page,
+                                scenario,
+                                scheduleDraft,
+                                continuousRecords,
+                                repetitiveRecords,
+                                continuousSelected,
+                                { scheduleDraft = it },
+                                { continuousRecords = it },
+                                { repetitiveRecords = it },
+                                ::goBack,
+                                ::open,
+                                {
+                                    continuousSelected = it
+                                    open(RecurringTransferDestinations.DETAIL)
+                                },
+                                {
+                                    continuousSchedule =
+                                        "${scheduleDraft.title} · " +
+                                            RecurringTransferRules.frequencyTitle(
+                                                scheduleDraft.frequency,
+                                                scheduleDraft.day,
+                                            ) +
+                                            " · ${scheduleDraft.start} تا ${scheduleDraft.end}"
+                                    open(scheduleDraft.transferType)
+                                },
+                                ::repeat,
                                 { scenario = "populated" },
                                 ::unavailable,
                             )

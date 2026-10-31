@@ -1612,9 +1612,9 @@
       "id": "S-200",
       "name": "Recurring transfers: repetitive transactions home",
       "area": "F-041",
-      "label": "Inferred",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Compose screen; route obfuscated; screen recovered from its content."
+      "note": "Compose screen; route identity and Home bookmark caller recovered during FR-10 (RT-RECOVERY); S-199 is its host."
     },
     {
       "id": "S-201",

@@ -91,6 +91,12 @@ class HomeNavigationTest {
                 "S-188",
                 "S-189",
                 "S-190",
+                "S-177",
+                "S-178",
+                "S-179",
+                "S-180",
+                "S-181",
+                "S-200",
             ),
             HomeDestinations.implemented,
         )
@@ -100,6 +106,8 @@ class HomeNavigationTest {
         // S-183 is a wage-advance receipt, not part of the group-transfer journey.
         listOf(
                 "S-183",
+                // S-199 hosts only the S-200 repetitive-transactions route.
+                "S-199",
                 "S-194",
                 "S-195",
                 "S-138",
@@ -130,6 +138,7 @@ class HomeNavigationTest {
                         HomeControl.NOTIFICATIONS,
                         HomeControl.SUPPORT,
                         HomeControl.SEARCH,
+                        HomeControl.SHORTCUTS,
                     )
             }
             .forEach {

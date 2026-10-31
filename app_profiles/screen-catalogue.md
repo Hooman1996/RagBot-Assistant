@@ -7,7 +7,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 - **Labels:** `Recovered` (precise code location), `Inferred` (reasoned from a view-model or surrounding content), `Unknown` (obfuscated/computed/server-driven, with the reason). Nothing is `Observed` — the app was not run.
 - **IDs:** `F-001`/`F-002`/`F-066` reuse the P1a-03 inventory IDs (launcher, internal router, dashboard-menu hub). Every other screen is `S-###` (stable, assigned in area then name order).
 
-**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 345, Inferred 116, Unknown 24, Observed 0.
+**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 346, Inferred 115, Unknown 24, Observed 0.
 
 ## F-001 — Launch
 
@@ -338,7 +338,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 | ID | Name | Label | Basis |
 |---|---|---|---|
 | S-199 | Recurring transfers: repetitive transactions | Recovered | activity; named from its own screen content |
-| S-200 | Recurring transfers: repetitive transactions home | Inferred | Compose destination; screen recovered, route obfuscated |
+| S-200 | Recurring transfers: repetitive transactions home | Recovered | Compose destination; route/caller identity recovered in FR-10 (RT-RECOVERY); S-199 is its host |
 
 ## F-042 — IBAN conversion
 
