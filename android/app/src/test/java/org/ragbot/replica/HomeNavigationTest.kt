@@ -122,6 +122,12 @@ class HomeNavigationTest {
                 "S-282",
                 "S-283",
                 "S-284",
+                "S-110",
+                "S-111",
+                "S-112",
+                "S-113",
+                "S-114",
+                "S-115",
             ),
             HomeDestinations.implemented,
         )
