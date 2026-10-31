@@ -113,6 +113,7 @@ fun ReplicaApp() {
     var charityDraft by rememberSaveable { mutableStateOf<CharityDraft?>(null) }
     var walletNumber by rememberSaveable { mutableStateOf(WalletFixture.wallets.first().number) }
     var walletRow by rememberSaveable { mutableStateOf("") }
+    var conversionResultDraft by rememberSaveable { mutableStateOf(ConversionDraft()) }
     var loanId by rememberSaveable { mutableStateOf(LoanFixture.loans.first().id) }
     var loanSelected by rememberSaveable { mutableStateOf(listOf<Int>()) }
     var loanSource by rememberSaveable { mutableStateOf("") }
@@ -434,6 +435,12 @@ fun ReplicaApp() {
                                 CharityDestinations.RECEIPT to "رسید مستقل خیریه — نمونه",
                                 WalletOverviewDestinations.MAIN to "کیف پول",
                                 WalletOverviewDestinations.RECEIPT to "رسید مستقل کیف پول — نمونه",
+                                ConversionDestinations.LOGIN to "تبدیل شناسه با ورود — نمونه",
+                                ConversionDestinations.NO_LOGIN to "تبدیل شناسه بدون ورود — نمونه",
+                                ConversionDestinations.PAID to
+                                    "استعلام کارمزدی با انتخابگر — نمونهٔ مستقل",
+                                ConversionDestinations.PAID_TYPED to
+                                    "استعلام کارمزدی با کارت تایپی — نمونهٔ مستقل",
                                 LoanDestinations.MENU to "منوی تسهیلات — نمونهٔ مستقل",
                                 LoanDestinations.SUMMARY to "تسهیلات جاری و پرداخت اقساط",
                                 LoanDestinations.GROUP to "گروه‌های تسهیلات — فقط مشاهده",
@@ -681,6 +688,19 @@ fun ReplicaApp() {
                                 { charityDraft = it },
                                 ::goBack,
                                 ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (page in ConversionDestinations.implemented) {
+                            ConversionPage(
+                                page,
+                                scenario,
+                                conversionResultDraft,
+                                {
+                                    conversionResultDraft = it
+                                    open(ConversionDestinations.RESULT)
+                                },
+                                ::goBack,
                                 { scenario = "populated" },
                                 ::unavailable,
                             )

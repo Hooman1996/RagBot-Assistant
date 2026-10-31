@@ -7,7 +7,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 - **Labels:** `Recovered` (precise code location), `Inferred` (reasoned from a view-model or surrounding content), `Unknown` (obfuscated/computed/server-driven, with the reason). Nothing is `Observed` — the app was not run.
 - **IDs:** `F-001`/`F-002`/`F-066` reuse the P1a-03 inventory IDs (launcher, internal router, dashboard-menu hub). Every other screen is `S-###` (stable, assigned in area then name order).
 
-**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 590 edges. By label: Recovered 356, Inferred 105, Unknown 24, Observed 0.
+**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 592 edges. By label: Recovered 358, Inferred 104, Unknown 23, Observed 0.
 
 ## F-001 — Launch
 
@@ -344,6 +344,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 
 | ID | Name | Label | Basis |
 |---|---|---|---|
+| S-011 | IBAN conversion: ownership result | Recovered | IDENTIFIER-RECOVERY; ev_e6f3e9b0b0162bcb2c9018ddee95090752b5e2210a6383514cc632190692f5fb; shared response-handler callers traced |
 | S-201 | IBAN conversion: convert iban login | Recovered | activity; name kept through obfuscation |
 | S-202 | IBAN conversion: convert iban no login | Recovered | activity; name kept through obfuscation |
 | S-203 | IBAN conversion: convert iban no login pay | Recovered | activity; name kept through obfuscation |
@@ -757,7 +758,6 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-008 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-009 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-010 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
-| S-011 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-013 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-015 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
 | S-017 | Unassigned: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
@@ -771,7 +771,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 
 ## Navigation edges
 
-The graph has **590 edges**: Recovered 545, Inferred 3, Unknown 42. **43** are `dynamic` (destination server-driven or built from a computed/encrypted route); these carry `to: null`. The server-driven dashboard menu (F-066) is one hub node whose out-edge is `dynamic` because the backend chooses the tiles and where each leads.
+The graph has **592 edges**: Recovered 547, Inferred 3, Unknown 42. **43** are `dynamic` (destination server-driven or built from a computed/encrypted route); these carry `to: null`. The server-driven dashboard menu (F-066) is one hub node whose out-edge is `dynamic` because the backend chooses the tiles and where each leads.
 
 **Gap:** 139 further `navigate`/launch call sites were found but their source screen could not be attributed statically — the reverse call path dead-ends in shared, obfuscated glue code. These are recorded, not guessed: no edge is emitted for them, so the affected destinations may show no inbound edge. Most such destinations are feature activities that the server-driven dashboard menu (F-066) opens.
 
