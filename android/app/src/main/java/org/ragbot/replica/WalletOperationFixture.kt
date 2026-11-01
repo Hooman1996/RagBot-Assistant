@@ -141,6 +141,10 @@ internal object WalletOperationFixture {
                 "واریز از حساب",
                 WalletOperation.CHARGE.form,
             ),
-            WalletMenuItem("AUTHENTICATED_WALLET_CHARGE_IPG", "واریز از درگاه پرداخت", null),
+            WalletMenuItem(
+                "AUTHENTICATED_WALLET_CHARGE_IPG",
+                "واریز از درگاه پرداخت",
+                FundingFlow.WALLET_STANDALONE.amount,
+            ),
         )
 }

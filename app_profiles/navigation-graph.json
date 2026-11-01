@@ -8617,6 +8617,14 @@
       "label": "Recovered",
       "dynamic": false,
       "note": "Shared account-to-IBAN response handler launches the result; concrete callback proved by ev_2b618c5b6e974e18452997a0cce080e09f6d572eee6f06e10de721635313d3a2 and ev_988b9ffb71581acaffac6bec9c0f67a9b9cc106549673035b52531b2ab9df143."
+    },
+    {
+      "from": "S-229",
+      "to": "S-113",
+      "action": "launch",
+      "label": "Recovered",
+      "dynamic": false,
+      "note": "Standalone wallet top-up waiting result opens the wallet receipt; FN-RECOVERY host-activity trace."
     }
   ]
 }

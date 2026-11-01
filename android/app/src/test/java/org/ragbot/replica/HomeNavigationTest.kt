@@ -151,6 +151,21 @@ class HomeNavigationTest {
                 "S-103",
                 "S-109",
                 "S-099",
+                "S-222",
+                "S-228",
+                "S-224",
+                "S-217",
+                "S-221",
+                "S-227",
+                "S-223",
+                "S-232",
+                "S-231",
+                "S-225",
+                "S-235",
+                "S-230",
+                "S-226",
+                "S-234",
+                "S-233",
             ),
             HomeDestinations.implemented,
         )
@@ -175,6 +190,13 @@ class HomeNavigationTest {
                 "S-308",
                 // The fast-payment QR scanner is deferred by D-021.
                 "S-108",
+                // Top-up hosts, the legacy amount/result pages and the unresolved web views.
+                "S-220",
+                "S-229",
+                "S-219",
+                "S-218",
+                "S-236",
+                "S-237",
                 "unknown",
                 "submit",
                 "authorize",
@@ -199,6 +221,7 @@ class HomeNavigationTest {
                         HomeControl.SUPPORT,
                         HomeControl.SEARCH,
                         HomeControl.SHORTCUTS,
+                        HomeControl.INCREASE,
                     )
             }
             .forEach {

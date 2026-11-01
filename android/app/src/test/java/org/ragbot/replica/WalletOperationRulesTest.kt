@@ -113,7 +113,7 @@ class WalletOperationRulesTest {
             assertEquals(it, WalletOperation.of(it.confirm))
         }
         assertEquals(
-            listOf("S-104", null),
+            listOf("S-104", "S-231"),
             WalletOperationFixture.chargeTypes.map { it.destination },
         )
     }

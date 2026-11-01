@@ -37,6 +37,7 @@ internal fun WalletPage(
     onOpen: (String) -> Unit,
     onRetry: () -> Unit,
     onUnavailable: (String) -> Unit,
+    funding: FundingDraft? = null,
 ) {
     val title =
         when (page) {
@@ -73,7 +74,7 @@ internal fun WalletPage(
                             TransferValue(label, value)
                         }
                     }
-                    else -> WalletReceipt(onBack, onUnavailable)
+                    else -> WalletReceipt(funding, onBack, onUnavailable)
                 }
             }
         }
@@ -94,7 +95,7 @@ private fun WalletMain(onOpen: (String) -> Unit, onUnavailable: (String) -> Unit
             }
         }
     }
-    // Recovered: the charge item opens a sheet of its children; the gateway belongs to FR-15.
+    // Recovered: the charge item opens a sheet of its children (account charge or gateway top-up).
     if (choosingCharge) {
         AlertDialog(
             onDismissRequest = { choosingCharge = false },
@@ -398,16 +399,33 @@ private fun WalletStatementCard(row: WalletStatementRow, modifier: Modifier = Mo
 }
 
 @Composable
-private fun WalletReceipt(onBack: () -> Unit, onUnavailable: (String) -> Unit) {
+private fun WalletReceipt(
+    funding: FundingDraft?,
+    onBack: () -> Unit,
+    onUnavailable: (String) -> Unit,
+) {
     Text(
         "رسید ساختگی مستقل برای بازبینی؛ حاصل تراکنش نیست.",
         modifier = Modifier.testTag("wallet-receipt-disclosure"),
     )
-    TransferValue("نوع تراکنش", "انتقال کیف به کیف | موفق")
-    TransferValue("مبلغ (ریال)", persianNumber(400_000L))
-    TransferValue("کیف مبدا", "0000000000101")
-    TransferValue("کیف مقصد", "0000000000201")
-    TransferValue("نام مقصد", "طرف نمایشی")
+    if (funding != null) {
+        // FN-RECOVERY: the standalone wallet top-up hands its result to this receipt.
+        val status =
+            when (funding.outcome) {
+                FundingOutcome.FAILED -> "ناموفق"
+                FundingOutcome.UNKNOWN -> "نامعلوم"
+                else -> "موفق"
+            }
+        TransferValue("نوع تراکنش", "افزایش موجودی | $status")
+        TransferValue("مبلغ (ریال)", persianNumber(FundingRules.amount(funding.amount)))
+        TransferValue("کیف مقصد", funding.target)
+    } else {
+        TransferValue("نوع تراکنش", "انتقال کیف به کیف | موفق")
+        TransferValue("مبلغ (ریال)", persianNumber(400_000L))
+        TransferValue("کیف مبدا", "0000000000101")
+        TransferValue("کیف مقصد", "0000000000201")
+        TransferValue("نام مقصد", "طرف نمایشی")
+    }
     TransferValue("زمان", "۱۴۰۵/۰۸/۰۱ - ۱۰:۰۰")
     TransferValue("شماره پیگیری ساختگی", "DEMO-WALLET-0001")
     Button(
