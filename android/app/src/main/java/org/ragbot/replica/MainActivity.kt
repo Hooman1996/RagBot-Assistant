@@ -126,6 +126,9 @@ fun ReplicaApp() {
     var chequeReport by rememberSaveable { mutableStateOf(ChequeReportFilter()) }
     var chequeTask by rememberSaveable { mutableStateOf("") }
     var digitalActive by rememberSaveable { mutableStateOf(false) }
+    var vehicleMenuKey by rememberSaveable { mutableStateOf("") }
+    var vehicleRecord by rememberSaveable { mutableStateOf("") }
+    var vehicleDeleted by rememberSaveable { mutableStateOf(listOf<String>()) }
     var digitalCheque by rememberSaveable { mutableStateOf("") }
     var digitalTransfer by rememberSaveable { mutableStateOf(DigitalTransferDraft()) }
     var loanId by rememberSaveable { mutableStateOf(LoanFixture.loans.first().id) }
@@ -546,6 +549,8 @@ fun ReplicaApp() {
                                     else if (item.key == "cheque") open(ChequeDestinations.MENU)
                                     else if (item.key == "cartable")
                                         open(ChequeDestinations.CARDBOARD)
+                                    // VH-RECOVERY: the car-inquiry key opens the vehicle menu.
+                                    else if (item.key == "vehicle") open(VehicleDestinations.MENU)
                                     else
                                         notice =
                                             "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
@@ -766,6 +771,21 @@ fun ReplicaApp() {
                                 { charityDraft = it },
                                 ::goBack,
                                 ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (page in VehicleDestinations.implemented) {
+                            VehiclePage(
+                                page,
+                                scenario,
+                                vehicleMenuKey,
+                                vehicleRecord,
+                                vehicleDeleted.toSet(),
+                                { vehicleMenuKey = it },
+                                { vehicleRecord = it },
+                                { vehicleDeleted = vehicleDeleted + it },
+                                ::open,
+                                ::goBack,
                                 { scenario = "populated" },
                                 ::unavailable,
                             )
