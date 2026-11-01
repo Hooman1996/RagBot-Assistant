@@ -49,7 +49,7 @@ internal data class WalletStatementRow(
     val description: String,
 )
 
-/** A server-supplied wallet menu item; [destination] is null where the item belongs to FR-14. */
+/** A server-supplied wallet menu item; [destination] is null where no page is built. */
 internal data class WalletMenuItem(val key: String, val title: String, val destination: String?)
 
 internal object WalletRules {
@@ -121,11 +121,20 @@ internal object WalletFixture {
         )
 
     // Menu keys and their targets are recovered; titles are server-supplied, so synthetic here.
+    // The charge action opens a payment-type sheet instead of a page.
     val actions =
         listOf(
             WalletMenuItem("AUTHENTICATED_WALLET_CHARGE", "شارژ کیف", null),
-            WalletMenuItem("AUTHENTICATED_WALLET_DECHARGE", "برداشت از کیف", null),
-            WalletMenuItem("AUTHENTICATED_WALLET_W2W", "انتقال کیف به کیف", null),
+            WalletMenuItem(
+                "AUTHENTICATED_WALLET_DECHARGE",
+                "برداشت از کیف",
+                WalletOperation.DECHARGE.form,
+            ),
+            WalletMenuItem(
+                "AUTHENTICATED_WALLET_W2W",
+                "انتقال کیف به کیف",
+                WalletOperation.W2W.form,
+            ),
         )
     val menu =
         listOf(
@@ -144,9 +153,21 @@ internal object WalletFixture {
                 "دریافت با بارکد",
                 WalletOverviewDestinations.QR,
             ),
-            WalletMenuItem("AUTHENTICATED_WALLET_BUY_WITH_WALLET", "خرید با کیف", null),
-            WalletMenuItem("AUTHENTICATED_WALLET_PAY_BILL", "پرداخت قبض با کیف", null),
-            WalletMenuItem("AUTHENTICATED_WALLET_BUY_MOBILE_CHARGE", "خرید شارژ با کیف", null),
+            WalletMenuItem(
+                "AUTHENTICATED_WALLET_BUY_WITH_WALLET",
+                "خرید با کیف",
+                WalletOperation.BUY.form,
+            ),
+            WalletMenuItem(
+                "AUTHENTICATED_WALLET_PAY_BILL",
+                "پرداخت قبض با کیف",
+                WalletOperation.BILL.form,
+            ),
+            WalletMenuItem(
+                "AUTHENTICATED_WALLET_BUY_MOBILE_CHARGE",
+                "خرید شارژ با کیف",
+                WalletOperation.MOBILE.form,
+            ),
         )
     // Recovered: every history item opens the transaction list (S-091).
     val history =

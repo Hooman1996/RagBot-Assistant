@@ -114,6 +114,10 @@ fun ReplicaApp() {
     var walletNumber by rememberSaveable { mutableStateOf(WalletFixture.wallets.first().number) }
     var walletRow by rememberSaveable { mutableStateOf("") }
     var conversionResultDraft by rememberSaveable { mutableStateOf(ConversionDraft()) }
+    var walletOperationDrafts by rememberSaveable {
+        mutableStateOf(mapOf<WalletOperation, WalletOperationDraft>())
+    }
+    var walletPreview by rememberSaveable { mutableStateOf<WalletPreview?>(null) }
     var loanId by rememberSaveable { mutableStateOf(LoanFixture.loans.first().id) }
     var loanSelected by rememberSaveable { mutableStateOf(listOf<Int>()) }
     var loanSource by rememberSaveable { mutableStateOf("") }
@@ -176,6 +180,14 @@ fun ReplicaApp() {
         stack = stack.filter { it !in flow }
         cardRequest = null
         walletRequest = null
+    }
+    // Cancel leaves the operation and forgets its draft; Back keeps it for correction.
+    fun leaveWalletOperation(operation: WalletOperation) {
+        val flow = setOf(operation.form, operation.confirm)
+        stack.filter { it in flow }.forEach(savedPages::removeState)
+        stack = stack.filter { it !in flow }
+        walletOperationDrafts = walletOperationDrafts - operation
+        walletPreview = null
     }
     // Recovered processing pages finish when they hand over to the next step.
     fun openGroup(id: String) {
@@ -456,6 +468,26 @@ fun ReplicaApp() {
                                     Text(title, fontSize = 12.sp)
                                 }
                             }
+                        // Stands in for a scanned payment: a fixed synthetic destination, no
+                        // camera.
+                        TextButton(
+                            {
+                                entered = true
+                                walletOperationDrafts =
+                                    walletOperationDrafts +
+                                        (WalletOperation.BUY to
+                                            WalletOperationDraft(
+                                                WalletRules.active(WalletFixture.wallets)
+                                                    .first()
+                                                    .number,
+                                                "0000000000000301",
+                                            ))
+                                open(WalletOperation.BUY.form)
+                            },
+                            Modifier.testTag("demo-wallet-buy-qr"),
+                        ) {
+                            Text("خرید با کیف با بارکد نمونه — نمونهٔ مستقل", fontSize = 12.sp)
+                        }
                     }
                 } else {
                     savedPages.SaveableStateProvider(page) {
@@ -688,6 +720,31 @@ fun ReplicaApp() {
                                 { charityDraft = it },
                                 ::goBack,
                                 ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (page in WalletOperationDestinations.implemented) {
+                            val operation = WalletOperation.of(page)
+                            WalletOperationPage(
+                                page,
+                                scenario,
+                                walletOperationDrafts[operation]
+                                    ?: WalletOperationDraft(
+                                        if (operation == WalletOperation.CHARGE) accountKey
+                                        else
+                                            WalletRules.active(WalletFixture.wallets).first().number
+                                    ),
+                                walletPreview,
+                                {
+                                    walletOperationDrafts =
+                                        walletOperationDrafts + (operation to it)
+                                },
+                                {
+                                    walletPreview = it
+                                    open(operation.confirm)
+                                },
+                                ::goBack,
+                                { leaveWalletOperation(operation) },
                                 { scenario = "populated" },
                                 ::unavailable,
                             )

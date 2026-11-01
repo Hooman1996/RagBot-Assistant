@@ -82,10 +82,11 @@ class WalletRulesTest {
     @Test
     fun menuItemsOpenOnlyRecoveredTargets() {
         assertEquals(
-            listOf("S-115", "S-110", "S-112"),
+            listOf("S-115", "S-110", "S-112", "S-100", "S-109", "S-102"),
             WalletFixture.menu.mapNotNull { it.destination },
         )
-        assertTrue(WalletFixture.actions.all { it.destination == null })
+        // The charge action opens its payment-type sheet instead of a page.
+        assertEquals(listOf(null, "S-106", "S-116"), WalletFixture.actions.map { it.destination })
         assertTrue(WalletFixture.history.all { it.destination == AccountDestinations.HISTORY })
         assertEquals(10, WalletRules.PAGE_SIZE)
     }
