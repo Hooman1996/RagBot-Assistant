@@ -8625,6 +8625,22 @@
       "label": "Recovered",
       "dynamic": false,
       "note": "Standalone wallet top-up waiting result opens the wallet receipt; FN-RECOVERY host-activity trace."
+    },
+    {
+      "from": "S-142",
+      "to": "S-146",
+      "action": "launch",
+      "label": "Recovered",
+      "dynamic": false,
+      "note": "Cheque-book row opens its cheque list; CQ-RECOVERY caller trace."
+    },
+    {
+      "from": "S-154",
+      "to": "S-156",
+      "action": "launch",
+      "label": "Recovered",
+      "dynamic": false,
+      "note": "Card board opens request details for non-paper-cheque processes; CQ-RECOVERY caller trace."
     }
   ]
 }

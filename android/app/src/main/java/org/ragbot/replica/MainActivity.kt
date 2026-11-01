@@ -120,6 +120,10 @@ fun ReplicaApp() {
     var walletPreview by rememberSaveable { mutableStateOf<WalletPreview?>(null) }
     var fundingDrafts by rememberSaveable { mutableStateOf(mapOf<FundingFlow, FundingDraft>()) }
     var walletFunding by rememberSaveable { mutableStateOf<FundingDraft?>(null) }
+    var chequeAccountKey by rememberSaveable { mutableStateOf("account-1") }
+    var chequeBook by rememberSaveable { mutableStateOf("") }
+    var chequeIssue by rememberSaveable { mutableStateOf(ChequeIssueDraft()) }
+    var chequeTask by rememberSaveable { mutableStateOf("") }
     var loanId by rememberSaveable { mutableStateOf(LoanFixture.loans.first().id) }
     var loanSelected by rememberSaveable { mutableStateOf(listOf<Int>()) }
     var loanSource by rememberSaveable { mutableStateOf("") }
@@ -465,6 +469,9 @@ fun ReplicaApp() {
                                 LoanDestinations.MENU to "منوی تسهیلات — نمونهٔ مستقل",
                                 LoanDestinations.SUMMARY to "تسهیلات جاری و پرداخت اقساط",
                                 LoanDestinations.GROUP to "گروه‌های تسهیلات — فقط مشاهده",
+                                // The report filter form (S-148) is unresolved.
+                                ChequeDestinations.REPORT to
+                                    "گزارش چک‌های واگذار شده — نمونهٔ مستقل",
                                 // The in-flow callers (wage advance) are deferred.
                                 FundingFlow.ACCOUNT_IN_FLOW.amount to
                                     "افزایش موجودی حساب درون جریان — نمونهٔ مستقل",
@@ -518,6 +525,10 @@ fun ReplicaApp() {
                                     // Recovered AUTHENTICATED_HOMEFIX_WALLET opens S-111.
                                     else if (item.key == "wallet")
                                         open(WalletOverviewDestinations.MAIN)
+                                    // CQ-RECOVERY: Home opens the cheque menu and the card board.
+                                    else if (item.key == "cheque") open(ChequeDestinations.MENU)
+                                    else if (item.key == "cartable")
+                                        open(ChequeDestinations.CARDBOARD)
                                     else
                                         notice =
                                             "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
@@ -738,6 +749,23 @@ fun ReplicaApp() {
                                 { charityDraft = it },
                                 ::goBack,
                                 ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (page in ChequeDestinations.implemented) {
+                            ChequePage(
+                                page,
+                                scenario,
+                                chequeAccountKey,
+                                chequeBook,
+                                chequeIssue,
+                                chequeTask,
+                                { chequeAccountKey = it },
+                                { chequeBook = it },
+                                { chequeIssue = it },
+                                { chequeTask = it },
+                                ::open,
+                                ::goBack,
                                 { scenario = "populated" },
                                 ::unavailable,
                             )
