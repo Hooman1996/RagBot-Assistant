@@ -118,6 +118,8 @@ fun ReplicaApp() {
         mutableStateOf(mapOf<WalletOperation, WalletOperationDraft>())
     }
     var walletPreview by rememberSaveable { mutableStateOf<WalletPreview?>(null) }
+    var fundingDrafts by rememberSaveable { mutableStateOf(mapOf<FundingFlow, FundingDraft>()) }
+    var walletFunding by rememberSaveable { mutableStateOf<FundingDraft?>(null) }
     var loanId by rememberSaveable { mutableStateOf(LoanFixture.loans.first().id) }
     var loanSelected by rememberSaveable { mutableStateOf(listOf<Int>()) }
     var loanSource by rememberSaveable { mutableStateOf("") }
@@ -158,6 +160,7 @@ fun ReplicaApp() {
             accountTransferMode = id
         if (id in BillPaymentDestinations.forms) billForm = id
         if (id in TopUpDestinations.forms) topUpForm = id
+        if (id == WalletOverviewDestinations.RECEIPT) walletFunding = null
         focus.clearFocus()
         keyboard?.hide()
         stack = stack + id
@@ -180,6 +183,12 @@ fun ReplicaApp() {
         stack = stack.filter { it !in flow }
         cardRequest = null
         walletRequest = null
+    }
+    // Leaving a top-up removes its pages and forgets its draft.
+    fun leaveFunding(flow: FundingFlow) {
+        stack.filter { it in flow.pages }.forEach(savedPages::removeState)
+        stack = stack.filter { it !in flow.pages }
+        fundingDrafts = fundingDrafts - flow
     }
     // Cancel leaves the operation and forgets its draft; Back keeps it for correction.
     fun leaveWalletOperation(operation: WalletOperation) {
@@ -456,6 +465,11 @@ fun ReplicaApp() {
                                 LoanDestinations.MENU to "منوی تسهیلات — نمونهٔ مستقل",
                                 LoanDestinations.SUMMARY to "تسهیلات جاری و پرداخت اقساط",
                                 LoanDestinations.GROUP to "گروه‌های تسهیلات — فقط مشاهده",
+                                // The in-flow callers (wage advance) are deferred.
+                                FundingFlow.ACCOUNT_IN_FLOW.amount to
+                                    "افزایش موجودی حساب درون جریان — نمونهٔ مستقل",
+                                FundingFlow.WALLET_IN_FLOW.amount to
+                                    "افزایش موجودی کیف درون جریان — نمونهٔ مستقل",
                             )
                             .forEach { (id, title) ->
                                 TextButton(
@@ -591,6 +605,10 @@ fun ReplicaApp() {
                                     HomeControl.PROFILE -> tab = control
                                     HomeControl.ACCOUNT_MANAGEMENT ->
                                         open(AccountDestinations.MANAGEMENT)
+                                    // FN-RECOVERY: the dashboard opens the standalone account
+                                    // top-up.
+                                    HomeControl.INCREASE ->
+                                        open(FundingFlow.ACCOUNT_STANDALONE.amount)
                                     HomeControl.NOTIFICATIONS -> open("S-075")
                                     HomeControl.SUPPORT -> open(SupportDestinations.FAQ)
                                     HomeControl.SEARCH -> open(ShortcutDestinations.SCREEN)
@@ -723,6 +741,34 @@ fun ReplicaApp() {
                                 { scenario = "populated" },
                                 ::unavailable,
                             )
+                        } else if (page in FundingDestinations.implemented) {
+                            val flow = FundingFlow.of(page)
+                            val draft =
+                                fundingDrafts[flow]
+                                    ?: FundingDraft(
+                                        if (flow.wallet)
+                                            WalletRules.active(WalletFixture.wallets).first().number
+                                        else accountKey
+                                    )
+                            FundingPage(
+                                page,
+                                scenario,
+                                draft,
+                                { fundingDrafts = fundingDrafts + (flow to it) },
+                                {
+                                    if (it == WalletOverviewDestinations.RECEIPT) {
+                                        // The wallet result replaces the top-up pages.
+                                        leaveFunding(flow)
+                                        open(it)
+                                        walletFunding = draft
+                                    } else open(it)
+                                },
+                                ::goBack,
+                                { leaveFunding(flow) },
+                                { notice = it },
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else if (page in WalletOperationDestinations.implemented) {
                             val operation = WalletOperation.of(page)
                             WalletOperationPage(
@@ -801,6 +847,7 @@ fun ReplicaApp() {
                                 ::open,
                                 { scenario = "populated" },
                                 ::unavailable,
+                                walletFunding,
                             )
                         } else if (page in GroupTransferDestinations.implemented) {
                             GroupTransferPage(

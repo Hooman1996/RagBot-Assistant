@@ -6,13 +6,13 @@
 > result to its row here and pastes its acceptance output in the PR. Where the text below asks for
 > a per-batch requirements matrix, that matrix is now written in Stage 5a for supported features.
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74) and FR-14 (#75) are done. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75) and FR-15 (#76) are done. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
 ## Evidence and interpretation
 
-- **Recovered:** the [feature inventory](../../app_profiles/feature-inventory.md), [screen catalogue](../../app_profiles/screen-catalogue.md), [navigation graph](../../app_profiles/navigation-graph.json) and [API/model inventory](../../app_profiles/api-structure.md) cover the pinned extracted artifact. The graph has **485 nodes / 592 edges**: 266 activities, 199 Compose destinations, 19 subgraphs and one menu hub. A host, lifecycle wrapper, nested graph or duplicate legacy/current implementation is not automatically a separate visible page.
+- **Recovered:** the [feature inventory](../../app_profiles/feature-inventory.md), [screen catalogue](../../app_profiles/screen-catalogue.md), [navigation graph](../../app_profiles/navigation-graph.json) and [API/model inventory](../../app_profiles/api-structure.md) cover the pinned extracted artifact. The graph has **485 nodes / 593 edges**: 266 activities, 199 Compose destinations, 19 subgraphs and one menu hub. A host, lifecycle wrapper, nested graph or duplicate legacy/current implementation is not automatically a separate visible page.
 - **Owner-supplied visual evidence:** HC-REF contains upper/lower scroll positions of the same original Home and the earlier replica capture. It establishes the visible Home configuration only. It does not observe other screens or prove their navigation.
 - **Recovered with limits:** 357 graph nodes are Recovered, 104 Inferred and 24 Unknown. There are **43 dynamic edges with null targets** and **139 additional call sites with unattributed source screens**. A destination declaration, feature package or named service method is insufficient proof of reachability, content fidelity or an exact contract.
 - **Inferred / Designed for mock:** batching, dependencies, day estimates and future records below are our implementation proposals. They are not new recovered graph edges, bank tables, menu identifiers or business rules. Local synthetic fixtures provide UI states; no mock HTTP service or database is authorized by this list.
@@ -257,17 +257,34 @@ Effort is an initial estimate in focused engineering days including recovery, UI
 
 ### FR-15 — Account/wallet funding and gateway states
 
-**Status:** in scope under D-021 (order 4 of 8); needs its own approved issue. **Families:** F-045. **Existing nodes:** S-217–S-235 (19 primary allocations). **Dependencies:** FR-02, FR-13.
+**Status:** done (#76, D-021 order 4 of 8); 83 JVM / 105 device tests (0 skipped), build/lint and rendered review passed. **Families:** F-045. **Registered nodes:** account standalone S-222→S-228→S-224→S-217; account in-flow S-221→S-227→S-223→S-232; wallet standalone S-231→S-225→S-235, ending on FR-13's wallet receipt S-113; wallet in-flow S-230→S-226→S-234→S-233 (15 pages). Hosts S-220/S-229 are containers. Legacy S-219 (amount) and S-218 (result) lead only to the unresolved web view S-236, so they stay unregistered with S-236/S-237 (FR-45). **Dependencies:** FR-02, FR-13, FR-14.
 
-**What opens afterward:** Inspect account/wallet increase-balance entry, in-flow/standalone waiting, result and receipt previews.
+**What opens afterward:** Home's **افزایش موجودی** opens the standalone account top-up (S-222). FR-14's wallet charge sheet option **واریز از درگاه پرداخت** opens the standalone wallet top-up (S-231). Two labelled independent demo entries open the account and wallet in-flow graphs, because their caller (wage advance) is deferred.
 
-**Frontend scope:** Consolidate four closely related funding graphs around source/amount/waiting/result components; preserve differences recovered from callers.
+**Recovered:** FN-RECOVERY.
+- **Shared amount step:** proposed-amount chips, a stepper (minus down to zero, plus without a cap), and 13-character input.
+- **Amount checks, in order:** empty; the transaction-limit maximum, then minimum; then the proposed-range minimum and maximum, each with its own message.
+- **Standalone pickers:** the default plus the other accounts or active wallets. In-flow graphs keep the destination the caller fixed.
+- **Gateway:** Completed goes to Waiting; a load error shows the connection message and goes back.
+- **Waiting:** asks for the result again while it is pending.
+- **Receipts:** success (continue/cancel), failed (close) and unknown (tracking number, track). S-217 shows the legacy receipt fields.
+- **Callers:** Home starts the account host's no-argument (standalone) starter through the dashboard's navigate-to-increase flag. The wallet router key opens the wallet host. The recovered launch S-229 → S-113 was missing and is added to the graph (593 edges).
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Gateway callback/result semantics and S-236/S-237 identity are unresolved; no WebView loads an original URL and no payment application launches.
+**Designed for mock:**
+- Transaction limits (10,000–500,000,000 IRR) and proposed amounts (step 100,000; default 1,000,000; chips 500,000 / 1,000,000 / 5,000,000; range 50,000–200,000,000). Exact IRR integers.
+- The gateway stand-in, where the user picks a synthetic return (success, success after one pending round, failed, connection loss → unknown).
+- A manual **دریافت نتیجهٔ نمونه** as the waiting state's deterministic exit; no timer was recovered.
+- Synthetic tracking and reference numbers, and the neutral default-wallet label.
+- Each receipt says nothing was charged. Loading/empty/error/retry use the existing scenario controls.
 
-**Requirements output:** Funding context, amount/unit, local waiting/result fixture transitions, callback expectations and provenance of synthetic receipts.
+**Unknown / stopped:**
+- The exact Home control binding goes through an obfuscated dispatcher: the dashboard flag, its LaunchedEffect and the Recovered S-026→S-220 edge are proved, the control binding is Inferred.
+- Gateway provider selection, the URL/callback contract, settlement, any timeout, the unknown-receipt tracking flow, the in-flow return contract to its caller and exact E/M joins.
+- No WebView, URL, payment app or gateway is opened; no card data or PIN is collected. Fidelity is unscored.
 
-**Acceptance beyond the common contract:** All recovered entry variants, cancellation/timeouts/recreation and Back work; waiting state has a deterministic local exit and never implies settlement. **Effort:** 3–5 days. **Evidence confidence:** medium-low.
+Private recovery, captures and logs: `local/evidence/funding/`. Stop before FR-19.
+
+**Acceptance:** 83 JVM / 105 device tests, 0 failures/errors/skips, versus baseline 79 / 101; lint 0 errors / 117 warnings, identical diagnostics to baseline. Full issue command and rendered RTL/amount/validation/gateway/waiting/receipt review pass; output is in the PR. **Evidence confidence:** high for amount rules, graphs and router/host callers; medium for screen layout; Inferred for the Home control binding.
 
 ### FR-16 — Vehicle-service hub and saved vehicle/contact records
 
