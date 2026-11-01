@@ -129,6 +129,7 @@ fun ReplicaApp() {
     var vehicleMenuKey by rememberSaveable { mutableStateOf("") }
     var vehicleRecord by rememberSaveable { mutableStateOf("") }
     var vehicleDeleted by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var tollDraft by rememberSaveable { mutableStateOf(TollDraft()) }
     var digitalCheque by rememberSaveable { mutableStateOf("") }
     var digitalTransfer by rememberSaveable { mutableStateOf(DigitalTransferDraft()) }
     var loanId by rememberSaveable { mutableStateOf(LoanFixture.loans.first().id) }
@@ -481,6 +482,7 @@ fun ReplicaApp() {
                                 LoanDestinations.MENU to "منوی تسهیلات — نمونهٔ مستقل",
                                 LoanDestinations.SUMMARY to "تسهیلات جاری و پرداخت اقساط",
                                 LoanDestinations.GROUP to "گروه‌های تسهیلات — فقط مشاهده",
+                                TollDestinations.RECEIPT to "رسید مستقل عوارض — نمونه",
                                 // The in-flow callers (wage advance) are deferred.
                                 FundingFlow.ACCOUNT_IN_FLOW.amount to
                                     "افزایش موجودی حساب درون جریان — نمونهٔ مستقل",
@@ -774,6 +776,17 @@ fun ReplicaApp() {
                                 { scenario = "populated" },
                                 ::unavailable,
                             )
+                        } else if (page in TollDestinations.implemented) {
+                            TollPage(
+                                page,
+                                scenario,
+                                tollDraft,
+                                { tollDraft = it },
+                                ::open,
+                                ::goBack,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
                         } else if (page in VehicleDestinations.implemented) {
                             VehiclePage(
                                 page,
@@ -784,6 +797,22 @@ fun ReplicaApp() {
                                 { vehicleMenuKey = it },
                                 { vehicleRecord = it },
                                 { vehicleDeleted = vehicleDeleted + it },
+                                { record ->
+                                    val service = checkNotNull(TollService.ofKey(vehicleMenuKey))
+                                    // A saved plate fills the inquiry; a new plate starts empty.
+                                    tollDraft =
+                                        if (record == null) TollDraft(service)
+                                        else
+                                            TollDraft(
+                                                service,
+                                                record.plate + List(4 - record.plate.size) { "" },
+                                                record.automobile,
+                                                record.mine,
+                                                if (record.mine) "" else record.ownerCode,
+                                                if (record.mine) "" else record.ownerMobile,
+                                            )
+                                    open(service.inquiry)
+                                },
                                 ::open,
                                 ::goBack,
                                 { scenario = "populated" },
