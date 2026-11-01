@@ -123,6 +123,7 @@ fun ReplicaApp() {
     var chequeAccountKey by rememberSaveable { mutableStateOf("account-1") }
     var chequeBook by rememberSaveable { mutableStateOf("") }
     var chequeIssue by rememberSaveable { mutableStateOf(ChequeIssueDraft()) }
+    var chequeReport by rememberSaveable { mutableStateOf(ChequeReportFilter()) }
     var chequeTask by rememberSaveable { mutableStateOf("") }
     var loanId by rememberSaveable { mutableStateOf(LoanFixture.loans.first().id) }
     var loanSelected by rememberSaveable { mutableStateOf(listOf<Int>()) }
@@ -469,9 +470,6 @@ fun ReplicaApp() {
                                 LoanDestinations.MENU to "منوی تسهیلات — نمونهٔ مستقل",
                                 LoanDestinations.SUMMARY to "تسهیلات جاری و پرداخت اقساط",
                                 LoanDestinations.GROUP to "گروه‌های تسهیلات — فقط مشاهده",
-                                // The report filter form (S-148) is unresolved.
-                                ChequeDestinations.REPORT to
-                                    "گزارش چک‌های واگذار شده — نمونهٔ مستقل",
                                 // The in-flow callers (wage advance) are deferred.
                                 FundingFlow.ACCOUNT_IN_FLOW.amount to
                                     "افزایش موجودی حساب درون جریان — نمونهٔ مستقل",
@@ -759,10 +757,12 @@ fun ReplicaApp() {
                                 chequeAccountKey,
                                 chequeBook,
                                 chequeIssue,
+                                chequeReport,
                                 chequeTask,
                                 { chequeAccountKey = it },
                                 { chequeBook = it },
                                 { chequeIssue = it },
+                                { chequeReport = it },
                                 { chequeTask = it },
                                 ::open,
                                 ::goBack,

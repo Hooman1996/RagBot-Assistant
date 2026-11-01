@@ -50,8 +50,31 @@ class ChequeRulesTest {
     fun menuOpensOnlyBuiltPagesAndPaperChequeTasksOpenTheirOwnDetail() {
         val targets = ChequeFixture.menu.mapNotNull { it.destination }.toSet()
         assertTrue(ChequeDestinations.implemented.containsAll(targets))
-        assertFalse("S-148" in HomeDestinations.implemented)
+        assertTrue("S-148" in HomeDestinations.implemented)
         assertEquals(listOf(false, true, false), ChequeFixture.tasks.map { it.pichak })
         assertEquals(setOf("WAITING", "TRACK", "DONE"), ChequeFixture.tabs.map { it.first }.toSet())
+    }
+
+    @Test
+    fun reportFilterNeedsAStatusAndDatesOnlyForOtherBanksOutsideReceiving() {
+        assertEquals(
+            mapOf("status" to PaymentRules.MANDATORY),
+            ChequeRules.reportErrors(ChequeReportFilter("OTHER")),
+        )
+        assertTrue(ChequeRules.reportErrors(ChequeReportFilter("INTERNAL", "PASSED")).isEmpty())
+        assertTrue(ChequeRules.reportErrors(ChequeReportFilter("OTHER", "RECEIVING")).isEmpty())
+        assertTrue(ChequeReportFilter("OTHER", "RETURNED").dated)
+        assertFalse(ChequeReportFilter("INTERNAL", "RETURNED").dated)
+        assertEquals(
+            listOf("PASSED", "RETURNED", "RECEIVING"),
+            chequeReportSubtypes.map { it.first },
+        )
+        assertEquals(
+            setOf("INTERNAL", "OTHER"),
+            ChequeFixture.menu
+                .filter { it.destination == ChequeDestinations.REPORT_FILTER }
+                .map { if ("KARAFARIN" in it.key) "INTERNAL" else "OTHER" }
+                .toSet(),
+        )
     }
 }

@@ -7,7 +7,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 - **Labels:** `Recovered` (precise code location), `Inferred` (reasoned from a view-model or surrounding content), `Unknown` (obfuscated/computed/server-driven, with the reason). Nothing is `Observed` — the app was not run.
 - **IDs:** `F-001`/`F-002`/`F-066` reuse the P1a-03 inventory IDs (launcher, internal router, dashboard-menu hub). Every other screen is `S-###` (stable, assigned in area then name order).
 
-**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 595 edges. By label: Recovered 358, Inferred 104, Unknown 23, Observed 0.
+**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 596 edges. By label: Recovered 359, Inferred 104, Unknown 22, Observed 0.
 
 ## F-001 — Launch
 
@@ -256,7 +256,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 | S-145 | Cheques: cheque issuance inquiry | Recovered | activity; named from its own screen content |
 | S-146 | Cheques: cheque list | Inferred | activity; feature read from its view-model |
 | S-147 | Cheques: cheque menu | Recovered | activity; named from its own screen content |
-| S-148 | Cheques: obfuscated screen | Unknown | activity; obfuscated, feature unresolved |
+| S-148 | Cheques: transferred cheques report filter | Recovered | CQ-RECOVERY; report filter form, router and S-153 callers traced |
 | S-149 | Cheques: track my cheques | Inferred | activity; feature read from its view-model |
 | S-150 | Cheques: track transferred cheques | Inferred | activity; feature read from its view-model |
 | S-151 | Cheques: transfer digital cheque | Recovered | activity; named from its own screen content |
@@ -771,7 +771,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 
 ## Navigation edges
 
-The graph has **595 edges**: Recovered 550, Inferred 3, Unknown 42. **43** are `dynamic` (destination server-driven or built from a computed/encrypted route); these carry `to: null`. The server-driven dashboard menu (F-066) is one hub node whose out-edge is `dynamic` because the backend chooses the tiles and where each leads.
+The graph has **596 edges**: Recovered 551, Inferred 3, Unknown 42. **43** are `dynamic` (destination server-driven or built from a computed/encrypted route); these carry `to: null`. The server-driven dashboard menu (F-066) is one hub node whose out-edge is `dynamic` because the backend chooses the tiles and where each leads.
 
 **Gap:** 139 further `navigate`/launch call sites were found but their source screen could not be attributed statically — the reverse call path dead-ends in shared, obfuscated glue code. These are recorded, not guessed: no edge is emitted for them, so the affected destinations may show no inbound edge. Most such destinations are feature activities that the server-driven dashboard menu (F-066) opens.
 
