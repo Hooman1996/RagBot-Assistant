@@ -12,9 +12,9 @@ This list consolidates the earlier proposed “Home refinement, then account tab
 
 ## Evidence and interpretation
 
-- **Recovered:** the [feature inventory](../../app_profiles/feature-inventory.md), [screen catalogue](../../app_profiles/screen-catalogue.md), [navigation graph](../../app_profiles/navigation-graph.json) and [API/model inventory](../../app_profiles/api-structure.md) cover the pinned extracted artifact. The graph has **485 nodes / 595 edges**: 266 activities, 199 Compose destinations, 19 subgraphs and one menu hub. A host, lifecycle wrapper, nested graph or duplicate legacy/current implementation is not automatically a separate visible page.
+- **Recovered:** the [feature inventory](../../app_profiles/feature-inventory.md), [screen catalogue](../../app_profiles/screen-catalogue.md), [navigation graph](../../app_profiles/navigation-graph.json) and [API/model inventory](../../app_profiles/api-structure.md) cover the pinned extracted artifact. The graph has **485 nodes / 596 edges**: 266 activities, 199 Compose destinations, 19 subgraphs and one menu hub. A host, lifecycle wrapper, nested graph or duplicate legacy/current implementation is not automatically a separate visible page.
 - **Owner-supplied visual evidence:** HC-REF contains upper/lower scroll positions of the same original Home and the earlier replica capture. It establishes the visible Home configuration only. It does not observe other screens or prove their navigation.
-- **Recovered with limits:** 357 graph nodes are Recovered, 104 Inferred and 24 Unknown. There are **43 dynamic edges with null targets** and **139 additional call sites with unattributed source screens**. A destination declaration, feature package or named service method is insufficient proof of reachability, content fidelity or an exact contract.
+- **Recovered with limits:** 359 graph nodes are Recovered, 104 Inferred and 22 Unknown. There are **43 dynamic edges with null targets** and **139 additional call sites with unattributed source screens**. A destination declaration, feature package or named service method is insufficient proof of reachability, content fidelity or an exact contract.
 - **Inferred / Designed for mock:** batching, dependencies, day estimates and future records below are our implementation proposals. They are not new recovered graph edges, bank tables, menu identifiers or business rules. Local synthetic fixtures provide UI states; no mock HTTP service or database is authorized by this list.
 - **Unknown:** encrypted M-002/M-003/M-029 wrappers expose transport shapes, not their inner business payloads. Service-area grouping does not establish a screen-to-endpoint relationship. Every future batch must trace actual content/view-model/repository callers before claiming E-###/M-### joins. The current map has 520 endpoints / 60 models, with 75 Unknown endpoints; no production path or host is needed.
 - Private recovery sources are the existing inventory/navigation/API findings and decode, reused under HC-PLAN. Exact classes, resources, caller mappings and raw REA output stay private. Focused recovery starts from those records; do not repeat the whole investigation or ask the owner to discover every page. Owner comparison supplements code/resource evidence.
@@ -330,13 +330,13 @@ Private recovery, captures and logs: `local/evidence/funding/`. Stop before FR-1
 
 ### FR-19 — Cheque overview, tracking and chequebook requests
 
-**Status:** done (#77, D-021 order 5 of 8); 88 JVM / 110 device tests (0 skipped), build/lint and rendered review passed. **Families:** F-035, F-036. **Registered nodes:** S-147 menu, S-142 books, S-146 cheques, S-149/S-150 tracking, S-153 transferred-cheques report list, S-143/S-144 chequebook request and confirmation, S-145 issuance tracking, S-154 card board, S-155/S-156 detail variants (12 pages). **Dependencies:** FR-02.
+**Status:** done (#77, D-021 order 5 of 8); 88 JVM / 110 device tests (0 skipped), build/lint and rendered review passed. S-148 then built on the owner's instruction (#77 follow-up); 89 JVM / 111 device tests. **Families:** F-035, F-036. **Registered nodes:** S-147 menu, S-142 books, S-146 cheques, S-149/S-150 tracking, S-148 transferred-cheques report filter → S-153 report list, S-143/S-144 chequebook request and confirmation, S-145 issuance tracking, S-154 card board, S-155/S-156 detail variants (13 pages). **Dependencies:** FR-02.
 
 **What opens afterward:** Home's **چک** tile opens S-147 and **کارتابل** opens S-154 (both Home launches Recovered).
-- **Menu:** recovered keys open books, paper/digital chequebook request (the media comes from the key), issuance tracking, my-cheques tracking and transferred-cheques tracking. Other cheque keys, and the transferred-cheques report filter form S-148, show notices.
+- **Menu:** recovered keys open books, paper/digital chequebook request (the media comes from the key), issuance tracking, my-cheques tracking and transferred-cheques tracking. The two report keys open the filter S-148 with other-bank or internal cheques. Other cheque keys show notices.
 - **Books and cheques:** books (S-142) are listed per account, with an empty account. A book opens its cheques (S-146), with the five-row summary and a cheque-number search.
 - **Tracking:** S-149/S-150 require a cheque number and show the result sheet or a not-found notice.
-- **Report:** a labelled independent entry opens the report list S-153 (internal/other tabs, search by amount or number).
+- **Report:** S-148 takes an account and a required status (received/returned/receiving). For other-bank reports outside "receiving" it also takes a from/to date (each required, start not after end, at most 30 days). It opens the filtered list S-153, which has a search by amount or number.
 - **Card board:** waiting/track/done tabs. Paper-cheque processes open S-155; other processes open S-156.
 
 **Recovered:** CQ-RECOVERY.
@@ -347,22 +347,22 @@ Private recovery, captures and logs: `local/evidence/funding/`. Stop before FR-1
 - Card board tabs, task fields, the actions pay/act/reject/revoke, and the paper-cheque process routing.
 - Book summary labels cleared/registered/returned and blocked/usable/other.
 - Tracking: cheque number required, trailing invalid character dropped.
-- Two missing caller-traced edges added: S-142→S-146 and S-154→S-156 (595 edges).
+- Two missing caller-traced edges added: S-142→S-146 and S-154→S-156; in the follow-up, S-148 is corrected from Unknown to the recovered report filter, with S-148→S-153 (596 edges; 359/104/22 node labels).
+- S-148: both report keys open it, passing other-bank or internal type; it has the status picker and the dated-range checks above.
 
 **Designed for mock:**
 - Menu titles, books, cheques and their status descriptions, page-count lists and the 150,000 IRR fee.
 - The shared-account card-board note on S-144, the issuance records and the workflow tasks.
-- The report list's fixed filter (S-148 is not built). Exact IRR integers. Scenario controls cover loading/empty/error.
+- The default 30-day range on S-148 and the report rows. Exact IRR integers. Scenario controls cover loading/empty/error.
 
 **Unknown / stopped:**
-- **S-148:** traced to the report's filter form (status, from/to date, view result), which opens S-153. #77 keeps it unresolved, so it is not registered, and its catalogue identity is left for FR-45/owner decision.
 - **Data meanings:** the cheque status vocabulary, the mapping of book counts to the five summary rows, request eligibility, fee rules, and the OTP/submit and workflow approve/reject contracts.
 - **Other cheque features:** digital-cheque (FR-20), paper-cheque issuing (FR-21) and inquiry (FR-24) keys.
 - No request is sent and no OTP field exists. Fidelity is unscored.
 
 Private recovery, captures and logs: `local/evidence/cheques/`. Stop before FR-20.
 
-**Acceptance:** 88 JVM / 110 device tests, 0 failures/errors/skips, versus baseline 83 / 105; lint 0 errors / 117 warnings, identical diagnostics to baseline. Full issue command and rendered RTL/menu/list/tracking/request/card-board review pass; output is in the PR. **Evidence confidence:** high for router keys, media, report enums and card-board routing; medium for layouts; low for status values and summary mapping.
+**Acceptance:** 88 JVM / 110 device tests, 0 failures/errors/skips, versus baseline 83 / 105 (S-148 follow-up: 89 JVM / 111 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics); lint 0 errors / 117 warnings, identical diagnostics to baseline. Full issue command and rendered RTL/menu/list/tracking/request/card-board review pass; output is in the PR. **Evidence confidence:** high for router keys, media, report enums and card-board routing; medium for layouts; low for status values and summary mapping.
 
 ### FR-20 — Digital cheque activation, cartable and transfer
 

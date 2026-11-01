@@ -66,8 +66,6 @@ class ChequesTest {
         shown("S-147")
         click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_CHAKAD_CARTABLE_DIGITAL_CHEQUE")
         unavailable("کارتابل چک دیجیتال")
-        click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRANSFERRED_CHEQUES_REPORT")
-        unavailable("گزارش چک‌های واگذار شده")
         click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_CHEQUEBOOK")
         shown("S-142")
         click("cheque-account")
@@ -168,26 +166,69 @@ class ChequesTest {
     }
 
     @Test
-    fun reportEntryFiltersAndScenarioStatesStayLocal() {
-        click("demo-S-153")
+    fun reportFilterChecksStatusAndRangeAndOpensItsFilteredList() {
+        home("cheque")
+        click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRANSFERRED_CHEQUES_REPORT")
+        shown("S-148")
+        // Recovered: other-bank reports start with the default date range shown.
+        compose.onNodeWithTag("cheque-from").assertExists()
+        click("cheque-report-apply")
+        compose.onNodeWithTag("cheque-status-error").assertExists()
+        click("cheque-status-RECEIVING")
+        compose.onNodeWithTag("cheque-from").assertDoesNotExist()
+        click("cheque-report-apply")
         shown("S-153")
-        compose.onNodeWithTag("cheque-report-880001").assertExists()
-        click("cheque-report-OTHER")
-        compose.onNodeWithTag("cheque-report-880001").assertDoesNotExist()
+        compose.onNodeWithTag("cheque-report-990002").assertExists()
+        compose.onNodeWithTag("cheque-report-990001").assertDoesNotExist()
+        back()
+        click("cheque-status-PASSED")
+        compose.onNodeWithTag("cheque-from").performScrollTo().performTextReplacement("1405/07/20")
+        compose.onNodeWithTag("cheque-to").performScrollTo().performTextReplacement("1405/07/10")
+        click("cheque-report-apply")
+        compose
+            .onNodeWithTag("cheque-range-error")
+            .assertTextEquals("تاریخ ابتدایی باید قبل از تاریخ انتهایی بازه زمانی باشد.")
+        compose.onNodeWithTag("cheque-from").performScrollTo().performTextReplacement("1405/05/01")
+        click("cheque-report-apply")
+        compose
+            .onNodeWithTag("cheque-range-error")
+            .assertTextEquals("بازه زمانی انتخابی، باید کمتر از 30 روز باشد.")
+        compose.onNodeWithTag("cheque-to").performScrollTo().performTextReplacement("")
+        compose.onNodeWithTag("cheque-from").performScrollTo().performTextReplacement("1405/07/01")
+        click("cheque-report-apply")
+        compose.onNodeWithTag("cheque-to-error").assertExists()
+        compose.onNodeWithTag("cheque-to").performScrollTo().performTextReplacement("1405/07/20")
+        click("cheque-report-apply")
+        shown("S-153")
         compose.onNodeWithTag("cheque-report-990001").assertExists()
-        click("cheque-report-INTERNAL")
-        compose.onNodeWithTag("cheque-report-search").performTextReplacement("9500000")
-        compose.onNodeWithTag("cheque-report-880001").assertDoesNotExist()
-        compose.onNodeWithTag("cheque-report-880002").assertExists()
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("cheque-report-990001").assertExists()
         back()
         back()
+        click(
+            "cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_KARAFARIN_TRANSFERRED_CHEQUES_REPORT"
+        )
+        click("cheque-status-RETURNED")
+        compose.onNodeWithTag("cheque-from").assertDoesNotExist()
+        click("cheque-report-apply")
+        compose.onNodeWithTag("cheque-report-880003").assertExists()
+        compose.onNodeWithTag("cheque-report-search").performTextReplacement("1800000")
+        compose.onNodeWithTag("cheque-report-880003").assertExists()
+        compose.onNodeWithTag("cheque-report-search").performTextReplacement("999")
+        compose.onNodeWithTag("cheque-empty").assertExists()
+    }
+
+    @Test
+    fun scenarioStatesStayLocal() {
         for (state in listOf("empty", "loading", "error")) {
             click("scenario-$state")
-            click("demo-S-153")
+            home("cheque")
             compose.onNodeWithTag("data-$state").assertIsDisplayed()
             if (state == "error") {
                 compose.onNodeWithText("تلاش مجدد").performClick()
-                compose.onNodeWithTag("cheque-report-880001").assertExists()
+                compose
+                    .onNodeWithTag("cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_CHEQUEBOOK")
+                    .assertExists()
             } else {
                 back()
                 back()

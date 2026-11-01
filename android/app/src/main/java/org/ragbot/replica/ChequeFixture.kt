@@ -8,6 +8,7 @@ internal object ChequeDestinations {
     const val CHEQUES = "S-146"
     const val TRACK_MY = "S-149"
     const val TRACK_TRANSFERRED = "S-150"
+    const val REPORT_FILTER = "S-148"
     const val REPORT = "S-153"
     const val ISSUE = "S-143"
     const val ISSUE_CONFIRM = "S-144"
@@ -15,10 +16,10 @@ internal object ChequeDestinations {
     const val CARDBOARD = "S-154"
     const val PAY_DETAIL = "S-155"
     const val REQUEST_DETAIL = "S-156"
-    // S-148 (the report filter form) stays unresolved by #77.
     val implemented =
         setOf(
             MENU,
+            REPORT_FILTER,
             BOOKS,
             CHEQUES,
             TRACK_MY,
@@ -94,6 +95,22 @@ internal data class WorkflowTask(
         get() = processKey.startsWith("pichak_")
 }
 
+/** Recovered report subtypes in their spinner order. */
+internal val chequeReportSubtypes =
+    listOf("PASSED" to "وصولی", "RETURNED" to "برگشتی", "RECEIVING" to "در جریان")
+
+/** S-148 filter; [type] is INTERNAL or OTHER, passed by the menu key. */
+internal data class ChequeReportFilter(
+    val type: String = "OTHER",
+    val subtype: String? = null,
+    val from: String = "",
+    val to: String = "",
+) : Serializable {
+    // Recovered: only other-bank reports outside "receiving" take a date range.
+    val dated
+        get() = type == "OTHER" && subtype != "RECEIVING"
+}
+
 /** Non-secret issue form fields; no OTP is kept. */
 internal data class ChequeIssueDraft(
     val media: ChequeMedia = ChequeMedia.PAPER,
@@ -120,6 +137,29 @@ internal object ChequeRules {
 
     fun search(cheques: List<ChequePaper>, query: String) =
         cheques.filter { latinDigits(query).let { q -> q.isEmpty() || q in it.no } }
+
+    /** Recovered S-148 checks: status first, then the date range of a dated report. */
+    fun reportErrors(filter: ChequeReportFilter): Map<String, String> = buildMap {
+        if (filter.subtype == null) {
+            put("status", PaymentRules.MANDATORY)
+            return@buildMap
+        }
+        if (!filter.dated) return@buildMap
+        val from = persianDateMillis(filter.from)
+        val to = persianDateMillis(filter.to)
+        if (from != null && to != null) {
+            if (from > to) {
+                put("range", "تاریخ ابتدایی باید قبل از تاریخ انتهایی بازه زمانی باشد.")
+                return@buildMap
+            }
+            if ((to - from) / 86_400_000L > 30) {
+                put("range", "بازه زمانی انتخابی، باید کمتر از 30 روز باشد.")
+                return@buildMap
+            }
+        }
+        if (from == null) put("from", PaymentRules.MANDATORY)
+        if (to == null) put("to", PaymentRules.MANDATORY)
+    }
 
     fun searchReport(rows: List<TransferredCheque>, query: String) =
         rows.filter {
@@ -173,11 +213,16 @@ internal object ChequeFixture {
                 "پیگیری چک‌های واگذار شده",
                 ChequeDestinations.TRACK_TRANSFERRED,
             ),
-            // The report filter form (S-148) is unresolved; its result list has its own demo entry.
+            // Recovered: both report keys open S-148, with other-bank or internal cheques.
             WalletMenuItem(
                 "AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRANSFERRED_CHEQUES_REPORT",
                 "گزارش چک‌های واگذار شده",
-                null,
+                ChequeDestinations.REPORT_FILTER,
+            ),
+            WalletMenuItem(
+                "AUTHENTICATED_HOME_CHEQUE_FACILITIES_KARAFARIN_TRANSFERRED_CHEQUES_REPORT",
+                "گزارش چک‌های واگذار شده داخلی",
+                ChequeDestinations.REPORT_FILTER,
             ),
             WalletMenuItem(
                 "AUTHENTICATED_HOME_CHEQUE_CHAKAD_CARTABLE_DIGITAL_CHEQUE",
@@ -257,7 +302,9 @@ internal object ChequeFixture {
         listOf(
             TransferredCheque("880001", 4_000_000L, "۱۴۰۵/۰۷/۰۵", "INTERNAL", "PASSED"),
             TransferredCheque("880002", 9_500_000L, "۱۴۰۵/۰۷/۰۸", "INTERNAL", "PASSED"),
+            TransferredCheque("880003", 1_800_000L, "۱۴۰۵/۰۷/۰۹", "INTERNAL", "RETURNED"),
             TransferredCheque("990001", 2_200_000L, "۱۴۰۵/۰۷/۱۱", "OTHER", "PASSED"),
+            TransferredCheque("990002", 6_000_000L, "۱۴۰۵/۰۷/۱۲", "OTHER", "RECEIVING"),
         )
 
     val issuance =

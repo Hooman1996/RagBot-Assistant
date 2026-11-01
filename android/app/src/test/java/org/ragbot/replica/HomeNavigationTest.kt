@@ -178,6 +178,7 @@ class HomeNavigationTest {
                 "S-154",
                 "S-155",
                 "S-156",
+                "S-148",
             ),
             HomeDestinations.implemented,
         )
@@ -209,8 +210,6 @@ class HomeNavigationTest {
                 "S-218",
                 "S-236",
                 "S-237",
-                // The transferred-cheques report filter form stays unresolved (#77).
-                "S-148",
                 "unknown",
                 "submit",
                 "authorize",

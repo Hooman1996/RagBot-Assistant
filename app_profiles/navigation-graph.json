@@ -1194,11 +1194,11 @@
     },
     {
       "id": "S-148",
-      "name": "Cheques: obfuscated screen",
+      "name": "Cheques: transferred cheques report filter",
       "area": "F-035",
-      "label": "Unknown",
+      "label": "Recovered",
       "dynamic": false,
-      "note": "Activity screen; obfuscated; no content or view-model recovered."
+      "note": "Activity screen; report filter form (account, status, date range) recovered with its router and S-153 callers; CQ-RECOVERY."
     },
     {
       "id": "S-149",
@@ -8641,6 +8641,14 @@
       "label": "Recovered",
       "dynamic": false,
       "note": "Card board opens request details for non-paper-cheque processes; CQ-RECOVERY caller trace."
+    },
+    {
+      "from": "S-148",
+      "to": "S-153",
+      "action": "launch",
+      "label": "Recovered",
+      "dynamic": false,
+      "note": "Report filter opens the transferred-cheques list; CQ-RECOVERY caller trace."
     }
   ]
 }

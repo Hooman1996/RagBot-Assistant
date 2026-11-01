@@ -24,10 +24,12 @@ internal fun ChequePage(
     accountKey: String,
     bookRef: String,
     issue: ChequeIssueDraft,
+    report: ChequeReportFilter,
     taskId: String,
     onAccount: (String) -> Unit,
     onBook: (String) -> Unit,
     onIssue: (ChequeIssueDraft) -> Unit,
+    onReport: (ChequeReportFilter) -> Unit,
     onTask: (String) -> Unit,
     onOpen: (String) -> Unit,
     onBack: () -> Unit,
@@ -41,6 +43,7 @@ internal fun ChequePage(
             ChequeDestinations.CHEQUES -> "برگه‌های دسته چک"
             ChequeDestinations.TRACK_MY -> "پیگیری چک‌های من"
             ChequeDestinations.TRACK_TRANSFERRED -> "پیگیری چک‌های واگذار شده"
+            ChequeDestinations.REPORT_FILTER,
             ChequeDestinations.REPORT -> "گزارش چک‌های واگذار شده"
             ChequeDestinations.ISSUE,
             ChequeDestinations.ISSUE_CONFIRM -> issue.media.request
@@ -74,6 +77,17 @@ internal fun ChequePage(
                                                         if ("DIGITAL" in item.key)
                                                             ChequeMedia.DIGITAL
                                                         else ChequeMedia.PAPER
+                                                    )
+                                                )
+                                            // Recovered: each report key passes its cheque type.
+                                            if (target == ChequeDestinations.REPORT_FILTER)
+                                                onReport(
+                                                    ChequeReportFilter(
+                                                        if ("KARAFARIN" in item.key) "INTERNAL"
+                                                        else "OTHER",
+                                                        // Designed for mock default range.
+                                                        from = dateDaysAgo(29),
+                                                        to = todayPersian(),
                                                     )
                                                 )
                                             onOpen(target)
@@ -112,7 +126,9 @@ internal fun ChequePage(
                     ChequeDestinations.TRACK_MY,
                     ChequeDestinations.TRACK_TRANSFERRED ->
                         ChequeTrack(accountKey, onAccount, onUnavailable)
-                    ChequeDestinations.REPORT -> ChequeReport()
+                    ChequeDestinations.REPORT_FILTER ->
+                        ChequeReportForm(accountKey, report, onAccount, onReport, onOpen)
+                    ChequeDestinations.REPORT -> ChequeReport(accountKey, report)
                     ChequeDestinations.ISSUE -> ChequeIssue(issue, onIssue, onOpen, onBack)
                     ChequeDestinations.ISSUE_CONFIRM -> {
                         TransferValue("شماره حساب:", chequeAccount(issue.accountKey))
@@ -308,28 +324,83 @@ private fun ChequeTrack(
 }
 
 @Composable
-private fun ChequeReport() {
-    var type by rememberSaveable { mutableStateOf("INTERNAL") }
-    var query by rememberSaveable { mutableStateOf("") }
-    Text(
-        "نمونهٔ مستقل: نتیجهٔ گزارش برای حساب نمایشی، وضعیت «وصول شده» و ۳۰ روز اخیر.",
-        fontSize = 13.sp,
-    )
+private fun ChequeReportForm(
+    accountKey: String,
+    filter: ChequeReportFilter,
+    onAccount: (String) -> Unit,
+    onChange: (ChequeReportFilter) -> Unit,
+    onOpen: (String) -> Unit,
+) {
+    var errors by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
+    Text(if (filter.type == "OTHER") "چک‌های سایر بانک‌ها" else "چک‌های داخلی")
+    ChequeAccountPicker(accountKey, onAccount)
+    Text("وضعیت")
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf("INTERNAL" to "چک‌های داخلی", "OTHER" to "چک‌های سایر بانک‌ها").forEach {
-            (key, label) ->
+        chequeReportSubtypes.forEach { (key, label) ->
             FilterChip(
-                type == key,
-                { type = key },
+                filter.subtype == key,
+                {
+                    errors = emptyMap()
+                    onChange(filter.copy(subtype = key))
+                },
                 { Text(label) },
-                Modifier.testTag("cheque-report-$key"),
+                Modifier.testTag("cheque-status-$key"),
             )
         }
     }
+    errors["status"]?.let { ChequeError("cheque-status-error", it) }
+    if (filter.dated) {
+        Row {
+            PersianDateField(
+                filter.from,
+                { onChange(filter.copy(from = it)) },
+                "از تاریخ",
+                "cheque-from",
+                Modifier.weight(1f),
+            )
+            Spacer(Modifier.width(8.dp))
+            PersianDateField(
+                filter.to,
+                { onChange(filter.copy(to = it)) },
+                "تا تاریخ",
+                "cheque-to",
+                Modifier.weight(1f),
+            )
+        }
+        listOf("from", "to", "range").forEach { key ->
+            errors[key]?.let { ChequeError("cheque-$key-error", it) }
+        }
+    }
+    Button(
+        {
+            errors = ChequeRules.reportErrors(filter)
+            if (errors.isEmpty()) onOpen(ChequeDestinations.REPORT)
+        },
+        Modifier.fillMaxWidth().testTag("cheque-report-apply"),
+    ) {
+        Text("مشاهده نتیجه")
+    }
+}
+
+@Composable
+private fun ChequeError(tag: String, text: String) {
+    Text(text, Modifier.testTag(tag), color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+}
+
+@Composable
+private fun ChequeReport(accountKey: String, filter: ChequeReportFilter) {
+    var query by rememberSaveable { mutableStateOf("") }
+    PaymentRow("حساب", chequeAccount(accountKey))
+    PaymentRow("وضعیت", chequeReportSubtypes.find { it.first == filter.subtype }?.second ?: "")
+    if (filter.dated) PaymentRow("بازه", "${filter.from} تا ${filter.to}")
     PaymentInput("cheque-report-search", "جستجو بر اساس مبلغ یا شماره چک", query, null) {
         query = it
     }
-    val rows = ChequeRules.searchReport(ChequeFixture.report.filter { it.type == type }, query)
+    val rows =
+        ChequeRules.searchReport(
+            ChequeFixture.report.filter { it.type == filter.type && it.subtype == filter.subtype },
+            query,
+        )
     if (rows.isEmpty()) Text("موردی برای نمایش وجود ندارد.", Modifier.testTag("cheque-empty"))
     rows.forEach {
         OutlinedCard(Modifier.fillMaxWidth().testTag("cheque-report-${it.no}")) {
