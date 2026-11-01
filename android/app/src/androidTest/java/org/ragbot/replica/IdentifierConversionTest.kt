@@ -5,6 +5,9 @@ import android.content.Context
 import android.view.KeyEvent
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
@@ -16,7 +19,25 @@ import org.junit.runner.RunWith
 class IdentifierConversionTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
-    private fun click(tag: String) = compose.onNodeWithTag(tag).performScrollTo().performClick()
+    // A late keyboard update would clear the field's error, so close it before each click.
+    private fun closeKeyboard() {
+        compose.runOnIdle {
+            WindowCompat.getInsetsController(
+                    compose.activity.window,
+                    compose.activity.window.decorView,
+                )
+                .hide(WindowInsetsCompat.Type.ime())
+        }
+        compose.waitUntil(5_000) {
+            ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
+                ?.isVisible(WindowInsetsCompat.Type.ime()) != true
+        }
+    }
+
+    private fun click(tag: String) {
+        closeKeyboard()
+        compose.onNodeWithTag(tag).performScrollTo().performClick()
+    }
 
     private fun back() {
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }

@@ -83,15 +83,39 @@ internal fun WalletPage(
 @Composable
 private fun WalletMain(onOpen: (String) -> Unit, onUnavailable: (String) -> Unit) {
     var shownBalances by rememberSaveable { mutableStateOf(listOf<String>()) }
+    var choosingCharge by rememberSaveable { mutableStateOf(false) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         WalletFixture.actions.forEach {
             OutlinedButton(
-                { onUnavailable(it.title) },
+                { it.destination?.let(onOpen) ?: run { choosingCharge = true } },
                 Modifier.weight(1f).testTag("wallet-action-${it.key}"),
             ) {
                 Text(it.title, fontSize = 12.sp)
             }
         }
+    }
+    // Recovered: the charge item opens a sheet of its children; the gateway belongs to FR-15.
+    if (choosingCharge) {
+        AlertDialog(
+            onDismissRequest = { choosingCharge = false },
+            title = { Text("انتخاب روش پرداخت") },
+            text = {
+                Column {
+                    WalletOperationFixture.chargeTypes.forEach {
+                        TextButton(
+                            {
+                                choosingCharge = false
+                                it.destination?.let(onOpen) ?: onUnavailable(it.title)
+                            },
+                            Modifier.testTag("wallet-charge-${it.key}"),
+                        ) {
+                            Text(it.title)
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton({ choosingCharge = false }) { Text("انصراف") } },
+        )
     }
     WalletRules.shown(WalletFixture.wallets).forEach { wallet ->
         val shown = wallet.number in shownBalances
