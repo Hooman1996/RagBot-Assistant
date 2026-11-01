@@ -49,7 +49,7 @@ class ChequeRulesTest {
     @Test
     fun menuOpensOnlyBuiltPagesAndPaperChequeTasksOpenTheirOwnDetail() {
         val targets = ChequeFixture.menu.mapNotNull { it.destination }.toSet()
-        assertTrue(ChequeDestinations.implemented.containsAll(targets))
+        assertTrue(HomeDestinations.implemented.containsAll(targets))
         assertTrue("S-148" in HomeDestinations.implemented)
         assertEquals(listOf(false, true, false), ChequeFixture.tasks.map { it.pichak })
         assertEquals(setOf("WAITING", "TRACK", "DONE"), ChequeFixture.tabs.map { it.first }.toSet())

@@ -125,6 +125,9 @@ fun ReplicaApp() {
     var chequeIssue by rememberSaveable { mutableStateOf(ChequeIssueDraft()) }
     var chequeReport by rememberSaveable { mutableStateOf(ChequeReportFilter()) }
     var chequeTask by rememberSaveable { mutableStateOf("") }
+    var digitalActive by rememberSaveable { mutableStateOf(false) }
+    var digitalCheque by rememberSaveable { mutableStateOf("") }
+    var digitalTransfer by rememberSaveable { mutableStateOf(DigitalTransferDraft()) }
     var loanId by rememberSaveable { mutableStateOf(LoanFixture.loans.first().id) }
     var loanSelected by rememberSaveable { mutableStateOf(listOf<Int>()) }
     var loanSource by rememberSaveable { mutableStateOf("") }
@@ -166,6 +169,11 @@ fun ReplicaApp() {
         if (id in BillPaymentDestinations.forms) billForm = id
         if (id in TopUpDestinations.forms) topUpForm = id
         if (id == WalletOverviewDestinations.RECEIPT) walletFunding = null
+        // From the cheque menu the transfer picks its own cheque and activation starts inactive.
+        if (stack.last() == ChequeDestinations.MENU) {
+            if (id == DigitalChequeDestinations.TRANSFER) digitalTransfer = DigitalTransferDraft()
+            if (id == DigitalChequeDestinations.ACTIVATION) digitalActive = false
+        }
         focus.clearFocus()
         keyboard?.hide()
         stack = stack + id
@@ -487,6 +495,17 @@ fun ReplicaApp() {
                                     Text(title, fontSize = 12.sp)
                                 }
                             }
+                        // The active state needs the external Hamun app, so it has its own entry.
+                        TextButton(
+                            {
+                                entered = true
+                                digitalActive = true
+                                open(DigitalChequeDestinations.ACTIVATION)
+                            },
+                            Modifier.testTag("demo-digital-active"),
+                        ) {
+                            Text("امضای چکاد فعال — نمونهٔ مستقل", fontSize = 12.sp)
+                        }
                         // Stands in for a scanned payment: a fixed synthetic destination, no
                         // camera.
                         TextButton(
@@ -747,6 +766,20 @@ fun ReplicaApp() {
                                 { charityDraft = it },
                                 ::goBack,
                                 ::open,
+                                { scenario = "populated" },
+                                ::unavailable,
+                            )
+                        } else if (page in DigitalChequeDestinations.implemented) {
+                            DigitalChequePage(
+                                page,
+                                scenario,
+                                digitalActive,
+                                digitalCheque,
+                                digitalTransfer,
+                                { digitalCheque = it },
+                                { digitalTransfer = it },
+                                ::open,
+                                ::goBack,
                                 { scenario = "populated" },
                                 ::unavailable,
                             )
