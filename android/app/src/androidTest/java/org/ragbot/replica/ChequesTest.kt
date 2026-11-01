@@ -64,8 +64,8 @@ class ChequesTest {
     fun homeChequeMenuOpensBooksWithAnEmptyAccountSummaryAndSearch() {
         home("cheque")
         shown("S-147")
-        click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_CHAKAD_CARTABLE_DIGITAL_CHEQUE")
-        unavailable("کارتابل چک دیجیتال")
+        click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER")
+        unavailable("استعلام چک")
         click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_CHEQUEBOOK")
         shown("S-142")
         click("cheque-account")

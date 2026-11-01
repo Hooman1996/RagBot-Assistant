@@ -6,7 +6,7 @@
 > result to its row here and pastes its acceptance output in the PR. Where the text below asks for
 > a per-batch requirements matrix, that matrix is now written in Stage 5a for supported features.
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75), FR-15 (#76) and FR-19 (#77) are done. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75), FR-15 (#76), FR-19 (#77) and FR-20 (#78) are done. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -366,17 +366,35 @@ Private recovery, captures and logs: `local/evidence/cheques/`. Stop before FR-2
 
 ### FR-20 — Digital cheque activation, cartable and transfer
 
-**Status:** in scope under D-021 (order 6 of 8); needs its own approved issue. **Families:** F-035, F-037. **Existing nodes:** S-151–S-152, S-157–S-159 (5 primary allocations). **Dependencies:** FR-19.
+**Status:** done (#78, D-021 order 6 of 8); 93 JVM / 115 device tests (0 skipped), build/lint and rendered review passed. **Families:** F-035, F-037. **Registered nodes:** S-157 activation, S-159 cartable list, S-158 detail, S-151 transfer, S-152 transfer confirmation (5 pages). The graph already held all their recovered edges, so no graph change. **Dependencies:** FR-19.
 
-**What opens afterward:** Inspect digital-cheque activation requirements, cartable list/detail and transfer review with synthetic records.
+**What opens afterward:** The FR-19 cheque menu's recovered keys open activation (S-157), digital-cheque transfer (S-151) and the cartable (S-159).
+- **Cartable:** searchable by Sayad ID. A row opens S-158 (bank/branch, cheque, guarantee, block, cash-out and holder statuses, reason, description), and **واگذاری چک** opens S-151 with that Sayad ID fixed.
+- **Transfer from the menu:** the Sayad ID is picked from the user's assigned cheques, with search and the recovered empty notice.
+- **Transfer form:** an account (preselected), the **برگشت زده شود** option, then **تایید اطلاعات** to S-152 (holders, digital IBAN, bounce yes/no, fee). The final confirmation only shows a notice.
+- **Activation states:** S-157 shows the inactive state from the menu. A labelled independent entry shows the active state, because reaching it needs the external Hamun app.
 
-**Frontend scope:** Combine closely related digital-cheque list/detail/transfer and activation-state UI, reusing cheque identifiers and source context.
+**Recovered:** DC-RECOVERY.
+- Router keys and targets.
+- Activation request types (activate, deactivate, sync) with server-supplied descriptions, and the Hamun download warning.
+- Cartable and detail fields.
+- Sayad ID check: only an empty value is rejected before the holder inquiry.
+- The picker over assigned cheques.
+- The transfer request built from the inquiry: digital media, holders, no recipient input.
+- Confirmation rows.
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; External integration handoff and activation prerequisites need recovery; no real integration app is opened and no invented cartable category is added.
+**Designed for mock:**
+- Cheque records and their status texts, plain text in place of the server's HTML descriptions, the 50,000 IRR fee, and the active-state entry. Exact IRR integers.
+- Scenario controls cover loading/empty/error.
 
-**Requirements output:** Digital-cheque ownership/status, recipient and activation-result records, required inputs and external-dependency boundary.
+**Unknown / stopped:**
+- The Hamun handoff and signature, activation eligibility and results, the status vocabulary, fee rules and the transfer/signature contract.
+- Acceptance, payment and agent flows stay in FR-21.
+- No external app is opened and no cheque is transferred. Fidelity is unscored.
 
-**Acceptance beyond the common contract:** Activation unavailable/error states, list/detail, transfer validation/cancel and Back pass without external execution or transfer. **Effort:** 2–4 days. **Evidence confidence:** medium.
+Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop before FR-16.
+
+**Acceptance:** 93 JVM / 115 device tests, 0 failures/errors/skips, versus baseline 89 / 111; lint 0 errors / 117 warnings, identical diagnostics to baseline. Full issue command and rendered RTL/activation/cartable/detail/transfer review pass; output is in the PR. **Evidence confidence:** high for routes, fields and the Sayad check; medium for layouts; low for status values and activation results.
 
 ### FR-21 — Cheque acceptance, payment and agent flows
 

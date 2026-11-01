@@ -175,11 +175,11 @@ internal fun ChequePage(
     }
 }
 
-private fun chequeAccount(key: String) =
+internal fun chequeAccount(key: String) =
     AccountFixture.accounts.find { it.key == key }?.let { "${it.type} · ${it.number}" } ?: ""
 
 @Composable
-private fun ChequeAccountPicker(selected: String, onSelect: (String) -> Unit) {
+internal fun ChequeAccountPicker(selected: String, onSelect: (String) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     val focus = LocalFocusManager.current
     Text("انتخاب حساب")

@@ -224,10 +224,21 @@ internal object ChequeFixture {
                 "گزارش چک‌های واگذار شده داخلی",
                 ChequeDestinations.REPORT_FILTER,
             ),
+            // DC-RECOVERY: the digital-cheque keys and their targets.
+            WalletMenuItem(
+                "AUTHENTICATED_HOME_CHEQUE_CHAKAD_ACTIVATION",
+                "فعالسازی چکاد",
+                DigitalChequeDestinations.ACTIVATION,
+            ),
+            WalletMenuItem(
+                "AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRANSFER_DIGITAL_CHEQUE",
+                "واگذاری چک دیجیتال",
+                DigitalChequeDestinations.TRANSFER,
+            ),
             WalletMenuItem(
                 "AUTHENTICATED_HOME_CHEQUE_CHAKAD_CARTABLE_DIGITAL_CHEQUE",
                 "کارتابل چک دیجیتال",
-                null,
+                DigitalChequeDestinations.CARTABLE,
             ),
             WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_PICHAK_ISSUE_PAPER_CHEQUE", "صدور چک", null),
             WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER", "استعلام چک", null),

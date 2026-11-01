@@ -535,3 +535,12 @@ Home → **چک** opens the cheque menu (S-147). The rows open:
 - **پیگیری درخواست دسته چک** (S-145).
 
 **گزارش چک‌های واگذار شده** (other banks) and **… داخلی** (internal) open the report filter (S-148). Choose a status; other-bank reports outside **در جریان** also take a date range of at most 30 days. **مشاهده نتیجه** opens the list (S-153). Home → **کارتابل** (S-154) has waiting/track/done tabs. The paper-cheque task opens S-155 and the chequebook-request task opens S-156; approve and reject only show notices. Private CQ-RECOVERY evidence and QA: `local/evidence/cheques/`. Acceptance: 88 JVM / 110 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 83 / 105. Stop before FR-20.
+
+## FR-20 digital cheques (#78, D-021)
+
+From the cheque menu (Home → **چک**):
+- **فعالسازی چکاد** opens S-157 in the inactive state. **درخواست فعالسازی** shows the description and Hamun warning, then a notice; the Hamun app is never opened. The demo entry **امضای چکاد فعال — نمونهٔ مستقل** shows the active state, with sync and deactivate confirmations that end in notices.
+- **کارتابل چک دیجیتال** opens S-159. Search by Sayad ID (`…0201`, `…0202`); a row opens S-158, and **واگذاری چک** opens S-151 with the cheque fixed.
+- **واگذاری چک دیجیتال** opens S-151 with the assigned-cheque picker.
+
+On S-151, **تایید اطلاعات** opens S-152; its final **تایید** only shows a notice. Private DC-RECOVERY evidence and QA: `local/evidence/digital-cheques/`. Acceptance: 93 JVM / 115 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 89 / 111. Stop before FR-16.
