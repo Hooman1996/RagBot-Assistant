@@ -6,13 +6,13 @@
 > result to its row here and pastes its acceptance output in the PR. Where the text below asks for
 > a per-batch requirements matrix, that matrix is now written in Stage 5a for supported features.
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75) and FR-15 (#76) are done. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75), FR-15 (#76) and FR-19 (#77) are done. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
 ## Evidence and interpretation
 
-- **Recovered:** the [feature inventory](../../app_profiles/feature-inventory.md), [screen catalogue](../../app_profiles/screen-catalogue.md), [navigation graph](../../app_profiles/navigation-graph.json) and [API/model inventory](../../app_profiles/api-structure.md) cover the pinned extracted artifact. The graph has **485 nodes / 593 edges**: 266 activities, 199 Compose destinations, 19 subgraphs and one menu hub. A host, lifecycle wrapper, nested graph or duplicate legacy/current implementation is not automatically a separate visible page.
+- **Recovered:** the [feature inventory](../../app_profiles/feature-inventory.md), [screen catalogue](../../app_profiles/screen-catalogue.md), [navigation graph](../../app_profiles/navigation-graph.json) and [API/model inventory](../../app_profiles/api-structure.md) cover the pinned extracted artifact. The graph has **485 nodes / 595 edges**: 266 activities, 199 Compose destinations, 19 subgraphs and one menu hub. A host, lifecycle wrapper, nested graph or duplicate legacy/current implementation is not automatically a separate visible page.
 - **Owner-supplied visual evidence:** HC-REF contains upper/lower scroll positions of the same original Home and the earlier replica capture. It establishes the visible Home configuration only. It does not observe other screens or prove their navigation.
 - **Recovered with limits:** 357 graph nodes are Recovered, 104 Inferred and 24 Unknown. There are **43 dynamic edges with null targets** and **139 additional call sites with unattributed source screens**. A destination declaration, feature package or named service method is insufficient proof of reachability, content fidelity or an exact contract.
 - **Inferred / Designed for mock:** batching, dependencies, day estimates and future records below are our implementation proposals. They are not new recovered graph edges, bank tables, menu identifiers or business rules. Local synthetic fixtures provide UI states; no mock HTTP service or database is authorized by this list.
@@ -330,17 +330,39 @@ Private recovery, captures and logs: `local/evidence/funding/`. Stop before FR-1
 
 ### FR-19 — Cheque overview, tracking and chequebook requests
 
-**Status:** in scope under D-021 (order 5 of 8); needs its own approved issue. **Families:** F-035, F-036. **Existing nodes:** S-142–S-147, S-149–S-150, S-153–S-156 (12 primary allocations). **Dependencies:** FR-02.
+**Status:** done (#77, D-021 order 5 of 8); 88 JVM / 110 device tests (0 skipped), build/lint and rendered review passed. **Families:** F-035, F-036. **Registered nodes:** S-147 menu, S-142 books, S-146 cheques, S-149/S-150 tracking, S-153 transferred-cheques report list, S-143/S-144 chequebook request and confirmation, S-145 issuance tracking, S-154 card board, S-155/S-156 detail variants (12 pages). **Dependencies:** FR-02.
 
-**What opens afterward:** Open cheque menu/list/tracking, inspect chequebook/request details and walk issue inquiry/fee/review states.
+**What opens afterward:** Home's **چک** tile opens S-147 and **کارتابل** opens S-154 (both Home launches Recovered).
+- **Menu:** recovered keys open books, paper/digital chequebook request (the media comes from the key), issuance tracking, my-cheques tracking and transferred-cheques tracking. Other cheque keys, and the transferred-cheques report filter form S-148, show notices.
+- **Books and cheques:** books (S-142) are listed per account, with an empty account. A book opens its cheques (S-146), with the five-row summary and a cheque-number search.
+- **Tracking:** S-149/S-150 require a cheque number and show the result sheet or a not-found notice.
+- **Report:** a labelled independent entry opens the report list S-153 (internal/other tabs, search by amount or number).
+- **Card board:** waiting/track/done tabs. Paper-cheque processes open S-155; other processes open S-156.
 
-**Frontend scope:** Combine cheque inventory, status tracking and the short chequebook issue family; S-155/S-156 are retained as variants until content equivalence is established.
+**Recovered:** CQ-RECOVERY.
+- Router keys and targets, including the media passed to S-143.
+- Media PAPER/DIGITAL with server-supplied page-count lists, and the pre-validation and fee step before S-144.
+- S-144's account, page-count, media and fee rows, and its OTP-before-submit step.
+- Report subtypes received/returned/receiving and transfer types internal/other.
+- Card board tabs, task fields, the actions pay/act/reject/revoke, and the paper-cheque process routing.
+- Book summary labels cleared/registered/returned and blocked/usable/other.
+- Tracking: cheque number required, trailing invalid character dropped.
+- Two missing caller-traced edges added: S-142→S-146 and S-154→S-156 (595 edges).
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; S-148 is unresolved, lists are largely Inferred, and cheque/book status enums and request prerequisites need caller/content recovery.
+**Designed for mock:**
+- Menu titles, books, cheques and their status descriptions, page-count lists and the 150,000 IRR fee.
+- The shared-account card-board note on S-144, the issuance records and the workflow tasks.
+- The report list's fixed filter (S-148 is not built). Exact IRR integers. Scenario controls cover loading/empty/error.
 
-**Requirements output:** Cheque/book/request fixtures, issue page-count/fee fields, account eligibility and caller-backed service references; no issuance contract guessed.
+**Unknown / stopped:**
+- **S-148:** traced to the report's filter form (status, from/to date, view result), which opens S-153. #77 keeps it unresolved, so it is not registered, and its catalogue identity is left for FR-45/owner decision.
+- **Data meanings:** the cheque status vocabulary, the mapping of book counts to the five summary rows, request eligibility, fee rules, and the OTP/submit and workflow approve/reject contracts.
+- **Other cheque features:** digital-cheque (FR-20), paper-cheque issuing (FR-21) and inquiry (FR-24) keys.
+- No request is sent and no OTP field exists. Fidelity is unscored.
 
-**Acceptance beyond the common contract:** Filters/statuses, issue validation, request-detail Back and empty/error fixtures pass; issuing remains a local preview. **Effort:** 3–5 days. **Evidence confidence:** medium-low.
+Private recovery, captures and logs: `local/evidence/cheques/`. Stop before FR-20.
+
+**Acceptance:** 88 JVM / 110 device tests, 0 failures/errors/skips, versus baseline 83 / 105; lint 0 errors / 117 warnings, identical diagnostics to baseline. Full issue command and rendered RTL/menu/list/tracking/request/card-board review pass; output is in the PR. **Evidence confidence:** high for router keys, media, report enums and card-board routing; medium for layouts; low for status values and summary mapping.
 
 ### FR-20 — Digital cheque activation, cartable and transfer
 

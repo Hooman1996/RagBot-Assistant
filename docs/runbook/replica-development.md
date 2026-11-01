@@ -525,3 +525,13 @@ S-100 needs a scanned payment. From the menu its Continue shows a notice; the de
 Home → **افزایش موجودی** opens the standalone account top-up (S-222). Wallet main → **شارژ کیف** → **واریز از درگاه پرداخت** opens the standalone wallet top-up (S-231). The demo entries **افزایش موجودی حساب/کیف درون جریان — نمونهٔ مستقل** open the in-flow graphs (S-221, S-230), whose destination is fixed. Pick a proposed amount, step it, or type it. Synthetic limits are 10,000–500,000,000 IRR, with a proposed range of 50,000–200,000,000. **افزایش موجودی** opens the gateway stand-in, which loads nothing. Choose a synthetic return, or **خطای بارگذاری درگاه نمونه** to go back with the connection message. On the waiting page, **دریافت نتیجهٔ نمونه** resolves the result; the delayed return needs a second request. Receipts show success, failed or unknown. The standalone wallet result opens S-113 with the top-up status. **بازگشت**, **بستن**, **انصراف** and **ادامه فرایند** leave the top-up and forget its draft.
 
 No WebView, URL, payment app or gateway is opened. Legacy S-219/S-218 and S-236/S-237 are not built. Private FN-RECOVERY evidence and QA: `local/evidence/funding/`. Acceptance: 83 JVM / 105 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 79 / 101. Stop before FR-19.
+
+## FR-19 cheques and chequebook requests (#77, D-021)
+
+Home → **چک** opens the cheque menu (S-147). The rows open:
+- **دسته چک‌ها** (S-142): pick an account (account 3 has no books), then open a book (S-146) for its cheques, the **خلاصه وضعیت دسته چک** sheet and the number search.
+- **پیگیری چک‌های من / واگذار شده** (S-149/S-150): enter a cheque number, for example `534002` on account 1.
+- **درخواست دسته چک کاغذی/دیجیتال** (S-143): pick an account and a page count; continue to S-144 (fee 150,000 IRR). A shared account shows the card-board note. **تایید تراکنش** only shows a notice and no OTP field exists.
+- **پیگیری درخواست دسته چک** (S-145).
+
+The demo entry **گزارش چک‌های واگذار شده — نمونهٔ مستقل** opens the report list (S-153); its filter form S-148 stays unresolved. Home → **کارتابل** (S-154) has waiting/track/done tabs. The paper-cheque task opens S-155 and the chequebook-request task opens S-156; approve and reject only show notices. Private CQ-RECOVERY evidence and QA: `local/evidence/cheques/`. Acceptance: 88 JVM / 110 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 83 / 105. Stop before FR-20.

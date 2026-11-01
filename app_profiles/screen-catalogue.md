@@ -7,7 +7,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 - **Labels:** `Recovered` (precise code location), `Inferred` (reasoned from a view-model or surrounding content), `Unknown` (obfuscated/computed/server-driven, with the reason). Nothing is `Observed` — the app was not run.
 - **IDs:** `F-001`/`F-002`/`F-066` reuse the P1a-03 inventory IDs (launcher, internal router, dashboard-menu hub). Every other screen is `S-###` (stable, assigned in area then name order).
 
-**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 593 edges. By label: Recovered 358, Inferred 104, Unknown 23, Observed 0.
+**Totals:** 485 nodes (266 activities, 199 Compose destinations, 19 nested sub-graphs, 1 server-driven hub) and 595 edges. By label: Recovered 358, Inferred 104, Unknown 23, Observed 0.
 
 ## F-001 — Launch
 
@@ -771,7 +771,7 @@ Every navigation destination the catalogued banking app declares, named at scree
 
 ## Navigation edges
 
-The graph has **593 edges**: Recovered 548, Inferred 3, Unknown 42. **43** are `dynamic` (destination server-driven or built from a computed/encrypted route); these carry `to: null`. The server-driven dashboard menu (F-066) is one hub node whose out-edge is `dynamic` because the backend chooses the tiles and where each leads.
+The graph has **595 edges**: Recovered 550, Inferred 3, Unknown 42. **43** are `dynamic` (destination server-driven or built from a computed/encrypted route); these carry `to: null`. The server-driven dashboard menu (F-066) is one hub node whose out-edge is `dynamic` because the backend chooses the tiles and where each leads.
 
 **Gap:** 139 further `navigate`/launch call sites were found but their source screen could not be attributed statically — the reverse call path dead-ends in shared, obfuscated glue code. These are recorded, not guessed: no edge is emitted for them, so the affected destinations may show no inbound edge. Most such destinations are feature activities that the server-driven dashboard menu (F-066) opens.
 
