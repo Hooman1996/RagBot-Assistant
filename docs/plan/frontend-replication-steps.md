@@ -6,7 +6,7 @@
 > result to its row here and pastes its acceptance output in the PR. Where the text below asks for
 > a per-batch requirements matrix, that matrix is now written in Stage 5a for supported features.
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75), FR-15 (#76), FR-19 (#77) and FR-20 (#78) are done. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75), FR-15 (#76), FR-19 (#77), FR-20 (#78) and FR-16 (#79) are done. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -288,17 +288,33 @@ Private recovery, captures and logs: `local/evidence/funding/`. Stop before FR-1
 
 ### FR-16 — Vehicle-service hub and saved vehicle/contact records
 
-**Status:** in scope under D-021 (order 7 of 8); needs its own approved issue. **Families:** F-046. **Existing nodes:** S-246, S-248, S-252–S-254, S-256, S-259–S-260, S-262–S-273 (20 primary allocations). **Dependencies:** FR-05.
+**Status:** done (#79, D-021 order 7 of 8); 96 JVM / 118 device tests (0 skipped), build/lint and rendered review passed. **Families:** F-046. **Registered nodes:** S-253 vehicle menu, S-254 payment-history menu, S-256 saved plates, S-246 saved contacts, S-248 saved licences, S-252 inquiry history (6 pages). Not pages: the host S-262, the back-handler wrappers S-259/S-260 and the nested graphs S-263–S-273. No graph change. **Dependencies:** FR-05.
 
-**What opens afterward:** Open the recovered vehicle-service hub, manage synthetic plates/contacts/license selections and inspect inquiry history.
+**What opens afterward:** Home's **خدمات خودرو** tile opens S-253; the recovered car-inquiry router key opens the vehicle host, which starts on the menu.
+- **Menu routing (recovered):** annual, traffic, freeway, transfer-tax, combined toll, vehicle-document and pollution-area keys open the saved plates (S-256). Active-plates and driving-licence keys open the contacts (S-246). The negative-point key opens the licences (S-248). The payment-history key opens S-254.
+- **Saved lists:** each shows "select one of your saved items" (contacts: "select the service contact"), the ownership tag **(خودم)/(دیگران)** and the owner's code and mobile. Plates show automobile fragments (two digits, letter, three digits, region) left to right, or motorcycle digits. The pollution-area list shows automobile plates only.
+- **Row actions:** delete asks for confirmation and removes the record locally. **سوابق استعلام** opens S-252.
+- **Notices (later batches):** row selection and **پلاک/مخاطب/گواهینامه جدید** continue to the inquiry forms (FR-17/18). S-252's **مشاهده نتیجه** and the payment-history items also show notices.
 
-**Frontend scope:** Combine shared selectors/menu/history/navigation-state wrappers. S-263–S-273 are graph containers, not eleven new pages; Back-handler nodes need content-level recovery.
+**Recovered:** VH-RECOVERY.
+- The router key and host, the route classes and the menu-key → list mapping.
+- The list models (plate number/type, contact code/mobile, licence number, owner code/mobile, ownership CUSTOMER/OTHERS) and the plate-letter list.
+- The pollution-area plate filter, the delete confirmation, the picker titles and "new" buttons.
+- The inquiry-history request (service type, plate/licence/identification, mobile) and response (date, trace ID, per-service result).
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Most vehicle route labels are Inferred; menu variants, ownership, plate formats and handler/container-to-content relationships need recovery before registration.
+**Designed for mock:**
+- Menu titles and the saved records, with plate parts kept apart (the original's single plate-number encoding is Unknown).
+- The one-row inquiry history per record and local deletion state.
+- Scenario controls cover loading/empty/error.
 
-**Requirements output:** Vehicle/license/contact fields, selection result contracts, history fixtures and per-query prerequisites; no new database tables inferred.
+**Unknown / stopped:**
+- The plate-number string encoding and letter codes, the server menu children and titles, empty-list behaviour in the original, and the history-menu targets (central router).
+- Inquiry forms and results: road tolls are FR-17; status, violation, tax and document inquiries stay deferred (FR-18).
+- No inquiry or payment is sent. Fidelity is unscored.
 
-**Acceptance beyond the common contract:** Persian plate RTL/LTR fragments, selection/cancel, empty lists, nested Back and recreation pass with only implemented destinations registered. **Effort:** 3–5 days. **Evidence confidence:** low-medium.
+Private recovery, captures and logs: `local/evidence/vehicles/`. Stop before FR-17.
+
+**Acceptance:** 96 JVM / 118 device tests, 0 failures/errors/skips, versus baseline 93 / 115; lint 0 errors / 117 warnings, identical diagnostics to baseline. Full issue command and rendered RTL/plate/list/history review pass; output is in the PR. **Evidence confidence:** high for menu routing and list models; medium for layouts; low for plate encoding and history targets.
 
 ### FR-17 — Road toll inquiry and payment previews
 

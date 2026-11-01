@@ -544,3 +544,7 @@ From the cheque menu (Home → **چک**):
 - **واگذاری چک دیجیتال** opens S-151 with the assigned-cheque picker.
 
 On S-151, **تایید اطلاعات** opens S-152; its final **تایید** only shows a notice. Private DC-RECOVERY evidence and QA: `local/evidence/digital-cheques/`. Acceptance: 93 JVM / 115 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 89 / 111. Stop before FR-16.
+
+## FR-16 vehicle hub (#79, D-021)
+
+Home → **خدمات خودرو** opens the vehicle menu (S-253). The toll, document and pollution items open the saved plates (S-256); **طرح آلودگی هوا** shows automobile plates only. **پلاک‌های فعال** and **وضعیت گواهینامه** open the contacts (S-246), and **نمره منفی گواهینامه** opens the licences (S-248). **سوابق پرداخت** opens the history menu (S-254). In a list, **سوابق استعلام** opens S-252 and **حذف** asks before removing the record locally. Selecting a record or adding a new one stops with a notice until FR-17/18. Private VH-RECOVERY evidence and QA: `local/evidence/vehicles/`. Acceptance: 96 JVM / 118 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 93 / 115. Stop before FR-17.
