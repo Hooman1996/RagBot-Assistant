@@ -548,3 +548,13 @@ On S-151, **تایید اطلاعات** opens S-152; its final **تایید** on
 ## FR-16 vehicle hub (#79, D-021)
 
 Home → **خدمات خودرو** opens the vehicle menu (S-253). The toll, document and pollution items open the saved plates (S-256); **طرح آلودگی هوا** shows automobile plates only. **پلاک‌های فعال** and **وضعیت گواهینامه** open the contacts (S-246), and **نمره منفی گواهینامه** opens the licences (S-248). **سوابق پرداخت** opens the history menu (S-254). In a list, **سوابق استعلام** opens S-252 and **حذف** asks before removing the record locally. Selecting a record or adding a new one stops with a notice until FR-17/18. Private VH-RECOVERY evidence and QA: `local/evidence/vehicles/`. Acceptance: 96 JVM / 118 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 93 / 115. Stop before FR-17.
+
+## FR-17 road tolls (#80, D-021)
+
+Home → **خدمات خودرو** → **عوارض سالیانه / عوارض طرح ترافیک / عوارض آزادراه / طرح آلودگی هوا** → a saved plate (or **پلاک جدید**) opens the inquiry.
+- **Others' vehicles:** **دیگران** needs a valid national code (for example `0000000019`) and a `09…` mobile; annual also needs a VIN.
+- **Inquiry:** **استعلام** asks for the fee source, then the local OTP (`12345`, never saved).
+- **Results:** the first saved automobile plate has dues; select rows (traffic/freeway) and **پرداخت** opens the confirmation, whose final button only shows a notice. Pollution shows quota only.
+- **Receipt:** the demo entry **رسید مستقل عوارض — نمونه** opens S-261.
+
+Private TL-RECOVERY evidence and QA: `local/evidence/tolls/`. Acceptance: 100 JVM / 122 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 96 / 118. The D-021 Stage 1 batches are complete.

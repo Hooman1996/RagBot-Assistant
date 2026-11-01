@@ -6,7 +6,7 @@
 > result to its row here and pastes its acceptance output in the PR. Where the text below asks for
 > a per-batch requirements matrix, that matrix is now written in Stage 5a for supported features.
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75), FR-15 (#76), FR-19 (#77), FR-20 (#78) and FR-16 (#79) are done. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75), FR-15 (#76), FR-19 (#77), FR-20 (#78), FR-16 (#79) and FR-17 (#80) are done; the D-021 Stage 1 batches are complete. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -303,7 +303,7 @@ Private recovery, captures and logs: `local/evidence/funding/`. Stop before FR-1
 - The inquiry-history request (service type, plate/licence/identification, mobile) and response (date, trace ID, per-service result).
 
 **Designed for mock:**
-- Menu titles and the saved records, with plate parts kept apart (the original's single plate-number encoding is Unknown).
+- Menu titles and the saved records, with plate parts kept apart (FR-17 later recovered the 9/8-character plate strings; the letter-code table stays Unknown).
 - The one-row inquiry history per record and local deletion state.
 - Scenario controls cover loading/empty/error.
 
@@ -318,17 +318,30 @@ Private recovery, captures and logs: `local/evidence/vehicles/`. Stop before FR-
 
 ### FR-17 — Road toll inquiry and payment previews
 
-**Status:** in scope under D-021 (order 8 of 8); needs its own approved issue. **Families:** F-046. **Existing nodes:** S-240–S-242, S-249–S-251, S-257–S-258, S-261, S-274–S-276 (12 primary allocations). **Dependencies:** FR-11, FR-16.
+**Status:** done (#80, D-021 order 8 of 8, the last Stage 1 batch); 100 JVM / 122 device tests (0 skipped), build/lint and rendered review passed. **Families:** F-046. **Registered nodes:** annual S-241→S-242→S-240, traffic S-275→S-276→S-274, freeway S-250→S-251→S-249, pollution S-257→S-258 (no confirmation, recovered), receipt S-261 (12 pages). No graph change. **Dependencies:** FR-11, FR-16.
 
-**What opens afterward:** Inspect annual/freeway/traffic/pollution inquiry and charge rows, then recovered confirmation and receipt previews.
+**What opens afterward:** In FR-16's saved-plate list, the annual, traffic, freeway and pollution services now open their inquiry: a saved plate fills it, and **پلاک جدید** starts empty. Other plate services keep their notices (FR-18).
+- **Inquiry:** plate input (automobile two digits/letter/three digits/region, or motorcycle 3+5 digits; pollution takes automobile only), ownership **خودم/دیگران**, and for others the national code and mobile; annual also needs the VIN. Then the inquiry-fee source (an account, or a wallet for pollution) and the local OTP sheet (preview code, never stored) lead to the result.
+- **Results:** annual shows car, masked VIN, items with penalty and depreciation, commission and total. Traffic and freeway show selectable dated rows with select-all, the running total and the recovered "choose an item" error. Any other plate has no dues. Pollution shows season quota (allowed, remaining, consumed per season) and last billing date, with no payment.
+- **Confirmation:** an account picker, the plate, the items and the total. **تایید و پرداخت** only shows a notice; the payment's OTP and signature stay with the user.
+- **Receipt:** a labelled independent entry opens S-261.
 
-**Frontend scope:** Combine the related toll inquiry/result/fee/review components with a local selected vehicle; no live balance lookup or payment.
+**Recovered:** TL-RECOVERY.
+- Entry from the plate list per menu key, and the pages per service.
+- The pollution route without confirmation (inquiry fee from a wallet, quota result).
+- Plate strings of 9 characters (automobile, with a two-character letter code) or 8 (motorcycle), and the incomplete-plate message.
+- The national-code checksum (10 digits, not all equal, weighted mod 11) and the 11-digit 09 mobile check, each mandatory then invalid.
+- The VIN requirement, inquiry request and result fields, item selection with select-all and its message, and the pre-validation and payment structure.
 
-**Evidence / specific gaps:** Catalogue/graph and existing private route/content map; Pollution route may have a different payment boundary; query parameters, fee freshness, unpaid-item selection and receipt joins need verification.
+**Designed for mock:** the plate-letter codes, the 5,000 IRR inquiry fee, the 10,000 IRR commission, all dues and quota values, which plate has dues, the annual total (items plus commission), and the receipt values. Exact IRR integers. Loading/empty/error/retry use the scenario controls.
 
-**Requirements output:** Per-toll fields, integer amount/unit, result-status taxonomy, fees and expected navigation; encrypted service relationships remain Unknown.
+**Unknown / stopped:**
+- The real letter-code table, fee rules, the total and commission formula, pre-validation outcomes, the payment OTP/signature contract, pollution billing, and the receipt join from history (S-090).
+- No inquiry or payment is sent. Fidelity is unscored.
 
-**Acceptance beyond the common contract:** No-dues/multiple-dues/error fixtures, item selection, review and Back preserve vehicle/context; no toll payment is submitted. **Effort:** 3–5 days. **Evidence confidence:** low-medium.
+Private recovery, captures and logs: `local/evidence/tolls/`. Stage 1's D-021 batches are complete; the bridge and interactive graph follow.
+
+**Acceptance:** 100 JVM / 122 device tests, 0 failures/errors/skips, versus baseline 96 / 118; lint 0 errors / 117 warnings, identical diagnostics to baseline. Full issue command and rendered RTL/inquiry/result/confirmation review pass; output is in the PR. **Evidence confidence:** high for validation and page routing; medium for result layouts; low for fees and totals.
 
 ### FR-18 — Vehicle status, violations, tax and document inquiries
 

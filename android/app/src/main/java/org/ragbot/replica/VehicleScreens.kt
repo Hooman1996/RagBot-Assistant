@@ -30,6 +30,7 @@ internal fun VehiclePage(
     onMenu: (String) -> Unit,
     onRecord: (String) -> Unit,
     onDelete: (String) -> Unit,
+    onToll: (VehicleRecord?) -> Unit,
     onOpen: (String) -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
@@ -98,6 +99,7 @@ internal fun VehiclePage(
                             deleted,
                             onRecord,
                             onDelete,
+                            onToll,
                             onOpen,
                             onUnavailable,
                         )
@@ -125,10 +127,13 @@ private fun VehicleList(
     deleted: Set<String>,
     onRecord: (String) -> Unit,
     onDelete: (String) -> Unit,
+    onToll: (VehicleRecord?) -> Unit,
     onOpen: (String) -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
     var confirm by rememberSaveable { mutableStateOf<String?>(null) }
+    // The road-toll inquiries are built (FR-17); the others are deferred (FR-18).
+    val toll = kind == "plate" && TollService.ofKey(menuKey) != null
     Text(
         if (kind == "contact") "مخاطب خدمت را انتخاب کنید."
         else "یکی از اطلاعات ثبت‌شده خود را انتخاب کنید."
@@ -139,7 +144,7 @@ private fun VehicleList(
         OutlinedCard(
             Modifier.fillMaxWidth().testTag("vehicle-${record.id}").clickable(role = Role.Button) {
                 // Selecting continues to the inquiry form, which is not built (FR-17/18).
-                onUnavailable("استعلام $service")
+                if (toll) onToll(record) else onUnavailable("استعلام $service")
             }
         ) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -165,7 +170,7 @@ private fun VehicleList(
         }
     }
     OutlinedButton(
-        { onUnavailable("استعلام $service") },
+        { if (toll) onToll(null) else onUnavailable("استعلام $service") },
         Modifier.fillMaxWidth().testTag("vehicle-new"),
     ) {
         Text(
