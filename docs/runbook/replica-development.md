@@ -175,6 +175,11 @@ check its crash records. Device tests run on this server; CI runs build, unit
 tests and lint. Original-app fidelity remains unscored until the owner compares
 matching states; our own screenshots are not goldens proving equivalence.
 
+CVV2 and the second password on S-119/S-120 must not survive a killed process. An
+instrumented test cannot kill its own process, so with the debug APK installed run
+`python android/tools/check_secret_state.py` from the host. `CardsTest` covers the same
+rule through activity recreation in the normal device suite.
+
 ## Populated Home and the next batches
 
 Issue #42 completes the configured Home from the two owner references. On demo
