@@ -6,7 +6,7 @@
 > result to its row here and pastes its acceptance output in the PR. Where the text below asks for
 > a per-batch requirements matrix, that matrix is now written in Stage 5a for supported features.
 
-Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75), FR-15 (#76), FR-19 (#77), FR-20 (#78), FR-16 (#79) and FR-17 (#80) are done; the D-021 Stage 1 batches are complete. The remaining D-021 batches are approved; other batches are deferred.** The next approved issue must name its exact batch and acceptance command. No later batch starts automatically.
+Canonical ordered implementation list for D-020 Stage 1. Issue #42 authorizes Home completion and this investigation only. **FR-01 is done; FR-02 is done in #44 (including owner-approved recovery of S-014/S-016); FR-03 is done in #46 (including owner-approved recovery of S-012 and the move of S-123 to FR-04); FR-04 was split with owner approval in #48; FR-04a (#48), FR-04b (#50), FR-04c (#52) and FR-05 (#54, including the recovered S-025 identity) are done; FR-06 (#56) is done; FR-07 (#58), FR-08 (#60), FR-09 (#62), FR-10 (#64), FR-11 (#66), FR-12 (#68) and FR-13 (#70) are done; FR-35 (#73), FR-23 (#74), FR-14 (#75), FR-15 (#76), FR-19 (#77), FR-20 (#78), FR-16 (#79) and FR-17 (#80) are done; the D-021 Stage 1 batches are complete and the other batches are deferred.** A deferred batch needs the owner to pick it and its own approved issue.
 
 This list consolidates the earlier proposed “Home refinement, then account tab” paragraph in the foundation report. Phase specs and the revised build sequence remain the authority for later stages; this is the single frontend batch tracker, not a replacement master plan.
 
@@ -294,7 +294,7 @@ Private recovery, captures and logs: `local/evidence/funding/`. Stop before FR-1
 - **Menu routing (recovered):** annual, traffic, freeway, transfer-tax, combined toll, vehicle-document and pollution-area keys open the saved plates (S-256). Active-plates and driving-licence keys open the contacts (S-246). The negative-point key opens the licences (S-248). The payment-history key opens S-254.
 - **Saved lists:** each shows "select one of your saved items" (contacts: "select the service contact"), the ownership tag **(خودم)/(دیگران)** and the owner's code and mobile. Plates show automobile fragments (two digits, letter, three digits, region) left to right, or motorcycle digits. The pollution-area list shows automobile plates only.
 - **Row actions:** delete asks for confirmation and removes the record locally. **سوابق استعلام** opens S-252.
-- **Notices (later batches):** row selection and **پلاک/مخاطب/گواهینامه جدید** continue to the inquiry forms (FR-17/18). S-252's **مشاهده نتیجه** and the payment-history items also show notices.
+- **Notices (later batches):** row selection and **پلاک/مخاطب/گواهینامه جدید** show notices, except the road-toll plate lists, which FR-17 connected to its inquiries; the rest wait for FR-18. S-252's **مشاهده نتیجه** and the payment-history items also show notices.
 
 **Recovered:** VH-RECOVERY.
 - The router key and host, the route classes and the menu-key → list mapping.
@@ -455,7 +455,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-23 — Bank identifier conversion
 
-**Status:** implemented under approved #74, D-021 order 2 of 8. **Families:** F-042. **Existing nodes:** S-201–S-204 plus S-011 recovered as the shared ownership result (5 allocations). **Dependencies:** FR-02, FR-03.
+**Status:** done (#74, D-021 order 2 of 8); 73 JVM / 96 device tests (0 skipped), build/lint and rendered review passed. **Families:** F-042. **Existing nodes:** S-201–S-204 plus S-011 recovered as the shared ownership result (5 allocations). **Dependencies:** FR-02, FR-03.
 
 **Reachable:** Demo entries open logged-in/no-login forms (S-201/S-202), each with account→IBAN, card→IBAN, IBAN→account, IBAN→card and card→account sections. Exact synthetic fixture matches open S-011 with ownership, bank and direction-specific values; IBAN→card demonstrates two distinct cards. Separate labelled demo entries open the paid source-picker/typed-source variants (S-203/S-204). Paid queries, OTP, final payment and external sharing show unavailable notices. No paid result is fabricated.
 
@@ -851,8 +851,8 @@ Coverage audit HC-PLAN: 51/51 feature families assigned; 71/71 inventory rows as
 
 ## Recommended next approval and stopping point
 
-FR-35 (#73) and FR-23 (#74) are done. Under D-021 the next batch is **FR-14 — Wallet purchases and transfers (without the QR scanner)** (#75), then FR-15, FR-19, FR-20, FR-16 and FR-17. These issues are approved; each requires its own implementation handover. Stage 1 closes after FR-17.
+All D-021 batches are done; the Stage 1 recheck is in the [readiness report](../reports/stage1-readiness.md). The next steps are the graph and bridge (#92, #93, #94), once the recheck clears. Deferred batches are built only if the owner picks them.
 
 Small tasks already consolidated include account list/details/statement/history, card issue/PIN/address variants, profile/settings/addresses, notifications/support, saved destinations/shortcuts, bill/insurance installments, mobile top-up/charity, wallet history/details, rewards/referral/agent history and postal delivery/address selection. Larger wallet, vehicle, cheque, promissory, wage-advance and loan families are split along distinct data/state journeys. This avoids both one-step-per-icon planning and a single oversized “all banking screens” issue.
 
-FR-01 is done. FR-02 to FR-13 acceptance and rendered review are recorded in their reports; FR-14–FR-45 remain proposed. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Stage 1 closes only after supported whole-app coverage and explicit unknowns are reviewed. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
+FR-01 is done. FR-02 to FR-13 acceptance and rendered review are recorded in their reports, and the D-021 batches in their rows here; the other batches up to FR-45 are deferred. FR-45 preserves unresolved destinations; it does not authorize inventing their UI. Under D-021, Stage 1 closes with the core journeys; [the readiness report](../reports/stage1-readiness.md) lists what remains Unknown. D-020 Stage 2 owner graph validation, Stage 3 bridge/interactive graph, later feature selection/mocks/assistant and app-team integration retain their existing stages. This document does not authorize or start them.
