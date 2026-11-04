@@ -1,39 +1,40 @@
 # Stage 1 readiness (S1-CHECK, #91)
 
-**Verdict: ready with gaps, on hold for the owner.** Checked on `main` at `28b826f`, 4 Nov 2026.
+**Verdict: ready with gaps.** Checked on `main` at `28b826f`, 4 Nov 2026. Rechecked at `31625f2`
+after the fixes in #96.
 
-**One device test failed on clean `main`, then passed on rerun** (section 1). That is this issue's
-stop condition, so S3 waits for the owner's ruling.
-
-Otherwise every registered ID is valid, and nothing can reach a confirm, submit or pay handler
-without a user tap. Once the hold clears, S3-01 and S3-02 must close the gaps in
-[section 6](#6-gaps-for-s3-01-and-s3-02). The biggest one: **83 of the
-189 screens have no path from Home**, and they include every first-wave form except credit
-repayment. Four items need the owner: see [section 7](#7-for-the-owner).
+Every registered ID is valid, and nothing can reach a confirm, submit or pay handler without a user
+tap. One device test failed during this check; #96 found the cause, fixed it and closed G2 (section
+1). S3-01 and S3-02 must close the gaps in [section 6](#6-gaps-for-s3-01-and-s3-02). The biggest
+one: **83 of the 189 screens have no path from Home**, and they include every first-wave form except
+credit repayment. The owner's decisions are in [section 7](#7-owner-decisions).
 
 Evidence labels: reachability is `Observed` from the replica's own handlers. "Recovered caller"
 restates the label in `navigation-graph.json`.
 
 ## 1. Build and tests
 
-| Step | Result |
+| Step | Result at `31625f2` |
 |---|---|
-| `project_checks.py all`, `ruff check`, `ruff format --check` | Pass |
+| `project_checks.py all` | 131 passed, 0 failed |
 | `pytest` | 112 passed, 0 skipped |
+| `ruff check`, `ruff format --check` | Pass |
 | JVM tests | 100 passed, 0 failed, 0 skipped |
 | Lint | 0 errors, 117 warnings, unchanged from the FR-17 baseline |
-| Device tests, full run 1 | **121 of 122 passed, 1 failed**, 0 skipped |
-| Device tests, full runs 2 and 3 | 122 of 122 passed, 0 skipped |
-| Installed build on emulator-5554 | Shows revision `28b826fc55f1` |
+| Device tests, three full runs in a row on a fresh emulator | 124 finished in each, 0 failed, 0 skipped |
 
-**The failure.** `RecurringTransfersTest.scheduleValidationCorrectionAndContinuousFormNeverSubmit`,
-line 78. After the end date was replaced with `1406/09/02`, Continue still showed the "start before
-end" error for the old end date, not the expected one-year error. The same source then passed two
-full runs and three runs of that test alone.
+**Earlier failures, for the record.**
 
-The cause is not proved. The error means Continue validated the old end date, so the test's keyboard
-handling or a real timing race in the form are both possible. Nothing in this step changed app code.
-A race would matter to the bridge, which fills fields and then continues.
+1. On clean `main` at `28b826f`,
+   `RecurringTransfersTest.scheduleValidationCorrectionAndContinuousFormNeverSubmit` failed in 1 of 3
+   full runs. #96 proved it was a test bug. The window reports the keyboard hidden while the page
+   still has its keyboard height, so a touch can miss the clipped button. Under CPU load the click
+   action missed 0 of 320 times, and a real touch 6 of 320. The form's validation and drafts were
+   never at fault. The same touch helper remains in 10 other test files.
+2. At `31625f2`, one full run crashed after 17 of 124 tests, with a native abort on the replica's
+   render thread in the system graphics library. It had no assertion failure and no app frame. The
+   emulator had been up for hours under those load tests, and the crash did not recur after a fresh
+   boot. Its cause is not proved, so a repeat should be investigated.
 
 ## 2. Graph IDs
 
@@ -131,7 +132,7 @@ Every listed field has a test tag. Wave 1 is the first assistant wave under D-02
 | Statement request | Demo S-086 | `statement-start`, `statement-end`, `export-account`, `export-format` | Local | None | `statement-request` | G1, G3, G6 |
 | Transaction history | Home → card tab: S-091 → S-090 | `history-search` | Local | None | None | G4 |
 | Cards (read-only) | Home → card tab: S-012, S-125, S-134; profile: S-126 → S-068, S-025 → S-130 | `card-search`, `manage-search`, `pick-*` | Local | None | `fetch-ok`, `card-visible` | G3 |
-| Balance forms | Home → card tab S-119; Demo S-120 | `secure-number`; the rest are secret | Local | None | `secure-cvv2`, `-expiry`, `-password`, `-ok` | G1 (S-120), G2, G6 |
+| Balance forms | Home → card tab S-119; Demo S-120 | `secure-number`; the rest are secret | Local | None | `secure-cvv2`, `-expiry`, `-password`, `-ok` | G1 (S-120), G6 |
 | Card issue and changes | Home → card tab: S-124, S-127 → S-129 → S-123 | `source-*`, `delivery-branch`, `delivery-post`, `address-*`, `color-*` | Draft | S-128 | `request-submit` | G4 |
 | Card block and PIN | Home → card tab: S-121, S-135, S-136; Demo S-118, S-122 | `block-*`, `pick-*`; S-118/S-122 `noLogin-number`, `noLogin-expiry` | Local | None | `block-ok`, `secret-*`, `pin-ok`, `pin-confirm`, `activation-send`, `otp-*`, `noLogin-ok` | G1 (S-118, S-122), G3 |
 | Wallet card | Home → card tab: S-140 → S-137 → S-139; S-141 | `wallet-*`, `wallet-address-*` | Draft | S-139 | `wallet-submit`; S-141 as card PIN | None |
@@ -162,12 +163,12 @@ Every listed field has a test tag. Wave 1 is the first assistant wave under D-02
 | Confirm, submit or pay without a user tap | **None.** Every such handler is an `onClick`. The only effects are the card pager index and notification paging |
 | Assistant-reachable confirm handler | **None.** No bridge exists yet, and the contract's five operations include no tap or submit |
 | External entry | One exported activity, launcher only. No incoming intent data, deep links, receivers, services or WebView. No INTERNET permission |
-| Secrets in saved state | **One failure.** S-119/S-120 keep CVV2 and the second password in `rememberSaveable`, so they survive in the saved instance state (G2). On the device, a CVV2 typed on S-120 came back after the process was killed. Every other PIN, OTP, CVV2 and password field uses `remember`, and no draft class holds a secret. Nothing is written to disk |
+| Secrets in saved state | Pass after #96. S-119/S-120 kept CVV2 and the second password in saved state until #96 fixed it (G2). `android/tools/check_secret_state.py` now shows them empty after the process is killed. No PIN, OTP, CVV2 or password field is saved, no draft class holds a secret, and nothing is written to disk |
 | Money | Integer `Long` with an IRR unit. No floating point in amounts or rules |
 | Committed hosts and URLs | Pass. No original endpoint host. Remaining hosts are standards, tooling mirrors, `localhost` and test fixtures |
 | Committed secrets | Pass |
-| Committed brand strings | **One failure.** A recovered cheque menu key contains the bank's brand token, on 4 lines in 4 files (section 7) |
-| External digital-cheque system name | Flagged for the owner (section 7) |
+| Committed brand strings | A recovered cheque menu key contains the bank's brand token. The owner accepts it: not a flaw (section 7) |
+| National digital-cheque system name | The owner accepts it in public records: not a flaw (section 7) |
 
 Some final steps end in a labelled local result rather than a notice: `request-submit`,
 `wallet-submit`, `block-ok`, `pin-ok`, `pin-confirm`, `activation-send`, `otp-ok`, `noLogin-ok` and
@@ -177,8 +178,8 @@ Some final steps end in a labelled local result rather than a notice: `request-s
 
 | ID | Gap | Closes in | What to do |
 |---|---|---|---|
-| G1 | 83 screens have no Home path, including every first-wave form except credit repayment. #93 expects the executor to reach each journey's form from Home | S3-01 | Declare these as labelled demo edges from S-026 that use the demo entry's handler. Do not invent real callers. Needs the owner's call (section 7) |
-| G2 | S-119/S-120 save CVV2 and the second password | S3-01 | Change both to `remember`, as the other forms do, and mark them secret |
+| G1 | 83 screens have no Home path, including every first-wave form except credit repayment. #93 expects the executor to reach each journey's form from Home | S3-01 | Follow the owner's decision in section 7. Do not invent real callers |
+| G2 | S-119/S-120 saved CVV2 and the second password | Closed by #96 | S3-01 still marks them secret in the profile |
 | G3 | Page-local form values on S-016, S-064, S-065, S-066, S-086, S-112, S-115, S-118, S-121, S-122, S-131, S-135, S-136, S-149, S-150, S-197, S-201 to S-204 and S-463. A bridge cannot set them through a normal handler | S3-01 | Lift the values the assistant fills into `ReplicaApp` drafts. Hits #93's stop condition if left |
 | G4 | Row-dependent pages: S-014, S-090, S-114, S-146, S-155, S-156, S-158, S-179, S-252, S-306, S-401 need a selected record, and the wallet charge choice is a dialog. `navigate` has no argument for this | S3-02 | Stop on the list and return `blocked`, or use `select_candidate`. Never jump straight to the page |
 | G5 | S-066 row actions need a swipe, and reordering needs a long press. Home layout editing needs a drag | S3-01 | Keep them out of the profile; they are not needed to reach a form |
@@ -186,33 +187,27 @@ Some final steps end in a labelled local result rather than a notice: `request-s
 | G7 | Toll results sit behind the user's OTP, so S-240, S-274, S-249 and S-258 cannot be reached by the bridge | S3-02 | `navigate` returns `blocked` at the OTP sheet. The same applies to S-081 behind `support-otp` |
 | G8 | Direct `open(id)` crashes on S-123, S-124, S-127, S-128, S-129, S-137, S-139 and S-140 (null request) and S-114 (no row). Other pages render blank without a draft | S3-02 | Move only along declared edges. #94's node click must use the same route |
 | G9 | No single observable state: current page, tab, dialogs and sheets are local to composables, and the demo page has no graph ID. Drafts have no ID or version, which `observation.schema.json` requires | S3-02 | Expose them from `ReplicaApp`, and add version counters |
-| G10 | `profile.schema.json` allows field types `text`, `money` and `ref` only. #92 needs `choice` and a secret marker | S3-01 | Hits #92's stop condition: propose the schema change first. `action` can carry the control tag and demo label |
+| G10 | `profile.schema.json` allows field types `text`, `money` and `ref` only. #92 needs `choice` and a secret marker | S3-01 | Propose the schema change in the PR and wait for the owner's review before merging. `action` can carry the control tag and demo label |
 | G11 | Independent receipts would show a success page for a payment that never happened | S3-01 | Exclude them from feature destinations |
 
 Not a gap: `Continue`-style controls are often labelled "confirm" (`loan-source-confirm`,
 `first-ok`), but they only open the next step. S3-01 should classify each one by its handler, not
 by its label.
 
-## 7. For the owner
+## 7. Owner decisions
 
-1. **Does the failed test stop S3?** The stop condition names a failing test on clean `main`, so
-   this step stopped before merging. Recommended: make the failure a small approved fix first, or
-   at least find its cause, because a real race would also affect the bridge. If you rule it a
-   test-only flake, this PR can merge and S3 can start.
-2. **How should the bridge reach demo-only journeys?** Recommended: labelled demo edges from Home,
-   as in G1. They need no behaviour change and claim nothing about the real app. The alternative
-   is to add Home tiles for the eight screens with a recovered caller, but their controls are
-   Unknown and #92 says navigation must not change.
-3. **Brand token in public code.** It came in with #87 as part of a recovered menu key. Renaming it
-   to a neutral key is a small change outside this issue's allowed files. It would stay in git
-   history, because rewriting pushed history is not allowed here. Please decide whether to approve
-   the rename and whether the history matters.
-4. **External digital-cheque system name.** It appears in the FR-20 screens, tests and records, and
-   in `navigation-graph.json`, `screen-catalogue.md`, the tracker, the runbook and `status.md`. It
-   is a public national system rather than our client's brand, so it may be acceptable, but that is
-   your call. This report does not repeat it.
+Recorded on #92 and #96.
+
+1. **Test failure:** find and fix it before merging, and fix G2 in the same issue. Done in #96.
+2. **G1, Home paths:** in #92, add real Home links for the journeys the owner traces in the real
+   app, using the taps the owner puts in `docs/reports/graph-validation.md`. Every other built screen
+   gets a labelled demo path from a demo menu on Home, marked "demo path, not a real-app route".
+3. **Brand token:** keep it as it is. Not a flaw. No rename and no history rewrite.
+4. **National digital-cheque system name:** fine in public records. Not a flaw.
+5. **G10:** in #92, propose the profile schema change in the PR and wait for the owner's review
+   before merging it.
 
 ## 8. Left Unknown
 
-Original-app fidelity stays unscored. The real controls for the eight recovered callers, and every
+Original-app fidelity stays unscored, and the one render-thread crash in section 1 is unexplained. The real controls for the eight recovered callers, and every
 "Unknown" caller in section 3, stay Unknown until the owner's Stage 2 graph validation.
