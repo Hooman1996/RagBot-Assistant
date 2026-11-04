@@ -1,6 +1,6 @@
 # Android replica development
 
-Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers), #62 (FR-09 group transfers), #64 (FR-10 recurring/continuous transfers), #66 (FR-11 bill/insurance payments) and #68 (FR-12 mobile top-up/charity), D-020. One Kotlin/Compose app: `org.ragbot.replica` (launcher
+Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers), #62 (FR-09 group transfers), #64 (FR-10 recurring/continuous transfers), #66 (FR-11 bill/insurance payments), #68 (FR-12 mobile top-up/charity), #70 (FR-13 wallet overview), #73 (FR-35 loans), #74 (FR-23 identifier conversion), #75 (FR-14 wallet operations), #76 (FR-15 funding), #77 (FR-19 cheques), #78 (FR-20 digital cheques), #79 (FR-16 vehicles) and #80 (FR-17 road tolls), D-020 and D-021. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
@@ -204,8 +204,8 @@ scroll/header restoration and recreation. The Home requirements are in
 [the batch matrix](../reports/home-requirements.md); results and fidelity limits
 are in [Home completion](../reports/home-completion.md).
 The only remaining frontend tracker is
-[frontend replication steps](../plan/frontend-replication-steps.md). These are
-proposals; neither opening Home nor this runbook approves their implementation.
+[frontend replication steps](../plan/frontend-replication-steps.md). Under D-021 the
+core journeys are built and the other batches are deferred until the owner picks them.
 
 After device tests (which may uninstall the tested package), explicitly install
 the comparison APK and launch it using the commands above. Capture top, lower
@@ -251,11 +251,12 @@ group chips and tap **مشاهده موجودی** on a debit card (hidden, shown
 missing balances are separate). Rows open card information `S-012`, the
 legacy list `S-125`, credit detail `S-131`, file-loan summary `S-134`, the
 bon-balance form `S-119` and, for credit cards, legacy history `S-091`. Issue,
-block, PIN, share, pay and file-detail controls explain that they are
-unavailable. The demo entry's **مدیریت کارت** (`S-126` → `S-068`),
-**نمایش کارت** (`S-130`) and **موجودی بدون ورود** (`S-120`) buttons are
-Designed-for-mock review entries for menus not built yet. Secure balance forms
-validate only; no PIN is processed and no balance is returned.
+block and PIN rows open the FR-04 pages below, and pay opens FR-11's repayment.
+Share and file-detail controls explain that they are unavailable. Card
+management (`S-126` → `S-068`) and card display (`S-130`) now open from the
+Profile tab (FR-05). The demo entry's **موجودی بدون ورود** (`S-120`) stays a
+Designed-for-mock review entry. Secure balance forms validate only; no PIN is
+processed and no balance is returned.
 
 CI-ASSETS verifies the previous 64 resources plus 12 card inputs (76) and keeps
 private bitmaps in their source density folder. Public builds show a plain
@@ -270,7 +271,7 @@ On the card tab's debit group, **درخواست کارت** opens issue `S-124`;
 In-person delivery goes to colour `S-123`; postal goes to address `S-129`
 first. Confirm `S-128` ends in a labelled Designed-for-mock result: nothing is
 issued, changed or charged. Cancel returns to the card tab; Back keeps the
-draft. Adding an address is unavailable (FR-05). No new private assets.
+draft. **افزودن آدرس** opens `S-463` (FR-05). No new private assets.
 See the [FR-04a report](../reports/card-requests-inspection.md).
 
 ## FR-04b card blocking and PIN
@@ -484,8 +485,8 @@ Home → **کیف پول** (or the demo entry) opens S-111 with three synthetic 
 picker, date range, pages of 10) and a row opens S-114. **سوابق تراکنش‌ها** opens
 S-110, whose items open the S-091 list. **دریافت با بارکد** opens S-112, which
 shows the recovered QR payload as local text and can add an amount or copy the
-wallet ID. A separate entry opens the S-113 receipt. Wallet operations, share and
-export are unavailable. See [inspection](../reports/wallet-inspection.md) and
+wallet ID. A separate entry opens the S-113 receipt. Wallet operations are in FR-14
+below; share and export are unavailable. See [inspection](../reports/wallet-inspection.md) and
 [requirements](../reports/wallet-requirements.md). Recovery ledger, captures,
 acceptance output and merged installation verification remain in
 `local/evidence/wallet/`. No new assets. Stop before FR-14.
@@ -552,7 +553,7 @@ On S-151, **تایید اطلاعات** opens S-152; its final **تایید** on
 
 ## FR-16 vehicle hub (#79, D-021)
 
-Home → **خدمات خودرو** opens the vehicle menu (S-253). The toll, document and pollution items open the saved plates (S-256); **طرح آلودگی هوا** shows automobile plates only. **پلاک‌های فعال** and **وضعیت گواهینامه** open the contacts (S-246), and **نمره منفی گواهینامه** opens the licences (S-248). **سوابق پرداخت** opens the history menu (S-254). In a list, **سوابق استعلام** opens S-252 and **حذف** asks before removing the record locally. Selecting a record or adding a new one stops with a notice until FR-17/18. Private VH-RECOVERY evidence and QA: `local/evidence/vehicles/`. Acceptance: 96 JVM / 118 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 93 / 115. Stop before FR-17.
+Home → **خدمات خودرو** opens the vehicle menu (S-253). The toll, document and pollution items open the saved plates (S-256); **طرح آلودگی هوا** shows automobile plates only. **پلاک‌های فعال** and **وضعیت گواهینامه** open the contacts (S-246), and **نمره منفی گواهینامه** opens the licences (S-248). **سوابق پرداخت** opens the history menu (S-254). In a list, **سوابق استعلام** opens S-252 and **حذف** asks before removing the record locally. On the road-toll plate lists, selecting a record or adding a new one opens the FR-17 inquiry; everywhere else it stops with a notice until FR-18. Private VH-RECOVERY evidence and QA: `local/evidence/vehicles/`. Acceptance: 96 JVM / 118 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 93 / 115. Stop before FR-17.
 
 ## FR-17 road tolls (#80, D-021)
 
