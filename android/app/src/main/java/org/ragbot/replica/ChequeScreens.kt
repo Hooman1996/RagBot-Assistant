@@ -264,7 +264,7 @@ private fun ChequeTrack(
     onAccount: (String) -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
-    var chequeNo by rememberSaveable { mutableStateOf("") }
+    var chequeNo by pageValue("cheque-no", "")
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var resultNo by rememberSaveable { mutableStateOf<String?>(null) }
     var missing by rememberSaveable { mutableStateOf(false) }

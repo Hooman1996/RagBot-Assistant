@@ -1,5 +1,6 @@
 package org.ragbot.replica
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -42,7 +43,12 @@ class IndividualTransfersTest {
 
     private fun click(tag: String) {
         closeKeyboard()
-        compose.onNodeWithTag(tag).performScrollTo().performClick()
+        // While the keyboard closes the page keeps its height, so a touch can miss the clipped
+        // node.
+        compose
+            .onNodeWithTag(tag)
+            .performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
     }
 
     @Test
@@ -260,16 +266,17 @@ class IndividualTransfersTest {
             ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
                 ?.isVisible(WindowInsetsCompat.Type.ime()) == true
         }
-        compose.onNodeWithTag("card-transfer-review").performScrollTo().assertIsDisplayed()
         val metrics = compose.activity.resources.displayMetrics
-        val keyboardHeight =
-            checkNotNull(ViewCompat.getRootWindowInsets(compose.activity.window.decorView))
-                .getInsets(WindowInsetsCompat.Type.ime())
-                .bottom
-        val keyboardTop = (metrics.heightPixels - keyboardHeight) / metrics.density
-        org.junit.Assert.assertTrue(
+        // The window reports the keyboard before the page has finished moving above it.
+        compose.waitUntil(5_000) {
+            val keyboardHeight =
+                checkNotNull(ViewCompat.getRootWindowInsets(compose.activity.window.decorView))
+                    .getInsets(WindowInsetsCompat.Type.ime())
+                    .bottom
+            val keyboardTop = (metrics.heightPixels - keyboardHeight) / metrics.density
+            compose.onNodeWithTag("card-transfer-review").performScrollTo()
             compose.onNodeWithTag("card-transfer-review").getUnclippedBoundsInRoot().bottom.value <=
                 keyboardTop
-        )
+        }
     }
 }

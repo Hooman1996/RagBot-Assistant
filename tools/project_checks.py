@@ -12,6 +12,7 @@ Usage:
     python tools/project_checks.py rea-environment
     python tools/project_checks.py navgraph
     python tools/project_checks.py api-structure
+    python tools/project_checks.py profile
     python tools/project_checks.py all
     python tools/project_checks.py all --root path/to/checkout
 """
@@ -26,6 +27,7 @@ import subprocess
 import sys
 import zipfile
 from dataclasses import dataclass, field
+from fnmatch import fnmatchcase
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -102,6 +104,8 @@ COMMAND_OPERATIONS = ["observe", "navigate", "fill_form", "select_candidate", "s
 PROFILE_DIR = "app_profiles"
 PROFILE_SCHEMA = "app_profiles/profile.schema.json"
 NAV_GRAPH = "app_profiles/navigation-graph.json"
+REPLICA_PROFILE = "app_profiles/replica.profile.json"
+PROFILE_EXPORT = "android/app/build/replica-profile/replica.profile.json"
 NAV_LABELS = ("Observed", "Recovered", "Inferred", "Unknown")
 API_STRUCTURE = "app_profiles/api-structure.json"
 
@@ -630,6 +634,66 @@ def check_api_structure(root: Path, report: Report) -> None:
     report.check(not bad_refs, "every model reference names a known model", "; ".join(bad_refs))
 
 
+def check_profile(root: Path, report: Report) -> None:
+    """The replica profile the executor runs on. Needs the pinned jsonschema."""
+    from jsonschema import Draft202012Validator
+
+    text = read(root, REPLICA_PROFILE)
+    if text is None:
+        report.check(False, "replica profile exists", REPLICA_PROFILE)
+        return
+    report.check(True, "replica profile exists")
+    profile = json.loads(text)
+    validator = Draft202012Validator(load_json(root / PROFILE_SCHEMA))
+    messages = "; ".join(e.message for e in validator.iter_errors(profile))
+    report.check(not messages, "replica profile matches the schema", messages)
+    if messages:
+        return
+
+    graph_ids = {node["id"] for node in load_json(root / NAV_GRAPH)["nodes"]}
+    screens = set(profile["screens"])
+    report.check(
+        screens <= graph_ids, "every profile screen is in the graph", f"{sorted(screens - graph_ids)}"
+    )
+
+    edges = profile["edges"]
+    loose = [f"{e['from']} -> {e['to']}" for e in edges if not {e["from"], e["to"]} <= screens]
+    report.check(not loose, "every edge endpoint is a profile screen", "; ".join(loose))
+
+    user_only = profile["user_only_actions"]
+
+    def is_user_only(tag: str) -> bool:
+        return any(fnmatchcase(tag, item) for item in user_only)
+
+    crossing = [
+        f"{e['from']} -> {e['to']} ({e['action']})"
+        for e in edges
+        if any(is_user_only(tag) for tag in e["action"].split(" > "))
+    ]
+    report.check(not crossing, "no edge uses a user-only action", "; ".join(crossing))
+
+    forms = {form["id"]: form["fields"] for form in profile["forms"]}
+    report.check(set(forms) <= screens, "every form is a profile screen", f"{sorted(set(forms) - screens)}")
+    bad_features = []
+    for feature in profile["features"]:
+        fields = {field["ref"]: field for field in forms.get(feature["form"], [])}
+        slots = feature["required_slots"]
+        if (
+            feature["destination"] not in screens
+            or is_user_only(feature["destination"])
+            or (feature["form"] is not None and feature["form"] not in forms)
+            or any(slot not in fields or fields[slot].get("secret") for slot in slots)
+        ):
+            bad_features.append(feature["intent"])
+    report.check(not bad_features, "every feature has a valid target and fillable slots", f"{bad_features}")
+
+    export = read(root, PROFILE_EXPORT)
+    if export is None:
+        report.not_applicable.append(f"fresh profile export: {PROFILE_EXPORT} is absent; run the JVM tests")
+    else:
+        report.check(export == text, "committed profile matches a fresh export", PROFILE_EXPORT)
+
+
 def check_apk_baseline(root: Path, report: Report) -> None:
     record = read(root, APK_RECORD)
     report.check(record is not None, f"{APK_RECORD} exists")
@@ -676,13 +740,14 @@ SUITES = {
     "rea-environment": (check_rea_environment,),
     "navgraph": (check_navgraph,),
     "api-structure": (check_api_structure,),
+    "profile": (check_profile,),
 }
 SUITES["all"] = (
     SUITES["foundation"]
     + SUITES["baseline"]
     + SUITES["contracts"]
     + SUITES["isolation"]
-    + (check_apk_baseline, check_rea_environment, check_navgraph, check_api_structure)
+    + (check_apk_baseline, check_rea_environment, check_navgraph, check_api_structure, check_profile)
 )
 
 

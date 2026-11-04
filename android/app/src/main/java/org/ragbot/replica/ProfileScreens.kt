@@ -340,7 +340,7 @@ private fun AdditionalInfo(
     onSave: (Map<String, String>) -> Unit,
     onDone: () -> Unit,
 ) {
-    var draft by rememberSaveable { mutableStateOf(profile) }
+    var draft by pageValue("additional-draft", profile)
     var errors by remember { mutableStateOf(mapOf<String, String>()) }
     var saved by rememberSaveable { mutableStateOf(false) }
     fun set(key: String, value: String) {
@@ -707,11 +707,11 @@ private fun AddressList(
 /** S-463: title, province, city, 10-digit postal code and address; saved locally. */
 @Composable
 private fun AddAddress(onAdd: (PreviewAddress) -> Unit, onDone: () -> Unit) {
-    var title by rememberSaveable { mutableStateOf("") }
-    var province by rememberSaveable { mutableStateOf<String?>(null) }
-    var city by rememberSaveable { mutableStateOf<String?>(null) }
-    var postal by rememberSaveable { mutableStateOf("") }
-    var address by rememberSaveable { mutableStateOf("") }
+    var title by pageValue("field-title", "")
+    var province by pageValue<String?>("pick-addressProvince", null)
+    var city by pageValue<String?>("pick-addressCity", null)
+    var postal by pageValue("field-postal", "")
+    var address by pageValue("field-address", "")
     var errors by remember { mutableStateOf(mapOf<String, String>()) }
     Text("اطلاعات آدرس خود را با دقت وارد کنید", fontSize = 14.sp)
     LocalNote()

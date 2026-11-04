@@ -564,3 +564,18 @@ Home → **خدمات خودرو** → **عوارض سالیانه / عوارض 
 - **Receipt:** the demo entry **رسید مستقل عوارض — نمونه** opens S-261.
 
 Private TL-RECOVERY evidence and QA: `local/evidence/tolls/`. Acceptance: 100 JVM / 122 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 96 / 118. The D-021 Stage 1 batches are complete.
+
+## Graph and replica profile (S3-01, #92)
+
+`ReplicaGraph.kt` declares every transition: from, to, the control's test tags and its kind. `open()` refuses any move not declared there, so a device test fails if the declaration falls behind the screens. `ReplicaProfile.kt` holds the forms, features and user-only actions.
+
+The JVM test `ReplicaProfileTest` builds `app_profiles/replica.profile.json` and fails if the committed file differs. After changing the graph or forms, regenerate it and rerun the check:
+
+```bash
+UPDATE_REPLICA_PROFILE=1 ./android/gradlew -p android --no-daemon :app:testDebugUnitTest --rerun-tasks
+python tools/project_checks.py profile
+```
+
+Only `REAL` and `DEMO` edges reach the profile. `USER_ONLY` edges stay out, so the executor stops before any OTP, card-secret or payment step. Fields the bridge fills use `pageValue(...)` instead of `rememberSaveable`; never use it for a secret. S-065 stays page-local because one field holds a password in one mode. The bridge must call a control's handler only when the control is enabled: the Compose click action runs even on a disabled row.
+
+Home → **مسیرهای نمایشی** (below the recent transactions) opens the demo menu. It lists every entry with no Home route, marked as a demo path, not a real-app route. The owner's taps in [graph validation](../reports/graph-validation.md) decide which of these become real Home links.

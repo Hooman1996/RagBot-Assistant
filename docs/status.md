@@ -40,6 +40,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #92 S3-01 Core-journey graph and replica profile | In review | PR into `sub/bridge-graph`, waiting for the owner's review of the profile schema change and the taps in [graph validation](reports/graph-validation.md). |
 | #96 S1-FIX Flaky schedule test and card secrets | Done | The schedule test's touch could miss while the page kept its keyboard height (a test bug); it now uses the click action. S-119/S-120 no longer save CVV2 or the second password. 100 JVM / 124 device tests in three full runs in a row (0 skipped); lint 0 errors / 117 warnings. One earlier full run crashed in the system graphics library and did not recur on a fresh emulator; cause unproved. |
 | #91 S1-CHECK Stage 1 recheck and bridge readiness | Done | Verdict: ready with gaps. 189 registered IDs valid; 106 screens reachable from Home, 83 demo-only. Records drift fixed; no app code changed. [Report](reports/stage1-readiness.md). |
 | #40 Android foundation and first Home batch | Done | `S-026` and embedded empty `F-066`; 2 JVM / 4 device tests pass, lint passes. [Report](reports/replica-foundation.md), [runbook](runbook/replica-development.md). Historical first empty frame; populated Home follows in #42. Remaining screens are proposed; bridge has not started. |

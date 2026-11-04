@@ -53,8 +53,8 @@ internal fun ConversionPage(
 @Composable
 private fun ConversionForm(onResult: (ConversionDraft) -> Unit, onUnavailable: (String) -> Unit) {
     // The recovered layout has five separate expandable fields; values never cross modes.
-    var active by rememberSaveable { mutableStateOf("") }
-    var drafts by rememberSaveable { mutableStateOf(mapOf<String, ConversionDraft>()) }
+    var active by pageValue("conversion-mode", "")
+    var drafts by pageValue("conversion-drafts", mapOf<String, ConversionDraft>())
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var bankPicker by rememberSaveable { mutableStateOf(false) }
     Text("فهرست و بانک‌ها ساختگی هستند؛ نتیجه فقط برای شناسه‌های نمونه نمایش داده می‌شود.")
@@ -165,7 +165,7 @@ private fun ConversionPaidPreview(
     onBack: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
-    var source by rememberSaveable { mutableStateOf("") }
+    var source by pageValue("conversion-source", "")
     var picker by rememberSaveable { mutableStateOf(false) }
     Text("نمونهٔ مستقل استعلام کارمزدی؛ مبلغ، شرایط و نتیجه نامشخص است.")
     Text("کارت مقصد ساختگی: 0000010000000001")

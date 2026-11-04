@@ -147,12 +147,18 @@ fun ReplicaApp() {
         mutableStateOf<List<String>>(listOf("account-1", "account-2"))
     }
     var scenario by rememberSaveable { mutableStateOf("populated") }
+    var demoMenu by rememberSaveable { mutableStateOf(false) }
+    var pageValueMap by rememberSaveable { mutableStateOf(mapOf<String, Any?>()) }
     var transactionKey by rememberSaveable { mutableStateOf("preview-1") }
     var statementKey by rememberSaveable { mutableStateOf("statement-1") }
     val account = AccountFixture.accounts.firstOrNull { it.key == accountKey }
     val page = stack.last()
-    fun open(id: String) {
+    val pageValues = remember {
+        PageValues({ stack.last() }, { pageValueMap }, { pageValueMap = it })
+    }
+    fun move(from: String, id: String) {
         check(id in HomeDestinations.implemented)
+        check(ReplicaGraph.declared(from, id)) { "Undeclared move: $from to $id" }
         // Only S-177 opens the account forms in continuous mode.
         if (
             id in
@@ -182,9 +188,14 @@ fun ReplicaApp() {
         keyboard?.hide()
         stack = stack + id
     }
+    fun open(id: String) = move(stack.last(), id)
+    fun forgetPage(id: String) {
+        savedPages.removeState(id)
+        pageValueMap = pageValueMap.filterKeys { !it.startsWith("$id/") }
+    }
     fun goBack() {
         val leavingPickerReview = pickerReview && stack.last() == SavedDestinationRoutes.PICKER
-        savedPages.removeState(stack.last())
+        forgetPage(stack.last())
         stack = stack.dropLast(1)
         if (leavingPickerReview) {
             focus.clearFocus()
@@ -196,36 +207,37 @@ fun ReplicaApp() {
     // Cancel leaves the whole request flow, as the recovered pages return to Home.
     fun leaveRequest() {
         val flow = CardRequestDestinations.implemented + WalletDestinations.implemented
-        stack.filter { it in flow }.forEach(savedPages::removeState)
+        stack.filter { it in flow }.forEach(::forgetPage)
         stack = stack.filter { it !in flow }
         cardRequest = null
         walletRequest = null
     }
     // Leaving a top-up removes its pages and forgets its draft.
     fun leaveFunding(flow: FundingFlow) {
-        stack.filter { it in flow.pages }.forEach(savedPages::removeState)
+        stack.filter { it in flow.pages }.forEach(::forgetPage)
         stack = stack.filter { it !in flow.pages }
         fundingDrafts = fundingDrafts - flow
     }
     // Cancel leaves the operation and forgets its draft; Back keeps it for correction.
     fun leaveWalletOperation(operation: WalletOperation) {
         val flow = setOf(operation.form, operation.confirm)
-        stack.filter { it in flow }.forEach(savedPages::removeState)
+        stack.filter { it in flow }.forEach(::forgetPage)
         stack = stack.filter { it !in flow }
         walletOperationDrafts = walletOperationDrafts - operation
         walletPreview = null
     }
     // Recovered processing pages finish when they hand over to the next step.
     fun openGroup(id: String) {
-        if (stack.last() in GroupTransferDestinations.guarded) {
-            savedPages.removeState(stack.last())
+        val from = stack.last()
+        if (from in GroupTransferDestinations.guarded) {
+            forgetPage(from)
             stack = stack.dropLast(1)
         }
-        open(id)
+        move(from, id)
     }
     // Cancel returns to the first page, keeping its inputs, as the recovered flow does.
     fun leaveGroup() {
-        stack.filter { it in GroupTransferDestinations.flow }.forEach(savedPages::removeState)
+        stack.filter { it in GroupTransferDestinations.flow }.forEach(::forgetPage)
         stack = stack.filter { it !in GroupTransferDestinations.flow }
         groupDraft =
             GroupTransferDraft(
@@ -291,6 +303,19 @@ fun ReplicaApp() {
             }
         }
     }
+    fun openDemo(entry: DemoEntry) {
+        if (entry == DemoPaths.digitalActive) digitalActive = true
+        if (entry.to == SupportDestinations.TICKET) selectedTicket = ""
+        if (entry == DemoPaths.walletBuy)
+            walletOperationDrafts =
+                walletOperationDrafts +
+                    (WalletOperation.BUY to
+                        WalletOperationDraft(
+                            WalletRules.active(WalletFixture.wallets).first().number,
+                            "0000000000000301",
+                        ))
+        open(entry.to)
+    }
     val activity = checkNotNull(LocalActivity.current)
     val homeVisible = entered && page == HomeDestinations.HOME
     SideEffect {
@@ -300,7 +325,10 @@ fun ReplicaApp() {
     }
     val regular = replicaFont("replica_regular")
     val medium = replicaFont("replica_medium")
-    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+    CompositionLocalProvider(
+        LocalLayoutDirection provides LayoutDirection.Rtl,
+        LocalPageValues provides pageValues,
+    ) {
         MaterialTheme(
             colorScheme =
                 lightColorScheme(
@@ -344,54 +372,33 @@ fun ReplicaApp() {
                             fontSize = 11.sp,
                         )
                         Row {
-                            TextButton(
-                                {
-                                    entered = true
-                                    open(AccountDestinations.HISTORY)
-                                },
-                                Modifier.testTag("demo-history"),
-                            ) {
-                                Text("سوابق قدیمی")
-                            }
-                            TextButton(
-                                {
-                                    entered = true
-                                    open(AccountDestinations.STATEMENT)
-                                },
-                                Modifier.testTag("demo-statement"),
-                            ) {
-                                Text("درخواست صورتحساب")
+                            DemoPaths.history.forEach {
+                                TextButton(
+                                    {
+                                        entered = true
+                                        openDemo(it)
+                                    },
+                                    Modifier.testTag("demo-${it.key}"),
+                                ) {
+                                    Text(it.title)
+                                }
                             }
                         }
-                        listOf(
-                                ProfileDestinations.NOTIFICATIONS to "تنظیمات اعلان‌ها",
-                                CardDestinations.ANONYMOUS_BALANCE to "موجودی بدون ورود",
-                                CardSecurityDestinations.LEGACY_BLOCK to "مسدودی بدون ورود",
-                                CardSecurityDestinations.ANONYMOUS_BLOCK to "مسدودی بدون ورود ۲",
-                                SupportDestinations.CHATBOT to "پرسش از چت‌بات",
-                                SupportDestinations.FAQ_NO_LOGIN to "پرسش‌های متداول بدون ورود",
-                                SupportDestinations.SUGGESTION to "پیشنهاد",
-                                SupportDestinations.TICKETS to "لیست تیکت‌ها",
-                                SupportDestinations.TICKET to "پیام جدید بدون تیکت",
-                            )
-                            .chunked(2)
-                            .forEach { row ->
-                                Row {
-                                    row.forEach { (id, title) ->
-                                        TextButton(
-                                            {
-                                                entered = true
-                                                if (id == SupportDestinations.TICKET)
-                                                    selectedTicket = ""
-                                                open(id)
-                                            },
-                                            Modifier.testTag("demo-$id"),
-                                        ) {
-                                            Text(title, fontSize = 12.sp)
-                                        }
+                        DemoPaths.review.chunked(2).forEach { row ->
+                            Row {
+                                row.forEach {
+                                    TextButton(
+                                        {
+                                            entered = true
+                                            openDemo(it)
+                                        },
+                                        Modifier.testTag("demo-${it.key}"),
+                                    ) {
+                                        Text(it.title, fontSize = 12.sp)
                                     }
                                 }
                             }
+                        }
 
                         Button(
                             onClick = { entered = navigation.navigate(HomeDestinations.HOME) },
@@ -400,21 +407,17 @@ fun ReplicaApp() {
                             Text("ورود به خانه")
                         }
                         Text("بازبینی مستقل مقصدهای ذخیره‌شده — طراحی برای ماک", fontSize = 12.sp)
-                        listOf(
-                                SavedDestinationRoutes.LEGACY to "مقصدهای ذخیره‌شده قدیمی",
-                                SavedDestinationRoutes.MANAGEMENT to "مدیریت مقصد تسهیلات",
-                            )
-                            .forEach { (id, title) ->
-                                TextButton(
-                                    {
-                                        entered = true
-                                        open(id)
-                                    },
-                                    Modifier.testTag("demo-$id"),
-                                ) {
-                                    Text(title)
-                                }
+                        DemoPaths.saved.forEach {
+                            TextButton(
+                                {
+                                    entered = true
+                                    openDemo(it)
+                                },
+                                Modifier.testTag("demo-${it.key}"),
+                            ) {
+                                Text(it.title)
                             }
+                        }
                         Text("فرم آزمایشی انتخاب تسهیلات؛ مسیر بانکی نیست.", fontSize = 12.sp)
                         OutlinedTextField(
                             pickerDraft,
@@ -432,105 +435,28 @@ fun ReplicaApp() {
                                 keyboard?.hide()
                                 pickerReview = true
                                 entered = true
-                                open(SavedDestinationRoutes.PICKER)
+                                openDemo(DemoPaths.picker)
                             },
-                            Modifier.testTag("demo-S-198"),
+                            Modifier.testTag("demo-${DemoPaths.picker.key}"),
                         ) {
-                            Text("انتخاب مقصد تسهیلات — بازبینی مستقل")
+                            Text(DemoPaths.picker.title)
                         }
                         Text(
                             "بازبینی مستقل انتقال‌ها و پرداخت‌ها — فقط پیش‌نمایش محلی",
                             fontSize = 12.sp,
                         )
-                        listOf(
-                                CardTransferDestinations.ANONYMOUS to
-                                    "کارت به کارت بدون ورود با انتخاب مبدا",
-                                CardTransferDestinations.WITHOUT_SOURCE to
-                                    "کارت به کارت بدون انتخابگر مبدا",
-                                CardTransferDestinations.RECEIPT to
-                                    "رسید مستقل کارت به کارت — نمونه",
-                                AccountTransferDestinations.MENU to "منوی انتقال — نمونهٔ مستقل",
-                                AccountTransferDestinations.INTERNAL_RECEIPT to
-                                    "رسید مستقل انتقال داخلی — نمونه",
-                                AccountTransferDestinations.IBAN_RECEIPT to
-                                    "رسید مستقل انتقال شبا — نمونه",
-                                GroupTransferDestinations.HISTORY to "سوابق تراکنش گروهی — نمونه",
-                                GroupTransferDestinations.RECEIPT to
-                                    "رسید مستقل انتقال گروهی — نمونه",
-                                BillPaymentDestinations.ACCOUNT to "پرداخت قبض با حساب",
-                                BillPaymentDestinations.CARD to "پرداخت قبض با کارت",
-                                BillPaymentDestinations.WITHOUT_SOURCE to "پرداخت قبض بدون ورود",
-                                BillPaymentDestinations.RECEIPT to "رسید مستقل قبض — نمونه",
-                                InsuranceDestinations.MENU to "منوی بیمه — نمونهٔ مستقل",
-                                InsuranceDestinations.RECEIPT to "رسید مستقل قسط بیمه — نمونه",
-                                CreditRepaymentDestinations.RECEIPT to
-                                    "رسید مستقل بازپرداخت کارت اعتباری — نمونه",
-                                TopUpDestinations.ACCOUNT to "خرید شارژ با حساب",
-                                TopUpDestinations.CARD to "خرید شارژ با کارت",
-                                TopUpDestinations.WITHOUT_SOURCE to "خرید شارژ بدون ورود",
-                                TopUpDestinations.RECEIPT to "رسید مستقل شارژ — نمونه",
-                                CharityDestinations.PICKER to "کمک به خیریه",
-                                CharityDestinations.RECEIPT to "رسید مستقل خیریه — نمونه",
-                                WalletOverviewDestinations.MAIN to "کیف پول",
-                                WalletOverviewDestinations.RECEIPT to "رسید مستقل کیف پول — نمونه",
-                                ConversionDestinations.LOGIN to "تبدیل شناسه با ورود — نمونه",
-                                ConversionDestinations.NO_LOGIN to "تبدیل شناسه بدون ورود — نمونه",
-                                ConversionDestinations.PAID to
-                                    "استعلام کارمزدی با انتخابگر — نمونهٔ مستقل",
-                                ConversionDestinations.PAID_TYPED to
-                                    "استعلام کارمزدی با کارت تایپی — نمونهٔ مستقل",
-                                LoanDestinations.MENU to "منوی تسهیلات — نمونهٔ مستقل",
-                                LoanDestinations.SUMMARY to "تسهیلات جاری و پرداخت اقساط",
-                                LoanDestinations.GROUP to "گروه‌های تسهیلات — فقط مشاهده",
-                                TollDestinations.RECEIPT to "رسید مستقل عوارض — نمونه",
-                                // The in-flow callers (wage advance) are deferred.
-                                FundingFlow.ACCOUNT_IN_FLOW.amount to
-                                    "افزایش موجودی حساب درون جریان — نمونهٔ مستقل",
-                                FundingFlow.WALLET_IN_FLOW.amount to
-                                    "افزایش موجودی کیف درون جریان — نمونهٔ مستقل",
-                            )
-                            .forEach { (id, title) ->
+                        (DemoPaths.journeys + DemoPaths.digitalActive + DemoPaths.walletBuy)
+                            .forEach {
                                 TextButton(
                                     {
                                         entered = true
-                                        open(id)
+                                        openDemo(it)
                                     },
-                                    Modifier.testTag("demo-$id"),
+                                    Modifier.testTag("demo-${it.key}"),
                                 ) {
-                                    Text(title, fontSize = 12.sp)
+                                    Text(it.title, fontSize = 12.sp)
                                 }
                             }
-                        // The active state needs the external Hamun app, so it has its own entry.
-                        TextButton(
-                            {
-                                entered = true
-                                digitalActive = true
-                                open(DigitalChequeDestinations.ACTIVATION)
-                            },
-                            Modifier.testTag("demo-digital-active"),
-                        ) {
-                            Text("امضای چکاد فعال — نمونهٔ مستقل", fontSize = 12.sp)
-                        }
-                        // Stands in for a scanned payment: a fixed synthetic destination, no
-                        // camera.
-                        TextButton(
-                            {
-                                entered = true
-                                walletOperationDrafts =
-                                    walletOperationDrafts +
-                                        (WalletOperation.BUY to
-                                            WalletOperationDraft(
-                                                WalletRules.active(WalletFixture.wallets)
-                                                    .first()
-                                                    .number,
-                                                "0000000000000301",
-                                            ))
-                                open(WalletOperation.BUY.form)
-                            },
-                            Modifier.testTag("demo-wallet-buy-qr"),
-                        ) {
-                            Text("خرید با کیف با بارکد نمونه — نمونهٔ مستقل", fontSize = 12.sp)
-                        }
                     }
                 } else {
                     savedPages.SaveableStateProvider(page) {
@@ -558,6 +484,7 @@ fun ReplicaApp() {
                                             "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
                                 },
                                 { unavailable("جزئیات تراکنش خانه") },
+                                { demoMenu = true },
                                 account,
                                 tab,
                                 homeScroll,
@@ -869,7 +796,7 @@ fun ReplicaApp() {
                                     if (it == WalletOverviewDestinations.RECEIPT) {
                                         // The wallet result replaces the top-up pages.
                                         leaveFunding(flow)
-                                        open(it)
+                                        move(page, it)
                                         walletFunding = draft
                                     } else open(it)
                                 },
@@ -1134,6 +1061,36 @@ fun ReplicaApp() {
                             )
                         }
                     }
+                    if (demoMenu) {
+                        AlertDialog(
+                            onDismissRequest = { demoMenu = false },
+                            title = { Text("مسیرهای نمایشی") },
+                            text = {
+                                Column(Modifier.verticalScroll(rememberScrollState())) {
+                                    Text(
+                                        "مسیر نمایشی است، نه مسیر برنامهٔ واقعی " +
+                                            "(demo path, not a real-app route).",
+                                        Modifier.testTag("demo-menu-note"),
+                                        fontSize = 12.sp,
+                                    )
+                                    DemoPaths.onHome.forEach {
+                                        TextButton(
+                                            {
+                                                demoMenu = false
+                                                openDemo(it)
+                                            },
+                                            Modifier.testTag("demo-path-${it.key}"),
+                                        ) {
+                                            Text(it.title, fontSize = 12.sp)
+                                        }
+                                    }
+                                }
+                            },
+                            confirmButton = {
+                                TextButton(onClick = { demoMenu = false }) { Text("بستن") }
+                            },
+                        )
+                    }
                     if (editing) {
                         HomeMenuEditor(
                             serviceOrder,
@@ -1179,6 +1136,7 @@ private fun HomeFrame(
     onEdit: () -> Unit,
     onMenu: (HomeMenuItem) -> Unit,
     onTransaction: () -> Unit,
+    onDemoMenu: () -> Unit,
     account: PreviewAccount?,
     tab: HomeControl,
     homeScroll: androidx.compose.foundation.ScrollState,
@@ -1277,7 +1235,7 @@ private fun HomeFrame(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Row(
-                            Modifier.clickable(role = Role.Button) {
+                            Modifier.testTag("home-increase").clickable(role = Role.Button) {
                                 onControl(HomeControl.INCREASE)
                             },
                             verticalAlignment = Alignment.CenterVertically,
@@ -1314,7 +1272,8 @@ private fun HomeFrame(
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
                                 TextButton(
-                                    onClick = { onControl(HomeControl.ACCOUNT_MANAGEMENT) }
+                                    onClick = { onControl(HomeControl.ACCOUNT_MANAGEMENT) },
+                                    modifier = Modifier.testTag("home-account-management"),
                                 ) {
                                     Text(HomeControl.ACCOUNT_MANAGEMENT.title, color = Color.White)
                                 }
@@ -1363,6 +1322,7 @@ private fun HomeFrame(
                         onMenu,
                         onEdit,
                         onTransaction,
+                        onDemoMenu,
                     )
                 }
             }

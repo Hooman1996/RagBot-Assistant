@@ -320,9 +320,9 @@ private fun Activation(kind: CardKind, onDone: () -> Unit) {
  */
 @Composable
 private fun NoLoginBlock(page: String, onDone: () -> Unit, onUnavailable: (String) -> Unit) {
-    var number by rememberSaveable { mutableStateOf("") }
+    var number by pageValue("noLogin-number", "")
     var cvv2 by remember { mutableStateOf("") }
-    var expiry by rememberSaveable { mutableStateOf("") }
+    var expiry by pageValue("noLogin-expiry", "")
     var password by remember { mutableStateOf("") }
     var errors by remember { mutableStateOf(mapOf<String, String>()) }
     var done by rememberSaveable { mutableStateOf(false) }

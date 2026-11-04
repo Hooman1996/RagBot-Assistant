@@ -144,10 +144,10 @@ internal fun StatementScreen(
     onBack: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
-    var accountKey by rememberSaveable { mutableStateOf(account?.key ?: "") }
-    var start by rememberSaveable { mutableStateOf("") }
-    var end by rememberSaveable { mutableStateOf("") }
-    var format by rememberSaveable { mutableStateOf("") }
+    var accountKey by pageValue("export-account", account?.key ?: "")
+    var start by pageValue("statement-start", "")
+    var end by pageValue("statement-end", "")
+    var format by pageValue("export-format", "")
     var choosingFormat by rememberSaveable { mutableStateOf(false) }
     var choosingAccount by rememberSaveable { mutableStateOf(false) }
     var submitted by rememberSaveable { mutableStateOf(false) }
@@ -175,6 +175,7 @@ internal fun StatementScreen(
                             accountKey = item.key
                             choosingAccount = false
                         },
+                        Modifier.testTag("export-account-${item.key}"),
                     )
                 }
             }
@@ -195,6 +196,7 @@ internal fun StatementScreen(
                                 format = label
                                 choosingFormat = false
                             },
+                            Modifier.testTag("export-format-$label"),
                         )
                     }
                 }
