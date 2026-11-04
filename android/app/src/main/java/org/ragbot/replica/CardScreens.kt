@@ -757,9 +757,9 @@ private fun FileLoans(onUnavailable: (String) -> Unit) {
 private fun SecureBalanceForm(page: String, onBack: () -> Unit, onUnavailable: (String) -> Unit) {
     val anonymous = page == CardDestinations.ANONYMOUS_BALANCE
     var number by rememberSaveable { mutableStateOf("") }
-    var cvv2 by rememberSaveable { mutableStateOf("") }
+    var cvv2 by remember { mutableStateOf("") }
     var expiry by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
     var save by rememberSaveable { mutableStateOf(false) }
     var errors by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     val digits = KeyboardOptions(keyboardType = KeyboardType.NumberPassword)
