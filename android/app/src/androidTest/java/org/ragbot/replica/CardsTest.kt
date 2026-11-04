@@ -1,8 +1,10 @@
 package org.ragbot.replica
 
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.text.AnnotatedString
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
@@ -217,5 +219,37 @@ class CardsTest {
         compose.onNodeWithTag("secure-number").performTextReplacement("1234")
         compose.onNodeWithTag("secure-ok").performClick()
         compose.onNodeWithText("شماره کارت باید ۱۶ رقم باشد.").assertIsDisplayed()
+    }
+
+    private fun secretsClearOnRecreation() {
+        compose.onNodeWithTag("secure-cvv2").performTextReplacement("1234")
+        compose.onNodeWithTag("secure-password").performTextReplacement("12345")
+        compose.onNodeWithTag("secure-expiry").performTextReplacement("05/08")
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("secure-expiry").assertTextContains("05/08")
+        listOf("secure-cvv2", "secure-password").forEach {
+            compose
+                .onNodeWithTag(it)
+                .assert(
+                    SemanticsMatcher.expectValue(
+                        SemanticsProperties.EditableText,
+                        AnnotatedString(""),
+                    )
+                )
+        }
+    }
+
+    @Test
+    fun anonymousBalanceSecretsAreNotSaved() {
+        compose.onNodeWithTag("demo-S-120").performScrollTo().performClick()
+        secretsClearOnRecreation()
+    }
+
+    @Test
+    fun bonBalanceSecretsAreNotSaved() {
+        enterCards()
+        compose.onNodeWithTag("card-kind-BON").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("card-action-bon").performScrollTo().performClick()
+        secretsClearOnRecreation()
     }
 }
