@@ -39,6 +39,7 @@ internal fun SupportPage(
 ) {
     val title =
         when (page) {
+            SupportDestinations.MENU -> "پشتیبانی"
             SupportDestinations.CHATBOT -> "پرسش و پاسخ"
             SupportDestinations.FAQ,
             SupportDestinations.FAQ_NO_LOGIN -> "سوالات متداول"
@@ -64,6 +65,20 @@ internal fun SupportPage(
                     Column(Modifier.padding(24.dp).testTag("support-error")) {
                         Text("دریافت اطلاعات نمونه با خطا مواجه شد.")
                         Button(onRetry, Modifier.testTag("support-retry")) { Text("تلاش مجدد") }
+                    }
+                page == SupportDestinations.MENU ->
+                    Column(
+                        Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        SupportFixture.menu.forEach { (key, title, to) ->
+                            Button(
+                                { onOpen(to) },
+                                Modifier.fillMaxWidth().testTag("support-menu-$key"),
+                            ) {
+                                Text(title)
+                            }
+                        }
                     }
                 page == SupportDestinations.FAQ || page == SupportDestinations.FAQ_NO_LOGIN ->
                     FaqPage(page, scenario, onOpen)

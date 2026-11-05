@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +28,7 @@ internal fun HomeContent(
     onMenu: (HomeMenuItem) -> Unit,
     onEdit: () -> Unit,
     onTransaction: () -> Unit,
+    onDemoMenu: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().testTag(HomeDestinations.MENU)) {
         MenuRow(HomeFixture.top, "top", onMenu)
@@ -71,6 +73,7 @@ internal fun HomeContent(
             TransactionRow(transaction, onTransaction)
             Spacer(Modifier.height(16.dp))
         }
+        TextButton(onDemoMenu, Modifier.testTag("demo-menu")) { Text("مسیرهای نمایشی") }
     }
 }
 

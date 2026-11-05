@@ -44,6 +44,14 @@ class NotificationsSupportTest {
                 .config[SemanticsProperties.VerticalScrollAxisRange]
                 .value()
         compose.onNodeWithTag("menu-support").performClick()
+        compose.onNodeWithTag("D-001").assertIsDisplayed()
+        SupportFixture.menu.forEach { (key, _, to) ->
+            compose.onNodeWithTag("support-menu-$key").performClick()
+            compose.onNodeWithTag(to).assertIsDisplayed()
+            back()
+        }
+        back()
+        compose.onNodeWithTag("header-SUPPORT").performClick()
         compose.onNodeWithTag("S-077").assertIsDisplayed()
         compose.onNodeWithTag("faq-variant").assertTextContains("کاربر واردشده", substring = true)
         compose.onNodeWithTag("faq-support").assertDoesNotExist()

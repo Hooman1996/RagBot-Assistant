@@ -8,7 +8,8 @@ object SupportDestinations {
     const val TICKETS = "S-080"
     const val MESSAGE = "S-081"
     const val TICKET = "S-082"
-    val implemented = setOf(CHATBOT, FAQ, FAQ_NO_LOGIN, SUGGESTION, TICKETS, MESSAGE, TICKET)
+    const val MENU = "D-001"
+    val implemented = setOf(MENU, CHATBOT, FAQ, FAQ_NO_LOGIN, SUGGESTION, TICKETS, MESSAGE, TICKET)
 }
 
 data class PreviewFaq(val question: String, val answer: String)
@@ -31,6 +32,16 @@ data class PreviewSupportMessage(
 /** NS-FIXTURE: every question, answer, ticket, conversation and identifier is invented. */
 object SupportFixture {
     const val firstTicket = "DEMO-1001"
+
+    // Owner-traced entries of the Home support menu; the page itself is Designed for mock.
+    val menu =
+        listOf(
+            Triple("chatbot", "چت بات", SupportDestinations.CHATBOT),
+            Triple("faq", "سوالات متداول", SupportDestinations.FAQ_NO_LOGIN),
+            Triple("suggestion", "بازخورد (ایده)", SupportDestinations.SUGGESTION),
+            Triple("inbox", "صندوق (پیام ها)", SupportDestinations.TICKETS),
+            Triple("ticket", "پیام (تیکت)", SupportDestinations.TICKET),
+        )
     val faqs =
         listOf(
             PreviewFaq(

@@ -43,7 +43,8 @@
               "required": ["ref", "type"],
               "properties": {
                 "ref": { "type": "string", "minLength": 1 },
-                "type": { "enum": ["text", "money", "ref"] }
+                "type": { "enum": ["text", "money", "ref", "choice"] },
+                "secret": { "description": "True when only the user may enter it. Never filled.", "type": "boolean" }
               }
             }
           }

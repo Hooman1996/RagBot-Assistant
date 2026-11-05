@@ -1,5 +1,6 @@
 package org.ragbot.replica
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.view.ViewCompat
@@ -34,7 +35,12 @@ class TollsTest {
 
     private fun click(tag: String) {
         closeKeyboard()
-        compose.onNodeWithTag(tag).performScrollTo().performClick()
+        // While the keyboard closes the page keeps its height, so a touch can miss the clipped
+        // node.
+        compose
+            .onNodeWithTag(tag)
+            .performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
     }
 
     private fun dialog(tag: String) {

@@ -11,14 +11,22 @@ internal object ConversionDestinations {
     val forms = setOf(LOGIN, NO_LOGIN)
     val paid = setOf(PAID, PAID_TYPED)
     val implemented = forms + paid + RESULT
+
+    /** Owner-traced: on S-201 these directions open their own pages. */
+    val modePages =
+        mapOf(
+            ConversionMode.ACCOUNT_TO_IBAN to NO_LOGIN,
+            ConversionMode.CARD_TO_IBAN to PAID,
+            ConversionMode.IBAN_TO_ACCOUNT to PAID_TYPED,
+        )
 }
 
 internal enum class ConversionMode(val title: String, val inputLabel: String) {
-    ACCOUNT_TO_IBAN("حساب به شبا", "شماره حساب"),
-    CARD_TO_IBAN("کارت به شبا", "شماره کارت"),
-    IBAN_TO_ACCOUNT("شبا به حساب", "شماره شبا بدون IR"),
-    IBAN_TO_CARD("شبا به کارت", "شماره شبا بدون IR"),
-    CARD_TO_ACCOUNT("کارت به حساب", "شماره کارت");
+    ACCOUNT_TO_IBAN("تبدیل حساب به شبا", "شماره حساب"),
+    CARD_TO_IBAN("تبدیل کارت به شبا", "شماره کارت"),
+    IBAN_TO_ACCOUNT("تبدیل شبا به حساب", "شماره شبا بدون IR"),
+    IBAN_TO_CARD("تبدیل شبا به کارت", "شماره شبا بدون IR"),
+    CARD_TO_ACCOUNT("تبدیل کارت به حساب", "شماره کارت");
 
     val isCardInput: Boolean
         get() = this == CARD_TO_IBAN || this == CARD_TO_ACCOUNT

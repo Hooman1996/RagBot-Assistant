@@ -617,7 +617,7 @@ private fun firstCredit() = CardFixture.of(CardKind.CREDIT).firstOrNull()
 private fun CreditDetail(onBack: () -> Unit, onRepay: (CreditRepayment) -> Unit) {
     // BP-RECOVERY: Pay asks for the repayment amount, then the source account, then opens S-132.
     var amountDialog by rememberSaveable { mutableStateOf(false) }
-    var amount by rememberSaveable { mutableStateOf("") }
+    var amount by pageValue("credit-amount", "")
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var sourceDialog by rememberSaveable { mutableStateOf(false) }
     val card = firstCredit()
@@ -756,9 +756,9 @@ private fun FileLoans(onUnavailable: (String) -> Unit) {
 @Composable
 private fun SecureBalanceForm(page: String, onBack: () -> Unit, onUnavailable: (String) -> Unit) {
     val anonymous = page == CardDestinations.ANONYMOUS_BALANCE
-    var number by rememberSaveable { mutableStateOf("") }
+    var number by pageValue("secure-number", "")
     var cvv2 by remember { mutableStateOf("") }
-    var expiry by rememberSaveable { mutableStateOf("") }
+    var expiry by pageValue("secure-expiry", "")
     var password by remember { mutableStateOf("") }
     var save by rememberSaveable { mutableStateOf(false) }
     var errors by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
@@ -796,7 +796,7 @@ private fun SecureBalanceForm(page: String, onBack: () -> Unit, onUnavailable: (
     }
     if (!anonymous)
         Row(
-            Modifier.toggleable(save, role = Role.Checkbox) { save = it },
+            Modifier.testTag("secure-save").toggleable(save, role = Role.Checkbox) { save = it },
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Checkbox(save, null)

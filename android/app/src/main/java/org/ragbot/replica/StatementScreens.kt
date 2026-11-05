@@ -87,8 +87,8 @@ internal fun bankStatementDateError(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun StatementListScreen(account: PreviewAccount?, onStatement: (String) -> Unit) {
-    var start by rememberSaveable { mutableStateOf(dateDaysAgo(7)) }
-    var end by rememberSaveable { mutableStateOf(todayPersian()) }
+    var start by pageValue("ledger-start", dateDaysAgo(7))
+    var end by pageValue("ledger-end", todayPersian())
     var appliedStart by rememberSaveable { mutableStateOf(start) }
     var appliedEnd by rememberSaveable { mutableStateOf(end) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }

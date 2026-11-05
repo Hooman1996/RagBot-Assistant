@@ -300,8 +300,8 @@ profile `S-065` (credential changes use OTP `12345` and a labelled result),
 additional information `S-064`, account management `S-063`, card management
 `S-126`, saved addresses `S-464` → add `S-463`, the settings menu `S-025`
 (biometric `S-070`, services `S-072`, storefront `S-073`, card display
-`S-130`), invitation `S-069` and changelog `S-074`. Notification settings
-`S-071` has a labelled review entry on the demo page. Profile, address and
+`S-130`, notification settings `S-071`), invitation `S-069` and changelog
+`S-074`. Profile, address and
 toggle changes stay in the app's saved UI state only. The card-request and
 wallet address steps now open add address `S-463`. See the
 [FR-05 report](../reports/profile-inspection.md).
@@ -311,8 +311,8 @@ wallet address steps now open add address `S-463`. See the
 From Home, the notification header button opens **اعلان‌ها** (`S-075`):
 type filters, item detail/copy, selection and read/delete controls affect only
 synthetic preview state. Deleting asks first; dismissing cancels. Both the
-support/message header button and **پشتیبانی** menu tile open authenticated
-FAQ (`S-077`) through independently recovered handlers. Expand each FAQ item
+support/message header button opens authenticated FAQ (`S-077`). The **پشتیبانی**
+tile opens the owner-traced support menu `D-001`. Expand each FAQ item
 to inspect its synthetic answer.
 
 The demo page's explicitly independent entries open chatbot question `S-076`,
@@ -328,7 +328,7 @@ Scenario controls remain on the demo page. The unanswered/answered/closed
 fixture tickets exercise editing, a long thread with continuation controls,
 and read-only closed state. No server support-menu snapshot, ticket delivery,
 attachment control, session-expiry service or real authentication is claimed.
-S-071 remains independent. See the [inspection](../reports/notifications-support-inspection.md)
+See the [inspection](../reports/notifications-support-inspection.md)
 and [requirements](../reports/notifications-support-requirements.md). FR-07 was
 subsequently approved in #58; later batches still require owner approval.
 
@@ -494,7 +494,7 @@ acceptance output and merged installation verification remain in
 ## Loans and repayment review (FR-35)
 
 Scroll the demo page to **منوی تسهیلات — نمونهٔ مستقل** (S-324), then choose
-**تسهیلات جاری و پرداخت اقساط** (S-338), or use its independent entry. Individual
+**تسهیلات در جریان و پرداخت** (S-338), or use its independent entry. Individual
 and corporate tabs show synthetic loans. A row opens S-306. Choose unpaid
 installments in due-date order; overdue debt has priority, and deselection starts
 at the last chosen installment. **پرداخت — بازبینی محلی** opens the source-account
@@ -564,3 +564,20 @@ Home → **خدمات خودرو** → **عوارض سالیانه / عوارض 
 - **Receipt:** the demo entry **رسید مستقل عوارض — نمونه** opens S-261.
 
 Private TL-RECOVERY evidence and QA: `local/evidence/tolls/`. Acceptance: 100 JVM / 122 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 96 / 118. The D-021 Stage 1 batches are complete.
+
+## Graph and replica profile (S3-01, #92)
+
+`ReplicaGraph.kt` declares every transition: from, to, the control's test tags and its kind. `open()` refuses any move not declared there, so a device test fails if the declaration falls behind the screens. `ReplicaProfile.kt` holds the forms, features and user-only actions.
+
+The JVM test `ReplicaProfileTest` builds `app_profiles/replica.profile.json` and fails if the committed file differs. After changing the graph or forms, regenerate it and rerun the check:
+
+```bash
+UPDATE_REPLICA_PROFILE=1 ./android/gradlew -p android --no-daemon :app:testDebugUnitTest --rerun-tasks
+python tools/project_checks.py profile
+```
+
+Only `REAL` and `DEMO` edges reach the profile. `USER_ONLY` edges stay out, so the executor stops before any OTP, card-secret or payment step. Fields the bridge fills use `pageValue(...)` instead of `rememberSaveable`; never use it for a secret. S-065 stays page-local because one field holds a password in one mode. The bridge must call a control's handler only when the control is enabled: the Compose click action runs even on a disabled row.
+
+Home → **مسیرهای نمایشی** (below the recent transactions) opens the demo menu. It lists every entry with no Home route, marked as a demo path, not a real-app route. The owner's taps in [graph validation](../reports/graph-validation.md) decide which of these become real Home links. So far the tiles **انتقال وجه** (S-193), **قبض** (S-209), **خیریه** (S-283) and **تسهیلات** (S-338) are real links, and S-071 opens from **پروفایل** → **تنظیمات برنامه** → **تنظیمات اعلان‌ها**.
+
+The owner's second trace round (5 Nov 2026) added the Home tiles کارت به کارت, شارژ, صورتحساب, پشتیبانی, تسهیلات, تبدیل بانکی, بیمه and سوابق, and two menu pages with no recovered node, `D-001` (پشتیبانی) and `D-002` (چکاد). `D-` nodes are labelled `Designed for mock` in `navigation-graph.json`. The answers and what came of each are in the [validation sheet](../reports/graph-validation.md).

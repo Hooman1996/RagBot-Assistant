@@ -47,9 +47,9 @@ internal fun SavedDestinationScreen(
     var query by rememberSaveable(screenId, type) { mutableStateOf("") }
     var editing by rememberSaveable { mutableStateOf(false) }
     var editingId by rememberSaveable { mutableStateOf<String?>(null) }
-    var name by rememberSaveable { mutableStateOf("") }
-    var number by rememberSaveable { mutableStateOf("") }
-    var description by rememberSaveable { mutableStateOf("") }
+    var name by pageValue("saved-name", "")
+    var number by pageValue("saved-number", "")
+    var description by pageValue("saved-description", "")
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var deleteId by rememberSaveable { mutableStateOf<String?>(null) }
     var orderMode by rememberSaveable { mutableStateOf(false) }
