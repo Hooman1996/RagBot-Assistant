@@ -34,7 +34,7 @@ class DigitalChequeRulesTest {
     fun menuOpensTheThreeRecoveredDigitalChequePages() {
         assertEquals(
             setOf("S-157", "S-151", "S-159"),
-            ChequeFixture.menu
+            ChequeFixture.chakadMenu
                 .mapNotNull { it.destination }
                 .filter { it in DigitalChequeDestinations.implemented }
                 .toSet(),

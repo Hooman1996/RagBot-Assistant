@@ -19,6 +19,8 @@ Node-ID scheme:
 - `S-###` — a screen node in the P1a-04 navigation graph: an activity or a Compose navigation
   destination. IDs are stable, assigned in feature-area then name order. `F-000` is the area ID
   for a screen whose feature area could not be resolved statically.
+- `D-###` — a replica page with no recovered node, such as a menu the owner traced in the real
+  app. Its label is `Designed for mock`.
 - `E-###` — an endpoint in the P1a-05 API-structure map: one Retrofit interface method, assigned
   in service then declaration order. Its `area` reuses a P1a-03 feature-area ID (or `F-000` for a
   cross-cutting/infra service, or the one legacy aggregate interface whose metadata was stripped).

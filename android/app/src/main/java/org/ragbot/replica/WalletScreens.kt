@@ -214,7 +214,7 @@ private fun WalletQr(
     onUnavailable: (String) -> Unit,
 ) {
     val context = LocalContext.current
-    var amount by rememberSaveable { mutableStateOf<String?>(null) }
+    var amount by pageValue<String?>("wallet-amount", null)
     var entering by rememberSaveable { mutableStateOf(false) }
     var copied by rememberSaveable { mutableStateOf(false) }
     WalletPicker(wallet, onWallet)
@@ -310,8 +310,8 @@ private fun WalletStatementList(
     onRow: (String) -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
-    var start by rememberSaveable { mutableStateOf(dateDaysAgo(29)) }
-    var end by rememberSaveable { mutableStateOf(todayPersian()) }
+    var start by pageValue("wallet-start", dateDaysAgo(29))
+    var end by pageValue("wallet-end", todayPersian())
     var appliedStart by rememberSaveable { mutableStateOf(start) }
     var appliedEnd by rememberSaveable { mutableStateOf(end) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }

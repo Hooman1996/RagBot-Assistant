@@ -1,5 +1,6 @@
 package org.ragbot.replica
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -36,7 +37,12 @@ class PaymentsTest {
 
     private fun click(tag: String) {
         closeKeyboard()
-        compose.onNodeWithTag(tag).performScrollTo().performClick()
+        // While the keyboard closes the page keeps its height, so a touch can miss the clipped
+        // node.
+        compose
+            .onNodeWithTag(tag)
+            .performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
     }
 
     private fun dialog(tag: String) {
@@ -168,7 +174,8 @@ class PaymentsTest {
         click("insurance-policy-policy-1")
         click("insurance-pay")
         compose.onNodeWithTag("insurance-error").assertTextContains(PaymentRules.SELECT_INSTALLMENT)
-        click("installment-1")
+        // A real touch: the click action would ignore the row being disabled.
+        compose.onNodeWithTag("installment-1").performScrollTo().performClick()
         compose.onNodeWithTag("installment-1").assertIsNotSelected()
         compose.onNodeWithTag("installment-2").assertIsNotEnabled()
         click("installment-3")

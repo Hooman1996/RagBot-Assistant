@@ -63,13 +63,13 @@ internal fun AccountTransferPage(
                             { onOpen(AccountTransferDestinations.INTERNAL) },
                             Modifier.fillMaxWidth().testTag("transfer-internal"),
                         ) {
-                            Text("انتقال داخلی")
+                            Text("انتقال وجه داخلی")
                         }
                         Button(
                             { onOpen(AccountTransferDestinations.INTERBANK) },
                             Modifier.fillMaxWidth().testTag("transfer-interbank"),
                         ) {
-                            Text("انتقال بین بانکی")
+                            Text("انتقال وجه بین بانکی")
                         }
                         Button(
                             { onOpen(GroupTransferDestinations.FIRST) },

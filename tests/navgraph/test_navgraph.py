@@ -82,7 +82,7 @@ def test_duplicate_id_fails(tmp_path: Path):
 def test_unknown_label_fails(tmp_path: Path):
     graph = json.loads(json.dumps(GOOD))
     graph["nodes"][1]["label"] = "Guessed"
-    assert any("one of the four" in f for f in check(write(tmp_path, graph)).failures)
+    assert any("known evidence label" in f for f in check(write(tmp_path, graph)).failures)
 
 
 def test_dangling_edge_to_fails(tmp_path: Path):

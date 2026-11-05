@@ -3,6 +3,7 @@ package org.ragbot.replica
 import android.content.ClipboardManager
 import android.content.Context
 import android.view.KeyEvent
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.view.ViewCompat
@@ -36,7 +37,12 @@ class IdentifierConversionTest {
 
     private fun click(tag: String) {
         closeKeyboard()
-        compose.onNodeWithTag(tag).performScrollTo().performClick()
+        // While the keyboard closes the page keeps its height, so a touch can miss the clipped
+        // node.
+        compose
+            .onNodeWithTag(tag)
+            .performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
     }
 
     private fun back() {
@@ -90,6 +96,8 @@ class IdentifierConversionTest {
         bank("external")
         calculate()
         compose.onNodeWithTag("unavailable").assertTextContains("استعلام کارمزدی", substring = true)
+        back()
+        compose.onNodeWithTag("S-202").assertIsDisplayed()
         back()
         compose.onNodeWithTag("S-201").assertIsDisplayed()
     }

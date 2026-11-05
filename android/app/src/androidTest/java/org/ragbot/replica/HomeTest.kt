@@ -3,6 +3,7 @@ package org.ragbot.replica
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -228,5 +229,37 @@ class HomeTest {
             compose.onNodeWithTag("menu-cheque").fetchSemanticsNode().boundsInRoot.center.x >
                 compose.onNodeWithTag("menu-loan").fetchSemanticsNode().boundsInRoot.center.x
         )
+    }
+
+    @Test
+    fun tracedHomeTilesOpenTheirScreens() {
+        enter()
+        tracedHomeTiles.forEach { (key, screen) ->
+            scrollTo("menu-$key").performClick()
+            compose.onNodeWithTag(screen).assertIsDisplayed()
+            back()
+            compose.onNodeWithTag("S-026").assertIsDisplayed()
+        }
+    }
+
+    @Test
+    fun everyDemoPathOpensItsScreenFromHomeAndIsLabelled() {
+        enter()
+        DemoPaths.onHome.forEach {
+            scrollTo("demo-menu").performClick()
+            compose
+                .onNodeWithTag("demo-menu-note")
+                .assertTextContains("not a real-app route", substring = true)
+            compose
+                .onNodeWithTag("demo-path-${it.key}")
+                .performSemanticsAction(SemanticsActions.OnClick)
+            compose.waitUntil(5_000) {
+                compose.onAllNodesWithTag(it.to).fetchSemanticsNodes().isNotEmpty()
+            }
+            back()
+            compose.waitUntil(5_000) {
+                compose.onAllNodesWithTag("S-026").fetchSemanticsNodes().isNotEmpty()
+            }
+        }
     }
 }

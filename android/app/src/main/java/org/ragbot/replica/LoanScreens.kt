@@ -58,13 +58,13 @@ internal fun LoanPage(
                             { onOpen(LoanDestinations.SUMMARY) },
                             Modifier.fillMaxWidth().testTag("loan-current"),
                         ) {
-                            Text("تسهیلات جاری و پرداخت اقساط")
+                            Text("تسهیلات در جریان و پرداخت")
                         }
                         OutlinedButton(
                             { onOpen(LoanDestinations.GROUP) },
                             Modifier.fillMaxWidth().testTag("loan-groups"),
                         ) {
-                            Text("گروه‌های تسهیلات — فقط مشاهده")
+                            Text("تسهیلات باشگاه مشتریان")
                         }
                     }
                     LoanDestinations.SUMMARY -> LoanSummary(onLoan)

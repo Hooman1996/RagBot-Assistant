@@ -1,5 +1,6 @@
 package org.ragbot.replica
 
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.view.ViewCompat
@@ -34,7 +35,12 @@ class DigitalChequesTest {
 
     private fun click(tag: String) {
         closeKeyboard()
-        compose.onNodeWithTag(tag).performScrollTo().performClick()
+        // While the keyboard closes the page keeps its height, so a touch can miss the clipped
+        // node.
+        compose
+            .onNodeWithTag(tag)
+            .performScrollTo()
+            .performSemanticsAction(SemanticsActions.OnClick)
     }
 
     private fun dialog(tag: String) {
@@ -58,6 +64,7 @@ class DigitalChequesTest {
     private fun menu(key: String) {
         compose.onNodeWithTag("demo-entry").performClick()
         compose.onNodeWithTag("menu-cheque").performScrollTo().performClick()
+        click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_CHAKAD")
         click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_$key")
     }
 
@@ -73,6 +80,7 @@ class DigitalChequesTest {
         click("digital-activate")
         compose.onNodeWithTag("digital-confirm").performClick()
         unavailable("امضا با برنامهٔ هامون")
+        back()
         back()
         back()
         back()

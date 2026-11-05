@@ -137,8 +137,10 @@ class ProfileFlowsTest {
     }
 
     @Test
-    fun notificationReviewEntryAsksBeforeTurningOff() {
-        compose.onNodeWithTag("demo-S-071").performClick()
+    fun notificationSettingsAskBeforeTurningOff() {
+        openProfile()
+        compose.onNodeWithTag("profile-settings").performScrollTo().performClick()
+        compose.onNodeWithTag("settings-notifications").performClick()
         compose.onNodeWithTag("S-071").assertIsDisplayed()
         compose.onNodeWithTag("notify-اعلان پیشنهادها").assertIsOn().performClick()
         compose.onNodeWithTag("notify-off").performClick()

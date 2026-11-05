@@ -28,6 +28,7 @@ internal fun CardTransferPage(
     onChange: (CardTransferDraft) -> Unit,
     onBack: () -> Unit,
     onReview: () -> Unit,
+    onTyped: () -> Unit,
     onRetry: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
@@ -47,7 +48,7 @@ internal fun CardTransferPage(
             when (page) {
                 CardTransferDestinations.ANONYMOUS,
                 CardTransferDestinations.WITHOUT_SOURCE ->
-                    CardTransferForm(page, draft, onChange, onBack, onReview, onUnavailable)
+                    CardTransferForm(page, draft, onChange, onBack, onReview, onTyped, onUnavailable)
                 CardTransferDestinations.CONFIRM ->
                     CardTransferConfirmation(draft, onChange, onBack, onUnavailable)
                 CardTransferDestinations.RECEIPT -> CardTransferReceipt(onUnavailable)
@@ -62,6 +63,7 @@ private fun CardTransferForm(
     onChange: (CardTransferDraft) -> Unit,
     onBack: () -> Unit,
     onReview: () -> Unit,
+    onTyped: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
     var attempted by rememberSaveable { mutableStateOf(false) }
@@ -77,6 +79,9 @@ private fun CardTransferForm(
                 Modifier.fillMaxWidth().testTag("card-transfer-source-picker"),
             ) {
                 Text(draft.source.ifEmpty { "انتخاب کارت نمونه" })
+            }
+            TextButton(onTyped, Modifier.testTag("card-transfer-typed")) {
+                Text("ورود دستی کارت مبدا")
             }
             errors["source"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         } else {

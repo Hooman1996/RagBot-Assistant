@@ -16,9 +16,11 @@ internal object ChequeDestinations {
     const val CARDBOARD = "S-154"
     const val PAY_DETAIL = "S-155"
     const val REQUEST_DETAIL = "S-156"
+    const val CHAKAD = "D-002"
     val implemented =
         setOf(
             MENU,
+            CHAKAD,
             REPORT_FILTER,
             BOOKS,
             CHEQUES,
@@ -185,7 +187,7 @@ internal object ChequeFixture {
         listOf(
             WalletMenuItem(
                 "AUTHENTICATED_HOME_CHEQUE_FACILITIES_CHEQUEBOOK",
-                "دسته چک‌ها",
+                "دسته چک های من",
                 ChequeDestinations.BOOKS,
             ),
             WalletMenuItem(
@@ -195,12 +197,12 @@ internal object ChequeFixture {
             ),
             WalletMenuItem(
                 "AUTHENTICATED_HOME_CHEQUE_FACILITIES_ISSUANCE_DIGITAL_CHECKBOOK",
-                "درخواست دسته چک دیجیتال",
+                "صدور دسته چک دیجیتال",
                 ChequeDestinations.ISSUE,
             ),
             WalletMenuItem(
                 "AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRACE_ISSUANCE_CHECKBOOK",
-                "پیگیری درخواست دسته چک",
+                "پیگیری صدور دسته چک",
                 ChequeDestinations.ISSUANCE,
             ),
             WalletMenuItem(
@@ -216,7 +218,7 @@ internal object ChequeFixture {
             // Recovered: both report keys open S-148, with other-bank or internal cheques.
             WalletMenuItem(
                 "AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRANSFERRED_CHEQUES_REPORT",
-                "گزارش چک‌های واگذار شده",
+                "گزارش چک‌های واگذاری",
                 ChequeDestinations.REPORT_FILTER,
             ),
             WalletMenuItem(
@@ -224,6 +226,13 @@ internal object ChequeFixture {
                 "گزارش چک‌های واگذار شده داخلی",
                 ChequeDestinations.REPORT_FILTER,
             ),
+            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_CHAKAD", "چکاد", ChequeDestinations.CHAKAD),
+            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_PICHAK_ISSUE_PAPER_CHEQUE", "صدور چک", null),
+            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER", "استعلام چک", null),
+        )
+
+    val chakadMenu =
+        listOf(
             // DC-RECOVERY: the digital-cheque keys and their targets.
             WalletMenuItem(
                 "AUTHENTICATED_HOME_CHEQUE_CHAKAD_ACTIVATION",
@@ -240,8 +249,6 @@ internal object ChequeFixture {
                 "کارتابل چک دیجیتال",
                 DigitalChequeDestinations.CARTABLE,
             ),
-            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_PICHAK_ISSUE_PAPER_CHEQUE", "صدور چک", null),
-            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER", "استعلام چک", null),
         )
 
     // Server-supplied page counts per media; Designed for mock.

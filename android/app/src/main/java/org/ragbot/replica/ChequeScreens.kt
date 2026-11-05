@@ -39,6 +39,7 @@ internal fun ChequePage(
     val title =
         when (page) {
             ChequeDestinations.MENU -> "چک"
+            ChequeDestinations.CHAKAD -> "چکاد"
             ChequeDestinations.BOOKS -> "دسته چک‌ها"
             ChequeDestinations.CHEQUES -> "برگه‌های دسته چک"
             ChequeDestinations.TRACK_MY -> "پیگیری چک‌های من"
@@ -61,8 +62,11 @@ internal fun ChequePage(
             ) {
                 Text(ChequeFixture.NOTICE, style = MaterialTheme.typography.bodySmall)
                 when (page) {
-                    ChequeDestinations.MENU ->
-                        ChequeFixture.menu.forEach { item ->
+                    ChequeDestinations.MENU,
+                    ChequeDestinations.CHAKAD ->
+                        (if (page == ChequeDestinations.MENU) ChequeFixture.menu
+                            else ChequeFixture.chakadMenu)
+                            .forEach { item ->
                             OutlinedCard(
                                 Modifier.fillMaxWidth()
                                     .testTag("cheque-menu-${item.key}")
@@ -264,7 +268,7 @@ private fun ChequeTrack(
     onAccount: (String) -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
-    var chequeNo by rememberSaveable { mutableStateOf("") }
+    var chequeNo by pageValue("cheque-no", "")
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var resultNo by rememberSaveable { mutableStateOf<String?>(null) }
     var missing by rememberSaveable { mutableStateOf(false) }
