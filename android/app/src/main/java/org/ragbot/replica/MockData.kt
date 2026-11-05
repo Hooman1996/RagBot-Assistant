@@ -41,6 +41,24 @@ internal data class ConversionSample(
     val fee: Long,
 )
 
+/** A Sayad cheque; [party] is the other side, and [received] means the customer holds it. */
+internal data class SayadCheque(
+    val sayadId: String,
+    val amount: Long,
+    val dueDate: String,
+    val party: String,
+    val received: Boolean,
+    val status: String,
+) {
+    companion object {
+        const val PENDING = "در انتظار تایید"
+        const val ACCEPTED = "تایید شده"
+        const val REJECTED = "رد شده"
+        const val REGISTERED = "ثبت شده"
+        const val TRANSFERRED = "منتقل شده"
+    }
+}
+
 /** Forces [outcome] for [operation], or for every operation when it is "*". */
 internal data class ForcedOutcome(val operation: String, val outcome: String)
 
@@ -346,6 +364,17 @@ internal class MockFiles(read: (String) -> Json) {
                 it.str("description"),
                 it.strings("holders"),
                 it.str("digitalIban"),
+            )
+        }
+    val sayad =
+        chequeFile.list("sayad") {
+            SayadCheque(
+                it.str("sayadId"),
+                it.long("amount"),
+                it.str("dueDate"),
+                it.str("party"),
+                it.bool("received"),
+                it.str("status"),
             )
         }
     private val vehicleFile = read("vehicles")

@@ -229,8 +229,12 @@ internal object ChequeFixture {
                 ChequeDestinations.REPORT_FILTER,
             ),
             WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_CHAKAD", "چکاد", ChequeDestinations.CHAKAD),
-            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_PICHAK_ISSUE_PAPER_CHEQUE", "صدور چک", null),
-            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER", "استعلام چک", null),
+            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_PICHAK_ISSUE_PAPER_CHEQUE", "صدور چک", "S-165"),
+            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER", "استعلام چک", "S-164"),
+            // Designed for mock: the recovered menu keys for these three are Unknown.
+            WalletMenuItem("DESIGNED_SAYAD_ANSWER", "تایید یا رد چک دریافتی", "S-167"),
+            WalletMenuItem("DESIGNED_SAYAD_TRANSFER", "انتقال چک", "S-172"),
+            WalletMenuItem("DESIGNED_SAYAD_HISTORY", "سوابق چک صیادی", "S-169"),
         )
 
     val chakadMenu =

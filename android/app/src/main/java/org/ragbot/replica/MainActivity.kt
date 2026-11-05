@@ -69,6 +69,8 @@ fun ReplicaApp() {
         mutableStateOf<List<String>>(HomeFixture.services.map { it.key })
     }
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
+    var serviceKey by rememberSaveable { mutableStateOf("") }
+    var serviceValues by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     var bankFailure by rememberSaveable { mutableStateOf<String?>(null) }
     var bankDone by rememberSaveable { mutableStateOf<String?>(null) }
     val navigation = remember { HomeNavigation() }
@@ -195,6 +197,10 @@ fun ReplicaApp() {
         if (stack.last() == ChequeDestinations.CHAKAD) {
             if (id == DigitalChequeDestinations.TRANSFER) digitalTransfer = DigitalTransferDraft()
             if (id == DigitalChequeDestinations.ACTIVATION) digitalActive = false
+        }
+        ServiceCatalog.starting(id)?.let {
+            serviceKey = it.key
+            serviceValues = emptyMap()
         }
         focus.clearFocus()
         keyboard?.hide()
@@ -627,6 +633,17 @@ fun ReplicaApp() {
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in ServiceCatalog.pages) {
+                            ServicePage(
+                                ServiceCatalog.flow(serviceKey),
+                                page,
+                                serviceValues,
+                                { serviceValues = it },
+                                ::open,
+                                ::goBack,
+                            )
+                        } else if (page in ServiceCatalog.results) {
+                            ServiceResultPage(page, ::goBack, ::unavailable)
                         } else if (page in CardTransferDestinations.implemented) {
                             CardTransferPage(
                                 page,

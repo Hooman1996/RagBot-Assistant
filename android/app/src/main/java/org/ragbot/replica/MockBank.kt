@@ -35,6 +35,7 @@ internal object MockBank {
         val wallets: Map<String, Long>,
         val added: List<PreviewTransaction> = emptyList(),
         val settled: Set<String> = emptySet(),
+        val sayad: Map<String, SayadCheque> = emptyMap(),
         val spent: Long = 0,
         val trace: Int = 0,
     )
@@ -161,6 +162,69 @@ internal object MockBank {
     }
 
     fun invalidSecret() = failure("invalid-secret")
+
+    fun incomplete() = failure("incomplete")
+
+    /** The Sayad cheques known now: the mock file with this session's changes on top. */
+    val sayadCheques
+        get() = (MockData.current.sayad.associateBy { it.sayadId } + current.sayad).values.toList()
+
+    val sayadPending
+        get() = sayadCheques.filter { it.received && it.status == SayadCheque.PENDING }
+
+    val sayadHeld
+        get() = sayadCheques.filter { it.received && it.status == SayadCheque.ACCEPTED }
+
+    private fun sayadChange(cheque: SayadCheque, title: String, party: String): BankResult {
+        val result =
+            request("sayad", title, party, listOf("شناسه صیاد" to cheque.sayadId))
+        if (result is BankResult.Done)
+            session = current.copy(sayad = current.sayad + (cheque.sayadId to cheque))
+        return result
+    }
+
+    fun sayadRegister(id: String, amount: Long, due: String, receiver: String): BankResult {
+        val sayad = latinDigits(id)
+        if (sayadCheques.any { it.sayadId == sayad }) return failure("sayad-duplicate")
+        val cheque = SayadCheque(sayad, amount, due, receiver, false, SayadCheque.REGISTERED)
+        return sayadChange(cheque, "ثبت چک صیادی", receiver)
+    }
+
+    fun sayadAnswer(id: String, accept: Boolean): BankResult {
+        val cheque = sayadPending.find { it.sayadId == id } ?: return failure("sayad-not-found")
+        val status = if (accept) SayadCheque.ACCEPTED else SayadCheque.REJECTED
+        return sayadChange(
+            cheque.copy(status = status),
+            if (accept) "تایید چک دریافتی" else "رد چک دریافتی",
+            cheque.party,
+        )
+    }
+
+    fun sayadTransfer(id: String, receiver: String): BankResult {
+        val cheque = sayadHeld.find { it.sayadId == id } ?: return failure("sayad-not-found")
+        return sayadChange(
+            cheque.copy(status = SayadCheque.TRANSFERRED),
+            "انتقال چک",
+            receiver,
+        )
+    }
+
+    fun sayadInquiry(id: String): BankResult {
+        val sayad = latinDigits(id)
+        val cheque =
+            sayadCheques.find { it.sayadId == sayad } ?: return failure("sayad-not-found")
+        return request(
+            "sayad-inquiry",
+            "استعلام چک",
+            cheque.party,
+            listOf(
+                "شناسه صیاد" to cheque.sayadId,
+                "مبلغ (ریال)" to persianNumber(cheque.amount),
+                "تاریخ سررسید" to cheque.dueDate,
+                "وضعیت" to cheque.status,
+            ),
+        )
+    }
 
     /** A balance inquiry on one of the customer's cards; it changes nothing. */
     fun cardBalance(number: String): BankResult {
