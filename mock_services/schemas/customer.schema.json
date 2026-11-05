@@ -17,7 +17,12 @@
     "dailyLimit",
     "unit",
     "addresses",
-    "inquiries"
+    "inquiries",
+    "wageLimit",
+    "creditProductLimit",
+    "creditProductGuide",
+    "rewardPoints",
+    "rewardHistory"
   ],
   "properties": {
     "name": {
@@ -143,6 +148,33 @@
               "type": "string"
             }
           }
+        }
+      }
+    },
+    "wageLimit": {
+      "type": "integer"
+    },
+    "creditProductLimit": {
+      "type": "integer"
+    },
+    "creditProductGuide": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "rewardPoints": {
+      "type": "integer"
+    },
+    "rewardHistory": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
         }
       }
     }

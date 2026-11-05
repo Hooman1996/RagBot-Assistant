@@ -37,6 +37,8 @@ internal object MockBank {
         val settled: Set<String> = emptySet(),
         val sayad: Map<String, SayadCheque> = emptyMap(),
         val spent: Long = 0,
+        val wageTaken: Long = 0,
+        val pointsSpent: Long = 0,
         val categories: Map<String, Long> = emptyMap(),
         val budgets: Map<String, Long> = emptyMap(),
         val trace: Int = 0,
@@ -166,6 +168,35 @@ internal object MockBank {
     fun invalidSecret() = failure("invalid-secret")
 
     fun incomplete() = failure("incomplete")
+
+    val wageAvailable
+        get() = MockData.current.wageLimit - current.wageTaken
+
+    fun wageAdvance(amount: Long, target: String): BankResult {
+        if (amount > wageAvailable) return failure("wage-over-limit")
+        val result = credit("wage-advance", "مساعده", target, amount)
+        if (result is BankResult.Done)
+            session = current.copy(wageTaken = current.wageTaken + amount)
+        return result
+    }
+
+    /** Points are not money: they have their own balance and never touch an account. */
+    val points
+        get() = MockData.current.rewardPoints - current.pointsSpent
+
+    fun transferPoints(amount: Long, mobile: String): BankResult {
+        if (amount > points) return failure("points-not-enough")
+        val result =
+            request(
+                "rewards-transfer",
+                "انتقال امتیاز",
+                mobile,
+                listOf("امتیاز" to persianNumber(amount)),
+            )
+        if (result is BankResult.Done)
+            session = current.copy(pointsSpent = current.pointsSpent + amount)
+        return result
+    }
 
     /** Spending of this session in one finance category. */
     fun sessionSpending(category: String) = current.categories[category] ?: 0L

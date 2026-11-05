@@ -61,6 +61,12 @@ internal fun LoanPage(
                             Text("تسهیلات در جریان و پرداخت")
                         }
                         OutlinedButton(
+                            { onOpen("S-407") },
+                            Modifier.fillMaxWidth().testTag("loan-credit-product"),
+                        ) {
+                            Text("اعتبار خرید")
+                        }
+                        OutlinedButton(
                             { onOpen("S-287") },
                             Modifier.fillMaxWidth().testTag("loan-request"),
                         ) {

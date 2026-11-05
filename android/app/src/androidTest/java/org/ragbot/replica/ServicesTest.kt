@@ -405,4 +405,67 @@ class ServicesTest {
         shown("S-059")
         compose.onNodeWithText("درخواست ثبت شد").assertExists()
     }
+
+    @Test
+    fun aWageAdvanceCreditsTheChosenAccountWithinItsLimit() {
+        click("demo-entry")
+        click("menu-wage")
+        shown("S-414")
+        next()
+        shown("S-419")
+        fill("amount", "2000000")
+        click("svc-target-account-1")
+        next()
+        shown("S-417")
+        click("svc-agree-yes")
+        next()
+        shown("S-418")
+        confirm()
+        shown("S-183")
+        assert(MockBank.balance("account-1") == 14_500_000L)
+        assert(MockBank.wageAvailable == 48_000_000L)
+    }
+
+    @Test
+    fun theCreditProductActivatesThroughItsGuide() {
+        click("demo-entry")
+        click("menu-loan")
+        click("loan-credit-product")
+        shown("S-407")
+        next()
+        shown("S-406")
+        next()
+        shown("S-408")
+        click("svc-agree-yes")
+        confirm()
+        shown("S-409")
+        compose.onNodeWithText("فعال شد").assertExists()
+    }
+
+    @Test
+    fun rewardPointsMoveWithoutTouchingMoneyAndCannotOverdraw() {
+        click("demo-entry")
+        click("menu-loyalty")
+        shown("S-432")
+        click("svc-menu-rewards-transfer")
+        shown("S-428")
+        fill("mobile", "09010000000")
+        fill("points", "5000")
+        next()
+        shown("S-427")
+        confirm()
+        failure("points-not-enough")
+        click("page-back")
+        fill("points", "200")
+        next()
+        confirm()
+        shown("S-431")
+        assert(MockBank.points == 1_000L)
+        assert(MockBank.balance("account-1") == 12_500_000L)
+        click("bank-receipt-done")
+        click("menu-loyalty")
+        click("svc-menu-rewards-history")
+        shown("S-426")
+        compose.onNodeWithText(persianNumber(1_000L)).assertExists()
+    }
 }
