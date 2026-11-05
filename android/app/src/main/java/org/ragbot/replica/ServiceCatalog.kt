@@ -480,7 +480,76 @@ internal object ServiceCatalog {
             )
         }
 
-    val flows = sayad + vehicle + inquiries + loanRequest
+    private val accountOpening =
+        ServiceFlow(
+            "account-opening",
+            listOf(
+                FlowStep(
+                    "S-062",
+                    "افتتاح حساب",
+                    listOf(
+                        choice("kind", "نوع حساب") {
+                            MockData.current.openable.map { it.first to it.second }
+                        }
+                    ),
+                ),
+                FlowStep(
+                    "S-054",
+                    "اطلاعات تماس",
+                    listOf(
+                        FlowField("mobile", "تلفن همراه", check = digits(11)),
+                        FlowField("email", "ایمیل"),
+                    ),
+                ),
+                FlowStep("S-053", "اطلاعات تکمیلی", listOf(FlowField("job", "شغل"))),
+                FlowStep(
+                    "S-061",
+                    "مدارک هویتی",
+                    listOf(
+                        choice("document", "مرحله نمایشی؛ فایلی بارگذاری نمی‌شود") {
+                            listOf("card" to "کارت ملی نمایشی")
+                        }
+                    ),
+                ),
+                FlowStep(
+                    "S-052",
+                    "انتخاب شعبه",
+                    listOf(
+                        choice("branch", "شعبه") {
+                            MockData.current.branches.map { it.first to it.second }
+                        }
+                    ),
+                ),
+                FlowStep(
+                    "S-058",
+                    "قوانین و مقررات",
+                    listOf(choice("agree", "قوانین") { listOf("yes" to "قوانین را می‌پذیرم") }),
+                ),
+                FlowStep(
+                    "S-057",
+                    "تایید درخواست",
+                    show = { values ->
+                        rows(
+                            "نوع حساب" to
+                                MockData.current.openable.find { it.first == values["kind"] }?.second,
+                            "شعبه" to
+                                MockData.current.branches.find { it.first == values["branch"] }?.second,
+                            "تلفن همراه" to values["mobile"],
+                        )
+                    },
+                ),
+            ),
+            "S-059",
+        ) { values ->
+            MockBank.request(
+                "account-opening",
+                "افتتاح حساب",
+                MockData.current.openable.first { it.first == values["kind"] }.second,
+                listOf("وضعیت" to "درخواست ثبت شد"),
+            )
+        }
+
+    val flows = sayad + vehicle + inquiries + loanRequest + accountOpening
 
     /** Result pages: each shows the receipt of the service that opened it. */
     val results

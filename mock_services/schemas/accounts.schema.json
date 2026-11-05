@@ -6,7 +6,9 @@
   "required": [
     "unit",
     "accounts",
-    "conversion"
+    "conversion",
+    "openable",
+    "branches"
   ],
   "properties": {
     "unit": {
@@ -88,6 +90,44 @@
         },
         "fee": {
           "type": "integer"
+        }
+      }
+    },
+    "openable": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "title"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "branches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "title"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
         }
       }
     }

@@ -370,4 +370,39 @@ class ServicesTest {
         val after = FinanceRules.spending().first { it.category == "bills" }.amount
         assert(after == before + 1_250_000L)
     }
+
+    @Test
+    fun anAccountOpeningApplicationWalksEveryStep() {
+        click("demo-entry")
+        click("menu-open-account")
+        shown("S-062")
+        next()
+        compose.onNodeWithText(PaymentRules.MANDATORY, substring = true).assertExists()
+        click("svc-kind-saving")
+        next()
+        shown("S-054")
+        fill("mobile", "0901")
+        fill("email", "demo@example.test")
+        next()
+        compose.onNodeWithText(PaymentRules.INVALID, substring = true).assertExists()
+        fill("mobile", "09010000000")
+        next()
+        shown("S-053")
+        fill("job", "کارمند")
+        next()
+        shown("S-061")
+        click("svc-document-card")
+        next()
+        shown("S-052")
+        click("svc-branch-north")
+        next()
+        shown("S-058")
+        click("svc-agree-yes")
+        next()
+        shown("S-057")
+        compose.onNodeWithText("شعبه نمایشی شمال").assertExists()
+        confirm()
+        shown("S-059")
+        compose.onNodeWithText("درخواست ثبت شد").assertExists()
+    }
 }

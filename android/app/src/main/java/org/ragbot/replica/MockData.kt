@@ -153,6 +153,11 @@ internal class MockFiles(read: (String) -> Json) {
                 it.str("ownership"),
             )
         }
+    private fun titled(key: String) =
+        accountFile.list(key) { it.str("key") to it.str("title") }
+
+    val openable = titled("openable")
+    val branches = titled("branches")
     val conversion =
         accountFile["conversion"].let {
             ConversionSample(
@@ -632,6 +637,9 @@ internal object MockData {
         checkNotNull(javaClass.classLoader?.getResource("$name.json")) { name }.readText()
     }
     private var files: MockFiles? = null
+
+    val loaded
+        get() = files != null
 
     val current: MockFiles
         get() = files ?: parse().also { files = it }

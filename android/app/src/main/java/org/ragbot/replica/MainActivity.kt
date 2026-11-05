@@ -46,7 +46,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // A launch reads the mock files and starts a fresh session; a rotation keeps both.
-        val error = if (savedInstanceState == null) MockData.load(this) else null
+        val error =
+            if (savedInstanceState == null || !MockData.loaded) MockData.load(this) else null
         if (savedInstanceState == null) MockBank.reset()
         // No incoming Intent data, extras, nested intents or deep links are interpreted.
         setContent {
