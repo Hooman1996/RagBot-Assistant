@@ -54,118 +54,18 @@ data class FileLoan(
 data class CardAction(val key: String, val title: String, val destination: String?)
 
 object CardFixture {
-    val cards =
-        listOf(
-            PreviewCard(
-                "card-1",
-                CardKind.DEBIT,
-                "0000000000000001",
-                HomeFixture.accountOwner,
-                12_500_000L,
-                12_500_000L,
-                HomeFixture.accountNumber,
-                listOf("۰۰۰۰۰۰۰۰۱۱"),
-                HomeFixture.accountIban,
-                isDefault = true,
-            ),
-            PreviewCard(
-                "card-2",
-                CardKind.DEBIT,
-                "0000000000000002",
-                "کاربر نمایشی",
-                0L,
-                3_750_000L,
-                "۰۰۰۰۰۰۰۰۰۲",
-                iban = "IR000000000000000000000002",
-                altLogo = true,
-            ),
-            PreviewCard(
-                "card-3",
-                CardKind.DEBIT,
-                "000000******0003",
-                "کاربر نمایشی",
-                null,
-                null,
-                "۰۰۰۰۰۰۰۰۰۳",
-                iban = "IR000000000000000000000003",
-                status = "غیرفعال",
-                locked = true,
-            ),
-            PreviewCard(
-                "card-4",
-                CardKind.CREDIT,
-                "0000000000000004",
-                HomeFixture.accountOwner,
-                null,
-                null,
-                "۰۰۰۰۰۰۰۰۰۴",
-                iban = "IR000000000000000000000004",
-            ),
-            PreviewCard(
-                "card-5",
-                CardKind.CREDIT,
-                "0000000000000005",
-                HomeFixture.accountOwner,
-                null,
-                null,
-                "۰۰۰۰۰۰۰۰۰۵",
-                iban = "IR000000000000000000000005",
-            ),
-            PreviewCard(
-                "card-6",
-                CardKind.BON,
-                "0000000000000006",
-                HomeFixture.accountOwner,
-                null,
-                null,
-                "۰۰۰۰۰۰۰۰۰۶",
-                iban = "IR000000000000000000000006",
-            ),
-            // Wallet-linked card: the account field holds the synthetic wallet account number.
-            PreviewCard(
-                "card-8",
-                CardKind.WALLET,
-                "0000000000000008",
-                HomeFixture.accountOwner,
-                2_400_000L,
-                null,
-                "۰۰۰۰۰۰۰۰۰۸",
-                iban = "IR000000000000000000000008",
-            ),
-        )
+    val cards
+        get() = MockData.current.cards.map(MockBank::liveCard)
 
     /** Candidate cards offered by the fetch-card review page; never added to any profile. */
-    val candidates =
-        listOf(
-            cards[0],
-            cards[1],
-            PreviewCard(
-                "card-7",
-                CardKind.DEBIT,
-                "0000000000000007",
-                "کاربر نمایشی",
-                null,
-                null,
-                "۰۰۰۰۰۰۰۰۰۷",
-                iban = "IR000000000000000000000007",
-            ),
-        )
+    val candidates
+        get() = cards.take(2) + MockData.current.candidates
 
-    val credit =
-        mapOf(
-            "card-4" to
-                CreditSummary("فعال", 500_000_000L, 320_000_000L, 180_000_000L, 0L, 180_000_000L),
-            "card-5" to CreditSummary("فعال", 200_000_000L, 200_000_000L, 0L, 0L, 0L),
-        )
+    val credit
+        get() = MockData.current.credit
 
-    val fileLoans =
-        mapOf(
-            "card-4" to
-                listOf(
-                    FileLoan("۰۰۰۱", "۱۴۰۵/۰۹/۰۱", 12, 150_000_000L),
-                    FileLoan("۰۰۰۲", "۱۴۰۵/۱۰/۰۱", 6, 30_000_000L),
-                )
-        )
+    val fileLoans
+        get() = MockData.current.fileLoans
 
     // AI-MENU style: deterministic preview configuration; original server menus and order are
     // unknown.

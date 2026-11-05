@@ -66,12 +66,20 @@ class ChequesTest {
         compose.onNodeWithTag("menu-$tile").performScrollTo().performClick()
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun homeChequeMenuOpensBooksWithAnEmptyAccountSummaryAndSearch() {
         home("cheque")
         shown("S-147")
-        click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER")
-        unavailable("استعلام چک")
         click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_CHEQUEBOOK")
         shown("S-142")
         click("cheque-account")
@@ -137,7 +145,7 @@ class ChequesTest {
         compose.onNodeWithText("۱۵۰٬۰۰۰ ریال").assertExists()
         compose.onNodeWithTag("cheque-cardboard-note").assertExists()
         click("payment-submit")
-        unavailable("تایید تراکنش با رمز پویا")
+        otpPrompt()
         compose.onNodeWithTag("otp-code").assertDoesNotExist()
         click("payment-cancel")
         shown("S-143")
@@ -156,12 +164,12 @@ class ChequesTest {
         shown("S-155")
         compose.onNodeWithText("گیرندهٔ نمایشی").assertExists()
         click("cardboard-act")
-        unavailable("تایید درخواست کارتابل")
+        otpPrompt()
         back()
         click("cardboard-task-1")
         shown("S-156")
         click("cardboard-reject")
-        unavailable("رد درخواست کارتابل")
+        otpPrompt()
         back()
         click("cardboard-tab-TRACK")
         compose.onNodeWithTag("cheque-empty").assertExists()

@@ -54,51 +54,20 @@ internal object DigitalChequeRules {
 }
 
 internal object DigitalChequeFixture {
-    const val NOTICE =
-        "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ برنامهٔ خارجی باز نمی‌شود و هیچ چکی واگذار نمی‌شود."
-    const val FEE = 50_000L
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
+    val FEE
+        get() = MockData.current.digitalChequeFee
+
 
     // The service supplies these texts as HTML; synthetic plain text here.
     const val ACTIVATION_TEXT =
         "شرایط نمایشی فعال‌سازی امضای چکاد. متن اصلی از سرویس دریافت می‌شود و امضا با برنامهٔ هامون انجام می‌شود."
     const val UPDATE_TEXT = "شرایط نمایشی همگام‌سازی با هامون. متن اصلی از سرویس دریافت می‌شود."
 
-    val cartable =
-        listOf(
-            DigitalCheque(
-                "0000000000000201",
-                8_000_000L,
-                "۱۴۰۵/۰۹/۱۰",
-                "بانک نمایشی",
-                "شعبه نمایشی",
-                "صادر شده",
-                "بدون ضمانت",
-                "مسدود نشده",
-                "قابل نقد",
-                "پذیرفته شده",
-                "بابت نمایشی",
-                "شرح نمایشی",
-                listOf("کاربر نمایشی"),
-                "IR000000000000000000000201",
-            ),
-            DigitalCheque(
-                "0000000000000202",
-                2_500_000L,
-                "۱۴۰۵/۱۰/۰۱",
-                "بانک نمایشی",
-                "شعبه نمایشی",
-                "صادر شده",
-                "بدون ضمانت",
-                "مسدود نشده",
-                "قابل نقد",
-                "در انتظار پذیرش",
-                "بابت نمایشی دوم",
-                "",
-                listOf("کاربر نمایشی", "دارندهٔ نمایشی"),
-                "IR000000000000000000000202",
-            ),
-        )
+    val cartable
+        get() = MockData.current.digitalCheques
 
     // Cheques assigned to the user, offered by the transfer picker.
-    val assigned = cartable.map { it.sayadId }
+    val assigned
+        get() = cartable.map { it.sayadId }
 }

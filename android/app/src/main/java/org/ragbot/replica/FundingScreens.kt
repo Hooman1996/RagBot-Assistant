@@ -31,6 +31,7 @@ internal fun FundingPage(
     onRetry: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
+    val bank = LocalBank.current
     val flow = FundingFlow.of(page)
     PageFrame(page, "افزایش موجودی", onBack) {
         if (scenario != "populated") {
@@ -88,7 +89,24 @@ internal fun FundingPage(
                             {
                                 if (draft.outcome == FundingOutcome.PENDING && !draft.pendingSeen)
                                     onDraft(draft.copy(pendingSeen = true))
-                                else onOpen(flow.receipt)
+                                else {
+                                    // A confirmed gateway return credits the target.
+                                    val paid =
+                                        draft.outcome == FundingOutcome.SUCCESS ||
+                                            draft.outcome == FundingOutcome.PENDING
+                                    if (
+                                        !paid ||
+                                            bank.accepted(
+                                                MockBank.credit(
+                                                    "funding",
+                                                    "افزایش موجودی",
+                                                    draft.target,
+                                                    FundingRules.amount(draft.amount),
+                                                )
+                                            )
+                                    )
+                                        onOpen(flow.receipt)
+                                }
                             },
                             Modifier.fillMaxWidth().testTag("funding-fetch"),
                         ) {
@@ -235,10 +253,6 @@ private fun FundingReceipt(
     onUnavailable: (String) -> Unit,
 ) {
     val amount = persianNumber(FundingRules.amount(draft.amount))
-    Text(
-        "رسید ساختگی برای بازبینی؛ هیچ مبلغی شارژ نشده است.",
-        Modifier.testTag("funding-receipt-disclosure"),
-    )
     when (draft.outcome) {
         FundingOutcome.SUCCESS,
         FundingOutcome.PENDING ->
@@ -265,9 +279,8 @@ private fun FundingReceipt(
             AccountFixture.accounts.find { it.key == draft.target }?.owner ?: "",
         )
         TransferValue("مبلغ (ریال)", amount)
-        TransferValue("زمان", "۱۴۰۵/۰۸/۱۰ - ۱۰:۰۰")
-        TransferValue("شماره مرجع", "DEMO-REF-0001")
-        TransferValue("شماره پیگیری", FundingFixture.TRACKING)
+        TransferValue("زمان", MockBank.clock())
+                TransferValue("شماره پیگیری", FundingFixture.TRACKING)
         Button(
             { onUnavailable("اشتراک‌گذاری رسید") },
             Modifier.fillMaxWidth().testTag("funding-share"),

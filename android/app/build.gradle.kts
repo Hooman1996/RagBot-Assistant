@@ -14,6 +14,14 @@ val sourceRevision =
         .get()
         .trim()
 val privateResources = providers.gradleProperty("replicaPrivateResources").orNull
+val mockFixtures = rootDir.resolve("../mock_services/fixtures")
+val mockAssets = layout.buildDirectory.dir("generated/mockAssets")
+val copyMockData =
+    tasks.register<Copy>("copyMockData") {
+        from(mockFixtures)
+        include("*.json")
+        into(mockAssets.map { it.dir("mock") })
+    }
 
 android {
     namespace = "org.ragbot.replica"
@@ -46,6 +54,9 @@ android {
         }
         sourceSets.getByName("main").res.directories.add(privateResources)
     }
+    sourceSets.getByName("main").assets.directories.add("build/generated/mockAssets")
+    // JVM tests read the same JSON from their classpath.
+    sourceSets.getByName("test").resources.directories.add(mockFixtures.path)
     lint { abortOnError = true }
 }
 
@@ -60,3 +71,5 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
     testImplementation("junit:junit:4.13.2")
 }
+
+tasks.named("preBuild") { dependsOn(copyMockData) }

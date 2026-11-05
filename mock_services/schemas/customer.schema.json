@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: customer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "customerNumber",
+    "lastLogin",
+    "inviteCode",
+    "nationalCode",
+    "mobile",
+    "username",
+    "password",
+    "otp",
+    "perTransferLimit",
+    "dailyLimit",
+    "unit",
+    "addresses",
+    "inquiries",
+    "wageLimit",
+    "creditProductLimit",
+    "creditProductGuide",
+    "rewardPoints",
+    "rewardHistory"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "customerNumber": {
+      "type": "string"
+    },
+    "lastLogin": {
+      "type": "string"
+    },
+    "inviteCode": {
+      "type": "string"
+    },
+    "nationalCode": {
+      "type": "string"
+    },
+    "mobile": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "password": {
+      "type": "string"
+    },
+    "otp": {
+      "type": "string"
+    },
+    "perTransferLimit": {
+      "type": "integer"
+    },
+    "dailyLimit": {
+      "type": "integer"
+    },
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "addresses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "title",
+          "address",
+          "postalCode"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "inquiries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fee",
+        "report",
+        "reportDetail",
+        "bounced",
+        "bouncedDetail",
+        "rate"
+      ],
+      "properties": {
+        "fee": {
+          "type": "integer"
+        },
+        "report": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "reportDetail": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "bounced": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "bouncedDetail": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "rate": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "wageLimit": {
+      "type": "integer"
+    },
+    "creditProductLimit": {
+      "type": "integer"
+    },
+    "creditProductGuide": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "rewardPoints": {
+      "type": "integer"
+    },
+    "rewardHistory": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

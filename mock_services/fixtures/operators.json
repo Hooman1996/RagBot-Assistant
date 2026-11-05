@@ -1,0 +1,32 @@
+{
+  "unit": "IRR",
+  "operators": [
+    {
+      "operator": "HAMRAH_AVAL",
+      "title": "همراه اول",
+      "min": 50000,
+      "max": 5000000,
+      "multiplier": 50000,
+      "defaults": [100000, 200000, 500000, 1000000],
+      "prefixes": ["0900"]
+    },
+    {
+      "operator": "IRANCELL",
+      "title": "ایرانسل",
+      "min": 50000,
+      "max": 5000000,
+      "multiplier": 50000,
+      "defaults": [100000, 200000, 500000, 1000000],
+      "prefixes": ["0901"]
+    },
+    {
+      "operator": "RIGHTEL",
+      "title": "رایتل",
+      "min": 100000,
+      "max": 2000000,
+      "multiplier": 100000,
+      "defaults": [200000, 500000, 1000000],
+      "prefixes": ["0902"]
+    }
+  ]
+}

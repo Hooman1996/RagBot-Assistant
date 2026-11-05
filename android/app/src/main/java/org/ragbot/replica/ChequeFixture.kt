@@ -179,8 +179,10 @@ internal object ChequeRules {
 }
 
 internal object ChequeFixture {
-    const val NOTICE = "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ درخواست یا عملیات چکی ارسال نمی‌شود."
-    const val FEE = 150_000L
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
+    val FEE
+        get() = MockData.current.chequeFee
+
 
     // Recovered menu keys and targets; titles are server-supplied, so synthetic here.
     val menu =
@@ -227,8 +229,12 @@ internal object ChequeFixture {
                 ChequeDestinations.REPORT_FILTER,
             ),
             WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_CHAKAD", "چکاد", ChequeDestinations.CHAKAD),
-            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_PICHAK_ISSUE_PAPER_CHEQUE", "صدور چک", null),
-            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER", "استعلام چک", null),
+            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_PICHAK_ISSUE_PAPER_CHEQUE", "صدور چک", "S-165"),
+            WalletMenuItem("AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER", "استعلام چک", "S-164"),
+            // Designed for mock: the recovered menu keys for these three are Unknown.
+            WalletMenuItem("DESIGNED_SAYAD_ANSWER", "تایید یا رد چک دریافتی", "S-167"),
+            WalletMenuItem("DESIGNED_SAYAD_TRANSFER", "انتقال چک", "S-172"),
+            WalletMenuItem("DESIGNED_SAYAD_HISTORY", "سوابق چک صیادی", "S-169"),
         )
 
     val chakadMenu =
@@ -258,129 +264,22 @@ internal object ChequeFixture {
             ChequeMedia.DIGITAL to listOf("10", "20"),
         )
 
-    val books =
-        listOf(
-            ChequeBook(
-                "DEMO-BOOK-01",
-                "account-1",
-                25,
-                "534001",
-                "534025",
-                "۱۴۰۵/۰۲/۱۰",
-                "دسته چک کاغذی",
-                listOf(
-                    "نقد شده" to 6,
-                    "ثبت شده" to 3,
-                    "برگشتی و مسدود" to 1,
-                    "قابل استفاده" to 14,
-                    "سایر" to 1,
-                ),
-            ),
-            ChequeBook(
-                "DEMO-BOOK-02",
-                "account-2",
-                10,
-                "229901",
-                "229910",
-                "۱۴۰۵/۰۶/۰۱",
-                "دسته چک دیجیتال",
-                listOf(
-                    "نقد شده" to 0,
-                    "ثبت شده" to 1,
-                    "برگشتی و مسدود" to 0,
-                    "قابل استفاده" to 9,
-                    "سایر" to 0,
-                ),
-            ),
-        )
+    val books
+        get() = MockData.current.books
 
     // Status descriptions come from the server; these are synthetic.
     fun cheques(book: ChequeBook): List<ChequePaper> =
-        (0 until 4).map { i ->
-            val no = (book.startNo.toLong() + i).toString()
-            val (status, amount) =
-                when (i) {
-                    0 -> "نقد شده" to 12_500_000L
-                    1 -> "برگشتی" to 3_000_000L
-                    2 -> "ثبت شده" to 7_250_000L
-                    else -> "استفاده نشده" to null
-                }
-            ChequePaper(
-                no,
-                amount,
-                "00000000000${100 + i}",
-                "شعبه نمایشی",
-                "۱۴۰۵/۰۷/${persianNumber(10L + i)}",
-                status,
-                "۱۴۰۵/۰۷/${persianNumber(20L + i)}",
-            )
-        }
+        MockData.current.papers[book.reference].orEmpty()
 
-    val report =
-        listOf(
-            TransferredCheque("880001", 4_000_000L, "۱۴۰۵/۰۷/۰۵", "INTERNAL", "PASSED"),
-            TransferredCheque("880002", 9_500_000L, "۱۴۰۵/۰۷/۰۸", "INTERNAL", "PASSED"),
-            TransferredCheque("880003", 1_800_000L, "۱۴۰۵/۰۷/۰۹", "INTERNAL", "RETURNED"),
-            TransferredCheque("990001", 2_200_000L, "۱۴۰۵/۰۷/۱۱", "OTHER", "PASSED"),
-            TransferredCheque("990002", 6_000_000L, "۱۴۰۵/۰۷/۱۲", "OTHER", "RECEIVING"),
-        )
+    val report
+        get() = MockData.current.chequeReport
 
-    val issuance =
-        listOf(
-            IssuanceRecord(
-                "DEMO-TRACE-201",
-                "account-1",
-                ChequeMedia.PAPER,
-                "25",
-                "۱۴۰۵/۰۷/۰۱",
-                "در حال بررسی",
-                null,
-            ),
-            IssuanceRecord(
-                "DEMO-TRACE-202",
-                "account-2",
-                ChequeMedia.DIGITAL,
-                "10",
-                "۱۴۰۵/۰۶/۲۰",
-                "رد شده",
-                "دلیل رد نمایشی",
-            ),
-        )
+    val issuance
+        get() = MockData.current.issuance
 
     // Recovered tabs: waiting, track and done.
     val tabs = listOf("WAITING" to "در انتظار اقدام", "TRACK" to "پیگیری", "DONE" to "انجام شده")
 
-    val tasks =
-        listOf(
-            WorkflowTask(
-                "task-1",
-                "WAITING",
-                "cheque_book_request_process",
-                "درخواست دسته چک",
-                "عضو نمایشی",
-                "۱۴۰۵/۰۷/۲۵",
-                "در انتظار تایید",
-                ChequeFixture.FEE,
-            ),
-            WorkflowTask(
-                "task-2",
-                "WAITING",
-                "pichak_issue_process",
-                "صدور چک کاغذی",
-                "عضو نمایشی",
-                "۱۴۰۵/۰۷/۲۶",
-                "در انتظار تایید",
-                5_000_000L,
-            ),
-            WorkflowTask(
-                "task-3",
-                "DONE",
-                "cheque_book_request_process",
-                "درخواست دسته چک",
-                "کاربر نمایشی",
-                "۱۴۰۵/۰۶/۱۰",
-                "تایید شده",
-                ChequeFixture.FEE,
-            ),
-        )
+    val tasks
+        get() = MockData.current.tasks
 }

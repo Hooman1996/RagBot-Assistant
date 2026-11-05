@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: vehicles",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "records",
+    "inquiryFee",
+    "commission",
+    "duesPlate",
+    "tolls",
+    "quotaAllowed",
+    "quotaRemaining",
+    "consumed",
+    "violations",
+    "transferTax",
+    "documents",
+    "activePlates",
+    "licences",
+    "negativePoints"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "mine",
+          "ownerCode",
+          "ownerMobile",
+          "plate",
+          "automobile",
+          "licence"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "mine": {
+            "type": "boolean"
+          },
+          "ownerCode": {
+            "type": "string"
+          },
+          "ownerMobile": {
+            "type": "string"
+          },
+          "plate": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "automobile": {
+            "type": "boolean"
+          },
+          "licence": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "inquiryFee": {
+      "type": "integer"
+    },
+    "commission": {
+      "type": "integer"
+    },
+    "duesPlate": {
+      "type": "string"
+    },
+    "tolls": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "title",
+            "price",
+            "penalty",
+            "frazzle"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "price": {
+              "type": "integer"
+            },
+            "penalty": {
+              "type": "integer"
+            },
+            "frazzle": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "quotaAllowed": {
+      "type": "integer"
+    },
+    "quotaRemaining": {
+      "type": "integer"
+    },
+    "consumed": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer"
+        }
+      }
+    },
+    "violations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "title",
+            "date",
+            "amount"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            },
+            "amount": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "transferTax": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "documents": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "activePlates": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "licences": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "negativePoints": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

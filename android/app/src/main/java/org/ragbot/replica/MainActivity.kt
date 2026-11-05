@@ -45,8 +45,18 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // A launch reads the mock files and starts a fresh session; a rotation keeps both.
+        val error =
+            if (savedInstanceState == null || !MockData.loaded) MockData.load(this) else null
+        if (savedInstanceState == null) MockBank.reset()
         // No incoming Intent data, extras, nested intents or deep links are interpreted.
-        setContent { ReplicaApp() }
+        setContent {
+            if (error != null)
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    MockDataErrorPage(error)
+                }
+            else ReplicaApp()
+        }
     }
 }
 
@@ -60,6 +70,11 @@ fun ReplicaApp() {
         mutableStateOf<List<String>>(HomeFixture.services.map { it.key })
     }
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
+    var serviceKey by rememberSaveable { mutableStateOf("") }
+    var budgetCategory by rememberSaveable { mutableStateOf("") }
+    var serviceValues by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
+    var bankFailure by rememberSaveable { mutableStateOf<String?>(null) }
+    var bankDone by rememberSaveable { mutableStateOf<String?>(null) }
     val navigation = remember { HomeNavigation() }
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -185,6 +200,10 @@ fun ReplicaApp() {
             if (id == DigitalChequeDestinations.TRANSFER) digitalTransfer = DigitalTransferDraft()
             if (id == DigitalChequeDestinations.ACTIVATION) digitalActive = false
         }
+        ServiceCatalog.starting(id)?.let {
+            serviceKey = it.key
+            serviceValues = emptyMap()
+        }
         focus.clearFocus()
         keyboard?.hide()
         stack = stack + id
@@ -196,8 +215,11 @@ fun ReplicaApp() {
     }
     fun goBack() {
         val leavingPickerReview = pickerReview && stack.last() == SavedDestinationRoutes.PICKER
+        // Backing out of login leaves the app's front page; it never skips into Home.
+        val leavingLogin = stack.size == 2 && stack.last() == LoginDestinations.INTRO
         forgetPage(stack.last())
         stack = stack.dropLast(1)
+        if (leavingLogin) entered = false
         if (leavingPickerReview) {
             focus.clearFocus()
             keyboard?.hide()
@@ -250,6 +272,36 @@ fun ReplicaApp() {
             )
         groupCancel = false
     }
+    // A finished service leaves its flow: Back from the receipt goes Home and cannot resubmit.
+    fun finishBank(result: BankResult, receipt: String?) {
+        if (result is BankResult.Failed) {
+            bankFailure = result.message
+            return
+        }
+        if (receipt != null) check(ReplicaGraph.declared(stack.last(), receipt))
+        focus.clearFocus()
+        keyboard?.hide()
+        stack.drop(1).forEach(::forgetPage)
+        stack = listOfNotNull(HomeDestinations.HOME, receipt)
+        cardTransferDrafts = emptyMap()
+        accountTransferDrafts = emptyMap()
+        billDrafts = emptyMap()
+        topUpDrafts = emptyMap()
+        charityDraft = null
+        walletOperationDrafts = emptyMap()
+        walletPreview = null
+        creditRepayment = null
+        groupDraft = GroupTransferDraft()
+        tollDraft = TollDraft()
+        if (receipt == null)
+            bankDone =
+                (result as BankResult.Done).receipt.let { done ->
+                    (listOf("${done.title} · ${done.trace}") +
+                            done.rows.map { "${it.first}: ${it.second}" })
+                        .joinToString("\n")
+                }
+    }
+    val bankActions = remember { BankActions { result, page -> finishBank(result, page) } }
     fun unavailable(title: String) {
         notice = "$title در این پیش‌نمایش آماده نیست. در همین صفحه می‌مانید."
     }
@@ -330,6 +382,7 @@ fun ReplicaApp() {
     CompositionLocalProvider(
         LocalLayoutDirection provides LayoutDirection.Rtl,
         LocalPageValues provides pageValues,
+        LocalBank provides bankActions,
     ) {
         MaterialTheme(
             colorScheme =
@@ -402,6 +455,15 @@ fun ReplicaApp() {
                             }
                         }
 
+                        Button(
+                            {
+                                entered = true
+                                open(LoginDestinations.INTRO)
+                            },
+                            Modifier.testTag("login-start"),
+                        ) {
+                            Text("ورود با کاربر نمایشی")
+                        }
                         Button(
                             onClick = { entered = navigation.navigate(HomeDestinations.HOME) },
                             Modifier.testTag("demo-entry"),
@@ -480,13 +542,16 @@ fun ReplicaApp() {
                                         open(ChequeDestinations.CARDBOARD)
                                     // VH-RECOVERY: the car-inquiry key opens the vehicle menu.
                                     else if (item.key == "vehicle") open(VehicleDestinations.MENU)
-                                    else if (item.key in tracedHomeTiles)
-                                        open(tracedHomeTiles.getValue(item.key))
+                                    else if (item.key in tracedHomeTiles + designedHomeTiles)
+                                        open((tracedHomeTiles + designedHomeTiles).getValue(item.key))
                                     else
                                         notice =
                                             "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
                                 },
-                                { unavailable("جزئیات تراکنش خانه") },
+                                { key ->
+                                    transactionKey = key
+                                    open(AccountDestinations.TRANSACTION)
+                                },
                                 { demoMenu = true },
                                 account,
                                 tab,
@@ -579,9 +644,53 @@ fun ReplicaApp() {
                                     HomeControl.SEARCH -> open(ShortcutDestinations.SCREEN)
                                     HomeControl.SHORTCUTS ->
                                         open(RecurringTransferDestinations.REPETITIVE)
+                                    HomeControl.LOGOUT -> open(LoginDestinations.LOGIN)
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in FinanceDestinations.implemented) {
+                            FinancePage(page, budgetCategory, { budgetCategory = it }, ::open, ::goBack)
+                        } else if (page in LoginDestinations.implemented) {
+                            LoginPage(
+                                page,
+                                ::open,
+                                {
+                                    stack.drop(1).forEach(::forgetPage)
+                                    stack = listOf(HomeDestinations.HOME)
+                                    tab = HomeControl.HOME
+                                },
+                                ::goBack,
+                            )
+                        } else if (page in ServiceCatalog.pages) {
+                            ServicePage(
+                                ServiceCatalog.flow(serviceKey),
+                                page,
+                                serviceValues,
+                                { serviceValues = it },
+                                ::open,
+                                ::goBack,
+                            )
+                        } else if (page in ServiceCatalog.results) {
+                            ServiceResultPage(
+                                page,
+                                ServiceCatalog.flows.find { it.result == page }?.detail,
+                                ::open,
+                                ::goBack,
+                                ::unavailable,
+                            )
+                        } else if (page in ServiceCatalog.menus) {
+                            val (title, entries) = ServiceCatalog.menus.getValue(page)
+                            MenuPage(
+                                page,
+                                title,
+                                entries,
+                                { key, to ->
+                                    serviceKey = key
+                                    serviceValues = emptyMap()
+                                    open(to)
+                                },
+                                ::goBack,
+                            )
                         } else if (page in CardTransferDestinations.implemented) {
                             CardTransferPage(
                                 page,
@@ -743,6 +852,14 @@ fun ReplicaApp() {
                                                 if (record.mine) "" else record.ownerMobile,
                                             )
                                     open(service.inquiry)
+                                },
+                                { record ->
+                                    val flow =
+                                        ServiceCatalog.flow(
+                                            ServiceCatalog.vehicleMenu.getValue(vehicleMenuKey)
+                                        )
+                                    open(flow.steps.first().page)
+                                    if (record != null) serviceValues = mapOf("record" to record.id)
                                 },
                                 ::open,
                                 ::goBack,
@@ -1117,6 +1234,33 @@ fun ReplicaApp() {
                         )
                     }
                 }
+                bankFailure?.let { message ->
+                    AlertDialog(
+                        onDismissRequest = { bankFailure = null },
+                        title = { Text("عملیات ناموفق") },
+                        text = { Text(message, Modifier.testTag("bank-failure")) },
+                        confirmButton = {
+                            TextButton(
+                                { bankFailure = null },
+                                Modifier.testTag("bank-failure-close"),
+                            ) {
+                                Text("بستن")
+                            }
+                        },
+                    )
+                }
+                bankDone?.let { message ->
+                    AlertDialog(
+                        onDismissRequest = { bankDone = null },
+                        title = { Text("عملیات موفق") },
+                        text = { Text(message, Modifier.testTag("bank-done")) },
+                        confirmButton = {
+                            TextButton({ bankDone = null }, Modifier.testTag("bank-done-close")) {
+                                Text("بستن")
+                            }
+                        },
+                    )
+                }
                 notice?.let { message ->
                     AlertDialog(
                         onDismissRequest = { notice = null },
@@ -1147,7 +1291,7 @@ private fun HomeFrame(
     toggleHeader: () -> Unit,
     onEdit: () -> Unit,
     onMenu: (HomeMenuItem) -> Unit,
-    onTransaction: () -> Unit,
+    onTransaction: (String) -> Unit,
     onDemoMenu: () -> Unit,
     account: PreviewAccount?,
     tab: HomeControl,

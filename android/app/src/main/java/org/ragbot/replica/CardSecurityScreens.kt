@@ -30,8 +30,11 @@ object CardSecurityDestinations {
 }
 
 /** CS-FIXTURE: the OTP is a fixed local code and the phone is synthetic; Designed for mock. */
-internal const val PREVIEW_OTP = "12345"
-private const val PREVIEW_PHONE = "۰۹۰۰۰۰۰۰۰۰۰"
+internal val PREVIEW_OTP
+    get() = MockData.current.customer.otp
+
+private val PREVIEW_PHONE
+    get() = MockData.current.customer.mobile
 
 /** CS-PIN: one section per recovered PIN operation. */
 enum class PinOperation(val title: String, val second: Boolean, val change: Boolean) {
@@ -74,7 +77,7 @@ internal fun MockResult(text: String, onDone: () -> Unit) {
         text = {
             Column(Modifier.semantics(mergeDescendants = true) {}.testTag("security-result")) {
                 Text(text)
-                Text("در این نسخه نمایشی هیچ تغییری روی کارت انجام نشد.")
+                Text("این نتیجه از بانک نمایشی محلی آمده است.")
                 Text("طراحی برای ماک", fontSize = 11.sp, color = Color.Gray)
             }
         },
@@ -157,6 +160,7 @@ internal fun CardSecurityPage(
 /** S-121: pick a card of the incoming group, confirm the recovered warning; no OTP. */
 @Composable
 private fun BlockCard(kind: CardKind, onDone: () -> Unit) {
+    val bank = LocalBank.current
     var selected by rememberSaveable { mutableStateOf<String?>(null) }
     var done by rememberSaveable { mutableStateOf(false) }
     Text("یک کارت را جهت مسدود کردن، انتخاب کنید:", fontSize = 14.sp)
@@ -188,7 +192,20 @@ private fun BlockCard(kind: CardKind, onDone: () -> Unit) {
                 }
             },
             confirmButton = {
-                TextButton({ done = true }, Modifier.testTag("block-ok")) { Text("تایید") }
+                TextButton(
+                    {
+                        if (
+                            bank.accepted(
+                                MockBank.request("card-block", "مسدودی کارت", card.number)
+                            )
+                        )
+                            done = true
+                        else selected = null
+                    },
+                    Modifier.testTag("block-ok"),
+                ) {
+                    Text("تایید")
+                }
             },
             dismissButton = { TextButton({ selected = null }) { Text("انصراف") } },
         )

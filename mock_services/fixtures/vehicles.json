@@ -1,0 +1,220 @@
+{
+  "unit": "IRR",
+  "records": [
+    {
+      "id": "plate-1",
+      "kind": "plate",
+      "mine": true,
+      "ownerCode": "0000000019",
+      "ownerMobile": "09000000001",
+      "plate": [
+        "12",
+        "ب",
+        "345",
+        "67"
+      ],
+      "automobile": true,
+      "licence": ""
+    },
+    {
+      "id": "plate-2",
+      "kind": "plate",
+      "mine": false,
+      "ownerCode": "0000000027",
+      "ownerMobile": "09000000002",
+      "plate": [
+        "123",
+        "45678"
+      ],
+      "automobile": false,
+      "licence": ""
+    },
+    {
+      "id": "contact-1",
+      "kind": "contact",
+      "mine": true,
+      "ownerCode": "0000000019",
+      "ownerMobile": "09000000001",
+      "plate": [],
+      "automobile": true,
+      "licence": ""
+    },
+    {
+      "id": "contact-2",
+      "kind": "contact",
+      "mine": false,
+      "ownerCode": "0000000035",
+      "ownerMobile": "09000000003",
+      "plate": [],
+      "automobile": true,
+      "licence": ""
+    },
+    {
+      "id": "licence-1",
+      "kind": "licence",
+      "mine": true,
+      "ownerCode": "0000000019",
+      "ownerMobile": "09000000001",
+      "plate": [],
+      "automobile": true,
+      "licence": "9000000001"
+    }
+  ],
+  "inquiryFee": 5000,
+  "commission": 10000,
+  "duesPlate": "120234567",
+  "tolls": {
+    "ANNUAL": [
+      {
+        "id": "annual-1404",
+        "title": "عوارض سال ۱۴۰۴",
+        "price": 450000,
+        "penalty": 45000,
+        "frazzle": 20000
+      },
+      {
+        "id": "annual-1405",
+        "title": "عوارض سال ۱۴۰۵",
+        "price": 500000,
+        "penalty": 0,
+        "frazzle": 0
+      }
+    ],
+    "TRAFFIC": [
+      {
+        "id": "traffic-1",
+        "title": "۱۴۰۵/۰۷/۲۰",
+        "price": 120000,
+        "penalty": 0,
+        "frazzle": 0
+      },
+      {
+        "id": "traffic-2",
+        "title": "۱۴۰۵/۰۷/۲۳",
+        "price": 85000,
+        "penalty": 0,
+        "frazzle": 0
+      },
+      {
+        "id": "traffic-3",
+        "title": "۱۴۰۵/۰۸/۰۲",
+        "price": 240000,
+        "penalty": 0,
+        "frazzle": 0
+      }
+    ],
+    "FREEWAY": [
+      {
+        "id": "freeway-1",
+        "title": "۱۴۰۵/۰۷/۱۵",
+        "price": 36000,
+        "penalty": 0,
+        "frazzle": 0
+      },
+      {
+        "id": "freeway-2",
+        "title": "۱۴۰۵/۰۸/۰۱",
+        "price": 52000,
+        "penalty": 0,
+        "frazzle": 0
+      }
+    ],
+    "POLLUTION": []
+  },
+  "quotaAllowed": 20,
+  "quotaRemaining": 7,
+  "consumed": [
+    [
+      1405,
+      2,
+      8
+    ],
+    [
+      1405,
+      3,
+      5
+    ]
+  ],
+  "violations": {
+    "plate-1": [
+      {
+        "id": "violation-1",
+        "title": "سرعت غیرمجاز",
+        "date": "۱۴۰۵/۰۷/۰۲",
+        "amount": 1500000
+      },
+      {
+        "id": "violation-2",
+        "title": "توقف ممنوع",
+        "date": "۱۴۰۵/۰۷/۱۸",
+        "amount": 500000
+      }
+    ],
+    "plate-2": []
+  },
+  "transferTax": {
+    "plate-1": 3500000,
+    "plate-2": 900000
+  },
+  "documents": {
+    "plate-1": [
+      [
+        "کارت خودرو",
+        "صادر شده"
+      ],
+      [
+        "سند خودرو",
+        "در حال صدور"
+      ]
+    ],
+    "plate-2": [
+      [
+        "کارت موتور",
+        "صادر شده"
+      ]
+    ]
+  },
+  "activePlates": {
+    "contact-1": [
+      [
+        "پلاک فعال",
+        "12 ب 345 ایران 67"
+      ]
+    ],
+    "contact-2": []
+  },
+  "licences": {
+    "contact-1": [
+      [
+        "شماره گواهینامه",
+        "9000000001"
+      ],
+      [
+        "وضعیت",
+        "معتبر"
+      ],
+      [
+        "تاریخ اعتبار",
+        "۱۴۰۹/۰۳/۱۰"
+      ]
+    ],
+    "contact-2": [
+      [
+        "وضعیت",
+        "بدون گواهینامه"
+      ]
+    ]
+  },
+  "negativePoints": {
+    "licence-1": [
+      [
+        "نمره منفی",
+        "۱۲"
+      ],
+      [
+        "سقف مجاز",
+        "۳۰"
+      ]
+    ]
+  }
+}

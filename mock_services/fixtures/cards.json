@@ -1,0 +1,173 @@
+{
+  "unit": "IRR",
+  "cards": [
+    {
+      "key": "card-1",
+      "kind": "DEBIT",
+      "number": "0000000000000018",
+      "owner": "کاربر نمایشی",
+      "cardBalance": 12500000,
+      "accountBalance": 12500000,
+      "primaryAccount": "۰۰۰۰۰۰۰۰۰۱",
+      "otherAccounts": ["۰۰۰۰۰۰۰۰۱۱"],
+      "iban": "IR490000000000000000000000",
+      "status": "فعال",
+      "isDefault": true,
+      "altLogo": false,
+      "locked": false,
+      "unit": "IRR"
+    },
+    {
+      "key": "card-2",
+      "kind": "DEBIT",
+      "number": "0000000000000026",
+      "owner": "کاربر نمایشی",
+      "cardBalance": 0,
+      "accountBalance": 3750000,
+      "primaryAccount": "۰۰۰۰۰۰۰۰۰۲",
+      "otherAccounts": [],
+      "iban": "IR920000000000000000000002",
+      "status": "فعال",
+      "isDefault": false,
+      "altLogo": true,
+      "locked": false,
+      "unit": "IRR"
+    },
+    {
+      "key": "card-3",
+      "kind": "DEBIT",
+      "number": "000000******0034",
+      "owner": "کاربر نمایشی",
+      "cardBalance": null,
+      "accountBalance": null,
+      "primaryAccount": "۰۰۰۰۰۰۰۰۰۳",
+      "otherAccounts": [],
+      "iban": "IR650000000000000000000003",
+      "status": "غیرفعال",
+      "isDefault": false,
+      "altLogo": false,
+      "locked": true,
+      "unit": "IRR"
+    },
+    {
+      "key": "card-4",
+      "kind": "CREDIT",
+      "number": "0000000000000042",
+      "owner": "کاربر نمایشی",
+      "cardBalance": null,
+      "accountBalance": null,
+      "primaryAccount": "۰۰۰۰۰۰۰۰۰۴",
+      "otherAccounts": [],
+      "iban": "IR380000000000000000000004",
+      "status": "فعال",
+      "isDefault": false,
+      "altLogo": false,
+      "locked": false,
+      "unit": "IRR"
+    },
+    {
+      "key": "card-5",
+      "kind": "CREDIT",
+      "number": "0000000000000059",
+      "owner": "کاربر نمایشی",
+      "cardBalance": null,
+      "accountBalance": null,
+      "primaryAccount": "۰۰۰۰۰۰۰۰۰۵",
+      "otherAccounts": [],
+      "iban": "IR110000000000000000000005",
+      "status": "فعال",
+      "isDefault": false,
+      "altLogo": false,
+      "locked": false,
+      "unit": "IRR"
+    },
+    {
+      "key": "card-6",
+      "kind": "BON",
+      "number": "0000000000000067",
+      "owner": "کاربر نمایشی",
+      "cardBalance": null,
+      "accountBalance": null,
+      "primaryAccount": "۰۰۰۰۰۰۰۰۰۶",
+      "otherAccounts": [],
+      "iban": "IR810000000000000000000006",
+      "status": "فعال",
+      "isDefault": false,
+      "altLogo": false,
+      "locked": false,
+      "unit": "IRR"
+    },
+    {
+      "key": "card-8",
+      "kind": "WALLET",
+      "number": "0000000000000083",
+      "owner": "کاربر نمایشی",
+      "cardBalance": 2400000,
+      "accountBalance": null,
+      "primaryAccount": "۰۰۰۰۰۰۰۰۰۸",
+      "otherAccounts": [],
+      "iban": "IR270000000000000000000008",
+      "status": "فعال",
+      "isDefault": false,
+      "altLogo": false,
+      "locked": false,
+      "unit": "IRR"
+    }
+  ],
+  "candidates": [
+    {
+      "key": "card-7",
+      "kind": "DEBIT",
+      "number": "0000000000000075",
+      "owner": "کاربر نمایشی",
+      "cardBalance": null,
+      "accountBalance": null,
+      "primaryAccount": "۰۰۰۰۰۰۰۰۰۷",
+      "otherAccounts": [],
+      "iban": "IR540000000000000000000007",
+      "status": "فعال",
+      "isDefault": false,
+      "altLogo": false,
+      "locked": false,
+      "unit": "IRR"
+    }
+  ],
+  "credit": {
+    "card-4": {
+      "state": "فعال",
+      "creditLimit": 500000000,
+      "remainingCredit": 320000000,
+      "usedAmount": 180000000,
+      "overdueDebt": 0,
+      "totalPayable": 180000000,
+      "unit": "IRR"
+    },
+    "card-5": {
+      "state": "فعال",
+      "creditLimit": 200000000,
+      "remainingCredit": 200000000,
+      "usedAmount": 0,
+      "overdueDebt": 0,
+      "totalPayable": 0,
+      "unit": "IRR"
+    }
+  },
+  "fileLoans": {
+    "card-4": [
+      {
+        "fileNumber": "۰۰۰۱",
+        "dueDate": "۱۴۰۵/۰۹/۰۱",
+        "instalments": 12,
+        "remaining": 150000000,
+        "unit": "IRR"
+      },
+      {
+        "fileNumber": "۰۰۰۲",
+        "dueDate": "۱۴۰۵/۱۰/۰۱",
+        "instalments": 6,
+        "remaining": 30000000,
+        "unit": "IRR"
+      }
+    ]
+  }
+}

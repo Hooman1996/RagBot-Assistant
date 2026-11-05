@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: wallets",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "wallets",
+    "destinations",
+    "statement"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "wallets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "number",
+          "title",
+          "owner",
+          "holderType",
+          "status",
+          "statusDescription",
+          "individual",
+          "balance"
+        ],
+        "properties": {
+          "number": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "holderType": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "statusDescription": {
+            "type": "string"
+          },
+          "individual": {
+            "type": "boolean"
+          },
+          "balance": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "destinations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "statement": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "amount",
+          "credit",
+          "balanceOffset",
+          "type",
+          "typeDescription",
+          "daysAgo",
+          "time",
+          "traceId",
+          "transactionId",
+          "participant",
+          "participantName",
+          "description"
+        ],
+        "properties": {
+          "amount": {
+            "type": "integer"
+          },
+          "credit": {
+            "type": "boolean"
+          },
+          "balanceOffset": {
+            "type": "integer"
+          },
+          "type": {
+            "type": "string"
+          },
+          "typeDescription": {
+            "type": "string"
+          },
+          "daysAgo": {
+            "type": "integer"
+          },
+          "time": {
+            "type": "string"
+          },
+          "traceId": {
+            "type": "string"
+          },
+          "transactionId": {
+            "type": "string"
+          },
+          "participant": {
+            "type": "string"
+          },
+          "participantName": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

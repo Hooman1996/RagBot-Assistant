@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 5 November 2026. This page is updated whenever a task changes state.
+Last updated: 6 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Next are the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the interactive graph (#94), all approved. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
 
@@ -26,7 +26,8 @@ approval of the replica.
 | P0: Foundation and readiness | Done | [P0](phases/P0-foundation.md) | 8 of 8 tasks done |
 | P1a: Reverse engineering and whole-app catalogue | Done | [P1](phases/P1-apk-investigation.md) | P1a-01…05 done; inventory, graph and API map in `app_profiles/` |
 | Reconstruct the frontend (core journeys, D-021) | Done | [sequence](plan/revised-build-sequence.md) | Stage 1 (D-020); #40 foundation, #42 Home, #44 FR-02 accounts, #46 FR-03 cards, #48/#50/#52 FR-04a–c card requests, blocking/PIN and wallet cards and #54 FR-05 profile/settings plus #56 FR-06 notifications/support and #58 FR-07 saved destinations/shortcuts and #60 FR-08 individual transfer previews and #62 FR-09 group transfer previews and #64 FR-10 recurring/continuous transfer previews and #66 FR-11 bill/insurance/credit repayment previews and #68 FR-12 mobile top-up/charity previews and #70 FR-13 wallet overview/QR/history previews and #73 FR-35 loans/repayment review and #74 FR-23 identifier conversion and #75 FR-14 wallet operations and #76 FR-15 account/wallet funding and #77 FR-19 cheques/chequebook requests and #78 FR-20 digital cheques and #79 FR-16 vehicle hub and #80 FR-17 road tolls done; the D-021 Stage 1 batches are complete, the rest deferred; recheck in the [readiness report](reports/stage1-readiness.md) (#91) |
-| Complete replica on mock data (D-022) | In progress | [decision](decisions/0022-complete-replica-with-mock-data.md) | Parts 2 to 4 on `sub/replica-complete` |
+| Complete replica on mock data (D-022) | Done | [report](reports/replica-complete.md) | Waiting for the owner's approval of the replica before #93 and #94 |
+| Mock data and mock bank (#102) | Done | [runbook](runbook/mock-data.md) | All synthetic records are JSON under `mock_services/fixtures/`; every service calls the local mock bank |
 | Replica bridge and interactive graph (Stages 2 and 3) | Waiting for owner approval of the replica | [sequence](plan/revised-build-sequence.md) | #92, #93, #94 (`sub/bridge-graph` is recreated later); they must close the gaps in the [readiness report](reports/stage1-readiness.md) |
 | P1b: Owner picks the features | Planned | [P1](phases/P1-apk-investigation.md) | D-021: every built journey is a feature; deferred batches can be picked later |
 | P1c: Navigation prototype | Dropped | [P1](phases/P1-apk-investigation.md) | Superseded by the live replica + bridge (D-020) |

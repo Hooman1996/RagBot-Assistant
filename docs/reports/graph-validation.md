@@ -122,7 +122,7 @@ screen shows.
 | S-241 | … > عوارض سالیانه خودرو و موتور | yes | Replica route, label updated |
 | S-275, S-250 | … > عوارض آزادراهی خودرو و موتور | yes | S-250 route, label updated, note 11 |
 
-## Every edge (243)
+## Every edge (330)
 
 | From | To | Control | Type | Graph | Real-app taps | Owner checked |
 |---|---|---|---|---|---|---|
@@ -135,10 +135,17 @@ screen shows.
 | S-026 Home: main | S-084 Shortcuts: shortcut home | `header-SEARCH` | Replica route | None |  | not found in the real app |
 | S-026 Home: main | S-200 Recurring transfers: repetitive transactions home | `header-SHORTCUTS` | Replica route | None |  | not found in the real app |
 | S-026 Home: main | S-222 Balance top-up: increase account balance amount standalone | `home-increase` | Replica route | None |  | yes |
+| S-436 Finance manager: main | S-434 Finance manager: budget | `finance-budgets` | Replica route | None |  |  |
+| S-434 Finance manager: budget | S-435 Finance manager: budget detail | `budget-*` | Replica route | None |  |  |
+| S-026 Home: main | S-027 Login | `header-LOGOUT` | Replica route | None |  |  |
+| S-048 Intro | S-049 Intro: welcome | `intro-next` | Replica route | None |  |  |
+| S-049 Intro: welcome | S-027 Login | `welcome-login` | Replica route | None |  |  |
+| S-027 Login | S-026 Home: main | `login-submit` | User-only step | Recovered |  |  |
 | S-026 Home: main | S-063 Profile: account management | `expand-account > home-account-management` | Replica route | None |  | yes |
 | S-026 Home: main | S-085 Accounts: account list | `control-ACCOUNT > account-list` | Replica route | None |  | yes |
 | S-026 Home: main | S-016 Statement: statement list | `control-ACCOUNT > account-statement` | Owner-traced | None | Home > صورتحساب | yes |
 | S-026 Home: main | S-063 Profile: account management | `control-ACCOUNT > account-management` | Replica route | None |  | yes |
+| S-026 Home: main | S-090 Transactions: transaction info | `transaction-*` | Replica route | None |  |  |
 | S-026 Home: main | S-174 Transfer: anonymous card transfer | `menu-card-transfer` | Owner-traced | None | Home > کارت به کارت | yes |
 | S-026 Home: main | S-193 Transfer: menu transfer | `menu-transfer` | Replica route | Recovered | Home → انتقال وجه | yes |
 | S-026 Home: main | S-211 Mobile top-up: charge by account | `menu-topup` | Owner-traced | Recovered | Home > شارژ | yes |
@@ -150,6 +157,11 @@ screen shows.
 | S-026 Home: main | S-201 IBAN conversion: convert iban login | `menu-conversion` | Owner-traced | None | Home > تبدیل بانکی | yes |
 | S-026 Home: main | S-403 Insurance: insurance menu | `menu-insurance` | Owner-traced | None | Home > بیمه | yes |
 | S-026 Home: main | S-091 Transactions: transaction list | `menu-history` | Replica route | None |  |  |
+| S-026 Home: main | S-443 Inquiries: inquiries menu | `menu-inquiry` | Replica route | None |  |  |
+| S-026 Home: main | S-062 Account opening: information | `menu-open-account` | Replica route | None |  |  |
+| S-026 Home: main | S-436 Finance manager: main | `menu-performance` | Replica route | None |  |  |
+| S-026 Home: main | S-414 Wage advance: dashboard | `menu-wage` | Replica route | None |  |  |
+| S-026 Home: main | S-432 Loyalty club: home | `menu-loyalty` | Replica route | None |  |  |
 | S-026 Home: main | S-012 Cards: card information | `control-CARD > card-kind-DEBIT > card-action-info` | Replica route | None |  | yes |
 | S-026 Home: main | S-125 Cards: card list | `control-CARD > card-kind-DEBIT > card-action-list` | Replica route | None |  |  |
 | S-026 Home: main | S-124 Cards: card issue first | `control-CARD > card-kind-DEBIT > card-action-issue` | Replica route | Recovered |  |  |
@@ -183,21 +195,10 @@ screen shows.
 | S-026 Home: main | S-122 Cards: card block no login 2 | `demo-menu > demo-path-S-122` | Demo path, not a real-app route | None | Home > کارت > مسدود سازی کارت > card picker (matches S-121, see note 8) | yes |
 | S-026 Home: main | S-197 Saved destinations: familiar destination management | `demo-menu > demo-path-S-197` | Demo path, not a real-app route | None |  | not found in the real app |
 | S-026 Home: main | S-198 Saved destinations: familiar destination picker | `demo-menu > demo-path-S-198` | Demo path, not a real-app route | None |  | not found in the real app |
-| S-026 Home: main | S-093 Receipts: card transfer receipt | `demo-menu > demo-path-S-093` | Demo path, not a real-app route | None | Result of the user-only confirm, not a navigation target | yes |
-| S-026 Home: main | S-098 Receipts: internal transfer receipt | `demo-menu > demo-path-S-098` | Demo path, not a real-app route | None | Result of the user-only confirm, not a navigation target | yes |
-| S-026 Home: main | S-097 Receipts: iban transfer receipt | `demo-menu > demo-path-S-097` | Demo path, not a real-app route | None | Result of the user-only confirm, not a navigation target | yes |
 | S-026 Home: main | S-089 Transactions: group transfer history | `demo-menu > demo-path-S-089` | Demo path, not a real-app route | Recovered |  | not found in the real app |
-| S-026 Home: main | S-096 Receipts: group transfer receipt | `demo-menu > demo-path-S-096` | Demo path, not a real-app route | None | Result of the user-only confirm, not a navigation target | yes |
 | S-026 Home: main | S-210 Bills: bill payment by card | `demo-menu > demo-path-S-210` | Demo path, not a real-app route | None | No card bill payment exists; bill payment is Home > قبض | not found in the real app |
 | S-026 Home: main | S-208 Bills: bill payment by typed card (no source picker) | `demo-menu > demo-path-S-208` | Demo path, not a real-app route | None |  | not found in the real app |
-| S-026 Home: main | S-092 Receipts: bill receipt | `demo-menu > demo-path-S-092` | Demo path, not a real-app route | None | Result of the user-only confirm, not a navigation target | yes |
-| S-026 Home: main | S-405 Insurance: insurance payment receipt | `demo-menu > demo-path-S-405` | Demo path, not a real-app route | None |  | not found in the real app |
-| S-026 Home: main | S-133 Cards: credit card detail receipt | `demo-menu > demo-path-S-133` | Demo path, not a real-app route | None | Result of the user-only confirm, not a navigation target | yes |
 | S-026 Home: main | S-214 Mobile top-up: charge by typed card (no source picker) | `demo-menu > demo-path-S-214` | Demo path, not a real-app route | None |  | not found in the real app |
-| S-026 Home: main | S-094 Receipts: charge receipt | `demo-menu > demo-path-S-094` | Demo path, not a real-app route | None | Result of the user-only confirm, not a navigation target | yes |
-| S-026 Home: main | S-095 Receipts: charity receipt | `demo-menu > demo-path-S-095` | Demo path, not a real-app route | None | Result of the user-only confirm, not a navigation target | yes |
-| S-026 Home: main | S-113 Wallet: wallet receipt | `demo-menu > demo-path-S-113` | Demo path, not a real-app route | None |  |  |
-| S-026 Home: main | S-261 Road toll: receipt | `demo-menu > demo-path-S-261` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-221 Balance top-up: increase account balance amount in flow | `demo-menu > demo-path-S-221` | Demo path, not a real-app route | None | Home > افزایش موجودی (same page as S-222, see note 9) | yes |
 | S-026 Home: main | S-230 Balance top-up: increase wallet balance amount in flow | `demo-menu > demo-path-S-230` | Demo path, not a real-app route | None |  | not found in the real app |
 | S-026 Home: main | S-157 Digital cheque: activate with hamun | `demo-menu > demo-path-digital-active` | Demo path, not a real-app route | None |  | not found in the real app |
@@ -272,6 +273,8 @@ screen shows.
 | S-284 Donations: charity transfer | S-282 Donations: charity confirmation | `charity-continue` | Replica route | Recovered |  |  |
 | S-324 Loans: loan menu | S-338 Loans: loan summary | `loan-current` | Owner-traced | None | Home > تسهیلات > تسهیلات در جریان و پرداخت | yes |
 | S-324 Loans: loan menu | S-307 Loans: loan group | `loan-groups` | Owner-traced | None | Home > تسهیلات > تسهیلات باشگاه مشتریان | yes |
+| S-324 Loans: loan menu | S-287 Loans: hub request | `loan-request` | Replica route | None |  |  |
+| S-324 Loans: loan menu | S-407 Credit product: main | `loan-credit-product` | Replica route | None |  |  |
 | S-338 Loans: loan summary | S-306 Loans: loan detail | `loan-*` | Replica route | Recovered |  |  |
 | S-306 Loans: loan detail | S-331 Loans: loan payment confirmation | `loan-review > loan-source-* > loan-source-confirm` | Replica route | Recovered |  |  |
 | S-307 Loans: loan group | S-309 Loans: loan group detail | `loan-group-*` | Replica route | None |  |  |
@@ -326,6 +329,11 @@ screen shows.
 | S-147 Cheques: cheque menu | S-148 Cheques: transferred cheques report filter | `cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRANSFERRED_CHEQUES_REPORT` | Owner-traced | None | Home > چک > گزارش چک‌های واگذاری | yes |
 | S-147 Cheques: cheque menu | S-148 Cheques: transferred cheques report filter | `cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_KARAFARIN_TRANSFERRED_CHEQUES_REPORT` | Replica route | None |  |  |
 | S-147 Cheques: cheque menu | D-002 Cheques: digital cheque menu | `cheque-menu-AUTHENTICATED_HOME_CHEQUE_CHAKAD` | Replica route | None |  |  |
+| S-147 Cheques: cheque menu | S-165 Cheque payment: issue pay cheque | `cheque-menu-AUTHENTICATED_HOME_CHEQUE_PICHAK_ISSUE_PAPER_CHEQUE` | Replica route | None |  |  |
+| S-147 Cheques: cheque menu | S-164 Cheque payment: inquiry type pay cheque | `cheque-menu-AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER` | Replica route | None |  |  |
+| S-147 Cheques: cheque menu | S-167 Cheque payment: operation pay cheque | `cheque-menu-DESIGNED_SAYAD_ANSWER` | Replica route | None |  |  |
+| S-147 Cheques: cheque menu | S-172 Cheque payment: transfer pay cheque | `cheque-menu-DESIGNED_SAYAD_TRANSFER` | Replica route | None |  |  |
+| S-147 Cheques: cheque menu | S-169 Cheque payment: pay cheque history list | `cheque-menu-DESIGNED_SAYAD_HISTORY` | Replica route | None |  |  |
 | D-002 Cheques: digital cheque menu | S-157 Digital cheque: activate with hamun | `cheque-menu-AUTHENTICATED_HOME_CHEQUE_CHAKAD_ACTIVATION` | Replica route | None |  |  |
 | D-002 Cheques: digital cheque menu | S-151 Cheques: transfer digital cheque | `cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRANSFER_DIGITAL_CHEQUE` | Owner-traced | None | Home > چک > چکاد > واگذاری چک دیجیتال | yes |
 | D-002 Cheques: digital cheque menu | S-159 Digital cheque: digital cheque cartable list | `cheque-menu-AUTHENTICATED_HOME_CHEQUE_CHAKAD_CARTABLE_DIGITAL_CHEQUE` | Replica route | None |  |  |
@@ -351,6 +359,13 @@ screen shows.
 | S-256 Road toll: plaque list | S-252 Road toll: inquiry history | `vehicle-history-*` | Replica route | Recovered |  |  |
 | S-246 Road toll: contact list | S-252 Road toll: inquiry history | `vehicle-history-*` | Replica route | Recovered |  |  |
 | S-248 Road toll: driving license list | S-252 Road toll: inquiry history | `vehicle-history-*` | Replica route | Recovered |  |  |
+| S-254 Road toll: menu list | S-091 Transactions: transaction list | `vehicle-paid-*` | Replica route | None |  |  |
+| S-253 Road toll: menu list | S-244 Road toll: car violation inquiry | `vehicle-menu-AUTHENTICATED_HOME_RAHVAR_TOLL > vehicle-new` | Replica route | None |  |  |
+| S-253 Road toll: menu list | S-278 Road toll: transfer tax inquiry | `vehicle-menu-AUTHENTICATED_HOME_TRANSFER_TOLL > vehicle-new` | Replica route | None |  |  |
+| S-253 Road toll: menu list | S-280 Road toll: vehicle doc inquiry | `vehicle-menu-AUTHENTICATED_HOME_VEHICLE_DOC_INQUIRY > vehicle-new` | Replica route | None |  |  |
+| S-253 Road toll: menu list | S-238 Road toll: active plaque inquiry | `vehicle-menu-AUTHENTICATED_HOME_ACTIVE_PLATES_INQUIRY > vehicle-new` | Replica route | None |  |  |
+| S-253 Road toll: menu list | S-247 Road toll: driving license inquiry result | `vehicle-menu-AUTHENTICATED_HOME_DRIVING_LICENSE_INQUIRY > vehicle-new` | Replica route | None |  |  |
+| S-253 Road toll: menu list | S-255 Road toll: negative point inquiry result | `vehicle-menu-AUTHENTICATED_HOME_NEGATIVE_POINT_INQUIRY > vehicle-new` | Replica route | None |  |  |
 | S-253 Road toll: menu list | S-241 Road toll: annual toll inquiry | `vehicle-menu-AUTHENTICATED_HOME_ANNUAL_TOLL > vehicle-new` | Owner-traced | None | Home > خدمات خودرو > عوارض سالیانه خودرو و موتور | yes |
 | S-241 Road toll: annual toll inquiry | S-242 Road toll: annual toll inquiry result | `toll-inquiry > toll-fee-* > otp-ok` | User-only step | Recovered |  |  |
 | S-242 Road toll: annual toll inquiry result | S-240 Road toll: annual toll confirmation | `toll-pay` | User-only step | Recovered |  |  |
@@ -369,3 +384,75 @@ screen shows.
 | D-001 Support: menu | S-082 Support: view ticket | `support-menu-ticket` | Owner-traced | None | Home > پشتیبانی > پیام (تیکت) | yes |
 | S-078 Support: faq no login | S-081 Support: view or send message | `faq-support > support-mobile > support-identity-continue > support-otp > support-otp-continue` | User-only step | Recovered |  |  |
 | S-080 Support: ticket list | S-082 Support: view ticket | `ticket-*` | Replica route | Recovered |  |  |
+| S-176 Transfer: card transfer confirmation | S-093 Receipts: card transfer receipt | `card-transfer-submit` | User-only step | Recovered |  |  |
+| S-173 Transfer: account transfer confirmation | S-098 Receipts: internal transfer receipt | `account-transfer-submit` | User-only step | Recovered |  |  |
+| S-173 Transfer: account transfer confirmation | S-097 Receipts: iban transfer receipt | `account-transfer-submit` | User-only step | Recovered |  |  |
+| S-189 Transfer: group transfer verify | S-096 Receipts: group transfer receipt | `group-verify-accept` | User-only step | Recovered |  |  |
+| S-207 Bills: bill confirmation | S-092 Receipts: bill receipt | `bill-accept` | User-only step | Recovered |  |  |
+| S-205 Bills: bill card info | S-092 Receipts: bill receipt | `payment-submit` | User-only step | Recovered |  |  |
+| S-206 Bills: bill card info no login | S-092 Receipts: bill receipt | `payment-submit` | User-only step | Recovered |  |  |
+| S-212 Mobile top-up: charge confirmation | S-094 Receipts: charge receipt | `topup-accept` | User-only step | Recovered |  |  |
+| S-215 Mobile top-up: charge card info | S-094 Receipts: charge receipt | `payment-submit` | User-only step | Recovered |  |  |
+| S-216 Mobile top-up: charge card info no login | S-094 Receipts: charge receipt | `payment-submit` | User-only step | Recovered |  |  |
+| S-282 Donations: charity confirmation | S-095 Receipts: charity receipt | `payment-submit` | User-only step | Recovered |  |  |
+| S-404 Insurance: insurance payment confirmation | S-405 Insurance: insurance payment receipt | `payment-submit` | User-only step | Recovered |  |  |
+| S-132 Cards: credit card detail confirmation | S-133 Cards: credit card detail receipt | `payment-submit` | User-only step | Recovered |  |  |
+| S-117 Wallet: wallet to wallet confirmation | S-113 Wallet: wallet receipt | `wallet-op-submit` | User-only step | None |  |  |
+| S-101 Wallet: buy with wallet confirmation | S-113 Wallet: wallet receipt | `wallet-op-submit` | User-only step | None |  |  |
+| S-107 Wallet: de charge wallet confirmation | S-113 Wallet: wallet receipt | `wallet-op-submit` | User-only step | None |  |  |
+| S-105 Wallet: charge wallet confirmation | S-113 Wallet: wallet receipt | `wallet-op-submit` | User-only step | None |  |  |
+| S-103 Wallet: charge by wallet confirmation | S-113 Wallet: wallet receipt | `wallet-op-submit` | User-only step | None |  |  |
+| S-099 Wallet: bill by wallet confirmation | S-113 Wallet: wallet receipt | `wallet-op-submit` | User-only step | None |  |  |
+| S-240 Road toll: annual toll confirmation | S-261 Road toll: receipt | `payment-submit` | User-only step | None |  |  |
+| S-274 Road toll: traffic toll confirmation | S-261 Road toll: receipt | `payment-submit` | User-only step | None |  |  |
+| S-249 Road toll: free way toll confirmation | S-261 Road toll: receipt | `payment-submit` | User-only step | None |  |  |
+| S-165 Cheque payment: issue pay cheque | S-171 Cheque payment: receiver pay cheque | `svc-continue` | Replica route | None |  |  |
+| S-171 Cheque payment: receiver pay cheque | S-170 Cheque payment: preview pay cheque | `svc-continue` | Replica route | None |  |  |
+| S-170 Cheque payment: preview pay cheque | S-168 Cheque payment: pay cheque history detail | `svc-confirm` | User-only step | None |  |  |
+| S-167 Cheque payment: operation pay cheque | S-163 Cheque payment: info pay cheque | `svc-continue` | Replica route | None |  |  |
+| S-163 Cheque payment: info pay cheque | S-170 Cheque payment: preview pay cheque | `svc-continue` | Replica route | None |  |  |
+| S-172 Cheque payment: transfer pay cheque | S-171 Cheque payment: receiver pay cheque | `svc-continue` | Replica route | None |  |  |
+| S-164 Cheque payment: inquiry type pay cheque | S-162 Cheque payment: cheque-id pay cheque | `svc-continue` | Replica route | None |  |  |
+| S-162 Cheque payment: cheque-id pay cheque | S-166 Cheque payment: made 21 validation result | `svc-confirm` | User-only step | None |  |  |
+| S-244 Road toll: car violation inquiry | S-245 Road toll: car violation inquiry result | `svc-continue` | Replica route | Recovered |  |  |
+| S-245 Road toll: car violation inquiry result | S-243 Road toll: car violation confirmation | `svc-continue` | Replica route | Recovered |  |  |
+| S-243 Road toll: car violation confirmation | S-261 Road toll: receipt | `svc-confirm` | User-only step | None |  |  |
+| S-278 Road toll: transfer tax inquiry | S-279 Road toll: transfer tax inquiry result | `svc-continue` | Replica route | Recovered |  |  |
+| S-279 Road toll: transfer tax inquiry result | S-277 Road toll: transfer tax confirmation | `svc-continue` | Replica route | Recovered |  |  |
+| S-277 Road toll: transfer tax confirmation | S-261 Road toll: receipt | `svc-confirm` | User-only step | None |  |  |
+| S-280 Road toll: vehicle doc inquiry | S-281 Road toll: vehicle doc inquiry result | `svc-continue` | Replica route | Recovered |  |  |
+| S-238 Road toll: active plaque inquiry | S-239 Road toll: active plaque inquiry result | `svc-continue` | Replica route | Recovered |  |  |
+| S-442 Inquiries: inquiries fee | S-445 Inquiries: inquiry result samat | `svc-confirm` | User-only step | Recovered |  |  |
+| S-445 Inquiries: inquiry result samat | S-441 Inquiries: detail item samat | `svc-detail` | Replica route | Recovered |  |  |
+| S-442 Inquiries: inquiries fee | S-444 Inquiries: inquiry result bounced cheque | `svc-confirm` | User-only step | Recovered |  |  |
+| S-444 Inquiries: inquiry result bounced cheque | S-440 Inquiries: detail item bounced cheque | `svc-detail` | Replica route | Recovered |  |  |
+| S-442 Inquiries: inquiries fee | S-453 Inquiries: rate result | `svc-confirm` | User-only step | Recovered |  |  |
+| S-287 Loans: hub request | S-308 Loans: loan group calculate | `svc-continue` | Replica route | None |  |  |
+| S-308 Loans: loan group calculate | S-286 Loans: customer info content | `svc-continue` | Replica route | None |  |  |
+| S-286 Loans: customer info content | S-335 Loans: loan promissory set guarantor | `svc-continue` | Replica route | None |  |  |
+| S-335 Loans: loan promissory set guarantor | S-285 Loans: agreement | `svc-continue` | Replica route | None |  |  |
+| S-285 Loans: agreement | S-334 Loans: loan promissory select promissory | `svc-continue` | Replica route | None |  |  |
+| S-334 Loans: loan promissory select promissory | S-378 Digital signature: sign issue sign | `svc-continue` | Replica route | None |  |  |
+| S-378 Digital signature: sign issue sign | S-336 Loans: loan request confirmation | `svc-continue` | Replica route | None |  |  |
+| S-336 Loans: loan request confirmation | S-337 Loans: loan request receipt | `svc-confirm` | User-only step | Recovered |  |  |
+| S-062 Account opening: information | S-054 Account opening: contact information | `svc-continue` | Replica route | None |  |  |
+| S-054 Account opening: contact information | S-053 Account opening: additional information | `svc-continue` | Replica route | None |  |  |
+| S-053 Account opening: additional information | S-061 Account opening: identity docs | `svc-continue` | Replica route | None |  |  |
+| S-061 Account opening: identity docs | S-052 Account opening: account branch selection | `svc-continue` | Replica route | None |  |  |
+| S-052 Account opening: account branch selection | S-058 Account opening: create account in app agreement | `svc-continue` | Replica route | None |  |  |
+| S-058 Account opening: create account in app agreement | S-057 Account opening: create account in app | `svc-continue` | Replica route | None |  |  |
+| S-057 Account opening: create account in app | S-059 Account opening: create account in app result | `svc-confirm` | User-only step | None |  |  |
+| S-414 Wage advance: dashboard | S-419 Wage advance: request enter amount | `svc-continue` | Replica route | None |  |  |
+| S-419 Wage advance: request enter amount | S-417 Wage advance: request agreement | `svc-continue` | Replica route | None |  |  |
+| S-417 Wage advance: request agreement | S-418 Wage advance: request confirmation | `svc-continue` | Replica route | None |  |  |
+| S-418 Wage advance: request confirmation | S-183 Wage advance: request receipt | `svc-confirm` | User-only step | None |  |  |
+| S-407 Credit product: main | S-406 Credit product: guide | `svc-continue` | Replica route | None |  |  |
+| S-406 Credit product: guide | S-408 Credit product: onboarding | `svc-continue` | Replica route | None |  |  |
+| S-408 Credit product: onboarding | S-409 Credit product: screen | `svc-confirm` | User-only step | None |  |  |
+| S-428 Loyalty club: coin transfer entry | S-427 Loyalty club: coin transfer confirmation | `svc-continue` | Replica route | None |  |  |
+| S-427 Loyalty club: coin transfer confirmation | S-431 Loyalty club: detail | `svc-confirm` | User-only step | None |  |  |
+| S-443 Inquiries: inquiries menu | S-442 Inquiries: inquiries fee | `svc-menu-credit-report` | Replica route | None |  |  |
+| S-443 Inquiries: inquiries menu | S-442 Inquiries: inquiries fee | `svc-menu-bounced-cheques` | Replica route | None |  |  |
+| S-443 Inquiries: inquiries menu | S-442 Inquiries: inquiries fee | `svc-menu-credit-rate` | Replica route | None |  |  |
+| S-432 Loyalty club: home | S-426 Loyalty club: coin transaction history | `svc-menu-rewards-history` | Replica route | None |  |  |
+| S-432 Loyalty club: home | S-428 Loyalty club: coin transfer entry | `svc-menu-rewards-transfer` | Replica route | None |  |  |

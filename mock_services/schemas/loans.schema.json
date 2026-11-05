@@ -1,0 +1,231 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: loans",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "loans",
+    "groups",
+    "options",
+    "products"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "loans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "title",
+          "fileNumber",
+          "principalIrr",
+          "paidIrr",
+          "totalDebtIrr",
+          "discountIrr",
+          "guaranteeAccount",
+          "installments",
+          "corporateTitle",
+          "loanType"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "fileNumber": {
+            "type": "string"
+          },
+          "principalIrr": {
+            "type": "integer"
+          },
+          "paidIrr": {
+            "type": "integer"
+          },
+          "totalDebtIrr": {
+            "type": "integer"
+          },
+          "discountIrr": {
+            "type": "integer"
+          },
+          "guaranteeAccount": {
+            "type": "string"
+          },
+          "installments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "number",
+                "dueDate",
+                "status",
+                "amountIrr",
+                "penaltyIrr",
+                "paidIrr",
+                "remainingIrr"
+              ],
+              "properties": {
+                "number": {
+                  "type": "integer"
+                },
+                "dueDate": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "amountIrr": {
+                  "type": "integer"
+                },
+                "penaltyIrr": {
+                  "type": "integer"
+                },
+                "paidIrr": {
+                  "type": "integer"
+                },
+                "remainingIrr": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "corporateTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "loanType": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "title",
+          "details",
+          "active",
+          "accountOpenElapsed",
+          "needsCredit"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "accountOpenElapsed": {
+            "type": "boolean"
+          },
+          "needsCredit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "title",
+          "amountRial",
+          "active",
+          "availableMonths",
+          "maximumMonths",
+          "subtitle",
+          "details"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "amountRial": {
+            "type": "integer"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "availableMonths": {
+            "type": "integer"
+          },
+          "maximumMonths": {
+            "type": "integer"
+          },
+          "subtitle": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "products": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "title",
+          "maxAmount",
+          "maxMonths",
+          "rate"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "maxAmount": {
+            "type": "integer"
+          },
+          "maxMonths": {
+            "type": "integer"
+          },
+          "rate": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

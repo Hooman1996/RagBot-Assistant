@@ -115,7 +115,7 @@ class ReplicaProfileTest {
             .filter { it.kind == EdgeKind.DEMO && it.from == HomeDestinations.HOME }
             .forEach { assertTrue(it.action, it.action.startsWith("demo-menu > demo-path-")) }
         assertFalse(ReplicaGraph.declared("S-026", "S-176"))
-        assertFalse(ReplicaGraph.declared("S-173", "S-097"))
+        assertFalse(ReplicaGraph.declared("S-026", "S-097"))
     }
 
     @Test

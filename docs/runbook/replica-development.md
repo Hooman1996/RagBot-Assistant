@@ -4,6 +4,9 @@ Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
+Data comes from the JSON files in `mock_services/fixtures/`, and every service runs against the
+local mock bank. See the [mock data runbook](mock-data.md).
+
 ## Pinned build inputs
 
 | Input | Version / reason |
@@ -581,3 +584,13 @@ Only `REAL` and `DEMO` edges reach the profile. `USER_ONLY` edges stay out, so t
 Home → **مسیرهای نمایشی** (below the recent transactions) opens the demo menu. It lists every entry with no Home route, marked as a demo path, not a real-app route. The owner's taps in [graph validation](../reports/graph-validation.md) decide which of these become real Home links. So far the tiles **انتقال وجه** (S-193), **قبض** (S-209), **خیریه** (S-283) and **تسهیلات** (S-338) are real links, and S-071 opens from **پروفایل** → **تنظیمات برنامه** → **تنظیمات اعلان‌ها**.
 
 The owner's second trace round (5 Nov 2026) added the Home tiles کارت به کارت, شارژ, صورتحساب, پشتیبانی, تسهیلات, تبدیل بانکی, بیمه and سوابق, and two menu pages with no recovered node, `D-001` (پشتیبانی) and `D-002` (چکاد). `D-` nodes are labelled `Designed for mock` in `navigation-graph.json`. The answers and what came of each are in the [validation sheet](../reports/graph-validation.md).
+
+## Complete replica (D-022)
+
+Tap **ورود با کاربر نمایشی** on the front page for the intro, welcome and login pages; the demo user is in `customer.json`. **ورود به خانه** still goes straight to Home.
+
+Every service runs against the local mock bank, so a confirm now changes balances and history for the session. Its result is a receipt page, a result dialog, or a failure dialog with the reason. See the [mock data runbook](mock-data.md).
+
+The services added under D-022 use one form engine: `ServiceFlows.kt` draws the fields, and `ServiceCatalog.kt` lists each service's steps, its result page and what its confirm does. `ReplicaGraph.kt` and `ReplicaProfile.kt` read that list, so a new service needs no extra graph or form entries.
+
+`RouteWalkTest` walks every plain route through Home and the menus, and `DemoWalkTest` runs the owner's demo walk with the money checked at the end.

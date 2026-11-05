@@ -42,6 +42,55 @@ internal data class WalletOperationDraft(
 internal data class WalletPreview(val destinationName: String, val amount: Long) : Serializable
 
 internal object WalletOperationRules {
+    /** Sends a reviewed wallet operation to the bank. */
+    fun submit(
+        operation: WalletOperation,
+        draft: WalletOperationDraft,
+        preview: WalletPreview,
+    ): BankResult {
+        val key = "wallet-${operation.name.lowercase()}"
+        val title = operation.title
+        return when (operation) {
+            WalletOperation.CHARGE ->
+                MockBank.walletCharge(draft.source, draft.destination, preview.amount)
+            WalletOperation.DECHARGE ->
+                MockBank.walletPay(
+                    key,
+                    title,
+                    draft.source,
+                    preview.amount,
+                    preview.destinationName,
+                    toAccount = draft.destination,
+                )
+            WalletOperation.BILL ->
+                MockBank.walletPay(
+                    key,
+                    title,
+                    draft.source,
+                    preview.amount,
+                    preview.destinationName,
+                    settles = listOf("bill:${latinDigits(draft.billId)}"),
+                )
+            WalletOperation.MOBILE ->
+                MockBank.walletPay(
+                    key,
+                    title,
+                    draft.source,
+                    preview.amount,
+                    latinDigits(draft.mobile),
+                )
+            else ->
+                MockBank.walletPay(
+                    key,
+                    title,
+                    draft.source,
+                    preview.amount,
+                    preview.destinationName,
+                    toWallet = latinDigits(draft.destination),
+                )
+        }
+    }
+
     const val SAME = "مبدا و مقصد نمی‌تواند یکسان باشد."
 
     /** Recovered: a missing amount is mandatory; no client limit exists. */
@@ -127,11 +176,11 @@ internal object WalletOperationRules {
 }
 
 internal object WalletOperationFixture {
-    const val NOTICE = "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ عملیات کیف پولی انجام نمی‌شود."
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
 
     // Synthetic 16-digit destination wallets and merchants with their owner names.
-    val destinations =
-        mapOf("0000000000000201" to "گیرندهٔ نمایشی", "0000000000000301" to "فروشگاه نمایشی")
+    val destinations
+        get() = MockData.current.walletDestinations
 
     // Server-supplied children of the wallet charge item; titles are synthetic.
     val chargeTypes =

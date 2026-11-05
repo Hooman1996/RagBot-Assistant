@@ -53,7 +53,7 @@ internal fun AccountTransferPage(
                 // RT-RECOVERY: S-177 opens these forms in continuous mode with its schedule.
                 if (schedule != null && page != AccountTransferDestinations.MENU)
                     Text(
-                        "انتقال وجه خودکار — $schedule. زمان‌بندی ثبت یا اجرا نمی‌شود.",
+                        "انتقال وجه خودکار — $schedule",
                         Modifier.testTag("account-transfer-schedule"),
                     )
                 when (page) {
@@ -88,8 +88,8 @@ internal fun AccountTransferPage(
                     AccountTransferDestinations.INTERBANK ->
                         AccountTransferForm(page, draft, onChange, onBack, onOpen, onUnavailable)
                     AccountTransferDestinations.CONFIRM ->
-                        AccountTransferReview(draft, onChange, onBack, onUnavailable)
-                    else -> AccountTransferReceipt(page, onBack, onUnavailable)
+                        AccountTransferReview(draft, schedule, onChange, onBack, onUnavailable)
+                    else -> BankReceipt(onBack, onUnavailable)
                 }
             }
         }
@@ -108,10 +108,19 @@ private fun AccountTransferForm(
     var sourcePicker by rememberSaveable { mutableStateOf(false) }
     var reasonPicker by rememberSaveable { mutableStateOf(false) }
     var extra by rememberSaveable { mutableStateOf(false) }
+    var contacts by rememberSaveable { mutableStateOf(false) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     val focus = LocalFocusManager.current
     val internal = page == AccountTransferDestinations.INTERNAL
     val source = AccountFixture.accounts.find { it.key == draft.sourceId }
+    if (contacts)
+        DestinationPicker(
+            if (internal) "ACCOUNT" else "IBAN",
+            "account-transfer-contact",
+            { contacts = false },
+        ) {
+            onChange(draft.copy(destination = it))
+        }
     Text("حساب مبدأ")
     OutlinedButton(
         {
@@ -132,7 +141,7 @@ private fun AccountTransferForm(
     TextButton(
         {
             focus.clearFocus()
-            onUnavailable("انتخاب مقصد ذخیره‌شده در این پیش‌نمایش در دسترس نیست.")
+            contacts = true
         },
         Modifier.testTag("account-transfer-favorites"),
     ) {
@@ -279,6 +288,7 @@ private fun AccountTransferForm(
 @Composable
 private fun AccountTransferReview(
     draft: AccountTransferDraft,
+    schedule: String?,
     onChange: (AccountTransferDraft) -> Unit,
     onBack: () -> Unit,
     onUnavailable: (String) -> Unit,
@@ -322,52 +332,24 @@ private fun AccountTransferReview(
         )
         Text("افزودن به مقصدها — فقط انتخاب محلی")
     }
-    Text(
-        "تأیید، رمز پویا و ارسال انتقال در این پیش‌نمایش در دسترس نیست. این صفحه مجوز یا رسید بانکی تولید نمی‌کند."
-    )
-    Button(
-        { onUnavailable("ارسال و تأیید بانکی در دسترس نیست؛ هیچ انتقالی انجام نشد.") },
-        Modifier.fillMaxWidth().testTag("account-transfer-submit"),
+    BankButton(
+        "تأیید",
+        "account-transfer-submit",
+        when {
+            schedule != null -> null
+            draft.mode == AccountTransferDestinations.INTERNAL ->
+                AccountTransferDestinations.INTERNAL_RECEIPT
+            else -> AccountTransferDestinations.IBAN_RECEIPT
+        },
+        otp = true,
     ) {
-        Text("تأیید — در دسترس نیست")
+        if (schedule != null)
+            MockBank.request("standing-order", "ثبت انتقال وجه خودکار", draft.destination)
+        else MockBank.accountTransfer(draft)
     }
     OutlinedButton(onBack, Modifier.fillMaxWidth()) { Text("انصراف") }
 }
 
-@Composable
-private fun AccountTransferReceipt(
-    page: String,
-    onBack: () -> Unit,
-    onUnavailable: (String) -> Unit,
-) {
-    Text(
-        "رسید ساختگی مستقل برای بازبینی؛ حاصل انتقال وجه نیست.",
-        modifier = Modifier.testTag("account-transfer-receipt-disclosure"),
-    )
-    TransferValue(
-        "نوع",
-        if (page == AccountTransferDestinations.INTERNAL_RECEIPT) "انتقال داخلی" else "انتقال شبا",
-    )
-    TransferValue("وضعیت", "نمونهٔ نمایشی — بدون تراکنش بانکی")
-    TransferValue("مبدأ", "0000000000001")
-    TransferValue(
-        "مقصد",
-        if (page == AccountTransferDestinations.INTERNAL_RECEIPT) "0000000000002"
-        else "IR000000000000000000000002",
-    )
-    TransferValue("مبلغ (ریال)", persianNumber(250_000L))
-    TransferValue("شماره پیگیری ساختگی", "DEMO-ACCOUNT-0001")
-    TransferValue("توضیحات", "رکورد ثابت ساختگی برای بررسی چیدمان و پیمایش رسید")
-    Button(
-        {
-            onUnavailable("ذخیره، اشتراک‌گذاری و بازکردن برنامهٔ خارجی در پیش‌نمایش در دسترس نیست.")
-        },
-        Modifier.fillMaxWidth().testTag("account-transfer-share"),
-    ) {
-        Text("ذخیره و اشتراک‌گذاری")
-    }
-    OutlinedButton(onBack, Modifier.fillMaxWidth()) { Text("بازگشت") }
-}
 
 @Composable
 internal fun TransferValue(label: String, value: String) {

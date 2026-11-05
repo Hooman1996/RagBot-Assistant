@@ -14,12 +14,9 @@ data class PreviewTransaction(
 )
 
 object HomeFixture {
-    const val accountNumber = "۰۰۰۰۰۰۰۰۰۱"
-    const val accountOwner = "کاربر نمایشی"
-    const val accountType = "حساب نمایشی"
-    const val accountIban = "IR000000000000000000000000"
-    const val balanceRial = 12_500_000L
-    const val currencyUnit = "IRR"
+    val accountOwner
+        get() = MockData.current.customer.name
+
 
     val top =
         listOf(
@@ -56,27 +53,8 @@ object HomeFixture {
             HomeMenuItem("open-account", "افتتاح حساب", "replica_service_open_account"),
             HomeMenuItem("branches", "شعب", "replica_service_branches"),
         )
-    val transactions =
-        listOf(
-            PreviewTransaction(
-                "preview-1",
-                "کارت به کارت",
-                1_250_000L,
-                "IRR",
-                "دیروز - ۱۵:۳۰:۰۰",
-                "کارت نمایشی ۰۰۰۱",
-                "کارت نمایشی ۰۰۰۲",
-            ),
-            PreviewTransaction(
-                "preview-2",
-                "انتقال وجه",
-                750_000L,
-                "IRR",
-                "دیروز - ۱۰:۱۵:۰۰",
-                "حساب نمایشی ۰۰۰۱",
-                "حساب نمایشی ۰۰۰۲",
-            ),
-        )
+    val transactions
+        get() = MockBank.transactions
 }
 
 fun persianNumber(value: Long): String =

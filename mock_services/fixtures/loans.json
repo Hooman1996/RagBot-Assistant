@@ -1,0 +1,228 @@
+{
+  "unit": "IRR",
+  "loans": [
+    {
+      "id": "loan-personal",
+      "title": "تسهیلات شخصی نمایشی",
+      "fileNumber": "900000000001",
+      "principalIrr": 15000000,
+      "paidIrr": 5000000,
+      "totalDebtIrr": 10000000,
+      "discountIrr": 250000,
+      "guaranteeAccount": "000.000.000001.1",
+      "installments": [
+        {
+          "number": 1,
+          "dueDate": "۱۴۰۵/۰۷/۰۱",
+          "status": "PAID",
+          "amountIrr": 5000000,
+          "penaltyIrr": 0,
+          "paidIrr": 5000000,
+          "remainingIrr": 0
+        },
+        {
+          "number": 2,
+          "dueDate": "۱۴۰۵/۰۸/۰۱",
+          "status": "UNPAID",
+          "amountIrr": 5000000,
+          "penaltyIrr": 0,
+          "paidIrr": 0,
+          "remainingIrr": 5000000
+        },
+        {
+          "number": 3,
+          "dueDate": "۱۴۰۵/۰۹/۰۱",
+          "status": "UNPAID",
+          "amountIrr": 5000000,
+          "penaltyIrr": 0,
+          "paidIrr": 0,
+          "remainingIrr": 5000000
+        }
+      ],
+      "corporateTitle": null,
+      "loanType": "نوع نمایشی"
+    },
+    {
+      "id": "loan-overdue",
+      "title": "تسهیلات دارای بدهی نمایشی",
+      "fileNumber": "900000000002",
+      "principalIrr": 12000000,
+      "paidIrr": 0,
+      "totalDebtIrr": 12150000,
+      "discountIrr": 0,
+      "guaranteeAccount": "000.000.000001.1",
+      "installments": [
+        {
+          "number": 1,
+          "dueDate": "۱۴۰۵/۰۶/۰۱",
+          "status": "TRACKABLE_OVERDUE",
+          "amountIrr": 4000000,
+          "penaltyIrr": 100000,
+          "paidIrr": 0,
+          "remainingIrr": 4100000
+        },
+        {
+          "number": 2,
+          "dueDate": "۱۴۰۵/۰۷/۰۱",
+          "status": "TRACKABLE_OVERDUE",
+          "amountIrr": 4000000,
+          "penaltyIrr": 50000,
+          "paidIrr": 0,
+          "remainingIrr": 4050000
+        },
+        {
+          "number": 3,
+          "dueDate": "۱۴۰۵/۰۹/۰۱",
+          "status": "UNPAID",
+          "amountIrr": 4000000,
+          "penaltyIrr": 0,
+          "paidIrr": 0,
+          "remainingIrr": 4000000
+        }
+      ],
+      "corporateTitle": null,
+      "loanType": "نوع نمایشی"
+    },
+    {
+      "id": "loan-corporate",
+      "title": "تسهیلات سازمانی نمایشی",
+      "fileNumber": "900000000003",
+      "principalIrr": 8000000,
+      "paidIrr": 0,
+      "totalDebtIrr": 8000000,
+      "discountIrr": 0,
+      "guaranteeAccount": "000.000.000002.2",
+      "installments": [
+        {
+          "number": 1,
+          "dueDate": "۱۴۰۵/۰۸/۱۵",
+          "status": "UNPAID",
+          "amountIrr": 8000000,
+          "penaltyIrr": 0,
+          "paidIrr": 0,
+          "remainingIrr": 8000000
+        }
+      ],
+      "corporateTitle": "سازمان نمایشی",
+      "loanType": "نوع نمایشی"
+    },
+    {
+      "id": "loan-paid",
+      "title": "تسهیلات تسویه‌شدهٔ نمایشی",
+      "fileNumber": "900000000004",
+      "principalIrr": 3000000,
+      "paidIrr": 3000000,
+      "totalDebtIrr": 0,
+      "discountIrr": 0,
+      "guaranteeAccount": "000.000.000001.1",
+      "installments": [
+        {
+          "number": 1,
+          "dueDate": "۱۴۰۵/۰۷/۱۵",
+          "status": "PAID",
+          "amountIrr": 3000000,
+          "penaltyIrr": 0,
+          "paidIrr": 3000000,
+          "remainingIrr": 0
+        }
+      ],
+      "corporateTitle": null,
+      "loanType": "نوع نمایشی"
+    }
+  ],
+  "groups": [
+    {
+      "key": "standard",
+      "title": "گروه تسهیلات نمونه",
+      "details": [
+        "نمایش شرایط ساختگی",
+        "بررسی گزینه‌های بازپرداخت"
+      ],
+      "active": true,
+      "accountOpenElapsed": true,
+      "needsCredit": false
+    },
+    {
+      "key": "inactive",
+      "title": "گروه غیرفعال نمونه",
+      "details": [
+        "این گروه در دسترس نیست."
+      ],
+      "active": false,
+      "accountOpenElapsed": true,
+      "needsCredit": false
+    },
+    {
+      "key": "recent",
+      "title": "حساب تازه نمونه",
+      "details": [
+        "بررسی مدت افتتاح حساب"
+      ],
+      "active": true,
+      "accountOpenElapsed": false,
+      "needsCredit": false
+    },
+    {
+      "key": "credit",
+      "title": "گروه نیازمند استعلام نمونه",
+      "details": [
+        "نیازمند بررسی رتبه اعتباری"
+      ],
+      "active": true,
+      "accountOpenElapsed": true,
+      "needsCredit": true
+    }
+  ],
+  "options": [
+    {
+      "key": "normal",
+      "title": "گزینه عادی نمونه",
+      "amountRial": 100000000,
+      "active": true,
+      "availableMonths": 12,
+      "maximumMonths": 12,
+      "subtitle": "بازپرداخت نمونه",
+      "details": [
+        "شرایط صرفاً برای نمایش است."
+      ]
+    },
+    {
+      "key": "limited",
+      "title": "گزینه با دوره محدود نمونه",
+      "amountRial": 100000000,
+      "active": true,
+      "availableMonths": 6,
+      "maximumMonths": 12,
+      "subtitle": null,
+      "details": [
+        "دوره در دسترس بر اساس امتیاز نمونه محدود است."
+      ]
+    },
+    {
+      "key": "inactive",
+      "title": "گزینه غیرفعال نمونه",
+      "amountRial": 200000000,
+      "active": false,
+      "availableMonths": 12,
+      "maximumMonths": 12,
+      "subtitle": null,
+      "details": []
+    }
+  ],
+  "products": [
+    {
+      "key": "personal",
+      "title": "تسهیلات شخصی",
+      "maxAmount": 500000000,
+      "maxMonths": 36,
+      "rate": 18
+    },
+    {
+      "key": "home",
+      "title": "تسهیلات مسکن",
+      "maxAmount": 2000000000,
+      "maxMonths": 60,
+      "rate": 12
+    }
+  ]
+}

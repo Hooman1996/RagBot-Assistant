@@ -1,0 +1,348 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: cheques",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "fee",
+    "digitalFee",
+    "books",
+    "papers",
+    "report",
+    "issuance",
+    "tasks",
+    "digital",
+    "sayad"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "fee": {
+      "type": "integer"
+    },
+    "digitalFee": {
+      "type": "integer"
+    },
+    "books": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "reference",
+          "accountKey",
+          "pageCount",
+          "startNo",
+          "endNo",
+          "issueDate",
+          "docType",
+          "summary"
+        ],
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "accountKey": {
+            "type": "string"
+          },
+          "pageCount": {
+            "type": "integer"
+          },
+          "startNo": {
+            "type": "string"
+          },
+          "endNo": {
+            "type": "string"
+          },
+          "issueDate": {
+            "type": "string"
+          },
+          "docType": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "string",
+                  "integer"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "papers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "no",
+            "amount",
+            "sayadId",
+            "branch",
+            "date",
+            "statusDesc",
+            "lastStatusDate"
+          ],
+          "properties": {
+            "no": {
+              "type": "string"
+            },
+            "amount": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "sayadId": {
+              "type": "string"
+            },
+            "branch": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            },
+            "statusDesc": {
+              "type": "string"
+            },
+            "lastStatusDate": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "report": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "no",
+          "amount",
+          "date",
+          "type",
+          "subtype"
+        ],
+        "properties": {
+          "no": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "date": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "subtype": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "issuance": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "trace",
+          "accountKey",
+          "media",
+          "pageCount",
+          "date",
+          "status",
+          "rejectReason"
+        ],
+        "properties": {
+          "trace": {
+            "type": "string"
+          },
+          "accountKey": {
+            "type": "string"
+          },
+          "media": {
+            "type": "string"
+          },
+          "pageCount": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "rejectReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "tab",
+          "processKey",
+          "processName",
+          "issuer",
+          "date",
+          "statusDesc",
+          "amount"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tab": {
+            "type": "string"
+          },
+          "processKey": {
+            "type": "string"
+          },
+          "processName": {
+            "type": "string"
+          },
+          "issuer": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "statusDesc": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "digital": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sayadId",
+          "amount",
+          "dueDate",
+          "bank",
+          "branch",
+          "status",
+          "guarantee",
+          "block",
+          "lock",
+          "holderStatus",
+          "reason",
+          "description",
+          "holders",
+          "digitalIban"
+        ],
+        "properties": {
+          "sayadId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "dueDate": {
+            "type": "string"
+          },
+          "bank": {
+            "type": "string"
+          },
+          "branch": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "guarantee": {
+            "type": "string"
+          },
+          "block": {
+            "type": "string"
+          },
+          "lock": {
+            "type": "string"
+          },
+          "holderStatus": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "holders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "digitalIban": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "sayad": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sayadId",
+          "amount",
+          "dueDate",
+          "party",
+          "received",
+          "status"
+        ],
+        "properties": {
+          "sayadId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "dueDate": {
+            "type": "string"
+          },
+          "party": {
+            "type": "string"
+          },
+          "received": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

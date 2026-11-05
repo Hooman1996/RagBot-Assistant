@@ -124,79 +124,22 @@ internal object GroupTransferRules {
 }
 
 internal object GroupTransferFixture {
-    private val header = listOf("ردیف", "شماره شبا", "مبلغ", "بابت", "شناسه واریز", "شرح مقصد")
-    private val first = AccountTransferFixture.reasons.first()
+    val files
+        get() =
+            MockData.current.groupFiles.let { files ->
+                // The 501-row boundary sample repeats the first row of the valid file.
+                val sheet = files.first().sheet
+                val row = sheet[1]
+                files +
+                    GroupFile(
+                        "large",
+                        "نمونه-۵۰۱-رکورد-ساختگی.xlsx",
+                        listOf(sheet[0]) + List(501) { index ->
+                            listOf("${index + 1}", row[1], "1000", row[3], "", "مقصد نمایشی")
+                        },
+                    )
+            }
 
-    private fun row(n: Int, iban: String, amount: String, reason: String = first) =
-        listOf("$n", iban, amount, reason, "", "مقصد نمایشی $n")
-
-    val files =
-        listOf(
-            GroupFile(
-                "valid",
-                "نمونه-معتبر-ساختگی.xlsx",
-                listOf(
-                    header,
-                    row(1, "IR920000000000000000000002", "150000"),
-                    row(2, "IR650000000000000000000003", "250000"),
-                    row(3, "IR380000000000000000000004", "100000"),
-                ),
-            ),
-            GroupFile(
-                "invalid",
-                "نمونه-با-خطا-ساختگی.xlsx",
-                listOf(
-                    header,
-                    row(1, "IR920000000000000000000002", "150000"),
-                    row(2, "IR930000000000000000000002", "250000"),
-                    listOf(null, null, null, null, null, null),
-                    row(4, "IR650000000000000000000003", "0"),
-                    row(5, "IR380000000000000000000004", "100000", ""),
-                    row(6, "IR110000000000000000000005", "300000"),
-                ),
-            ),
-            GroupFile(
-                "rejected",
-                "نمونه-رد-ثبت-ساختگی.xlsx",
-                listOf(
-                    header,
-                    row(1, "IR920000000000000000000002", "150000"),
-                    row(2, "IR650000000000000000000003", "250000"),
-                    row(3, "IR380000000000000000000004", "100000"),
-                ),
-                rejected = listOf(2L),
-            ),
-            GroupFile("empty", "نمونه-خالی-ساختگی.xlsx", listOf(header)),
-            GroupFile(
-                "large",
-                "نمونه-۵۰۱-رکورد-ساختگی.xlsx",
-                listOf(header) + (1..501).map { row(it, "IR920000000000000000000002", "1000") },
-            ),
-        )
-
-    val history =
-        listOf(
-            GroupHistory(
-                "DEMO-GROUP-0001",
-                "۱۴۰۵/۰۸/۰۹ - ۱۰:۲۰",
-                "نمونهٔ نمایشی — بدون تراکنش بانکی",
-                "0000000000001",
-                "حساب نمایشی ۰۰۰۱",
-                "",
-                "پرداخت نمایشی گروهی",
-                "یادداشت ساختگی",
-                GroupTransferRules.parse(files.first().sheet),
-            ),
-            GroupHistory(
-                "DEMO-GROUP-0002",
-                "۱۴۰۵/۰۸/۰۲ - ۰۹:۰۵",
-                "نمونهٔ نمایشی — بدون تراکنش بانکی",
-                "0000000000001",
-                "حساب نمایشی ۰۰۰۱",
-                "12345",
-                "",
-                "",
-                GroupTransferRules.parse(files.first().sheet).take(2),
-            ),
-        )
+    val history
+        get() = MockData.current.groupHistory
 }

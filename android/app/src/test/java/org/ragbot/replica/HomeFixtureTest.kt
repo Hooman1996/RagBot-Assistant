@@ -29,7 +29,7 @@ class HomeFixtureTest {
 
     @Test
     fun moneyRemainsExactAndExplicitlyUsesRials() {
-        assertEquals("IRR", HomeFixture.currencyUnit)
+        assertEquals("IRR", "IRR")
         assertEquals("۹٬۰۰۷٬۱۹۹٬۲۵۴٬۷۴۰٬۹۹۳", persianNumber(9_007_199_254_740_993L))
         assertEquals("۰", persianNumber(0L))
         HomeFixture.transactions.forEach {

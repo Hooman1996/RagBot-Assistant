@@ -135,6 +135,7 @@ private fun WalletOperationForm(
     var errors by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     var failure by rememberSaveable { mutableStateOf<String?>(null) }
     var balanceShown by rememberSaveable { mutableStateOf(false) }
+    var contacts by rememberSaveable { mutableStateOf(false) }
     fun change(key: String, next: WalletOperationDraft) {
         // An edited field drops its stale error until the next Continue.
         errors = errors - key
@@ -184,8 +185,11 @@ private fun WalletOperationForm(
             ) {
                 change("destination", draft.copy(destination = it))
             }
-            // The familiar-destination picker (S-330) is not built.
-            TextButton({ onUnavailable("مقصدهای آشنا") }, Modifier.testTag("wallet-op-familiar")) {
+            if (contacts)
+                DestinationPicker("WALLET", "wallet-op-contact", { contacts = false }) {
+                    change("destination", draft.copy(destination = it))
+                }
+            TextButton({ contacts = true }, Modifier.testTag("wallet-op-familiar")) {
                 Text("انتخاب از مقصدهای آشنا")
             }
         }
@@ -366,24 +370,20 @@ private fun WalletOperationConfirm(
         }
     }
     // Recovered: charge and withdrawal ask for an OTP, the others for a signature; both stay with
-    // the user and nothing is sent.
+    // the user.
     val otp = operation == WalletOperation.CHARGE || operation == WalletOperation.DECHARGE
-    Button(
-        {
-            onUnavailable(
-                if (otp) "تایید تراکنش با رمز پویا" else "امضا و انجام ${operation.title}"
-            )
+    BankButton(
+        when {
+            otp -> "تایید تراکنش"
+            operation == WalletOperation.BUY || operation == WalletOperation.MOBILE ->
+                "تایید و ادامه"
+            else -> "ادامه"
         },
-        Modifier.fillMaxWidth().testTag("wallet-op-submit"),
+        "wallet-op-submit",
+        WalletOverviewDestinations.RECEIPT,
+        otp = true,
     ) {
-        Text(
-            when {
-                otp -> "تایید تراکنش — در دسترس نیست"
-                operation == WalletOperation.BUY || operation == WalletOperation.MOBILE ->
-                    "تایید و ادامه — در دسترس نیست"
-                else -> "ادامه — در دسترس نیست"
-            }
-        )
+        WalletOperationRules.submit(operation, draft, preview)
     }
     OutlinedButton(onBack, Modifier.fillMaxWidth().testTag("wallet-op-edit")) {
         Text("بازگشت و ویرایش")

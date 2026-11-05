@@ -24,6 +24,7 @@ COPIED = (
     ".github",
     "app_profiles",
     "contracts",
+    "mock_services",
     "deployment",
     "docs",
     "tools",

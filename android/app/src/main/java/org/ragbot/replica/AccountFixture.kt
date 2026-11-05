@@ -13,34 +13,11 @@ data class PreviewAccount(
 )
 
 object AccountFixture {
-    val accounts =
-        listOf(
-            PreviewAccount(
-                "account-1",
-                HomeFixture.accountNumber,
-                HomeFixture.accountOwner,
-                HomeFixture.accountType,
-                HomeFixture.accountIban,
-                HomeFixture.balanceRial,
-            ),
-            PreviewAccount(
-                "account-2",
-                "۰۰۰۰۰۰۰۰۰۲",
-                "کاربر نمایشی",
-                "پس‌انداز نمایشی",
-                "IR000000000000000000000002",
-                3_750_000L,
-            ),
-            PreviewAccount(
-                "account-3",
-                "۰۰۰۰۰۰۰۰۰۳",
-                "کاربر نمایشی",
-                "حساب بدون موجودی دریافتی",
-                "IR000000000000000000000003",
-                null,
-                ownership = "مشترک",
-            ),
-        )
+    val accounts
+        get() =
+            MockData.current.accounts.map { account ->
+                account.copy(balance = account.balance?.let { MockBank.balance(account.key) })
+            }
 }
 
 /** Semantic IDs identify implemented screens, not every embedded tab or dialog. */

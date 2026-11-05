@@ -51,7 +51,7 @@ internal object VehicleRules {
 }
 
 internal object VehicleFixture {
-    const val NOTICE = "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ استعلام یا پرداختی ارسال نمی‌شود."
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
 
     // Recovered keys of the vehicle menu; titles are server-supplied, so synthetic here.
     val menu =
@@ -79,34 +79,6 @@ internal object VehicleFixture {
             "AUTHENTICATED_HOME_FREEWAY_TOLL_HISTORY" to "سوابق آزادراه",
         )
 
-    val records =
-        listOf(
-            VehicleRecord(
-                "plate-1",
-                "plate",
-                true,
-                "0000000019",
-                "09000000001",
-                listOf("12", "ب", "345", "67"),
-            ),
-            VehicleRecord(
-                "plate-2",
-                "plate",
-                false,
-                "0000000027",
-                "09000000002",
-                listOf("123", "45678"),
-                automobile = false,
-            ),
-            VehicleRecord("contact-1", "contact", true, "0000000019", "09000000001"),
-            VehicleRecord("contact-2", "contact", false, "0000000035", "09000000003"),
-            VehicleRecord(
-                "licence-1",
-                "licence",
-                true,
-                "0000000019",
-                "09000000001",
-                licence = "9000000001",
-            ),
-        )
+    val records
+        get() = MockData.current.vehicles
 }

@@ -122,37 +122,34 @@ internal object TollRules {
 }
 
 internal object TollFixture {
-    const val NOTICE = "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ استعلام یا پرداخت عوارضی ارسال نمی‌شود."
-    const val INQUIRY_FEE = 5_000L
-    const val COMMISSION = 10_000L
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
+    val INQUIRY_FEE
+        get() = MockData.current.inquiryFee
+
+    val COMMISSION
+        get() = MockData.current.commission
+
 
     // The service supplies the plate letters with their codes; these are synthetic.
     val letters = listOf("01" to "الف", "02" to "ب", "03" to "ج", "04" to "د")
-    const val DUES_PLATE = "120234567"
+    val DUES_PLATE
+        get() = MockData.current.duesPlate
 
-    val items =
-        mapOf(
-            TollService.ANNUAL to
-                listOf(
-                    TollItem("annual-1404", "عوارض سال ۱۴۰۴", 450_000L, 45_000L, 20_000L),
-                    TollItem("annual-1405", "عوارض سال ۱۴۰۵", 500_000L),
-                ),
-            TollService.TRAFFIC to
-                listOf(
-                    TollItem("traffic-1", "۱۴۰۵/۰۷/۲۰", 120_000L),
-                    TollItem("traffic-2", "۱۴۰۵/۰۷/۲۳", 85_000L),
-                    TollItem("traffic-3", "۱۴۰۵/۰۸/۰۲", 240_000L),
-                ),
-            TollService.FREEWAY to
-                listOf(
-                    TollItem("freeway-1", "۱۴۰۵/۰۷/۱۵", 36_000L),
-                    TollItem("freeway-2", "۱۴۰۵/۰۸/۰۱", 52_000L),
-                ),
-            TollService.POLLUTION to emptyList(),
-        )
+    val items
+        get() =
+            TollService.entries.associateWith { service ->
+                MockData.current.tolls[service.name].orEmpty().filter {
+                    !MockBank.settled("toll:${it.id}")
+                }
+            }
 
     // Pollution quota for the season: allowed, remaining and consumed per season.
-    const val QUOTA_ALLOWED = 20
-    const val QUOTA_REMAINING = 7
-    val consumed = listOf(Triple(1405, 2, 8), Triple(1405, 3, 5))
+    val QUOTA_ALLOWED
+        get() = MockData.current.quotaAllowed
+
+    val QUOTA_REMAINING
+        get() = MockData.current.quotaRemaining
+
+    val consumed
+        get() = MockData.current.consumed
 }

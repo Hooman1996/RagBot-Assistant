@@ -104,6 +104,8 @@ internal object ReplicaProfile {
 
     val forms =
         listOf(
+            ProfileForm("S-027", listOf(text("login-username"), secret("login-password"))),
+            ProfileForm("S-435", listOf(money("budget-limit"))),
             ProfileForm("S-174", cardTransfer),
             ProfileForm("S-175", cardTransfer),
             ProfileForm(
@@ -261,7 +263,20 @@ internal object ReplicaProfile {
             ProfileForm("S-275", toll),
             ProfileForm("S-250", toll),
             ProfileForm("S-257", toll),
-        )
+        ) +
+            ServiceCatalog.flows
+                .flatMap { it.steps }
+                .filter { it.fields.isNotEmpty() }
+                .groupBy { it.page }
+                .map { (page, steps) ->
+                    ProfileForm(
+                        page,
+                        steps
+                            .flatMap { it.fields }
+                            .distinct()
+                            .map { FormField("svc-${it.key}", it.type) },
+                    )
+                }
 
     private fun feature(
         intent: String,
@@ -631,7 +646,10 @@ internal object ReplicaProfile {
             "saved-delete-confirm",
             "secret-*",
             "secure-ok",
+            "login-password",
+            "login-submit",
             "statement-request",
+            "svc-confirm",
             "suggestion-submit",
             "support-identity-continue",
             "support-mobile",

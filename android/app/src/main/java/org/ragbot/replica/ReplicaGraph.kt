@@ -41,6 +41,10 @@ internal val tracedHomeTiles =
         "history" to AccountDestinations.HISTORY,
     )
 
+/** Home tiles of Designed-for-mock services, by tile key. */
+internal val designedHomeTiles =
+    mapOf("inquiry" to "S-443", "open-account" to "S-062", "performance" to FinanceDestinations.MAIN, "wage" to "S-414", "loyalty" to "S-432")
+
 /** Screens the owner traced below Home; they have real routes, so no Home demo path. */
 private val ownerTraced =
     setOf(
@@ -91,27 +95,17 @@ internal object DemoPaths {
         entries(
             CardTransferDestinations.ANONYMOUS to "کارت به کارت بدون ورود با انتخاب مبدا",
             CardTransferDestinations.WITHOUT_SOURCE to "کارت به کارت بدون انتخابگر مبدا",
-            CardTransferDestinations.RECEIPT to "رسید مستقل کارت به کارت — نمونه",
             AccountTransferDestinations.MENU to "منوی انتقال — نمونهٔ مستقل",
-            AccountTransferDestinations.INTERNAL_RECEIPT to "رسید مستقل انتقال داخلی — نمونه",
-            AccountTransferDestinations.IBAN_RECEIPT to "رسید مستقل انتقال شبا — نمونه",
             GroupTransferDestinations.HISTORY to "سوابق تراکنش گروهی — نمونه",
-            GroupTransferDestinations.RECEIPT to "رسید مستقل انتقال گروهی — نمونه",
             BillPaymentDestinations.ACCOUNT to "پرداخت قبض با حساب",
             BillPaymentDestinations.CARD to "پرداخت قبض با کارت",
             BillPaymentDestinations.WITHOUT_SOURCE to "پرداخت قبض بدون ورود",
-            BillPaymentDestinations.RECEIPT to "رسید مستقل قبض — نمونه",
             InsuranceDestinations.MENU to "منوی بیمه — نمونهٔ مستقل",
-            InsuranceDestinations.RECEIPT to "رسید مستقل قسط بیمه — نمونه",
-            CreditRepaymentDestinations.RECEIPT to "رسید مستقل بازپرداخت کارت اعتباری — نمونه",
             TopUpDestinations.ACCOUNT to "خرید شارژ با حساب",
             TopUpDestinations.CARD to "خرید شارژ با کارت",
             TopUpDestinations.WITHOUT_SOURCE to "خرید شارژ بدون ورود",
-            TopUpDestinations.RECEIPT to "رسید مستقل شارژ — نمونه",
             CharityDestinations.PICKER to "کمک به خیریه",
-            CharityDestinations.RECEIPT to "رسید مستقل خیریه — نمونه",
             WalletOverviewDestinations.MAIN to "کیف پول",
-            WalletOverviewDestinations.RECEIPT to "رسید مستقل کیف پول — نمونه",
             ConversionDestinations.LOGIN to "تبدیل شناسه با ورود — نمونه",
             ConversionDestinations.NO_LOGIN to "تبدیل شناسه بدون ورود — نمونه",
             ConversionDestinations.PAID to "استعلام کارمزدی با انتخابگر — نمونهٔ مستقل",
@@ -119,7 +113,6 @@ internal object DemoPaths {
             LoanDestinations.MENU to "منوی تسهیلات — نمونهٔ مستقل",
             LoanDestinations.SUMMARY to "تسهیلات جاری و پرداخت اقساط",
             LoanDestinations.GROUP to "گروه‌های تسهیلات — فقط مشاهده",
-            TollDestinations.RECEIPT to "رسید مستقل عوارض — نمونه",
             // The in-flow callers (wage advance) are deferred.
             FundingFlow.ACCOUNT_IN_FLOW.amount to "افزایش موجودی حساب درون جریان — نمونهٔ مستقل",
             FundingFlow.WALLET_IN_FLOW.amount to "افزایش موجودی کیف درون جریان — نمونهٔ مستقل",
@@ -176,12 +169,22 @@ internal object ReplicaGraph {
             Edge(HOME, ShortcutDestinations.SCREEN, "header-SEARCH"),
             Edge(HOME, RecurringTransferDestinations.REPETITIVE, "header-SHORTCUTS"),
             Edge(HOME, FundingFlow.ACCOUNT_STANDALONE.amount, "home-increase"),
+            Edge(FinanceDestinations.MAIN, FinanceDestinations.BUDGETS, "finance-budgets"),
+            Edge(FinanceDestinations.BUDGETS, FinanceDestinations.BUDGET, "budget-*"),
+            Edge(HOME, LoginDestinations.INTRO, "login-start", EdgeKind.STEP),
+            Edge(HOME, LoginDestinations.LOGIN, "header-LOGOUT"),
+            Edge(LoginDestinations.INTRO, LoginDestinations.WELCOME, "intro-next"),
+            Edge(LoginDestinations.WELCOME, LoginDestinations.LOGIN, "welcome-login"),
+            Edge(LoginDestinations.LOGIN, HOME, "login-submit", EdgeKind.USER_ONLY),
             Edge(HOME, AccountDestinations.MANAGEMENT, "expand-account > home-account-management"),
             Edge(HOME, AccountDestinations.LIST, "control-ACCOUNT > account-list"),
             Edge(HOME, AccountDestinations.STATEMENT_LIST, "control-ACCOUNT > account-statement"),
             Edge(HOME, AccountDestinations.MANAGEMENT, "control-ACCOUNT > account-management"),
+            Edge(HOME, AccountDestinations.TRANSACTION, "transaction-*"),
         ) +
-            tracedHomeTiles.map { (key, to) -> Edge(HOME, to, "menu-$key") } +
+            (tracedHomeTiles + designedHomeTiles).map { (key, to) ->
+                Edge(HOME, to, "menu-$key")
+            } +
             CardFixture.actions.flatMap { (kind, actions) ->
                 actions.mapNotNull { action ->
                     action.destination?.let {
@@ -397,6 +400,8 @@ internal object ReplicaGraph {
                 Edge(CharityDestinations.TRANSFER, CharityDestinations.CONFIRM, "charity-continue"),
                 Edge(LoanDestinations.MENU, LoanDestinations.SUMMARY, "loan-current"),
                 Edge(LoanDestinations.MENU, LoanDestinations.GROUP, "loan-groups"),
+                Edge(LoanDestinations.MENU, "S-287", "loan-request"),
+                Edge(LoanDestinations.MENU, "S-407", "loan-credit-product"),
                 Edge(LoanDestinations.SUMMARY, LoanDestinations.DETAIL, "loan-*"),
                 Edge(
                     LoanDestinations.DETAIL,
@@ -511,6 +516,14 @@ internal object ReplicaGraph {
                     VehicleDestinations.LICENCES,
                 )
                 .map { Edge(it, VehicleDestinations.INQUIRY_HISTORY, "vehicle-history-*") } +
+            Edge(VehicleDestinations.HISTORY_MENU, AccountDestinations.HISTORY, "vehicle-paid-*") +
+            ServiceCatalog.vehicleMenu.flatMap { (key, flow) ->
+                val first = ServiceCatalog.flow(flow).steps.first().page
+                listOf(
+                    Edge(VehicleDestinations.MENU, first, "vehicle-menu-$key > vehicle-new"),
+                    Edge(VehicleRules.target(key), first, "vehicle-*", EdgeKind.STEP),
+                )
+            } +
             TollService.entries.flatMap { service ->
                 // The plate list's onward move depends on the menu item that opened it.
                 listOfNotNull(
@@ -546,8 +559,77 @@ internal object ReplicaGraph {
                 Edge(SupportDestinations.TICKETS, SupportDestinations.TICKET, "ticket-*"),
             )
 
+    /** A receipt follows only the user's confirm, so none of these reach the executor. */
+    private val receipts =
+        listOf(
+                CardTransferDestinations.CONFIRM to
+                    (CardTransferDestinations.RECEIPT to "card-transfer-submit"),
+                AccountTransferDestinations.CONFIRM to
+                    (AccountTransferDestinations.INTERNAL_RECEIPT to "account-transfer-submit"),
+                AccountTransferDestinations.CONFIRM to
+                    (AccountTransferDestinations.IBAN_RECEIPT to "account-transfer-submit"),
+                GroupTransferDestinations.VERIFY to
+                    (GroupTransferDestinations.RECEIPT to "group-verify-accept"),
+                BillPaymentDestinations.CONFIRM to
+                    (BillPaymentDestinations.RECEIPT to "bill-accept"),
+                BillPaymentDestinations.CARD_INFO to
+                    (BillPaymentDestinations.RECEIPT to "payment-submit"),
+                BillPaymentDestinations.CARD_INFO_NO_LOGIN to
+                    (BillPaymentDestinations.RECEIPT to "payment-submit"),
+                TopUpDestinations.CONFIRM to (TopUpDestinations.RECEIPT to "topup-accept"),
+                TopUpDestinations.CARD_INFO to (TopUpDestinations.RECEIPT to "payment-submit"),
+                TopUpDestinations.CARD_INFO_NO_LOGIN to
+                    (TopUpDestinations.RECEIPT to "payment-submit"),
+                CharityDestinations.CONFIRM to (CharityDestinations.RECEIPT to "payment-submit"),
+                InsuranceDestinations.CONFIRM to
+                    (InsuranceDestinations.RECEIPT to "payment-submit"),
+                CreditRepaymentDestinations.CONFIRM to
+                    (CreditRepaymentDestinations.RECEIPT to "payment-submit"),
+            )
+            .map { (from, target) ->
+                Edge(from, target.first, target.second, EdgeKind.USER_ONLY)
+            } +
+            WalletOperation.entries.map {
+                Edge(
+                    it.confirm,
+                    WalletOverviewDestinations.RECEIPT,
+                    "wallet-op-submit",
+                    EdgeKind.USER_ONLY,
+                )
+            } +
+            TollService.entries.mapNotNull { service ->
+                service.confirm?.let {
+                    Edge(it, TollDestinations.RECEIPT, "payment-submit", EdgeKind.USER_ONLY)
+                }
+            }
+
+    private val services =
+        ServiceCatalog.flows
+            .flatMap { flow ->
+                flow.steps.zipWithNext { from, to -> Edge(from.page, to.page, "svc-continue") } +
+                    listOfNotNull(
+                        flow.result?.let {
+                            Edge(flow.steps.last().page, it, "svc-confirm", EdgeKind.USER_ONLY)
+                        },
+                        flow.detail?.let { Edge(flow.result!!, it, "svc-detail") },
+                    )
+            }
+            .distinct() +
+            ServiceCatalog.menus.flatMap { (page, menu) ->
+                menu.second.map { (key, _, to) -> Edge(page, to, "svc-menu-$key") }
+            }
+
     val edges =
-        home + accountsAndCards + transfers + payments + wallet + cheques + vehicles + support
+        home +
+            accountsAndCards +
+            transfers +
+            payments +
+            wallet +
+            cheques +
+            vehicles +
+            support +
+            receipts +
+            services
 
     private val moves = edges.map { it.from to it.to }.toSet()
 

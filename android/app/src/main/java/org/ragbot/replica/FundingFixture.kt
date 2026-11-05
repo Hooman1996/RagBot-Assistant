@@ -72,8 +72,7 @@ internal object FundingRules {
 }
 
 internal object FundingFixture {
-    const val NOTICE =
-        "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ درگاه، نشانی یا برنامهٔ پرداختی باز نمی‌شود و مبلغی شارژ نمی‌شود."
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
     const val STEP = 100_000L
     const val DEFAULT_AMOUNT = 1_000_000L
     const val TRACKING = "DEMO-IPG-0001"

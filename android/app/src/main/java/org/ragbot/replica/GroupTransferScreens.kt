@@ -64,7 +64,7 @@ internal fun GroupTransferPage(
                     GroupTransferDestinations.ERRORS ->
                         GroupErrors(draft, onChange, onOpen, onCancel)
                     GroupTransferDestinations.VERIFY -> GroupVerify(draft, onCancel, onUnavailable)
-                    GroupTransferDestinations.RECEIPT -> GroupReceipt(onBack, onUnavailable)
+                    GroupTransferDestinations.RECEIPT -> BankReceipt(onBack, onUnavailable)
                     GroupTransferDestinations.HISTORY -> GroupHistoryList(onTrace, onUnavailable)
                     GroupTransferDestinations.DESTINATIONS ->
                         history?.let { GroupDestinationList(it, onDestination) }
@@ -750,14 +750,14 @@ private fun GroupVerify(
     ) {
         Text("افزودن یادداشت و پیوست تراکنش")
     }
-    Text(
-        "تأیید پرداخت، رمز پویا و ارسال در این پیش‌نمایش در دسترس نیست. هیچ انتقالی انجام نمی‌شود."
-    )
-    Button(
-        { onUnavailable("تایید پرداخت و ارسال انتقال گروهی") },
-        Modifier.fillMaxWidth().testTag("group-verify-accept"),
-    ) {
-        Text("تایید — در دسترس نیست")
+    BankButton("تایید", "group-verify-accept", GroupTransferDestinations.RECEIPT, otp = true) {
+        MockBank.pay(
+            "group-transfer",
+            "انتقال وجه گروهی",
+            draft.sourceId,
+            GroupTransferRules.total(draft.rows) ?: 0L,
+            "${persianNumber(draft.rows.size.toLong())} مقصد",
+        )
     }
     OutlinedButton({ onCancel(true) }, Modifier.fillMaxWidth().testTag("group-cancel")) {
         Text("ابطال")
@@ -778,37 +778,6 @@ private fun GroupVerify(
             confirmButton = { TextButton({ details = false }) { Text("بازگشت") } },
         )
     }
-}
-
-@Composable
-private fun GroupReceipt(onBack: () -> Unit, onUnavailable: (String) -> Unit) {
-    val sample = GroupTransferFixture.history.first()
-    Text(
-        "رسید ساختگی مستقل برای بازبینی؛ حاصل انتقال وجه نیست.",
-        modifier = Modifier.testTag("group-receipt-disclosure"),
-    )
-    TransferValue("وضعیت", "نمونهٔ نمایشی — بدون تراکنش بانکی")
-    TransferValue("زمان", sample.date)
-    TransferValue(
-        "مجموع مبالغ (ریال)",
-        GroupTransferRules.total(sample.rows)?.let(::persianNumber) ?: "—",
-    )
-    TransferValue("مقصد", "${persianNumber(sample.rows.size.toLong())} مقصد")
-    TransferValue("مبدا", sample.source)
-    TransferValue("شماره پیگیری ساختگی", sample.traceId)
-    Button(
-        { onUnavailable("مشاهده سوابق از رسید") },
-        Modifier.fillMaxWidth().testTag("group-receipt-history"),
-    ) {
-        Text("مشاهده سوابق")
-    }
-    Button(
-        { onUnavailable("ذخیره و اشتراک‌گذاری رسید") },
-        Modifier.fillMaxWidth().testTag("group-receipt-share"),
-    ) {
-        Text("ذخیره و اشتراک‌گذاری")
-    }
-    OutlinedButton(onBack, Modifier.fillMaxWidth()) { Text("بازگشت") }
 }
 
 @Composable

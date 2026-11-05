@@ -34,7 +34,7 @@ class HomeTest {
         enter()
         compose.onNodeWithTag("S-026").assertIsDisplayed()
         compose.onNodeWithTag("F-066").assertExists()
-        compose.onNodeWithText("شماره حساب ${HomeFixture.accountNumber}").assertIsDisplayed()
+        compose.onNodeWithText("شماره حساب ${AccountFixture.accounts.first().number}").assertIsDisplayed()
         val home =
             compose.onNodeWithTag("control-HOME").assertIsSelected().getUnclippedBoundsInRoot()
         val profile =
@@ -144,7 +144,7 @@ class HomeTest {
     @Test
     fun shellControlsNeverPretendToNavigate() {
         enter()
-        listOf("control-QR", "header-LOGOUT").forEach {
+        listOf("control-QR").forEach {
             compose.onNodeWithTag(it).performClick()
             compose.onNodeWithTag("unavailable").assertIsDisplayed()
             back()

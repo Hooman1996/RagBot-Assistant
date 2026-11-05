@@ -204,7 +204,7 @@ class HomeNavigationTest {
                 "S-257",
                 "S-258",
                 "S-261",
-            ),
+            ) + ServiceCatalog.implemented + LoginDestinations.implemented + FinanceDestinations.implemented,
             HomeDestinations.implemented,
         )
         assertTrue(ids.containsAll(HomeDestinations.implemented))
@@ -212,7 +212,6 @@ class HomeNavigationTest {
         // Host container S-138 and received-card confirmation S-004 are not pages.
         // S-183 is a wage-advance receipt, not part of the group-transfer journey.
         listOf(
-                "S-183",
                 // S-199 hosts only the S-200 repetitive-transactions route.
                 "S-199",
                 "S-194",
@@ -225,7 +224,6 @@ class HomeNavigationTest {
                 // here.
                 "S-288",
                 "S-330",
-                "S-308",
                 // The fast-payment QR scanner is deferred by D-021.
                 "S-108",
                 // Top-up hosts, the legacy amount/result pages and the unresolved web views.
@@ -265,6 +263,7 @@ class HomeNavigationTest {
                         HomeControl.SEARCH,
                         HomeControl.SHORTCUTS,
                         HomeControl.INCREASE,
+                        HomeControl.LOGOUT,
                     )
             }
             .forEach {

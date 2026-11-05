@@ -80,6 +80,16 @@ class TollsTest {
         compose.onNodeWithTag("otp-ok").performClick()
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun trafficTollSelectionReviewAndBackKeepTheVehicle() {
         plates("TRAFFIC_TOLL")
@@ -101,7 +111,7 @@ class TollsTest {
         shown("S-274")
         compose.onNodeWithTag("toll-confirm-total").assertTextEquals("مبلغ کل: ۴۴۵٬۰۰۰ ریال")
         click("payment-submit")
-        unavailable("پرداخت عوارض شهرداری")
+        otpPrompt()
         compose.onNodeWithTag("otp-code").assertDoesNotExist()
         click("payment-cancel")
         shown("S-276")
@@ -169,18 +179,12 @@ class TollsTest {
     }
 
     @Test
-    fun receiptEntryAndErrorScenarioStayLocal() {
-        click("demo-S-261")
-        shown("S-261")
-        compose.onNodeWithTag("toll-receipt-disclosure").assertExists()
-        click("toll-track")
-        unavailable("پیگیری تراکنش")
-        back()
-        back()
+    fun errorScenarioRetriesLocally() {
         click("scenario-error")
-        click("demo-S-261")
+        click("demo-entry")
+        click("menu-vehicle")
         compose.onNodeWithTag("data-error").assertIsDisplayed()
         compose.onNodeWithText("تلاش مجدد").performClick()
-        compose.onNodeWithTag("toll-receipt-disclosure").assertExists()
+        shown("S-253")
     }
 }
