@@ -67,6 +67,16 @@ internal data class Violation(
     val amount: Long,
 )
 
+/** Credit inquiries of the demo user; each list is label and value rows. */
+internal data class Inquiries(
+    val fee: Long,
+    val report: List<Pair<String, String>>,
+    val reportDetail: List<Pair<String, String>>,
+    val bounced: List<Pair<String, String>>,
+    val bouncedDetail: List<Pair<String, String>>,
+    val rate: List<Pair<String, String>>,
+)
+
 /** Forces [outcome] for [operation], or for every operation when it is "*". */
 internal data class ForcedOutcome(val operation: String, val outcome: String)
 
@@ -113,6 +123,20 @@ internal class MockFiles(read: (String) -> Json) {
                 it.list("addresses") { a ->
                     PreviewAddress(a.str("key"), a.str("title"), a.str("address"), a.str("postalCode"))
                 },
+            )
+        }
+    private fun pairs(rows: Json) =
+        rows.list { row -> row.list { it.string() }.let { (label, value) -> label to value } }
+
+    val inquiries =
+        customerFile["inquiries"].let {
+            Inquiries(
+                it.long("fee"),
+                pairs(it["report"]),
+                pairs(it["reportDetail"]),
+                pairs(it["bounced"]),
+                pairs(it["bouncedDetail"]),
+                pairs(it["rate"]),
             )
         }
     private val accountFile = read("accounts")
@@ -414,10 +438,7 @@ internal class MockFiles(read: (String) -> Json) {
                 )
             }
         }
-    private fun rows(key: String) =
-        vehicleFile[key].map { rows ->
-            rows.list { row -> row.list { it.string() }.let { (label, value) -> label to value } }
-        }
+    private fun rows(key: String) = vehicleFile[key].map(::pairs)
 
     val violations =
         vehicleFile["violations"].map { items ->

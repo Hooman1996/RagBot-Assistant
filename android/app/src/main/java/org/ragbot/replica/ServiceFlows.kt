@@ -57,6 +57,7 @@ internal class ServiceFlow(
     val steps: List<FlowStep>,
     val result: String? = null,
     val otp: Boolean = true,
+    val detail: String? = null,
     val submit: ((Map<String, String>) -> BankResult)? = null,
 )
 
@@ -138,9 +139,25 @@ private fun FlowInput(field: FlowField, value: String, error: String?, onChange:
 
 /** The receipt page of a service. */
 @Composable
-internal fun ServiceResultPage(page: String, onBack: () -> Unit, onUnavailable: (String) -> Unit) {
+internal fun ServiceResultPage(
+    page: String,
+    detail: String?,
+    onOpen: (String) -> Unit,
+    onBack: () -> Unit,
+    onUnavailable: (String) -> Unit,
+) {
     PageFrame(page, "نتیجه عملیات", onBack) {
-        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
+        Column(
+            Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            if (detail != null)
+                OutlinedButton(
+                    { onOpen(detail) },
+                    Modifier.fillMaxWidth().testTag("svc-detail"),
+                ) {
+                    Text("جزئیات")
+                }
             BankReceipt(onBack, onUnavailable)
         }
     }

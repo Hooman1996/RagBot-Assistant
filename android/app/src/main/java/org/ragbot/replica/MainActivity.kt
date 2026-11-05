@@ -528,8 +528,8 @@ fun ReplicaApp() {
                                         open(ChequeDestinations.CARDBOARD)
                                     // VH-RECOVERY: the car-inquiry key opens the vehicle menu.
                                     else if (item.key == "vehicle") open(VehicleDestinations.MENU)
-                                    else if (item.key in tracedHomeTiles)
-                                        open(tracedHomeTiles.getValue(item.key))
+                                    else if (item.key in tracedHomeTiles + designedHomeTiles)
+                                        open((tracedHomeTiles + designedHomeTiles).getValue(item.key))
                                     else
                                         notice =
                                             "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
@@ -643,7 +643,26 @@ fun ReplicaApp() {
                                 ::goBack,
                             )
                         } else if (page in ServiceCatalog.results) {
-                            ServiceResultPage(page, ::goBack, ::unavailable)
+                            ServiceResultPage(
+                                page,
+                                ServiceCatalog.flows.find { it.result == page }?.detail,
+                                ::open,
+                                ::goBack,
+                                ::unavailable,
+                            )
+                        } else if (page in ServiceCatalog.menus) {
+                            val (title, entries) = ServiceCatalog.menus.getValue(page)
+                            MenuPage(
+                                page,
+                                title,
+                                entries,
+                                { key, to ->
+                                    serviceKey = key
+                                    serviceValues = emptyMap()
+                                    open(to)
+                                },
+                                ::goBack,
+                            )
                         } else if (page in CardTransferDestinations.implemented) {
                             CardTransferPage(
                                 page,

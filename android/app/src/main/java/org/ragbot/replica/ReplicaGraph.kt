@@ -41,6 +41,9 @@ internal val tracedHomeTiles =
         "history" to AccountDestinations.HISTORY,
     )
 
+/** Home tiles of Designed-for-mock services, by tile key. */
+internal val designedHomeTiles = mapOf("inquiry" to "S-443")
+
 /** Screens the owner traced below Home; they have real routes, so no Home demo path. */
 private val ownerTraced =
     setOf(
@@ -171,7 +174,9 @@ internal object ReplicaGraph {
             Edge(HOME, AccountDestinations.MANAGEMENT, "control-ACCOUNT > account-management"),
             Edge(HOME, AccountDestinations.TRANSACTION, "transaction-*"),
         ) +
-            tracedHomeTiles.map { (key, to) -> Edge(HOME, to, "menu-$key") } +
+            (tracedHomeTiles + designedHomeTiles).map { (key, to) ->
+                Edge(HOME, to, "menu-$key")
+            } +
             CardFixture.actions.flatMap { (kind, actions) ->
                 actions.mapNotNull { action ->
                     action.destination?.let {
@@ -595,10 +600,14 @@ internal object ReplicaGraph {
                     listOfNotNull(
                         flow.result?.let {
                             Edge(flow.steps.last().page, it, "svc-confirm", EdgeKind.USER_ONLY)
-                        }
+                        },
+                        flow.detail?.let { Edge(flow.result!!, it, "svc-detail") },
                     )
             }
-            .distinct()
+            .distinct() +
+            ServiceCatalog.menus.flatMap { (page, menu) ->
+                menu.second.map { (key, _, to) -> Edge(page, to, "svc-menu-$key") }
+            }
 
     val edges =
         home +

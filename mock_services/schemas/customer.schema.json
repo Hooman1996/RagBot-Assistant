@@ -16,7 +16,8 @@
     "perTransferLimit",
     "dailyLimit",
     "unit",
-    "addresses"
+    "addresses",
+    "inquiries"
   ],
   "properties": {
     "name": {
@@ -79,6 +80,68 @@
           },
           "postalCode": {
             "type": "string"
+          }
+        }
+      }
+    },
+    "inquiries": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fee",
+        "report",
+        "reportDetail",
+        "bounced",
+        "bouncedDetail",
+        "rate"
+      ],
+      "properties": {
+        "fee": {
+          "type": "integer"
+        },
+        "report": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "reportDetail": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "bounced": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "bouncedDetail": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "rate": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }
