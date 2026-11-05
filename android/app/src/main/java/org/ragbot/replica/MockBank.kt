@@ -3,6 +3,9 @@ package org.ragbot.replica
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /** What a finished service shows. [amount] is exact, in [unit]. */
 internal data class Receipt(
@@ -47,7 +50,9 @@ internal object MockBank {
         get() = session ?: fresh().also { session = it }
 
     /** JVM tests have no Persian calendar, so they replace this. */
-    var clock: () -> String = { "${todayPersian()} - ${java.time.LocalTime.now().withNano(0)}" }
+    var clock: () -> String = {
+        "${todayPersian()} - ${SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())}"
+    }
 
     var receipt by mutableStateOf<Receipt?>(null)
         private set
