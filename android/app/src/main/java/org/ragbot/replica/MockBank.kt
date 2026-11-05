@@ -37,6 +37,8 @@ internal object MockBank {
         val settled: Set<String> = emptySet(),
         val sayad: Map<String, SayadCheque> = emptyMap(),
         val spent: Long = 0,
+        val categories: Map<String, Long> = emptyMap(),
+        val budgets: Map<String, Long> = emptyMap(),
         val trace: Int = 0,
     )
 
@@ -165,6 +167,29 @@ internal object MockBank {
 
     fun incomplete() = failure("incomplete")
 
+    /** Spending of this session in one finance category. */
+    fun sessionSpending(category: String) = current.categories[category] ?: 0L
+
+    fun budget(category: String) =
+        current.budgets[category] ?: MockData.current.budgets[category] ?: 0L
+
+    fun setBudget(category: String, limit: Long) {
+        session = current.copy(budgets = current.budgets + (category to limit))
+    }
+
+    private fun category(operation: String) =
+        when (operation) {
+            "bill" -> "bills"
+            "charge" -> "mobile"
+            "toll",
+            "violation",
+            "transfer-tax" -> "vehicle"
+            "card-transfer",
+            "account-transfer",
+            "group-transfer" -> "transfers"
+            else -> "other"
+        }
+
     /** The generic loan application: the product's limits decide the mock result. */
     fun loanRequest(key: String, amount: Long, months: Long): BankResult {
         val product =
@@ -289,6 +314,10 @@ internal object MockBank {
                 balances = state.balances + (from.key to (balance - amount).coerceAtLeast(0)),
                 settled = state.settled + settles,
                 spent = state.spent + amount,
+                categories =
+                    state.categories +
+                        (category(operation) to
+                            (state.categories[category(operation)] ?: 0L) + amount),
             )
         return record(next, title, amount, "${from.type} ${from.number}", destination, rows)
     }

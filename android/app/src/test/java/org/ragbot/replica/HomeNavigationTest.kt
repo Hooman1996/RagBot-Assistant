@@ -204,7 +204,7 @@ class HomeNavigationTest {
                 "S-257",
                 "S-258",
                 "S-261",
-            ) + ServiceCatalog.implemented + LoginDestinations.implemented,
+            ) + ServiceCatalog.implemented + LoginDestinations.implemented + FinanceDestinations.implemented,
             HomeDestinations.implemented,
         )
         assertTrue(ids.containsAll(HomeDestinations.implemented))

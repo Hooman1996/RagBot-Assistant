@@ -587,6 +587,12 @@ internal class MockFiles(read: (String) -> Json) {
                 it.str("created"),
             )
         }
+    val categories = transactionFile["categories"].map { it.string() }
+    val spending =
+        transactionFile.list("spending") {
+            Spending(it.str("category"), it.str("title"), it.long("amount"))
+        }
+    val budgets = transactionFile["budgets"].map { it.long() }
     private val insuranceFile = read("insurance")
     val insuredName = insuranceFile.str("insuredName")
     val insuredNationalCode = insuranceFile.str("insuredNationalCode")

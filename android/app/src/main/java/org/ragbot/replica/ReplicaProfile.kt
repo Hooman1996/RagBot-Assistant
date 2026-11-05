@@ -105,6 +105,7 @@ internal object ReplicaProfile {
     val forms =
         listOf(
             ProfileForm("S-027", listOf(text("login-username"), secret("login-password"))),
+            ProfileForm("S-435", listOf(money("budget-limit"))),
             ProfileForm("S-174", cardTransfer),
             ProfileForm("S-175", cardTransfer),
             ProfileForm(

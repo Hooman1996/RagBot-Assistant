@@ -70,6 +70,7 @@ fun ReplicaApp() {
     }
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
     var serviceKey by rememberSaveable { mutableStateOf("") }
+    var budgetCategory by rememberSaveable { mutableStateOf("") }
     var serviceValues by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     var bankFailure by rememberSaveable { mutableStateOf<String?>(null) }
     var bankDone by rememberSaveable { mutableStateOf<String?>(null) }
@@ -646,6 +647,8 @@ fun ReplicaApp() {
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in FinanceDestinations.implemented) {
+                            FinancePage(page, budgetCategory, { budgetCategory = it }, ::open, ::goBack)
                         } else if (page in LoginDestinations.implemented) {
                             LoginPage(
                                 page,
