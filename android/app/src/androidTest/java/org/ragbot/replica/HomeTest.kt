@@ -232,6 +232,17 @@ class HomeTest {
     }
 
     @Test
+    fun tracedHomeTilesOpenTheirScreens() {
+        enter()
+        tracedHomeTiles.forEach { (key, screen) ->
+            scrollTo("menu-$key").performClick()
+            compose.onNodeWithTag(screen).assertIsDisplayed()
+            back()
+            compose.onNodeWithTag("S-026").assertIsDisplayed()
+        }
+    }
+
+    @Test
     fun everyDemoPathOpensItsScreenFromHomeAndIsLabelled() {
         enter()
         DemoPaths.onHome.forEach {

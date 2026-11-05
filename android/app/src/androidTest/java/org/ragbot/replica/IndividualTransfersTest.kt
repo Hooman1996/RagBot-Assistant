@@ -247,15 +247,11 @@ class IndividualTransfersTest {
     }
 
     @Test
-    fun unresolvedHomeQuickTransfersDoNotInventAnIncomingRoute() {
+    fun unresolvedHomeCardTransferDoesNotInventAnIncomingRoute() {
         compose.onNodeWithTag("demo-entry").performClick()
-        for (tag in listOf("menu-transfer", "menu-card-transfer")) {
-            compose.onNodeWithTag(tag).performScrollTo().performClick()
-            compose.onNodeWithTag("unavailable").assertIsDisplayed()
-            compose.onNodeWithTag("S-193").assertDoesNotExist()
-            compose.onNodeWithTag("S-175").assertDoesNotExist()
-            back()
-        }
+        compose.onNodeWithTag("menu-card-transfer").performScrollTo().performClick()
+        compose.onNodeWithTag("unavailable").assertIsDisplayed()
+        compose.onNodeWithTag("S-175").assertDoesNotExist()
     }
 
     @Test

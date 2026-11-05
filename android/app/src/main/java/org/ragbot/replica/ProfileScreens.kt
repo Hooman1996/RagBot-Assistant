@@ -77,6 +77,7 @@ object ProfileFixture {
                 ProfileDestinations.STOREFRONT,
             ),
             CardAction("cards", "وضعیت نمایش کارت", CardDestinations.VISIBILITY),
+            CardAction("notifications", "تنظیمات اعلان‌ها", ProfileDestinations.NOTIFICATIONS),
         )
     val facilities = listOf("انتقال وجه", "پرداخت قبض", "خرید شارژ", "کارت به کارت")
     val notifications = listOf("پیامک تراکنش‌ها", "اعلان پیشنهادها", "اعلان سررسیدها")

@@ -479,6 +479,8 @@ fun ReplicaApp() {
                                         open(ChequeDestinations.CARDBOARD)
                                     // VH-RECOVERY: the car-inquiry key opens the vehicle menu.
                                     else if (item.key == "vehicle") open(VehicleDestinations.MENU)
+                                    else if (item.key in tracedHomeTiles)
+                                        open(tracedHomeTiles.getValue(item.key))
                                     else
                                         notice =
                                             "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."

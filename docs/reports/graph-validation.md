@@ -6,6 +6,10 @@ For the owner to fill in (Stage 2, D-021). Our side runs no observation pass on 
 **Owner checked**. When a row marked as a demo path has real taps, it can become a real Home link in
 the replica.
 
+**Owner checked** holds `yes` when the owner confirmed the row, and `not found in the real app` when
+the owner looked for the move and could not find it. A not-found row is not a tick: the replica keeps
+its control and edge, and only this sheet records the answer. An empty cell means not answered yet.
+
 **Columns.**
 
 - **Type:** `Replica route` is a move the replica's own screens make. `Demo path` comes from the demo
@@ -17,67 +21,89 @@ the replica.
 
 ## Trace these first
 
-The graph records a launch from Home for these screens, but the control is Unknown. Tracing them
-gives the first-wave journeys a real Home link.
+The graph records a launch from Home for these screens, but the control is Unknown. **Replica** says
+what came of each trace. A link was added only where the taps and landing page match what the replica
+screen shows.
 
-| Screen | Name | Real-app taps from Home | Owner checked |
-|---|---|---|---|
-| S-193 | Transfer: menu transfer |  |  |
-| S-187 | Transfer: group transfer first |  |  |
-| S-178 | Transfer: continuous history |  |  |
-| S-089 | Transactions: group transfer history |  |  |
-| S-209 | Bills: bill payment from account |  |  |
-| S-211 | Mobile top-up: charge by account |  |  |
-| S-283 | Donations: charity picker |  |  |
-| S-338 | Loans: loan summary |  |  |
+| Screen | Name | Real-app taps from Home | Owner checked | Replica |
+|---|---|---|---|---|
+| S-193 | Transfer: menu transfer | Home → انتقال وجه→ lands on: form with انتقال وجه داخلی، انتقال وجه بین بانکی، انتقال وجه گروهی، انتقال وجه خودکار | yes | Real link: `menu-transfer` |
+| S-187 | Transfer: group transfer first | Home → انتقال وجه → انتقال وجه گروهی→ lands on: form with   مبلغ، ورود دستی مقصد ها، بارگذاری فایل مقصد ها | yes | Real route: `menu-transfer > transfer-group` |
+| S-178 | Transfer: continuous history | Home → انتقال وجه →انتقال وجه خودکار→لیست درخواست ها | yes | Real route: `menu-transfer > transfer-continuous > recurring-history`. Note 1 |
+| S-089 | Transactions: group transfer history | Home → سوابق→سوابق انتقال وجه گروهی→ lands on: form with  group transaction history | yes | Demo path kept. Note 2 |
+| S-209 | Bills: bill payment from account | Home →قبض → lands on: form with شناسه قبض and شناسه پرداخت | yes | Real link: `menu-bill` |
+| S-211 | Mobile top-up: charge by account | Home →افزایش موجودی→ lands on: form with the amount for افزایش موجودی | yes | No link added. Note 3 |
+| S-283 | Donations: charity picker | Home →خیریه→ lands on: a page with different charity foundations | yes | Real link: `menu-charity` |
+| S-338 | Loans: loan summary | Home →تسهیلات→ lands on: a page with different loans | yes | Real link: `menu-loan` |
+
+**Notes.**
+
+1. **S-178.** The last tap, `لیست درخواست ها`, has no label of that name in the replica. Its S-180
+   menu says `سوابق انتقال وجه خودکار`, and S-178 lists the requests under that title. Open question
+   for the owner.
+2. **S-089.** The replica has no `سوابق` menu screen for the middle step, and this issue adds no
+   screens, so the Home tile stays unavailable and the demo path stays.
+3. **S-211.** The replica's S-211 is the mobile charge form (`خرید شارژ`: phone and operator). The
+   owner's taps and amount form match S-222, which `home-increase` already opens. Open question for
+   the owner. The S-211 demo path stays.
+4. **S-086.** The Home tile `menu-statement` has the same label as the owner's tap, but the taps name
+   no landing page and the replica has two statement screens: S-016 (`صورتحساب`) and S-086
+   (`درخواست صورتحساب`). The demo path stays until the owner says which one it opens.
+5. **S-463.** The owner's taps reach the address list (S-464). `address-add` is the replica's next
+   step from that list.
+6. **S-071.** The replica's settings menu had no entry for this screen, so `settings-notifications`
+   was added to match the owner's taps. The screen itself is unchanged.
 
 ## Every edge (240)
 
 | From | To | Control | Type | Graph | Real-app taps | Owner checked |
 |---|---|---|---|---|---|---|
-| S-026 Home: main | S-111 Wallet: wallet main | `menu-wallet` | Replica route | None |  |  |
+| S-026 Home: main | S-111 Wallet: wallet main | `menu-wallet` | Replica route | None |  | yes |
 | S-026 Home: main | S-077 Support: faq | `menu-support` | Replica route | Recovered |  |  |
 | S-026 Home: main | S-077 Support: faq | `header-SUPPORT` | Replica route | Recovered |  |  |
 | S-026 Home: main | S-147 Cheques: cheque menu | `menu-cheque` | Replica route | Recovered |  |  |
 | S-026 Home: main | S-154 Chequebook: card board | `menu-cartable` | Replica route | Recovered |  |  |
-| S-026 Home: main | S-253 Road toll: menu list | `menu-vehicle` | Replica route | None |  |  |
+| S-026 Home: main | S-253 Road toll: menu list | `menu-vehicle` | Replica route | None |  | yes |
 | S-026 Home: main | S-075 Notifications | `header-NOTIFICATIONS` | Replica route | Recovered |  |  |
-| S-026 Home: main | S-084 Shortcuts: shortcut home | `header-SEARCH` | Replica route | None |  |  |
-| S-026 Home: main | S-200 Recurring transfers: repetitive transactions home | `header-SHORTCUTS` | Replica route | None |  |  |
-| S-026 Home: main | S-222 Balance top-up: increase account balance amount standalone | `home-increase` | Replica route | None |  |  |
-| S-026 Home: main | S-063 Profile: account management | `expand-account > home-account-management` | Replica route | None |  |  |
-| S-026 Home: main | S-085 Accounts: account list | `control-ACCOUNT > account-list` | Replica route | None |  |  |
-| S-026 Home: main | S-016 Statement: statement list | `control-ACCOUNT > account-statement` | Replica route | None |  |  |
-| S-026 Home: main | S-063 Profile: account management | `control-ACCOUNT > account-management` | Replica route | None |  |  |
-| S-026 Home: main | S-012 Cards: card information | `control-CARD > card-kind-DEBIT > card-action-info` | Replica route | None |  |  |
+| S-026 Home: main | S-084 Shortcuts: shortcut home | `header-SEARCH` | Replica route | None |  | not found in the real app |
+| S-026 Home: main | S-200 Recurring transfers: repetitive transactions home | `header-SHORTCUTS` | Replica route | None |  | not found in the real app |
+| S-026 Home: main | S-222 Balance top-up: increase account balance amount standalone | `home-increase` | Replica route | None |  | yes |
+| S-026 Home: main | S-063 Profile: account management | `expand-account > home-account-management` | Replica route | None |  | yes |
+| S-026 Home: main | S-085 Accounts: account list | `control-ACCOUNT > account-list` | Replica route | None |  | yes |
+| S-026 Home: main | S-016 Statement: statement list | `control-ACCOUNT > account-statement` | Replica route | None |  | yes |
+| S-026 Home: main | S-063 Profile: account management | `control-ACCOUNT > account-management` | Replica route | None |  | yes |
+| S-026 Home: main | S-193 Transfer: menu transfer | `menu-transfer` | Replica route | Recovered | Home → انتقال وجه | yes |
+| S-026 Home: main | S-209 Bills: bill payment from account | `menu-bill` | Replica route | Recovered | Home →قبض | yes |
+| S-026 Home: main | S-283 Donations: charity picker | `menu-charity` | Replica route | Recovered | Home →خیریه | yes |
+| S-026 Home: main | S-338 Loans: loan summary | `menu-loan` | Replica route | Recovered | Home →تسهیلات | yes |
+| S-026 Home: main | S-012 Cards: card information | `control-CARD > card-kind-DEBIT > card-action-info` | Replica route | None |  | yes |
 | S-026 Home: main | S-125 Cards: card list | `control-CARD > card-kind-DEBIT > card-action-list` | Replica route | None |  |  |
 | S-026 Home: main | S-124 Cards: card issue first | `control-CARD > card-kind-DEBIT > card-action-issue` | Replica route | Recovered |  |  |
-| S-026 Home: main | S-127 Cards: card modify first | `control-CARD > card-kind-DEBIT > card-action-extend` | Replica route | None |  |  |
-| S-026 Home: main | S-127 Cards: card modify first | `control-CARD > card-kind-DEBIT > card-action-replicate` | Replica route | None |  |  |
-| S-026 Home: main | S-127 Cards: card modify first | `control-CARD > card-kind-DEBIT > card-action-recolor` | Replica route | None |  |  |
-| S-026 Home: main | S-121 Cards: card block auth | `control-CARD > card-kind-DEBIT > card-action-block` | Replica route | None |  |  |
-| S-026 Home: main | S-135 Cards: get or change pass | `control-CARD > card-kind-DEBIT > card-action-pin` | Replica route | None |  |  |
-| S-026 Home: main | S-136 Cards: second pass activation | `control-CARD > card-kind-DEBIT > card-action-activation` | Replica route | None |  |  |
-| S-026 Home: main | S-131 Cards: credit card detail | `control-CARD > card-kind-CREDIT > card-action-credit` | Replica route | None |  |  |
-| S-026 Home: main | S-134 Cards: credit card file loan summary | `control-CARD > card-kind-CREDIT > card-action-loan` | Replica route | None |  |  |
-| S-026 Home: main | S-091 Transactions: transaction list | `control-CARD > card-kind-CREDIT > card-action-history` | Replica route | None |  |  |
-| S-026 Home: main | S-121 Cards: card block auth | `control-CARD > card-kind-CREDIT > card-action-block` | Replica route | None |  |  |
-| S-026 Home: main | S-119 Cards: bon card balance | `control-CARD > card-kind-BON > card-action-bon` | Replica route | None |  |  |
-| S-026 Home: main | S-121 Cards: card block auth | `control-CARD > card-kind-BON > card-action-block` | Replica route | None |  |  |
-| S-026 Home: main | S-012 Cards: card information | `control-CARD > card-kind-GIFT > card-action-info` | Replica route | None |  |  |
-| S-026 Home: main | S-140 Wallet card: wallet card issue send type | `control-CARD > card-kind-WALLET > card-action-wallet-issue` | Replica route | None |  |  |
-| S-026 Home: main | S-141 Wallet card: wallet card set or change pin | `control-CARD > card-kind-WALLET > card-action-wallet-pin` | Replica route | None |  |  |
-| S-026 Home: main | S-065 Profile: edit user | `control-PROFILE > profile-edit` | Replica route | None |  |  |
-| S-026 Home: main | S-064 Profile: additional information | `control-PROFILE > profile-additional` | Replica route | None |  |  |
-| S-026 Home: main | S-063 Profile: account management | `control-PROFILE > profile-accounts` | Replica route | None |  |  |
-| S-026 Home: main | S-126 Cards: card management | `control-PROFILE > profile-cards` | Replica route | None |  |  |
-| S-026 Home: main | S-464 Addresses: address list | `control-PROFILE > profile-addresses` | Replica route | None |  |  |
-| S-026 Home: main | S-025 Settings: app settings menu | `control-PROFILE > profile-settings` | Replica route | None |  |  |
-| S-026 Home: main | S-069 Profile: invitation | `control-PROFILE > profile-invite` | Replica route | None |  |  |
-| S-026 Home: main | S-074 What's new: changelog list | `control-PROFILE > profile-versions` | Replica route | None |  |  |
-| S-026 Home: main | S-086 Statement: request statement | `demo-menu > demo-path-statement` | Demo path, not a real-app route | None |  |  |
-| S-026 Home: main | S-071 Settings: notification settings | `demo-menu > demo-path-S-071` | Demo path, not a real-app route | None |  |  |
-| S-026 Home: main | S-120 Cards: card balance without source picker | `demo-menu > demo-path-S-120` | Demo path, not a real-app route | None |  |  |
+| S-026 Home: main | S-127 Cards: card modify first | `control-CARD > card-kind-DEBIT > card-action-extend` | Replica route | None |  | yes |
+| S-026 Home: main | S-127 Cards: card modify first | `control-CARD > card-kind-DEBIT > card-action-replicate` | Replica route | None |  | yes |
+| S-026 Home: main | S-127 Cards: card modify first | `control-CARD > card-kind-DEBIT > card-action-recolor` | Replica route | None |  | yes |
+| S-026 Home: main | S-121 Cards: card block auth | `control-CARD > card-kind-DEBIT > card-action-block` | Replica route | None |  | yes |
+| S-026 Home: main | S-135 Cards: get or change pass | `control-CARD > card-kind-DEBIT > card-action-pin` | Replica route | None |  | yes |
+| S-026 Home: main | S-136 Cards: second pass activation | `control-CARD > card-kind-DEBIT > card-action-activation` | Replica route | None |  | yes |
+| S-026 Home: main | S-131 Cards: credit card detail | `control-CARD > card-kind-CREDIT > card-action-credit` | Replica route | None |  | yes |
+| S-026 Home: main | S-134 Cards: credit card file loan summary | `control-CARD > card-kind-CREDIT > card-action-loan` | Replica route | None |  | yes |
+| S-026 Home: main | S-091 Transactions: transaction list | `control-CARD > card-kind-CREDIT > card-action-history` | Replica route | None |  | yes |
+| S-026 Home: main | S-121 Cards: card block auth | `control-CARD > card-kind-CREDIT > card-action-block` | Replica route | None |  | yes |
+| S-026 Home: main | S-119 Cards: bon card balance | `control-CARD > card-kind-BON > card-action-bon` | Replica route | None |  | yes |
+| S-026 Home: main | S-121 Cards: card block auth | `control-CARD > card-kind-BON > card-action-block` | Replica route | None |  | yes |
+| S-026 Home: main | S-012 Cards: card information | `control-CARD > card-kind-GIFT > card-action-info` | Replica route | None |  | not found in the real app |
+| S-026 Home: main | S-140 Wallet card: wallet card issue send type | `control-CARD > card-kind-WALLET > card-action-wallet-issue` | Replica route | None |  | yes |
+| S-026 Home: main | S-141 Wallet card: wallet card set or change pin | `control-CARD > card-kind-WALLET > card-action-wallet-pin` | Replica route | None |  | yes |
+| S-026 Home: main | S-065 Profile: edit user | `control-PROFILE > profile-edit` | Replica route | None |  | yes |
+| S-026 Home: main | S-064 Profile: additional information | `control-PROFILE > profile-additional` | Replica route | None |  | yes |
+| S-026 Home: main | S-063 Profile: account management | `control-PROFILE > profile-accounts` | Replica route | None |  | yes |
+| S-026 Home: main | S-126 Cards: card management | `control-PROFILE > profile-cards` | Replica route | None |  | yes |
+| S-026 Home: main | S-464 Addresses: address list | `control-PROFILE > profile-addresses` | Replica route | None |  | yes |
+| S-026 Home: main | S-025 Settings: app settings menu | `control-PROFILE > profile-settings` | Replica route | None |  | yes |
+| S-026 Home: main | S-069 Profile: invitation | `control-PROFILE > profile-invite` | Replica route | None |  | yes |
+| S-026 Home: main | S-074 What's new: changelog list | `control-PROFILE > profile-versions` | Replica route | None |  | yes |
+| S-026 Home: main | S-086 Statement: request statement | `demo-menu > demo-path-statement` | Demo path, not a real-app route | None | Home →صورتحساب | yes |
+| S-026 Home: main | S-120 Cards: card balance without source picker | `demo-menu > demo-path-S-120` | Demo path, not a real-app route | None |  | not found in the real app |
 | S-026 Home: main | S-118 Cards: block card without source picker | `demo-menu > demo-path-S-118` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-122 Cards: card block no login 2 | `demo-menu > demo-path-S-122` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-076 Support: chatbot ask question | `demo-menu > demo-path-S-076` | Demo path, not a real-app route | None |  |  |
@@ -91,12 +117,10 @@ gives the first-wave journeys a real Home link.
 | S-026 Home: main | S-174 Transfer: anonymous card transfer | `demo-menu > demo-path-S-174` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-175 Transfer: card to card without source | `demo-menu > demo-path-S-175` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-093 Receipts: card transfer receipt | `demo-menu > demo-path-S-093` | Demo path, not a real-app route | None |  |  |
-| S-026 Home: main | S-193 Transfer: menu transfer | `demo-menu > demo-path-S-193` | Demo path, not a real-app route | Recovered |  |  |
 | S-026 Home: main | S-098 Receipts: internal transfer receipt | `demo-menu > demo-path-S-098` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-097 Receipts: iban transfer receipt | `demo-menu > demo-path-S-097` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-089 Transactions: group transfer history | `demo-menu > demo-path-S-089` | Demo path, not a real-app route | Recovered |  |  |
 | S-026 Home: main | S-096 Receipts: group transfer receipt | `demo-menu > demo-path-S-096` | Demo path, not a real-app route | None |  |  |
-| S-026 Home: main | S-209 Bills: bill payment from account | `demo-menu > demo-path-S-209` | Demo path, not a real-app route | Recovered |  |  |
 | S-026 Home: main | S-210 Bills: bill payment by card | `demo-menu > demo-path-S-210` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-208 Bills: bill payment by typed card (no source picker) | `demo-menu > demo-path-S-208` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-092 Receipts: bill receipt | `demo-menu > demo-path-S-092` | Demo path, not a real-app route | None |  |  |
@@ -107,7 +131,6 @@ gives the first-wave journeys a real Home link.
 | S-026 Home: main | S-213 Mobile top-up: charge by card | `demo-menu > demo-path-S-213` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-214 Mobile top-up: charge by typed card (no source picker) | `demo-menu > demo-path-S-214` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-094 Receipts: charge receipt | `demo-menu > demo-path-S-094` | Demo path, not a real-app route | None |  |  |
-| S-026 Home: main | S-283 Donations: charity picker | `demo-menu > demo-path-S-283` | Demo path, not a real-app route | Recovered |  |  |
 | S-026 Home: main | S-095 Receipts: charity receipt | `demo-menu > demo-path-S-095` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-113 Wallet: wallet receipt | `demo-menu > demo-path-S-113` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-201 IBAN conversion: convert iban login | `demo-menu > demo-path-S-201` | Demo path, not a real-app route | None |  |  |
@@ -115,7 +138,6 @@ gives the first-wave journeys a real Home link.
 | S-026 Home: main | S-203 IBAN conversion: convert iban no login pay | `demo-menu > demo-path-S-203` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-204 IBAN conversion: convert iban no login pay without source picker | `demo-menu > demo-path-S-204` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-324 Loans: loan menu | `demo-menu > demo-path-S-324` | Demo path, not a real-app route | None |  |  |
-| S-026 Home: main | S-338 Loans: loan summary | `demo-menu > demo-path-S-338` | Demo path, not a real-app route | Recovered |  |  |
 | S-026 Home: main | S-307 Loans: loan group | `demo-menu > demo-path-S-307` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-261 Road toll: receipt | `demo-menu > demo-path-S-261` | Demo path, not a real-app route | None |  |  |
 | S-026 Home: main | S-221 Balance top-up: increase account balance amount in flow | `demo-menu > demo-path-S-221` | Demo path, not a real-app route | None |  |  |
@@ -127,7 +149,7 @@ gives the first-wave journeys a real Home link.
 | S-091 Transactions: transaction list | S-090 Transactions: transaction info | `history-*` | Replica route | Recovered |  |  |
 | S-126 Cards: card management | S-068 Profile: fetch card | `fetch-cards` | Replica route | Recovered |  |  |
 | S-131 Cards: credit card detail | S-132 Cards: credit card detail confirmation | `credit-pay > credit-amount-pay > credit-source-*` | Replica route | Recovered |  |  |
-| S-464 Addresses: address list | S-463 Addresses: add address | `address-add` | Replica route | None |  |  |
+| S-464 Addresses: address list | S-463 Addresses: add address | `address-add` | Replica route | None | Home →پروفایل→مدیریت آدرس | yes |
 | S-129 Cards: card operation select address | S-463 Addresses: add address | `add-address` | Replica route | Recovered |  |  |
 | S-129 Cards: card operation select address | S-123 Cards: card color | `address-ok` | Replica route | Recovered |  |  |
 | S-123 Cards: card color | S-128 Cards: card operation confirm | `color-ok` | Replica route | Recovered |  |  |
@@ -142,6 +164,7 @@ gives the first-wave journeys a real Home link.
 | S-025 Settings: app settings menu | S-072 Settings: service settings | `settings-services` | Replica route | Recovered |  |  |
 | S-025 Settings: app settings menu | S-073 Storefront settings: storefront service settings | `settings-storefront` | Replica route | Recovered |  |  |
 | S-025 Settings: app settings menu | S-130 Cards: card status visibility | `settings-cards` | Replica route | None |  |  |
+| S-025 Settings: app settings menu | S-071 Settings: notification settings | `settings-notifications` | Replica route | None | Home →پروفایل →تنظیمات →تنظیمات اعلان | yes |
 | S-193 Transfer: menu transfer | S-192 Transfer: internal transfer | `transfer-internal` | Replica route | None |  |  |
 | S-193 Transfer: menu transfer | S-191 Transfer: interbank transfer | `transfer-interbank` | Replica route | None |  |  |
 | S-193 Transfer: menu transfer | S-187 Transfer: group transfer first | `transfer-group` | Replica route | None |  |  |

@@ -25,6 +25,15 @@ internal data class DemoEntry(val key: String, val to: String, val title: String
 private fun entries(vararg items: Pair<String, String>) =
     items.map { (id, title) -> DemoEntry(id, id, title) }
 
+/** Home tiles the owner traced in the real app, by tile key. */
+internal val tracedHomeTiles =
+    mapOf(
+        "transfer" to AccountTransferDestinations.MENU,
+        "bill" to BillPaymentDestinations.ACCOUNT,
+        "charity" to CharityDestinations.PICKER,
+        "loan" to LoanDestinations.SUMMARY,
+    )
+
 internal object DemoPaths {
     val history =
         listOf(
@@ -33,7 +42,6 @@ internal object DemoPaths {
         )
     val review =
         entries(
-            ProfileDestinations.NOTIFICATIONS to "تنظیمات اعلان‌ها",
             CardDestinations.ANONYMOUS_BALANCE to "موجودی بدون ورود",
             CardSecurityDestinations.LEGACY_BLOCK to "مسدودی بدون ورود",
             CardSecurityDestinations.ANONYMOUS_BLOCK to "مسدودی بدون ورود ۲",
@@ -106,10 +114,12 @@ internal object DemoPaths {
             "خرید با کیف با بارکد نمونه — نمونهٔ مستقل",
         )
 
-    /** Every entry the Home demo menu offers. These two already have real Home routes. */
+    /** Every entry the Home demo menu offers: the ones with no real Home route. */
     val onHome =
         (history + review + saved + picker + journeys + digitalActive + walletBuy).filter {
-            it.to != AccountDestinations.HISTORY && it.to != WalletOverviewDestinations.MAIN
+            it.to != AccountDestinations.HISTORY &&
+                it.to != WalletOverviewDestinations.MAIN &&
+                it.to !in tracedHomeTiles.values
         }
 }
 
@@ -141,6 +151,7 @@ internal object ReplicaGraph {
             Edge(HOME, AccountDestinations.STATEMENT_LIST, "control-ACCOUNT > account-statement"),
             Edge(HOME, AccountDestinations.MANAGEMENT, "control-ACCOUNT > account-management"),
         ) +
+            tracedHomeTiles.map { (key, to) -> Edge(HOME, to, "menu-$key") } +
             CardFixture.actions.flatMap { (kind, actions) ->
                 actions.mapNotNull { action ->
                     action.destination?.let {
