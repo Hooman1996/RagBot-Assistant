@@ -283,7 +283,12 @@ fun ReplicaApp() {
         groupDraft = GroupTransferDraft()
         tollDraft = TollDraft()
         if (receipt == null)
-            bankDone = (result as BankResult.Done).receipt.let { "${it.title} · ${it.trace}" }
+            bankDone =
+                (result as BankResult.Done).receipt.let { done ->
+                    (listOf("${done.title} · ${done.trace}") +
+                            done.rows.map { "${it.first}: ${it.second}" })
+                        .joinToString("\n")
+                }
     }
     val bankActions = remember { BankActions { result, page -> finishBank(result, page) } }
     fun unavailable(title: String) {
@@ -523,7 +528,10 @@ fun ReplicaApp() {
                                         notice =
                                             "${item.title} در این پیش‌نمایش آماده نیست. در خانه می‌مانید."
                                 },
-                                { unavailable("جزئیات تراکنش خانه") },
+                                { key ->
+                                    transactionKey = key
+                                    open(AccountDestinations.TRANSACTION)
+                                },
                                 { demoMenu = true },
                                 account,
                                 tab,
@@ -1211,7 +1219,7 @@ private fun HomeFrame(
     toggleHeader: () -> Unit,
     onEdit: () -> Unit,
     onMenu: (HomeMenuItem) -> Unit,
-    onTransaction: () -> Unit,
+    onTransaction: (String) -> Unit,
     onDemoMenu: () -> Unit,
     account: PreviewAccount?,
     tab: HomeControl,

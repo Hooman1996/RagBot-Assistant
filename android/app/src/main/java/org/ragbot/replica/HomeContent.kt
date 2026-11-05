@@ -27,7 +27,7 @@ internal fun HomeContent(
     services: List<HomeMenuItem>,
     onMenu: (HomeMenuItem) -> Unit,
     onEdit: () -> Unit,
-    onTransaction: () -> Unit,
+    onTransaction: (String) -> Unit,
     onDemoMenu: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth().testTag(HomeDestinations.MENU)) {
@@ -69,8 +69,8 @@ internal fun HomeContent(
             modifier = Modifier.align(Alignment.Start).testTag("recent-heading"),
         )
         Spacer(Modifier.height(16.dp))
-        HomeFixture.transactions.forEach { transaction ->
-            TransactionRow(transaction, onTransaction)
+        HomeFixture.transactions.take(3).forEach { transaction ->
+            TransactionRow(transaction) { onTransaction(transaction.key) }
             Spacer(Modifier.height(16.dp))
         }
         TextButton(onDemoMenu, Modifier.testTag("demo-menu")) { Text("مسیرهای نمایشی") }

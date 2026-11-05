@@ -69,6 +69,9 @@ internal object MockBank {
     val transactions
         get() = current.added + MockData.current.transactions
 
+    /** What this session spent from the account [number], newest first. */
+    fun spentFrom(number: String) = current.added.filter { number in it.source && it.amount > 0 }
+
     /** True once a bill, installment or toll item has been paid in this session. */
     fun settled(key: String) = key in current.settled
 
@@ -158,6 +161,19 @@ internal object MockBank {
     }
 
     fun invalidSecret() = failure("invalid-secret")
+
+    /** A balance inquiry on one of the customer's cards; it changes nothing. */
+    fun cardBalance(number: String): BankResult {
+        val card =
+            CardFixture.cards.find { latinDigits(it.number) == latinDigits(number) }
+                ?: return failure("recipient-not-found")
+        return request(
+            "card-balance",
+            "موجودی کارت",
+            card.number,
+            listOf("موجودی (ریال)" to persianNumber(card.cardBalance ?: 0L)),
+        )
+    }
 
     /** A paid service: moves [amount] out of [source], or fails with the reason. */
     fun pay(

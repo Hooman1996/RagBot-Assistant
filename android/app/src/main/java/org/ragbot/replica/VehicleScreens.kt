@@ -63,7 +63,9 @@ internal fun VehiclePage(
                         }
                     VehicleDestinations.HISTORY_MENU ->
                         VehicleFixture.historyMenu.forEach { (key, label) ->
-                            VehicleMenuRow("vehicle-history-$key", label) { onUnavailable(label) }
+                            VehicleMenuRow("vehicle-paid-$key", label) {
+                                onOpen(AccountDestinations.HISTORY)
+                            }
                         }
                     VehicleDestinations.INQUIRY_HISTORY ->
                         VehicleFixture.records

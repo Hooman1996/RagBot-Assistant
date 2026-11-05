@@ -142,7 +142,7 @@ class WalletOperationsTest {
         value("wallet-op-destination", "0000000000000201")
         value("wallet-op-amount", "400000")
         click("wallet-op-familiar")
-        unavailable("مقصدهای آشنا")
+        compose.onNodeWithTag("wallet-op-contact-reza-wallet").performClick()
         click("wallet-op-continue")
         click("wallet-op-cancel")
         shown("S-111")

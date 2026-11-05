@@ -76,14 +76,7 @@ private fun CardTransferForm(
     var sources by rememberSaveable { mutableStateOf(false) }
     val errors = if (attempted) CardTransferRules.errors(draft) else emptyMap()
     if (contacts)
-        CardPicker(
-            "مقصدهای ذخیره‌شده",
-            SavedDestinationFixture.records
-                .filter { it.type == "CARD" }
-                .map { Triple(it.id, it.name, it.destination) },
-            "card-transfer-contact",
-            { contacts = false },
-        ) {
+        DestinationPicker("CARD", "card-transfer-contact", { contacts = false }) {
             onChange(draft.copy(destination = it))
         }
     if (sources)
@@ -299,6 +292,25 @@ internal fun CardTransferSecret(
         singleLine = true,
         visualTransformation = PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
+    )
+}
+
+/** Saved destinations of one [type], from contacts.json. */
+@Composable
+internal fun DestinationPicker(
+    type: String,
+    tag: String,
+    onClose: () -> Unit,
+    onPick: (String) -> Unit,
+) {
+    CardPicker(
+        "مقصدهای ذخیره‌شده",
+        SavedDestinationFixture.records
+            .filter { it.type == type }
+            .map { Triple(it.id, it.name, it.destination) },
+        tag,
+        onClose,
+        onPick,
     )
 }
 
