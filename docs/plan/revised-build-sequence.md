@@ -5,6 +5,11 @@
 > the built journeys, and every built journey becomes an assistant feature (Stage 4 is replaced).
 > See `docs/decisions/0021-core-journeys-first.md`.
 
+> **Revised by D-022 (owner, 5 Nov 2026).** The replica is completed first: the most-used services
+> run end to end on editable JSON mock data and a local mock bank. The bridge (#93) and the
+> clickable graph (#94) start only after the owner approves the replica. Work is grouped into
+> parts, not one issue per FR. See `docs/decisions/0022-complete-replica-with-mock-data.md`.
+
 **Approved by the owner, 29 Oct 2026.** This revises the order and scope set by decision
 **D-019** and is recorded as decision **D-020**. The master plan
 (`RagBot_Assistant_Final_Project_Plan_v2.md`) stays the reference for goals and gates; where
