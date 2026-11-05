@@ -213,8 +213,11 @@ fun ReplicaApp() {
     }
     fun goBack() {
         val leavingPickerReview = pickerReview && stack.last() == SavedDestinationRoutes.PICKER
+        // Backing out of login leaves the app's front page; it never skips into Home.
+        val leavingLogin = stack.size == 2 && stack.last() == LoginDestinations.INTRO
         forgetPage(stack.last())
         stack = stack.dropLast(1)
+        if (leavingLogin) entered = false
         if (leavingPickerReview) {
             focus.clearFocus()
             keyboard?.hide()
@@ -451,6 +454,15 @@ fun ReplicaApp() {
                         }
 
                         Button(
+                            {
+                                entered = true
+                                open(LoginDestinations.INTRO)
+                            },
+                            Modifier.testTag("login-start"),
+                        ) {
+                            Text("ورود با کاربر نمایشی")
+                        }
+                        Button(
                             onClick = { entered = navigation.navigate(HomeDestinations.HOME) },
                             Modifier.testTag("demo-entry"),
                         ) {
@@ -630,9 +642,21 @@ fun ReplicaApp() {
                                     HomeControl.SEARCH -> open(ShortcutDestinations.SCREEN)
                                     HomeControl.SHORTCUTS ->
                                         open(RecurringTransferDestinations.REPETITIVE)
+                                    HomeControl.LOGOUT -> open(LoginDestinations.LOGIN)
                                     else -> notice = navigation.unavailable(control)
                                 }
                             }
+                        } else if (page in LoginDestinations.implemented) {
+                            LoginPage(
+                                page,
+                                ::open,
+                                {
+                                    stack.drop(1).forEach(::forgetPage)
+                                    stack = listOf(HomeDestinations.HOME)
+                                    tab = HomeControl.HOME
+                                },
+                                ::goBack,
+                            )
                         } else if (page in ServiceCatalog.pages) {
                             ServicePage(
                                 ServiceCatalog.flow(serviceKey),

@@ -204,7 +204,7 @@ class HomeNavigationTest {
                 "S-257",
                 "S-258",
                 "S-261",
-            ) + ServiceCatalog.implemented,
+            ) + ServiceCatalog.implemented + LoginDestinations.implemented,
             HomeDestinations.implemented,
         )
         assertTrue(ids.containsAll(HomeDestinations.implemented))
@@ -264,6 +264,7 @@ class HomeNavigationTest {
                         HomeControl.SEARCH,
                         HomeControl.SHORTCUTS,
                         HomeControl.INCREASE,
+                        HomeControl.LOGOUT,
                     )
             }
             .forEach {

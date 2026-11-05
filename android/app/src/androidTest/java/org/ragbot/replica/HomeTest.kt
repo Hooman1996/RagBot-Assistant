@@ -144,7 +144,7 @@ class HomeTest {
     @Test
     fun shellControlsNeverPretendToNavigate() {
         enter()
-        listOf("control-QR", "header-LOGOUT").forEach {
+        listOf("control-QR").forEach {
             compose.onNodeWithTag(it).performClick()
             compose.onNodeWithTag("unavailable").assertIsDisplayed()
             back()
