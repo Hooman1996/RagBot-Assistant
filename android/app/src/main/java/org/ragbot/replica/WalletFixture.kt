@@ -124,7 +124,7 @@ internal object WalletFixture {
     // The charge action opens a payment-type sheet instead of a page.
     val actions =
         listOf(
-            WalletMenuItem("AUTHENTICATED_WALLET_CHARGE", "شارژ کیف", null),
+            WalletMenuItem("AUTHENTICATED_WALLET_CHARGE", "واریز به کیف", null),
             WalletMenuItem(
                 "AUTHENTICATED_WALLET_DECHARGE",
                 "برداشت از کیف",
@@ -132,7 +132,7 @@ internal object WalletFixture {
             ),
             WalletMenuItem(
                 "AUTHENTICATED_WALLET_W2W",
-                "انتقال کیف به کیف",
+                "کیف به کیف",
                 WalletOperation.W2W.form,
             ),
         )
@@ -140,12 +140,12 @@ internal object WalletFixture {
         listOf(
             WalletMenuItem(
                 "AUTHENTICATED_WALLET_STATEMENT",
-                "صورتحساب کیف",
+                "گردش کیف",
                 WalletOverviewDestinations.STATEMENT,
             ),
             WalletMenuItem(
                 "AUTHENTICATED_WALLET_TRANSACTION_HISTORY",
-                "سوابق تراکنش‌ها",
+                "سوابق",
                 WalletOverviewDestinations.HISTORY_MENU,
             ),
             WalletMenuItem(
@@ -160,21 +160,21 @@ internal object WalletFixture {
             ),
             WalletMenuItem(
                 "AUTHENTICATED_WALLET_PAY_BILL",
-                "پرداخت قبض با کیف",
+                "قبض",
                 WalletOperation.BILL.form,
             ),
             WalletMenuItem(
                 "AUTHENTICATED_WALLET_BUY_MOBILE_CHARGE",
-                "خرید شارژ با کیف",
+                "شارژ",
                 WalletOperation.MOBILE.form,
             ),
         )
     // Recovered: every history item opens the transaction list (S-091).
     val history =
         listOf(
-                "AUTHENTICATED_WALLET_CHARGE_TRANSACTION_HISTORY" to "سوابق شارژ کیف",
+                "AUTHENTICATED_WALLET_CHARGE_TRANSACTION_HISTORY" to "سوابق واریز به کیف",
                 "AUTHENTICATED_WALLET_DE_CHARGE_TRANSACTION_HISTORY" to "سوابق برداشت از کیف",
-                "AUTHENTICATED_WALLET_W2W_TRANSACTION_HISTORY" to "سوابق انتقال کیف به کیف",
+                "AUTHENTICATED_WALLET_W2W_TRANSACTION_HISTORY" to "سوابق کیف به کیف",
                 "AUTHENTICATED_WALLET_BUY_TRANSACTION_HISTORY" to "سوابق خرید با کیف",
                 "AUTHENTICATED_WALLET_BUY_MOBILE_CHARGE_HISTORY" to "سوابق خرید شارژ",
                 "AUTHENTICATED_WALLET_PAY_BILL_HISTORY" to "سوابق پرداخت قبض",
@@ -184,7 +184,7 @@ internal object WalletFixture {
     private val types =
         listOf(
             WalletTranType.CHARGE to "شارژ کیف",
-            WalletTranType.TRANSFER to "انتقال کیف به کیف",
+            WalletTranType.TRANSFER to "کیف به کیف",
             WalletTranType.WALLET_BILL_PAYMENT to "پرداخت قبض",
             WalletTranType.WALLET_MOBILE_CREDIT to "خرید شارژ",
             WalletTranType.IPG to "پرداخت اینترنتی",

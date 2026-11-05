@@ -64,6 +64,7 @@ class DigitalChequesTest {
     private fun menu(key: String) {
         compose.onNodeWithTag("demo-entry").performClick()
         compose.onNodeWithTag("menu-cheque").performScrollTo().performClick()
+        click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_CHAKAD")
         click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_$key")
     }
 
@@ -79,6 +80,7 @@ class DigitalChequesTest {
         click("digital-activate")
         compose.onNodeWithTag("digital-confirm").performClick()
         unavailable("امضا با برنامهٔ هامون")
+        back()
         back()
         back()
         back()

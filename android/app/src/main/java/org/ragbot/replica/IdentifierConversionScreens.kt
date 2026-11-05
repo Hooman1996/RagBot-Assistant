@@ -20,6 +20,8 @@ internal fun ConversionPage(
     page: String,
     scenario: String,
     resultDraft: ConversionDraft,
+    startMode: String,
+    onMode: (ConversionMode) -> Unit,
     onResult: (ConversionDraft) -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
@@ -40,20 +42,24 @@ internal fun ConversionPage(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 Text(PaymentFixture.NOTICE, style = MaterialTheme.typography.bodySmall)
-                if (page in ConversionDestinations.forms) {
-                    ConversionForm(onResult, onUnavailable)
-                } else {
+                ConversionForm(page, startMode, onMode, onResult, onUnavailable)
+                if (page in ConversionDestinations.paid)
                     ConversionPaidPreview(page, onBack, onUnavailable)
-                }
             }
         }
     }
 }
 
 @Composable
-private fun ConversionForm(onResult: (ConversionDraft) -> Unit, onUnavailable: (String) -> Unit) {
+private fun ConversionForm(
+    page: String,
+    startMode: String,
+    onMode: (ConversionMode) -> Unit,
+    onResult: (ConversionDraft) -> Unit,
+    onUnavailable: (String) -> Unit,
+) {
     // The recovered layout has five separate expandable fields; values never cross modes.
-    var active by pageValue("conversion-mode", "")
+    var active by pageValue("conversion-mode", if (page == ConversionDestinations.LOGIN) "" else startMode)
     var drafts by pageValue("conversion-drafts", mapOf<String, ConversionDraft>())
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     var bankPicker by rememberSaveable { mutableStateOf(false) }
@@ -61,12 +67,21 @@ private fun ConversionForm(onResult: (ConversionDraft) -> Unit, onUnavailable: (
     Text("حساب نمونه: ${ConversionFixture.account}")
     Text("کارت نمونه: ${ConversionFixture.card}")
     Text("شبای نمونه: ${ConversionFixture.iban}")
-    ConversionMode.entries.forEach { mode ->
+    val modes =
+        if (page in ConversionDestinations.paid)
+            ConversionDestinations.modePages.filterValues { it == page }.keys
+        else ConversionMode.entries
+    modes.forEach { mode ->
         OutlinedCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(
                     {
-                        active = if (active == mode.name) "" else mode.name
+                        if (
+                            page == ConversionDestinations.LOGIN &&
+                                mode in ConversionDestinations.modePages
+                        )
+                            onMode(mode)
+                        else active = if (active == mode.name) "" else mode.name
                         error = null
                     },
                     Modifier.fillMaxWidth().testTag("conversion-mode-${mode.name}"),

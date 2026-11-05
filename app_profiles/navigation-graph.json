@@ -3873,6 +3873,22 @@
       "note": "Compose screen; destination recovered from its route and content."
     },
     {
+      "id": "D-001",
+      "name": "Support: menu",
+      "area": "F-026",
+      "label": "Designed for mock",
+      "dynamic": false,
+      "note": "Menu page the owner traced in the real app; its screen has no recovered node."
+    },
+    {
+      "id": "D-002",
+      "name": "Cheques: digital cheque menu",
+      "area": "F-035",
+      "label": "Designed for mock",
+      "dynamic": false,
+      "note": "Menu page the owner traced in the real app; its screen has no recovered node."
+    },
+    {
       "id": "F-066",
       "name": "Dashboard menu: tile grid",
       "area": "F-066",

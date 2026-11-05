@@ -107,6 +107,8 @@ NAV_GRAPH = "app_profiles/navigation-graph.json"
 REPLICA_PROFILE = "app_profiles/replica.profile.json"
 PROFILE_EXPORT = "android/app/build/replica-profile/replica.profile.json"
 NAV_LABELS = ("Observed", "Recovered", "Inferred", "Unknown")
+# Replica pages with no recovered node, such as a menu the owner traced (D-022).
+NAV_NODE_LABELS = NAV_LABELS + ("Designed for mock",)
 API_STRUCTURE = "app_profiles/api-structure.json"
 
 # Plan §12 and §15: the project's own resources on the shared dev PostgreSQL and Qdrant.
@@ -545,10 +547,10 @@ def check_navgraph(root: Path, report: Report) -> None:
 
     known = set(ids)
     found_labels = {
-        n.get("label") for n in nodes if isinstance(n, dict) and n.get("label") not in NAV_LABELS
+        n.get("label") for n in nodes if isinstance(n, dict) and n.get("label") not in NAV_NODE_LABELS
     } | {e.get("label") for e in edges if isinstance(e, dict) and e.get("label") not in NAV_LABELS}
     bad_labels = sorted((label for label in found_labels if label is not None), key=str)
-    report.check(not bad_labels, "every label is one of the four", ", ".join(map(str, bad_labels)))
+    report.check(not bad_labels, "every label is a known evidence label", ", ".join(map(str, bad_labels)))
 
     dangling, null_not_dynamic = [], []
     for edge in edges:

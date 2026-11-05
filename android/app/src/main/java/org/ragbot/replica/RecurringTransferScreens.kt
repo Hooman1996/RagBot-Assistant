@@ -57,13 +57,13 @@ internal fun RecurringTransferPage(
                             { onOpen(RecurringTransferDestinations.REQUEST) },
                             Modifier.fillMaxWidth().testTag("recurring-new"),
                         ) {
-                            Text("درخواست انتقال وجه خودکار")
+                            Text("ثبت درخواست")
                         }
                         Button(
                             { onOpen(RecurringTransferDestinations.HISTORY) },
                             Modifier.fillMaxWidth().testTag("recurring-history"),
                         ) {
-                            Text("سوابق انتقال وجه خودکار")
+                            Text("لیست درخواست ها")
                         }
                     }
                     RecurringTransferDestinations.REQUEST ->

@@ -61,6 +61,7 @@ object ProfileFixture {
             CardAction("accounts", "مدیریت حساب", AccountDestinations.MANAGEMENT),
             CardAction("cards", "مدیریت کارت‌ها", CardDestinations.MANAGEMENT),
             CardAction("addresses", "مدیریت آدرس‌ها", ProfileDestinations.ADDRESSES),
+            CardAction("destinations", "مدیریت مقصد های آشنا", SavedDestinationRoutes.LEGACY),
             CardAction("settings", "تنظیمات برنامه", ProfileDestinations.SETTINGS_MENU),
             CardAction("invite", "دعوت از دوستان", ProfileDestinations.INVITATION),
             CardAction("versions", "تاریخچه نسخه‌ها", ProfileDestinations.CHANGELOG),
@@ -76,7 +77,7 @@ object ProfileFixture {
                 "خدمات مالی در ورود با سنسور زیستی",
                 ProfileDestinations.STOREFRONT,
             ),
-            CardAction("cards", "وضعیت نمایش کارت", CardDestinations.VISIBILITY),
+            CardAction("cards", "وضعیت نمایش کارت مبدا", CardDestinations.VISIBILITY),
             CardAction("notifications", "تنظیمات اعلان‌ها", ProfileDestinations.NOTIFICATIONS),
         )
     val facilities = listOf("انتقال وجه", "پرداخت قبض", "خرید شارژ", "کارت به کارت")

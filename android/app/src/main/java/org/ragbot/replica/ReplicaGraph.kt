@@ -28,10 +28,35 @@ private fun entries(vararg items: Pair<String, String>) =
 /** Home tiles the owner traced in the real app, by tile key. */
 internal val tracedHomeTiles =
     mapOf(
+        "card-transfer" to CardTransferDestinations.ANONYMOUS,
         "transfer" to AccountTransferDestinations.MENU,
+        "topup" to TopUpDestinations.ACCOUNT,
         "bill" to BillPaymentDestinations.ACCOUNT,
+        "statement" to AccountDestinations.STATEMENT_LIST,
+        "support" to SupportDestinations.MENU,
         "charity" to CharityDestinations.PICKER,
-        "loan" to LoanDestinations.SUMMARY,
+        "loan" to LoanDestinations.MENU,
+        "conversion" to ConversionDestinations.LOGIN,
+        "insurance" to InsuranceDestinations.MENU,
+        "history" to AccountDestinations.HISTORY,
+    )
+
+/** Screens the owner traced below Home; they have real routes, so no Home demo path. */
+private val ownerTraced =
+    setOf(
+        CardTransferDestinations.WITHOUT_SOURCE,
+        TopUpDestinations.CARD,
+        LoanDestinations.SUMMARY,
+        LoanDestinations.GROUP,
+        ConversionDestinations.NO_LOGIN,
+        ConversionDestinations.PAID,
+        ConversionDestinations.PAID_TYPED,
+        SupportDestinations.CHATBOT,
+        SupportDestinations.FAQ_NO_LOGIN,
+        SupportDestinations.SUGGESTION,
+        SupportDestinations.TICKETS,
+        SupportDestinations.TICKET,
+        SavedDestinationRoutes.LEGACY,
     )
 
 internal object DemoPaths {
@@ -114,13 +139,19 @@ internal object DemoPaths {
             "خرید با کیف با بارکد نمونه — نمونهٔ مستقل",
         )
 
+    private val all = history + review + saved + picker + journeys + digitalActive + walletBuy
+
     /** Every entry the Home demo menu offers: the ones with no real Home route. */
     val onHome =
-        (history + review + saved + picker + journeys + digitalActive + walletBuy).filter {
+        all.filter {
             it.to != AccountDestinations.HISTORY &&
                 it.to != WalletOverviewDestinations.MAIN &&
-                it.to !in tracedHomeTiles.values
+                it.to !in tracedHomeTiles.values &&
+                it.to !in ownerTraced
         }
+
+    /** Review entries before Home whose screens have a real route deeper than Home. */
+    val reviewOnly = all.filter { it.to in ownerTraced }
 }
 
 /** The replica's transitions. [ReplicaApp.open] refuses any move not declared here. */
@@ -137,7 +168,6 @@ internal object ReplicaGraph {
         listOf(
             Edge(HOME, HomeDestinations.MENU, "home-scroll", EdgeKind.STEP),
             Edge(HOME, WalletOverviewDestinations.MAIN, "menu-wallet"),
-            Edge(HOME, SupportDestinations.FAQ, "menu-support"),
             Edge(HOME, SupportDestinations.FAQ, "header-SUPPORT"),
             Edge(HOME, ChequeDestinations.MENU, "menu-cheque"),
             Edge(HOME, ChequeDestinations.CARDBOARD, "menu-cartable"),
@@ -170,7 +200,8 @@ internal object ReplicaGraph {
             } +
             DemoPaths.onHome.map {
                 Edge(HOME, it.to, "demo-menu > demo-path-${it.key}", EdgeKind.DEMO)
-            }
+            } +
+            DemoPaths.reviewOnly.map { Edge(HOME, it.to, "demo-${it.key}", EdgeKind.STEP) }
 
     private val accountsAndCards =
         listOf(
@@ -296,6 +327,11 @@ internal object ReplicaGraph {
                 "card-transfer-review",
                 EdgeKind.REAL,
             ) +
+            Edge(
+                CardTransferDestinations.ANONYMOUS,
+                CardTransferDestinations.WITHOUT_SOURCE,
+                "card-transfer-typed",
+            ) +
             all(
                 listOf(AccountTransferDestinations.INTERNAL, AccountTransferDestinations.INTERBANK),
                 AccountTransferDestinations.CONFIRM,
@@ -335,6 +371,7 @@ internal object ReplicaGraph {
                 .map {
                     Edge(BillPaymentDestinations.CONFIRM, it, "bill-accept", EdgeKind.USER_ONLY)
                 } +
+            Edge(TopUpDestinations.ACCOUNT, TopUpDestinations.CARD, "topup-pay-card") +
             all(
                 TopUpDestinations.forms,
                 TopUpDestinations.CONFIRM,
@@ -369,11 +406,14 @@ internal object ReplicaGraph {
                 Edge(LoanDestinations.GROUP, LoanDestinations.GROUP_DETAIL, "loan-group-*"),
             ) +
             all(
-                ConversionDestinations.forms,
+                ConversionDestinations.forms + ConversionDestinations.paid,
                 ConversionDestinations.RESULT,
                 "conversion-calculate",
                 EdgeKind.REAL,
-            )
+            ) +
+            ConversionDestinations.modePages.map { (mode, page) ->
+                Edge(ConversionDestinations.LOGIN, page, "conversion-mode-${mode.name}")
+            }
 
     private val wallet =
         WalletFixture.actions.mapNotNull { item ->
@@ -422,6 +462,11 @@ internal object ReplicaGraph {
         ChequeFixture.menu.mapNotNull { item ->
             item.destination?.let { Edge(ChequeDestinations.MENU, it, "cheque-menu-${item.key}") }
         } +
+            ChequeFixture.chakadMenu.mapNotNull { item ->
+                item.destination?.let {
+                    Edge(ChequeDestinations.CHAKAD, it, "cheque-menu-${item.key}")
+                }
+            } +
             many(
                 ChequeDestinations.CARDBOARD,
                 listOf(ChequeDestinations.PAY_DETAIL, ChequeDestinations.REQUEST_DETAIL),
@@ -488,15 +533,18 @@ internal object ReplicaGraph {
             }
 
     private val support =
-        listOf(
-            Edge(
-                SupportDestinations.FAQ_NO_LOGIN,
-                SupportDestinations.MESSAGE,
-                "faq-support > support-mobile > support-identity-continue > support-otp > support-otp-continue",
-                EdgeKind.USER_ONLY,
-            ),
-            Edge(SupportDestinations.TICKETS, SupportDestinations.TICKET, "ticket-*"),
-        )
+        SupportFixture.menu.map { (key, _, to) ->
+            Edge(SupportDestinations.MENU, to, "support-menu-$key")
+        } +
+            listOf(
+                Edge(
+                    SupportDestinations.FAQ_NO_LOGIN,
+                    SupportDestinations.MESSAGE,
+                    "faq-support > support-mobile > support-identity-continue > support-otp > support-otp-continue",
+                    EdgeKind.USER_ONLY,
+                ),
+                Edge(SupportDestinations.TICKETS, SupportDestinations.TICKET, "ticket-*"),
+            )
 
     val edges =
         home + accountsAndCards + transfers + payments + wallet + cheques + vehicles + support

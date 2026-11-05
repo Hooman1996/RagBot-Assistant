@@ -114,6 +114,7 @@ fun ReplicaApp() {
     var walletNumber by rememberSaveable { mutableStateOf(WalletFixture.wallets.first().number) }
     var walletRow by rememberSaveable { mutableStateOf("") }
     var conversionResultDraft by rememberSaveable { mutableStateOf(ConversionDraft()) }
+    var conversionMode by rememberSaveable { mutableStateOf("") }
     var walletOperationDrafts by rememberSaveable {
         mutableStateOf(mapOf<WalletOperation, WalletOperationDraft>())
     }
@@ -179,8 +180,8 @@ fun ReplicaApp() {
         if (id in BillPaymentDestinations.forms) billForm = id
         if (id in TopUpDestinations.forms) topUpForm = id
         if (id == WalletOverviewDestinations.RECEIPT) walletFunding = null
-        // From the cheque menu the transfer picks its own cheque and activation starts inactive.
-        if (stack.last() == ChequeDestinations.MENU) {
+        // From the chakad menu the transfer picks its own cheque and activation starts inactive.
+        if (stack.last() == ChequeDestinations.CHAKAD) {
             if (id == DigitalChequeDestinations.TRANSFER) digitalTransfer = DigitalTransferDraft()
             if (id == DigitalChequeDestinations.ACTIVATION) digitalActive = false
         }
@@ -306,6 +307,7 @@ fun ReplicaApp() {
     fun openDemo(entry: DemoEntry) {
         if (entry == DemoPaths.digitalActive) digitalActive = true
         if (entry.to == SupportDestinations.TICKET) selectedTicket = ""
+        conversionMode = ""
         if (entry == DemoPaths.walletBuy)
             walletOperationDrafts =
                 walletOperationDrafts +
@@ -469,9 +471,8 @@ fun ReplicaApp() {
                                 { expanded = !expanded },
                                 { editing = true },
                                 { item ->
-                                    if (item.key == "support") open(SupportDestinations.FAQ)
                                     // Recovered AUTHENTICATED_HOMEFIX_WALLET opens S-111.
-                                    else if (item.key == "wallet")
+                                    if (item.key == "wallet")
                                         open(WalletOverviewDestinations.MAIN)
                                     // CQ-RECOVERY: Home opens the cheque menu and the card board.
                                     else if (item.key == "cheque") open(ChequeDestinations.MENU)
@@ -592,6 +593,7 @@ fun ReplicaApp() {
                                 },
                                 ::goBack,
                                 { open(CardTransferDestinations.CONFIRM) },
+                                { open(CardTransferDestinations.WITHOUT_SOURCE) },
                                 { scenario = "populated" },
                                 ::unavailable,
                             )
@@ -838,6 +840,11 @@ fun ReplicaApp() {
                                 page,
                                 scenario,
                                 conversionResultDraft,
+                                conversionMode,
+                                { mode ->
+                                    conversionMode = mode.name
+                                    open(ConversionDestinations.modePages.getValue(mode))
+                                },
                                 {
                                     conversionResultDraft = it
                                     open(ConversionDestinations.RESULT)
@@ -958,7 +965,10 @@ fun ReplicaApp() {
                                 supportDrafts,
                                 { key, value -> supportDrafts = supportDrafts + (key to value) },
                                 { selectedTicket = it },
-                                ::open,
+                                { id ->
+                                    if (page == SupportDestinations.MENU) selectedTicket = ""
+                                    open(id)
+                                },
                                 ::goBack,
                                 { scenario = "populated" },
                                 ::unavailable,

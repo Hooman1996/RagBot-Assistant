@@ -157,6 +157,10 @@ private fun TopUpForm(
         errors = errors - key
         onChange(next)
     }
+    if (page == TopUpDestinations.ACCOUNT)
+        TextButton({ onOpen(TopUpDestinations.CARD) }, Modifier.testTag("topup-pay-card")) {
+            Text("پرداخت با کارت")
+        }
     if (page == TopUpDestinations.WITHOUT_SOURCE) {
         PaymentInput("topup-source", "کارت مبدا", draft.source, errors["source"]) {
             if (it.length <= 16) change("source", draft.copy(source = it))

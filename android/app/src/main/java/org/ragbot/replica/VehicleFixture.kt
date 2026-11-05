@@ -56,9 +56,9 @@ internal object VehicleFixture {
     // Recovered keys of the vehicle menu; titles are server-supplied, so synthetic here.
     val menu =
         listOf(
-            "AUTHENTICATED_HOME_ANNUAL_TOLL" to "عوارض سالیانه",
+            "AUTHENTICATED_HOME_ANNUAL_TOLL" to "عوارض سالیانه خودرو و موتور",
             "AUTHENTICATED_HOME_TRAFFIC_TOLL" to "عوارض طرح ترافیک",
-            "AUTHENTICATED_HOME_FREEWAY_TOLL" to "عوارض آزادراه",
+            "AUTHENTICATED_HOME_FREEWAY_TOLL" to "عوارض آزادراهی خودرو و موتور",
             "AUTHENTICATED_HOME_TRANSFER_TOLL" to "مالیات نقل و انتقال",
             "AUTHENTICATED_HOME_RAHVAR_TOLL" to "خلافی خودرو",
             "AUTHENTICATED_HOME_VEHICLE_DOC_INQUIRY" to "مدارک خودرو",
@@ -66,7 +66,7 @@ internal object VehicleFixture {
             "AUTHENTICATED_HOME_ACTIVE_PLATES_INQUIRY" to "پلاک‌های فعال",
             "AUTHENTICATED_HOME_DRIVING_LICENSE_INQUIRY" to "وضعیت گواهینامه",
             "AUTHENTICATED_HOME_NEGATIVE_POINT_INQUIRY" to "نمره منفی گواهینامه",
-            "AUTHENTICATED_HOME_PAYMENT_TOLL_HISTORY" to "سوابق پرداخت",
+            "AUTHENTICATED_HOME_PAYMENT_TOLL_HISTORY" to "سوابق",
         )
 
     // Recovered history keys; their targets are unproved, so they show notices.

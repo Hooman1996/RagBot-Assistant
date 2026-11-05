@@ -15,6 +15,8 @@ class HomeNavigationTest {
             setOf(
                 "S-026",
                 "F-066",
+                "D-001",
+                "D-002",
                 "S-063",
                 "S-067",
                 "S-085",

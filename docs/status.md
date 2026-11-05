@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 4 November 2026. This page is updated whenever a task changes state.
+Last updated: 5 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Next are the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the interactive graph (#94), all approved. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
 
@@ -40,7 +40,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
-| #92 S3-01 Core-journey graph and replica profile | In review | PR into `sub/bridge-graph`, not merged. The owner approved the profile schema change and gave the first real-app taps, now in [graph validation](reports/graph-validation.md) with five real links added. Waiting for the owner's remaining rows and open questions. |
+| #92 S3-01 Core-journey graph and replica profile | Done | Owner traces recorded in the [graph validation sheet](reports/graph-validation.md); every matching trace is a real Home route. Runs through `sub/bridge-graph` to `main`. |
 | #96 S1-FIX Flaky schedule test and card secrets | Done | The schedule test's touch could miss while the page kept its keyboard height (a test bug); it now uses the click action. S-119/S-120 no longer save CVV2 or the second password. 100 JVM / 124 device tests in three full runs in a row (0 skipped); lint 0 errors / 117 warnings. One earlier full run crashed in the system graphics library and did not recur on a fresh emulator; cause unproved. |
 | #91 S1-CHECK Stage 1 recheck and bridge readiness | Done | Verdict: ready with gaps. 189 registered IDs valid; 106 screens reachable from Home, 83 demo-only. Records drift fixed; no app code changed. [Report](reports/stage1-readiness.md). |
 | #40 Android foundation and first Home batch | Done | `S-026` and embedded empty `F-066`; 2 JVM / 4 device tests pass, lint passes. [Report](reports/replica-foundation.md), [runbook](runbook/replica-development.md). Historical first empty frame; populated Home follows in #42. Remaining screens are proposed; bridge has not started. |

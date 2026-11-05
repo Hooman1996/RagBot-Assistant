@@ -247,11 +247,12 @@ class IndividualTransfersTest {
     }
 
     @Test
-    fun unresolvedHomeCardTransferDoesNotInventAnIncomingRoute() {
+    fun homeCardTransferOpensThePickerFormAndItsTypedSourceForm() {
         compose.onNodeWithTag("demo-entry").performClick()
         compose.onNodeWithTag("menu-card-transfer").performScrollTo().performClick()
-        compose.onNodeWithTag("unavailable").assertIsDisplayed()
-        compose.onNodeWithTag("S-175").assertDoesNotExist()
+        compose.onNodeWithTag("S-174").assertIsDisplayed()
+        compose.onNodeWithTag("card-transfer-typed").performScrollTo().performClick()
+        compose.onNodeWithTag("S-175").assertIsDisplayed()
     }
 
     @Test

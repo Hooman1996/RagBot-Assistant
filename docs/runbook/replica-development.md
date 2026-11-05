@@ -311,8 +311,8 @@ wallet address steps now open add address `S-463`. See the
 From Home, the notification header button opens **اعلان‌ها** (`S-075`):
 type filters, item detail/copy, selection and read/delete controls affect only
 synthetic preview state. Deleting asks first; dismissing cancels. Both the
-support/message header button and **پشتیبانی** menu tile open authenticated
-FAQ (`S-077`) through independently recovered handlers. Expand each FAQ item
+support/message header button opens authenticated FAQ (`S-077`). The **پشتیبانی**
+tile opens the owner-traced support menu `D-001`. Expand each FAQ item
 to inspect its synthetic answer.
 
 The demo page's explicitly independent entries open chatbot question `S-076`,
@@ -494,7 +494,7 @@ acceptance output and merged installation verification remain in
 ## Loans and repayment review (FR-35)
 
 Scroll the demo page to **منوی تسهیلات — نمونهٔ مستقل** (S-324), then choose
-**تسهیلات جاری و پرداخت اقساط** (S-338), or use its independent entry. Individual
+**تسهیلات در جریان و پرداخت** (S-338), or use its independent entry. Individual
 and corporate tabs show synthetic loans. A row opens S-306. Choose unpaid
 installments in due-date order; overdue debt has priority, and deselection starts
 at the last chosen installment. **پرداخت — بازبینی محلی** opens the source-account
@@ -579,3 +579,5 @@ python tools/project_checks.py profile
 Only `REAL` and `DEMO` edges reach the profile. `USER_ONLY` edges stay out, so the executor stops before any OTP, card-secret or payment step. Fields the bridge fills use `pageValue(...)` instead of `rememberSaveable`; never use it for a secret. S-065 stays page-local because one field holds a password in one mode. The bridge must call a control's handler only when the control is enabled: the Compose click action runs even on a disabled row.
 
 Home → **مسیرهای نمایشی** (below the recent transactions) opens the demo menu. It lists every entry with no Home route, marked as a demo path, not a real-app route. The owner's taps in [graph validation](../reports/graph-validation.md) decide which of these become real Home links. So far the tiles **انتقال وجه** (S-193), **قبض** (S-209), **خیریه** (S-283) and **تسهیلات** (S-338) are real links, and S-071 opens from **پروفایل** → **تنظیمات برنامه** → **تنظیمات اعلان‌ها**.
+
+The owner's second trace round (5 Nov 2026) added the Home tiles کارت به کارت, شارژ, صورتحساب, پشتیبانی, تسهیلات, تبدیل بانکی, بیمه and سوابق, and two menu pages with no recovered node, `D-001` (پشتیبانی) and `D-002` (چکاد). `D-` nodes are labelled `Designed for mock` in `navigation-graph.json`. The answers and what came of each are in the [validation sheet](../reports/graph-validation.md).

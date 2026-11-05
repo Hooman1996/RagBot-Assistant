@@ -120,7 +120,11 @@ class ReplicaProfileTest {
 
     @Test
     fun ownerTracedScreensHaveARealRouteAndNoHomeDemoEdge() {
-        val traced = listOf("S-193", "S-187", "S-178", "S-209", "S-283", "S-338", "S-071", "S-463")
+        val traced =
+            tracedHomeTiles.values +
+                listOf("S-187", "S-178", "S-180", "S-191", "S-192", "S-338", "S-307", "S-071") +
+                listOf("S-463", "S-175", "S-213", "S-202", "S-203", "S-204", "S-066", "S-130") +
+                listOf("S-076", "S-078", "S-079", "S-080", "S-082", "S-151", "S-254", "S-241")
         val real = reachable(ReplicaGraph.edges.filter { it.kind == EdgeKind.REAL })
         val demo =
             ReplicaGraph.edges

@@ -97,6 +97,8 @@ class IdentifierConversionTest {
         calculate()
         compose.onNodeWithTag("unavailable").assertTextContains("استعلام کارمزدی", substring = true)
         back()
+        compose.onNodeWithTag("S-202").assertIsDisplayed()
+        back()
         compose.onNodeWithTag("S-201").assertIsDisplayed()
     }
 
