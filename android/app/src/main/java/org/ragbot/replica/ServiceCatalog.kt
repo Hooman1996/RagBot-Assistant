@@ -306,7 +306,76 @@ internal object ServiceCatalog {
             "AUTHENTICATED_HOME_NEGATIVE_POINT_INQUIRY" to "negative-points",
         )
 
-    val flows = sayad + vehicle
+    private val fee
+        get() = MockData.current.inquiries.fee
+
+    private fun feePage() =
+        FlowStep("S-442", "کارمزد استعلام", listOf(accountChoice()), { total("کارمزد", fee) })
+
+    private fun paidInquiry(
+        key: String,
+        title: String,
+        result: String,
+        detail: String?,
+        rows: () -> List<Pair<String, String>>,
+    ) =
+        ServiceFlow(key, listOf(feePage()), result, detail = detail) {
+            MockBank.pay(
+                key,
+                title,
+                it.getValue("source"),
+                fee,
+                MockData.current.customer.name,
+                rows = rows(),
+            )
+        }
+
+    private val inquiries =
+        listOf(
+            paidInquiry("credit-report", "گزارش اعتباری", "S-445", "S-441") {
+                MockData.current.inquiries.report
+            },
+            ServiceFlow(
+                "credit-report-detail",
+                listOf(
+                    FlowStep(
+                        "S-441",
+                        "جزئیات گزارش اعتباری",
+                        show = { MockData.current.inquiries.reportDetail },
+                    )
+                ),
+            ),
+            paidInquiry("bounced-cheques", "استعلام چک برگشتی", "S-444", "S-440") {
+                MockData.current.inquiries.bounced
+            },
+            ServiceFlow(
+                "bounced-cheques-detail",
+                listOf(
+                    FlowStep(
+                        "S-440",
+                        "جزئیات چک برگشتی",
+                        show = { MockData.current.inquiries.bouncedDetail },
+                    )
+                ),
+            ),
+            paidInquiry("credit-rate", "رتبه اعتباری", "S-453", null) {
+                MockData.current.inquiries.rate
+            },
+        )
+
+    /** Menu pages by screen: a title and the services they offer. */
+    val menus =
+        mapOf(
+            "S-443" to
+                ("استعلامات" to
+                    listOf(
+                        Triple("credit-report", "گزارش اعتباری", "S-442"),
+                        Triple("bounced-cheques", "استعلام چک برگشتی", "S-442"),
+                        Triple("credit-rate", "رتبه اعتباری", "S-442"),
+                    ))
+        )
+
+    val flows = sayad + vehicle + inquiries
 
     /** Result pages: each shows the receipt of the service that opened it. */
     val results
@@ -314,7 +383,7 @@ internal object ServiceCatalog {
 
     val pages = flows.flatMap { flow -> flow.steps.map { it.page } }.toSet()
     val implemented
-        get() = pages + results
+        get() = pages + results + menus.keys
 
     fun flow(key: String) = flows.first { it.key == key }
 

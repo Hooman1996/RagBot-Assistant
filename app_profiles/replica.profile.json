@@ -213,6 +213,13 @@
     "S-403",
     "S-404",
     "S-405",
+    "S-440",
+    "S-441",
+    "S-442",
+    "S-443",
+    "S-444",
+    "S-445",
+    "S-453",
     "S-463",
     "S-464"
   ],
@@ -242,6 +249,7 @@
     {"from": "S-026", "to": "S-201", "action": "menu-conversion"},
     {"from": "S-026", "to": "S-403", "action": "menu-insurance"},
     {"from": "S-026", "to": "S-091", "action": "menu-history"},
+    {"from": "S-026", "to": "S-443", "action": "menu-inquiry"},
     {"from": "S-026", "to": "S-012", "action": "control-CARD > card-kind-DEBIT > card-action-info"},
     {"from": "S-026", "to": "S-125", "action": "control-CARD > card-kind-DEBIT > card-action-list"},
     {"from": "S-026", "to": "S-124", "action": "control-CARD > card-kind-DEBIT > card-action-issue"},
@@ -449,7 +457,12 @@
     {"from": "S-278", "to": "S-279", "action": "svc-continue"},
     {"from": "S-279", "to": "S-277", "action": "svc-continue"},
     {"from": "S-280", "to": "S-281", "action": "svc-continue"},
-    {"from": "S-238", "to": "S-239", "action": "svc-continue"}
+    {"from": "S-238", "to": "S-239", "action": "svc-continue"},
+    {"from": "S-445", "to": "S-441", "action": "svc-detail"},
+    {"from": "S-444", "to": "S-440", "action": "svc-detail"},
+    {"from": "S-443", "to": "S-442", "action": "svc-menu-credit-report"},
+    {"from": "S-443", "to": "S-442", "action": "svc-menu-bounced-cheques"},
+    {"from": "S-443", "to": "S-442", "action": "svc-menu-credit-rate"}
   ],
   "forms": [
     {"id": "S-174", "fields": [{"ref": "card-transfer-source", "type": "text"}, {"ref": "card-transfer-destination", "type": "text"}, {"ref": "card-transfer-amount", "type": "money"}]},
@@ -534,7 +547,8 @@
     {"id": "S-280", "fields": [{"ref": "svc-record", "type": "choice"}]},
     {"id": "S-238", "fields": [{"ref": "svc-record", "type": "choice"}]},
     {"id": "S-247", "fields": [{"ref": "svc-record", "type": "choice"}]},
-    {"id": "S-255", "fields": [{"ref": "svc-record", "type": "choice"}]}
+    {"id": "S-255", "fields": [{"ref": "svc-record", "type": "choice"}]},
+    {"id": "S-442", "fields": [{"ref": "svc-source", "type": "ref"}]}
   ],
   "features": [
     {"intent": "card_transfer", "description": "Prepare a card-to-card transfer up to its review.", "required_slots": ["card-transfer-source", "card-transfer-destination", "card-transfer-amount"], "lookups": ["cards"], "destination": "S-175", "form": "S-175"},

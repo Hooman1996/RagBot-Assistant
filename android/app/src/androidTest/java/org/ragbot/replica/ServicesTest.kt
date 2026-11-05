@@ -201,4 +201,49 @@ class ServicesTest {
         shown("S-255")
         compose.onNodeWithText("۱۲").assertExists()
     }
+
+    private fun inquiryMenu(key: String) {
+        click("demo-entry")
+        click("menu-inquiry")
+        shown("S-443")
+        click("svc-menu-$key")
+        shown("S-442")
+    }
+
+    @Test
+    fun aCreditReportTakesTheFeeThenShowsTheReportAndItsDetail() {
+        inquiryMenu("credit-report")
+        click("svc-source-account-1")
+        confirm()
+        shown("S-445")
+        compose.onNodeWithText("۶۱۲").assertExists()
+        assert(MockBank.balance("account-1") == 12_250_000L)
+        click("svc-detail")
+        shown("S-441")
+        compose.onNodeWithText("ندارد").assertExists()
+    }
+
+    @Test
+    fun theFeeCanComeFromAnotherAccountAndAMissingSourceIsRefused() {
+        inquiryMenu("bounced-cheques")
+        click("svc-confirm")
+        compose.onNodeWithTag("otp-code").performTextReplacement("12345")
+        compose.onNodeWithTag("otp-ok").performClick()
+        failure("incomplete")
+        click("svc-source-account-2")
+        confirm()
+        shown("S-444")
+        assert(MockBank.balance("account-2") == 3_500_000L)
+        click("svc-detail")
+        shown("S-440")
+    }
+
+    @Test
+    fun theCreditRateIsAPaidInquiry() {
+        inquiryMenu("credit-rate")
+        click("svc-source-account-1")
+        confirm()
+        shown("S-453")
+        compose.onNodeWithText("خوب").assertExists()
+    }
 }
