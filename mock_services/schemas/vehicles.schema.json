@@ -12,7 +12,13 @@
     "tolls",
     "quotaAllowed",
     "quotaRemaining",
-    "consumed"
+    "consumed",
+    "violations",
+    "transferTax",
+    "documents",
+    "activePlates",
+    "licences",
+    "negativePoints"
   ],
   "properties": {
     "unit": {
@@ -120,6 +126,90 @@
         "type": "array",
         "items": {
           "type": "integer"
+        }
+      }
+    },
+    "violations": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "title",
+            "date",
+            "amount"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            },
+            "amount": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "transferTax": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
+      }
+    },
+    "documents": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "activePlates": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "licences": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "negativePoints": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

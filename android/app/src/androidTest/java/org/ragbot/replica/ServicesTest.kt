@@ -127,4 +127,78 @@ class ServicesTest {
         shown("S-169")
         compose.onNodeWithText("0000000000000321", substring = true).assertExists()
     }
+
+    private fun vehicleMenu(key: String) {
+        click("demo-entry")
+        click("menu-vehicle")
+        click("vehicle-menu-AUTHENTICATED_HOME_$key")
+    }
+
+    @Test
+    fun violationsArePaidOnceThroughTheUsersConfirm() {
+        vehicleMenu("RAHVAR_TOLL")
+        click("vehicle-plate-1")
+        shown("S-244")
+        next()
+        shown("S-245")
+        compose.onNodeWithText("سرعت غیرمجاز", substring = true).assertExists()
+        next()
+        shown("S-243")
+        click("svc-source-account-1")
+        confirm()
+        shown("S-261")
+        compose.onNodeWithTag("bank-receipt").assertExists()
+        click("bank-receipt-done")
+        click("menu-vehicle")
+        click("vehicle-menu-AUTHENTICATED_HOME_RAHVAR_TOLL")
+        click("vehicle-plate-1")
+        next()
+        compose.onNodeWithText("سرعت غیرمجاز", substring = true).assertDoesNotExist()
+        next()
+        click("svc-source-account-1")
+        confirm()
+        failure("nothing-to-pay")
+    }
+
+    @Test
+    fun transferTaxIsPaidFromTheChosenAccount() {
+        vehicleMenu("TRANSFER_TOLL")
+        click("vehicle-plate-1")
+        shown("S-278")
+        next()
+        shown("S-279")
+        next()
+        shown("S-277")
+        click("svc-source-account-2")
+        confirm()
+        shown("S-261")
+    }
+
+    @Test
+    fun theVehicleInquiriesShowTheirRecords() {
+        vehicleMenu("VEHICLE_DOC_INQUIRY")
+        click("vehicle-plate-1")
+        next()
+        shown("S-281")
+        compose.onNodeWithText("کارت خودرو").assertExists()
+        repeat(4) { click("page-back") }
+        click("menu-vehicle")
+        click("vehicle-menu-AUTHENTICATED_HOME_ACTIVE_PLATES_INQUIRY")
+        click("vehicle-contact-1")
+        next()
+        shown("S-239")
+        compose.onNodeWithText("12 ب 345 ایران 67").assertExists()
+        repeat(4) { click("page-back") }
+        click("menu-vehicle")
+        click("vehicle-menu-AUTHENTICATED_HOME_DRIVING_LICENSE_INQUIRY")
+        click("vehicle-contact-1")
+        shown("S-247")
+        compose.onNodeWithText("معتبر").assertExists()
+        repeat(3) { click("page-back") }
+        click("menu-vehicle")
+        click("vehicle-menu-AUTHENTICATED_HOME_NEGATIVE_POINT_INQUIRY")
+        click("vehicle-licence-1")
+        shown("S-255")
+        compose.onNodeWithText("۱۲").assertExists()
+    }
 }

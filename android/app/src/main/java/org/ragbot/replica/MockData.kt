@@ -59,6 +59,14 @@ internal data class SayadCheque(
     }
 }
 
+/** One traffic violation of a saved plate. */
+internal data class Violation(
+    val id: String,
+    val title: String,
+    val date: String,
+    val amount: Long,
+)
+
 /** Forces [outcome] for [operation], or for every operation when it is "*". */
 internal data class ForcedOutcome(val operation: String, val outcome: String)
 
@@ -406,6 +414,22 @@ internal class MockFiles(read: (String) -> Json) {
                 )
             }
         }
+    private fun rows(key: String) =
+        vehicleFile[key].map { rows ->
+            rows.list { row -> row.list { it.string() }.let { (label, value) -> label to value } }
+        }
+
+    val violations =
+        vehicleFile["violations"].map { items ->
+            items.list {
+                Violation(it.str("id"), it.str("title"), it.str("date"), it.long("amount"))
+            }
+        }
+    val transferTax = vehicleFile["transferTax"].map { it.long() }
+    val documents = rows("documents")
+    val activePlates = rows("activePlates")
+    val licences = rows("licences")
+    val negativePoints = rows("negativePoints")
     val quotaAllowed = vehicleFile.int("quotaAllowed")
     val quotaRemaining = vehicleFile.int("quotaRemaining")
     val consumed =

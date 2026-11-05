@@ -806,6 +806,14 @@ fun ReplicaApp() {
                                             )
                                     open(service.inquiry)
                                 },
+                                { record ->
+                                    val flow =
+                                        ServiceCatalog.flow(
+                                            ServiceCatalog.vehicleMenu.getValue(vehicleMenuKey)
+                                        )
+                                    open(flow.steps.first().page)
+                                    if (record != null) serviceValues = mapOf("record" to record.id)
+                                },
                                 ::open,
                                 ::goBack,
                                 { scenario = "populated" },
