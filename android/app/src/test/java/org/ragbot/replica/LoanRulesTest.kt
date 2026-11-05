@@ -103,4 +103,11 @@ class LoanRulesTest {
         assertEquals(exact, LoanFixture.selectedSumIrr(loan, listOf(0)))
         assertEquals(exact - 1L, LoanFixture.payableIrr(loan, listOf(0)))
     }
+
+    @Test
+    fun theRequestInstallmentIsExactSimpleInterest() {
+        assertEquals(11_800_000L, LoanRequestRules.installment(120_000_000L, 12L, 18L))
+        assertEquals(0L, LoanRequestRules.installment(0L, 12L, 18L))
+        assertEquals(0L, LoanRequestRules.installment(1_000L, 0L, 18L))
+    }
 }

@@ -375,7 +375,112 @@ internal object ServiceCatalog {
                     ))
         )
 
-    val flows = sayad + vehicle + inquiries
+    private fun product(values: Map<String, String>) =
+        MockData.current.loanProducts.find { it.key == values["product"] }
+
+    private fun plan(values: Map<String, String>) =
+        product(values)?.let {
+            LoanRequestRules.installment(
+                latinDigits(values["amount"].orEmpty()).toLongOrNull() ?: 0L,
+                latinDigits(values["months"].orEmpty()).toLongOrNull() ?: 0L,
+                it.rate,
+            )
+        }
+
+    private val loanRequest =
+        ServiceFlow(
+            "loan-request",
+            listOf(
+                FlowStep(
+                    "S-287",
+                    "درخواست تسهیلات",
+                    listOf(
+                        choice("product", "نوع تسهیلات") {
+                            MockData.current.loanProducts.map { it.key to it.title }
+                        }
+                    ),
+                ),
+                FlowStep(
+                    "S-308",
+                    "محاسبه اقساط",
+                    listOf(
+                        money("amount", "مبلغ درخواستی (ریال)"),
+                        FlowField("months", "تعداد اقساط", check = ::amountCheck),
+                    ),
+                    { values ->
+                        rows(
+                            "سقف مبلغ (ریال)" to product(values)?.maxAmount?.let(::persianNumber),
+                            "سقف اقساط" to product(values)?.maxMonths?.toLong()?.let(::persianNumber),
+                            "نرخ سود (درصد)" to product(values)?.rate?.let(::persianNumber),
+                            "قسط ماهانه (ریال)" to plan(values)?.let(::persianNumber),
+                        )
+                    },
+                ),
+                FlowStep(
+                    "S-286",
+                    "اطلاعات متقاضی",
+                    listOf(FlowField("job", "شغل")),
+                    {
+                        MockData.current.customer.let { customer ->
+                            rows("نام" to customer.name, "کد ملی" to customer.nationalCode)
+                        }
+                    },
+                ),
+                FlowStep(
+                    "S-335",
+                    "ضامن",
+                    listOf(
+                        FlowField("guarantor", "نام ضامن"),
+                        FlowField("guarantorCode", "کد ملی ضامن", check = digits(10)),
+                    ),
+                ),
+                FlowStep(
+                    "S-285",
+                    "تعهدنامه",
+                    listOf(choice("agree", "تعهدنامه") { listOf("yes" to "شرایط را می‌پذیرم") }),
+                ),
+                FlowStep(
+                    "S-334",
+                    "سفته الکترونیک",
+                    listOf(
+                        choice("note", "مرحله نمایشی؛ سفته‌ای صادر نمی‌شود") {
+                            listOf("issue" to "صدور سفته نمایشی")
+                        }
+                    ),
+                ),
+                FlowStep(
+                    "S-378",
+                    "امضای دیجیتال",
+                    listOf(
+                        choice("sign", "مرحله نمایشی؛ امضایی ثبت نمی‌شود") {
+                            listOf("sign" to "امضای نمایشی")
+                        }
+                    ),
+                ),
+                FlowStep(
+                    "S-336",
+                    "تایید درخواست",
+                    show = { values ->
+                        rows(
+                            "نوع تسهیلات" to product(values)?.title,
+                            "مبلغ (ریال)" to amount(values),
+                            "تعداد اقساط" to values["months"],
+                            "قسط ماهانه (ریال)" to plan(values)?.let(::persianNumber),
+                            "ضامن" to values["guarantor"],
+                        )
+                    },
+                ),
+            ),
+            "S-337",
+        ) { values ->
+            MockBank.loanRequest(
+                values.getValue("product"),
+                latinDigits(values.getValue("amount")).toLong(),
+                latinDigits(values.getValue("months")).toLong(),
+            )
+        }
+
+    val flows = sayad + vehicle + inquiries + loanRequest
 
     /** Result pages: each shows the receipt of the service that opened it. */
     val results

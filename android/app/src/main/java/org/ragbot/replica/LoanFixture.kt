@@ -41,6 +41,23 @@ internal data class LoanRecord(
     val loanType: String = "نوع نمایشی",
 )
 
+/** A product of the generic loan request; Designed for mock. [rate] is a yearly percent. */
+internal data class LoanProduct(
+    val key: String,
+    val title: String,
+    val maxAmount: Long,
+    val maxMonths: Int,
+    val rate: Long,
+)
+
+internal object LoanRequestRules {
+    /** The monthly installment in whole rials: simple interest, rounded down. */
+    fun installment(amount: Long, months: Long, rate: Long): Long {
+        if (amount <= 0 || months <= 0) return 0
+        return (amount + amount * rate * months / 1200) / months
+    }
+}
+
 /** LOANS-RECOVERY: recovered presentation rules; every record and IRR amount is synthetic. */
 internal object LoanFixture {
     const val ORDER_ERROR = "انتخاب باید به ترتیب تاریخ سررسید باشد."

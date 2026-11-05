@@ -61,6 +61,12 @@ internal fun LoanPage(
                             Text("تسهیلات در جریان و پرداخت")
                         }
                         OutlinedButton(
+                            { onOpen("S-287") },
+                            Modifier.fillMaxWidth().testTag("loan-request"),
+                        ) {
+                            Text("درخواست تسهیلات")
+                        }
+                        OutlinedButton(
                             { onOpen(LoanDestinations.GROUP) },
                             Modifier.fillMaxWidth().testTag("loan-groups"),
                         ) {

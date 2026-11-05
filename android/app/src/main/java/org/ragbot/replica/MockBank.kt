@@ -165,6 +165,26 @@ internal object MockBank {
 
     fun incomplete() = failure("incomplete")
 
+    /** The generic loan application: the product's limits decide the mock result. */
+    fun loanRequest(key: String, amount: Long, months: Long): BankResult {
+        val product =
+            MockData.current.loanProducts.find { it.key == key }
+                ?: return failure("loan-over-limit")
+        if (amount > product.maxAmount || months > product.maxMonths)
+            return failure("loan-over-limit")
+        return request(
+            "loan-request",
+            "درخواست تسهیلات",
+            product.title,
+            listOf(
+                "مبلغ (ریال)" to persianNumber(amount),
+                "قسط ماهانه (ریال)" to
+                    persianNumber(LoanRequestRules.installment(amount, months, product.rate)),
+                "وضعیت" to "تایید اولیه",
+            ),
+        )
+    }
+
     fun nothingToPay() = failure("nothing-to-pay")
 
     /** The Sayad cheques known now: the mock file with this session's changes on top. */

@@ -290,6 +290,16 @@ internal class MockFiles(read: (String) -> Json) {
                 it.str("loanType"),
             )
         }
+    val loanProducts =
+        loanFile.list("products") {
+            LoanProduct(
+                it.str("key"),
+                it.str("title"),
+                it.long("maxAmount"),
+                it.int("maxMonths"),
+                it.long("rate"),
+            )
+        }
     val loanGroups =
         loanFile.list("groups") {
             LoanGroup(

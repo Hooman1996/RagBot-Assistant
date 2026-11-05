@@ -134,7 +134,10 @@
     {
       "key": "standard",
       "title": "گروه تسهیلات نمونه",
-      "details": ["نمایش شرایط ساختگی", "بررسی گزینه‌های بازپرداخت"],
+      "details": [
+        "نمایش شرایط ساختگی",
+        "بررسی گزینه‌های بازپرداخت"
+      ],
       "active": true,
       "accountOpenElapsed": true,
       "needsCredit": false
@@ -142,7 +145,9 @@
     {
       "key": "inactive",
       "title": "گروه غیرفعال نمونه",
-      "details": ["این گروه در دسترس نیست."],
+      "details": [
+        "این گروه در دسترس نیست."
+      ],
       "active": false,
       "accountOpenElapsed": true,
       "needsCredit": false
@@ -150,7 +155,9 @@
     {
       "key": "recent",
       "title": "حساب تازه نمونه",
-      "details": ["بررسی مدت افتتاح حساب"],
+      "details": [
+        "بررسی مدت افتتاح حساب"
+      ],
       "active": true,
       "accountOpenElapsed": false,
       "needsCredit": false
@@ -158,7 +165,9 @@
     {
       "key": "credit",
       "title": "گروه نیازمند استعلام نمونه",
-      "details": ["نیازمند بررسی رتبه اعتباری"],
+      "details": [
+        "نیازمند بررسی رتبه اعتباری"
+      ],
       "active": true,
       "accountOpenElapsed": true,
       "needsCredit": true
@@ -173,7 +182,9 @@
       "availableMonths": 12,
       "maximumMonths": 12,
       "subtitle": "بازپرداخت نمونه",
-      "details": ["شرایط صرفاً برای نمایش است."]
+      "details": [
+        "شرایط صرفاً برای نمایش است."
+      ]
     },
     {
       "key": "limited",
@@ -183,7 +194,9 @@
       "availableMonths": 6,
       "maximumMonths": 12,
       "subtitle": null,
-      "details": ["دوره در دسترس بر اساس امتیاز نمونه محدود است."]
+      "details": [
+        "دوره در دسترس بر اساس امتیاز نمونه محدود است."
+      ]
     },
     {
       "key": "inactive",
@@ -194,6 +207,22 @@
       "maximumMonths": 12,
       "subtitle": null,
       "details": []
+    }
+  ],
+  "products": [
+    {
+      "key": "personal",
+      "title": "تسهیلات شخصی",
+      "maxAmount": 500000000,
+      "maxMonths": 36,
+      "rate": 18
+    },
+    {
+      "key": "home",
+      "title": "تسهیلات مسکن",
+      "maxAmount": 2000000000,
+      "maxMonths": 60,
+      "rate": 12
     }
   ]
 }
