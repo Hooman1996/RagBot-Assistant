@@ -261,7 +261,20 @@ internal object ReplicaProfile {
             ProfileForm("S-275", toll),
             ProfileForm("S-250", toll),
             ProfileForm("S-257", toll),
-        )
+        ) +
+            ServiceCatalog.flows
+                .flatMap { it.steps }
+                .filter { it.fields.isNotEmpty() }
+                .groupBy { it.page }
+                .map { (page, steps) ->
+                    ProfileForm(
+                        page,
+                        steps
+                            .flatMap { it.fields }
+                            .distinct()
+                            .map { FormField("svc-${it.key}", it.type) },
+                    )
+                }
 
     private fun feature(
         intent: String,
@@ -632,6 +645,7 @@ internal object ReplicaProfile {
             "secret-*",
             "secure-ok",
             "statement-request",
+            "svc-confirm",
             "suggestion-submit",
             "support-identity-continue",
             "support-mobile",

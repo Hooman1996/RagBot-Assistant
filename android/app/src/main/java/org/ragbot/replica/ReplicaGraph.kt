@@ -581,6 +581,18 @@ internal object ReplicaGraph {
                 }
             }
 
+    private val services =
+        ServiceCatalog.flows
+            .flatMap { flow ->
+                flow.steps.zipWithNext { from, to -> Edge(from.page, to.page, "svc-continue") } +
+                    listOfNotNull(
+                        flow.result?.let {
+                            Edge(flow.steps.last().page, it, "svc-confirm", EdgeKind.USER_ONLY)
+                        }
+                    )
+            }
+            .distinct()
+
     val edges =
         home +
             accountsAndCards +
@@ -590,7 +602,8 @@ internal object ReplicaGraph {
             cheques +
             vehicles +
             support +
-            receipts
+            receipts +
+            services
 
     private val moves = edges.map { it.from to it.to }.toSet()
 

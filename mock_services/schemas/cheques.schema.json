@@ -12,7 +12,8 @@
     "report",
     "issuance",
     "tasks",
-    "digital"
+    "digital",
+    "sayad"
   ],
   "properties": {
     "unit": {
@@ -303,6 +304,41 @@
             }
           },
           "digitalIban": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "sayad": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sayadId",
+          "amount",
+          "dueDate",
+          "party",
+          "received",
+          "status"
+        ],
+        "properties": {
+          "sayadId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "dueDate": {
+            "type": "string"
+          },
+          "party": {
+            "type": "string"
+          },
+          "received": {
+            "type": "boolean"
+          },
+          "status": {
             "type": "string"
           }
         }
