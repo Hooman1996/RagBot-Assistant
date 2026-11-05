@@ -1,0 +1,28 @@
+{
+  "name": "کاربر نمایشی",
+  "customerNumber": "۰۰۰۰۰۱",
+  "lastLogin": "۱۴۰۵/۰۸/۰۷ - ۰۹:۳۰",
+  "inviteCode": "PREVIEW01",
+  "nationalCode": "0000000019",
+  "mobile": "09000000000",
+  "username": "demo.user",
+  "password": "Demo@1234",
+  "otp": "12345",
+  "perTransferLimit": 500000000,
+  "dailyLimit": 1000000000,
+  "unit": "IRR",
+  "addresses": [
+    {
+      "key": "address-1",
+      "title": "خانه",
+      "address": "خیابان نمونه، کوچه یک، پلاک ۲",
+      "postalCode": "۰۰۰۰۰۰۰۰۰۱"
+    },
+    {
+      "key": "address-2",
+      "title": "محل کار",
+      "address": "میدان نمونه، ساختمان دو",
+      "postalCode": "۰۰۰۰۰۰۰۰۰۲"
+    }
+  ]
+}

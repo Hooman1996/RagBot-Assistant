@@ -54,7 +54,7 @@ class WalletCardFlowsTest {
         compose.onNodeWithTag("wallet-address-address-1").assertIsSelected()
         compose.onNodeWithTag("wallet-address-ok").performScrollTo().performClick()
         compose.onNodeWithTag("wallet-submit").performScrollTo().performClick()
-        compose.onNodeWithTag("security-result").assertTextContains("هیچ تغییری", substring = true)
+        compose.onNodeWithTag("security-result").assertTextContains("بانک نمایشی", substring = true)
         compose.onNodeWithTag("security-done").performClick()
         compose.onNodeWithTag("card-tab").assertIsDisplayed()
         compose.onNodeWithTag("card-kind-WALLET").assertIsSelected()

@@ -142,112 +142,13 @@ internal object RecurringTransferRules {
 }
 
 internal object RecurringTransferFixture {
-    const val NOTICE = "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ انتقال خودکاری ثبت یا اجرا نمی‌شود."
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
 
-    val records =
-        listOf(
-            ContinuousRecord(
-                "DEMO-STANDING-0001",
-                "اجارهٔ نمایشی",
-                AccountTransferDestinations.INTERNAL,
-                "0000000000001",
-                "0000000000002",
-                1_500_000L,
-                "۱۴۰۵/۰۷/۰۱",
-                "۱۴۰۵/۰۷/۰۱",
-                "۱۴۰۵/۱۲/۰۱",
-                RecurringTransferRules.MONTHLY,
-                false,
-                listOf(
-                    ScheduleExecution("۱۴۰۵/۰۷/۰۱", "SUCCESS"),
-                    ScheduleExecution("۱۴۰۵/۰۸/۰۱", "FAILED"),
-                    ScheduleExecution("۱۴۰۵/۰۹/۰۱", RecurringTransferRules.NOT_STARTED),
-                    ScheduleExecution("۱۴۰۵/۱۰/۰۱", RecurringTransferRules.NOT_STARTED),
-                ),
-            ),
-            ContinuousRecord(
-                "DEMO-STANDING-0002",
-                "پس‌انداز هفتگی نمایشی",
-                AccountTransferDestinations.INTERBANK,
-                "0000000000001",
-                "IR920000000000000000000002",
-                250_000L,
-                "۱۴۰۵/۰۸/۰۵",
-                "۱۴۰۵/۰۹/۰۱",
-                "۱۴۰۵/۰۹/۲۹",
-                RecurringTransferRules.WEEKLY,
-                false,
-                listOf(
-                    ScheduleExecution("۱۴۰۵/۰۹/۰۱", RecurringTransferRules.NOT_STARTED),
-                    ScheduleExecution("۱۴۰۵/۰۹/۰۸", RecurringTransferRules.NOT_STARTED),
-                ),
-            ),
-            ContinuousRecord(
-                "DEMO-STANDING-0003",
-                "قسط لغوشدهٔ نمایشی",
-                AccountTransferDestinations.INTERNAL,
-                "0000000000001",
-                "0000000000003",
-                400_000L,
-                "۱۴۰۵/۰۵/۱۰",
-                "۱۴۰۵/۰۵/۱۰",
-                "۱۴۰۵/۰۷/۱۰",
-                RecurringTransferRules.MONTHLY,
-                true,
-                listOf(
-                    ScheduleExecution("۱۴۰۵/۰۵/۱۰", "SUCCESS"),
-                    ScheduleExecution("۱۴۰۵/۰۶/۱۰", RecurringTransferRules.CANCELLED),
-                ),
-            ),
-        )
+    val records
+        get() = MockData.current.standingOrders
 
-    val repetitive =
-        listOf(
-            RepetitiveRecord(
-                "repeat-card",
-                "CARD_TO_CARD",
-                "کارت به کارت نمایشی",
-                CardTransferFixture.source,
-                CardTransferFixture.destination,
-                "گیرندهٔ نمایشی",
-                "بانک نمایشی",
-                250_000L,
-                "۱۴۰۵/۰۸/۰۱",
-            ),
-            RepetitiveRecord(
-                "repeat-internal",
-                "INTERNAL",
-                "انتقال داخلی نمایشی",
-                "account-1",
-                "0000000000002",
-                "گیرندهٔ نمایشی",
-                "بانک نمایشی",
-                300_000L,
-                "۱۴۰۵/۰۸/۰۲",
-            ),
-            RepetitiveRecord(
-                "repeat-paya",
-                "PAYA",
-                "پایای نمایشی",
-                "account-1",
-                "IR220000000000000000000001",
-                "گیرندهٔ نمایشی",
-                "بانک نمایشی",
-                500_000L,
-                "۱۴۰۵/۰۸/۰۳",
-            ),
-            RepetitiveRecord(
-                "repeat-charge",
-                "CHARGE",
-                "شارژ نمایشی",
-                "account-1",
-                "09000000000",
-                "اپراتور نمایشی",
-                "-",
-                100_000L,
-                "۱۴۰۵/۰۸/۰۴",
-            ),
-        )
+    val repetitive
+        get() = MockData.current.repetitive
 
     val typeTitles =
         mapOf(

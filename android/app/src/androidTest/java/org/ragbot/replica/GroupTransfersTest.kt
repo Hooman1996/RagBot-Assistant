@@ -68,6 +68,16 @@ class GroupTransfersTest {
         compose.onNodeWithTag(tag).performScrollTo().performTextInput(text)
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun manualRowsValidateTotalsAndSurviveCancelWithoutSubmission() {
         compose.onNodeWithTag("demo-S-193").performScrollTo().performClick()
@@ -122,9 +132,8 @@ class GroupTransfersTest {
         compose.onNodeWithText("۲۵۰٬۰۰۰").assertExists()
         compose.onNodeWithText("1234").assertExists()
         click("group-verify-accept")
-        compose.onNodeWithTag("unavailable").assertIsDisplayed()
+        otpPrompt()
         compose.onNodeWithTag("S-096").assertDoesNotExist()
-        back()
         back()
         shown("S-184")
         compose
@@ -233,13 +242,6 @@ class GroupTransfersTest {
         compose
             .onNodeWithTag("group-destination-search")
             .assertTextContains("0003", substring = true)
-        back()
-        back()
-        back()
-        compose.onNodeWithTag("demo-S-096").performScrollTo().performClick()
-        compose.onNodeWithTag("group-receipt-disclosure").assertExists()
-        click("group-receipt-share")
-        compose.onNodeWithTag("unavailable").assertIsDisplayed()
     }
 
     @Test

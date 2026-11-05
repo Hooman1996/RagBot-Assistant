@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: charities",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "charities"
+  ],
+  "properties": {
+    "charities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "name",
+          "desc",
+          "accountNo"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "desc": {
+            "type": "string"
+          },
+          "accountNo": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

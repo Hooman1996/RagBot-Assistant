@@ -24,30 +24,8 @@ data class SavedDestination(
 object SavedDestinationFixture {
     val types =
         linkedMapOf("ACCOUNT" to "حساب", "IBAN" to "شبا", "CARD" to "کارت", "WALLET" to "کیف")
-    val records =
-        types.keys.flatMap { type ->
-            (1..6).map { index ->
-                val number =
-                    when (type) {
-                        "ACCOUNT" -> "000000000000$index"
-                        "IBAN" -> "IR00000000000000000000000$index"
-                        "CARD" -> "000000000000000$index"
-                        else -> "111111111111111$index"
-                    }
-                SavedDestination(
-                    "${type.lowercase()}-$index",
-                    type,
-                    "${types[type]} آزمایشی $index",
-                    number,
-                    if (index == 6)
-                        "توضیح ساختگی بلند برای بررسی خوانایی فارسی و شناسه DEMO-6. ".repeat(6)
-                    else "داده ساختگی برای پیش‌نمایش",
-                )
-            }
-        } +
-            (1..6).map { index ->
-                SavedDestination("loan-$index", "LOAN", "وام آزمایشی $index", "DEMO-LOAN-$index")
-            }
+    val records
+        get() = MockData.current.destinations
 
     fun visible(records: List<SavedDestination>, type: String, query: String) =
         records.filter {

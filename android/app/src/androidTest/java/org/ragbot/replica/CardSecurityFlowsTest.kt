@@ -30,7 +30,7 @@ class CardSecurityFlowsTest {
         compose.onNodeWithTag("security-result").assertDoesNotExist()
         compose.onNodeWithTag("block-card-6").performClick()
         compose.onNodeWithTag("block-ok").performClick()
-        compose.onNodeWithTag("security-result").assertTextContains("هیچ تغییری", substring = true)
+        compose.onNodeWithTag("security-result").assertTextContains("بانک نمایشی", substring = true)
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("security-done").performClick()
         compose.onNodeWithTag("card-tab").assertIsDisplayed()

@@ -132,7 +132,9 @@ private fun ConversionForm(
                             if (error == null) {
                                 when {
                                     ConversionFixture.paidQuery(draft) ->
-                                        onUnavailable("استعلام کارمزدی؛ مبلغ و شرایط نامشخص")
+                                        onUnavailable(
+                                            "این شناسه کارمزدی است؛ کارمزد را در تبدیل کارت به شبا بپردازید."
+                                        )
                                     ConversionFixture.result(draft) != null -> onResult(draft)
                                     else ->
                                         error =
@@ -182,7 +184,7 @@ private fun ConversionPaidPreview(
 ) {
     var source by pageValue("conversion-source", "")
     var picker by rememberSaveable { mutableStateOf(false) }
-    Text("نمونهٔ مستقل استعلام کارمزدی؛ مبلغ، شرایط و نتیجه نامشخص است.")
+    Text("کارمزد استعلام: ${persianNumber(ConversionFixture.fee)} ریال")
     Text("کارت مقصد ساختگی: 0000010000000001")
     if (page == ConversionDestinations.PAID) {
         OutlinedButton(
@@ -217,7 +219,16 @@ private fun ConversionPaidPreview(
         PaymentInput("conversion-source", "شماره کارت مبدا", source, null) { source = it }
     }
     // Same recovered card-information include as FR-11. Secrets are remember-only there.
-    CardPaymentInfo(false, "استعلام کارمزدی", onBack, onUnavailable)
+    CardPaymentInfo(false, null, onBack, onUnavailable) { password ->
+        MockBank.pay(
+            "conversion-fee",
+            "استعلام کارمزدی",
+            source,
+            ConversionFixture.fee,
+            "کارمزد تبدیل",
+            password,
+        )
+    }
 }
 
 @Composable

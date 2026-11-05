@@ -1,0 +1,239 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: cards",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "cards",
+    "candidates",
+    "credit",
+    "fileLoans"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "cards": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "kind",
+          "number",
+          "owner",
+          "cardBalance",
+          "accountBalance",
+          "primaryAccount",
+          "otherAccounts",
+          "iban",
+          "status",
+          "isDefault",
+          "altLogo",
+          "locked",
+          "unit"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "cardBalance": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "accountBalance": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "primaryAccount": {
+            "type": "string"
+          },
+          "otherAccounts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "iban": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "altLogo": {
+            "type": "boolean"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "unit": {
+            "const": "IRR",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "kind",
+          "number",
+          "owner",
+          "cardBalance",
+          "accountBalance",
+          "primaryAccount",
+          "otherAccounts",
+          "iban",
+          "status",
+          "isDefault",
+          "altLogo",
+          "locked",
+          "unit"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "cardBalance": {
+            "type": "null"
+          },
+          "accountBalance": {
+            "type": "null"
+          },
+          "primaryAccount": {
+            "type": "string"
+          },
+          "otherAccounts": {
+            "type": "array"
+          },
+          "iban": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "altLogo": {
+            "type": "boolean"
+          },
+          "locked": {
+            "type": "boolean"
+          },
+          "unit": {
+            "const": "IRR",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "credit": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "state",
+          "creditLimit",
+          "remainingCredit",
+          "usedAmount",
+          "overdueDebt",
+          "totalPayable",
+          "unit"
+        ],
+        "properties": {
+          "state": {
+            "type": "string"
+          },
+          "creditLimit": {
+            "type": "integer"
+          },
+          "remainingCredit": {
+            "type": "integer"
+          },
+          "usedAmount": {
+            "type": "integer"
+          },
+          "overdueDebt": {
+            "type": "integer"
+          },
+          "totalPayable": {
+            "type": "integer"
+          },
+          "unit": {
+            "const": "IRR",
+            "type": "string"
+          }
+        }
+      }
+    },
+    "fileLoans": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fileNumber",
+            "dueDate",
+            "instalments",
+            "remaining",
+            "unit"
+          ],
+          "properties": {
+            "fileNumber": {
+              "type": "string"
+            },
+            "dueDate": {
+              "type": "string"
+            },
+            "instalments": {
+              "type": "integer"
+            },
+            "remaining": {
+              "type": "integer"
+            },
+            "unit": {
+              "const": "IRR",
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

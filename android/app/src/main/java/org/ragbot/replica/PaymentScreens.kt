@@ -114,10 +114,19 @@ internal fun PaymentPage(
                             TransferValue("مبلغ (ریال)", persianNumber(chosen.remained))
                             PaymentActions(
                                 "تایید و پرداخت",
-                                "پرداخت قسط بیمه",
+                                InsuranceDestinations.RECEIPT,
+                                true,
                                 onBack,
-                                onUnavailable,
-                            )
+                            ) {
+                                MockBank.pay(
+                                    "insurance",
+                                    "پرداخت اقساط بیمه نامه",
+                                    insuranceSource,
+                                    chosen.remained,
+                                    policy.number,
+                                    settles = listOf("installment:${chosen.paymentId}"),
+                                )
+                            }
                         }
                     }
                     CreditRepaymentDestinations.CONFIRM -> {
@@ -129,13 +138,21 @@ internal fun PaymentPage(
                             TransferValue("مبلغ (ریال)", persianNumber(repayment.amount))
                             PaymentActions(
                                 "تایید و ادامه",
-                                "بازپرداخت کارت اعتباری",
+                                CreditRepaymentDestinations.RECEIPT,
+                                true,
                                 onBack,
-                                onUnavailable,
-                            )
+                            ) {
+                                MockBank.pay(
+                                    "credit-repayment",
+                                    "بازپرداخت کارت اعتباری",
+                                    repayment.sourceId,
+                                    repayment.amount,
+                                    card.number,
+                                )
+                            }
                         }
                     }
-                    else -> PaymentReceipt(page, onBack, onUnavailable)
+                    else -> BankReceipt(onBack, onUnavailable)
                 }
             }
         }
@@ -284,22 +301,23 @@ private fun BillConfirmation(
     TextButton({ onUnavailable("انتخاب و بارگذاری پیوست") }, Modifier.testTag("bill-attachment")) {
         Text("افزودن یادداشت و پیوست تراکنش")
     }
-    Button(
-        {
-            when (form) {
-                // Recovered: account payment asks for a signature or OTP in a confirmation sheet.
-                BillPaymentDestinations.ACCOUNT -> onUnavailable("پرداخت قبض")
-                BillPaymentDestinations.CARD -> onOpen(BillPaymentDestinations.CARD_INFO)
-                else -> onOpen(BillPaymentDestinations.CARD_INFO_NO_LOGIN)
-            }
-        },
-        Modifier.fillMaxWidth().testTag("bill-accept"),
-    ) {
-        Text(
-            if (form == BillPaymentDestinations.ACCOUNT) "تایید و پرداخت — در دسترس نیست"
-            else "تایید"
-        )
-    }
+    // Recovered: account payment asks for a signature or OTP in a confirmation sheet.
+    if (form == BillPaymentDestinations.ACCOUNT)
+        BankButton("تایید و پرداخت", "bill-accept", BillPaymentDestinations.RECEIPT, otp = true) {
+            MockBank.bill(draft.source, draft.billId, draft.payId)
+        }
+    else
+        Button(
+            {
+                onOpen(
+                    if (form == BillPaymentDestinations.CARD) BillPaymentDestinations.CARD_INFO
+                    else BillPaymentDestinations.CARD_INFO_NO_LOGIN
+                )
+            },
+            Modifier.fillMaxWidth().testTag("bill-accept"),
+        ) {
+            Text("تایید")
+        }
     OutlinedButton(onBack, Modifier.fillMaxWidth().testTag("bill-edit")) { Text("بازگشت و ویرایش") }
 }
 
@@ -314,16 +332,24 @@ private fun BillCardInfo(
         TransferValue("مقصد", it.company)
         TransferValue("مبلغ (ریال)", persianNumber(it.amount))
     }
-    CardPaymentInfo(page == BillPaymentDestinations.CARD_INFO, "پرداخت قبض", onBack, onUnavailable)
+    CardPaymentInfo(
+        page == BillPaymentDestinations.CARD_INFO,
+        BillPaymentDestinations.RECEIPT,
+        onBack,
+        onUnavailable,
+    ) { password ->
+        MockBank.bill(draft.source, draft.billId, draft.payId, password)
+    }
 }
 
 /** Recovered card-info fields; the login variant adds the password type and save choice. */
 @Composable
 internal fun CardPaymentInfo(
     login: Boolean,
-    title: String,
+    receipt: String?,
     onBack: () -> Unit,
     onUnavailable: (String) -> Unit,
+    onPay: (String) -> BankResult,
 ) {
     // Credentials reset through recreation and Back. They never enter SavedState or a fixture.
     var cvv2 by remember { mutableStateOf("") }
@@ -355,8 +381,11 @@ internal fun CardPaymentInfo(
     CardTransferSecret("تاریخ انقضا", expiry, "payment-card-expiry") { expiry = it }
     CardTransferSecret("رمز دوم", password, "payment-card-password") { password = it }
     if (dynamic)
-        OutlinedButton({ onUnavailable("دریافت رمز پویا") }, Modifier.testTag("payment-card-otp")) {
-            Text("درخواست رمز پویا — غیرفعال")
+        OutlinedButton(
+            { onUnavailable("رمز پویای نمایشی $PREVIEW_OTP است؛ هیچ پیامکی ارسال نمی‌شود.") },
+            Modifier.testTag("payment-card-otp"),
+        ) {
+            Text("درخواست رمز پویا")
         }
     if (login)
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -369,7 +398,11 @@ internal fun CardPaymentInfo(
             )
             Text("ذخیره اطلاعات کارت • فقط انتخاب محلی، چیزی ذخیره نمی‌شود")
         }
-    PaymentActions("پرداخت", title, onBack, onUnavailable)
+    PaymentActions("پرداخت", receipt, false, onBack) {
+        if (latinDigits(cvv2).length !in 3..4 || latinDigits(expiry).length != 4)
+            MockBank.invalidSecret()
+        else onPay(latinDigits(password))
+    }
 }
 
 @Composable
@@ -485,40 +518,6 @@ private fun InsuranceInstallments(
 }
 
 @Composable
-private fun PaymentReceipt(page: String, onBack: () -> Unit, onUnavailable: (String) -> Unit) {
-    Text(
-        "رسید ساختگی مستقل برای بازبینی؛ حاصل پرداخت نیست.",
-        modifier = Modifier.testTag("payment-receipt-disclosure"),
-    )
-    TransferValue("مبدا", "0000000000001")
-    when (page) {
-        BillPaymentDestinations.RECEIPT -> {
-            TransferValue("به نام", "شرکت آب نمایشی")
-            TransferValue("شناسه قبض", "9000000000001")
-            TransferValue("شناسه واریز", "1250001")
-            TransferValue("مبلغ (ریال)", persianNumber(1_250_000L))
-        }
-        InsuranceDestinations.RECEIPT -> {
-            TransferValue("بابت", "پرداخت اقساط بیمه نامه")
-            TransferValue("مبلغ (ریال)", persianNumber(2_000_000L))
-        }
-        else -> {
-            TransferValue("بابت", "بازپرداخت کارت اعتباری")
-            TransferValue("مبلغ (ریال)", persianNumber(50_000_000L))
-        }
-    }
-    TransferValue("زمان", "۱۴۰۵/۰۸/۰۱ - ۱۰:۰۰")
-    TransferValue("کد رهگیری ساختگی", "DEMO-PAYMENT-0001")
-    Button(
-        { onUnavailable("ذخیره و اشتراک‌گذاری رسید") },
-        Modifier.fillMaxWidth().testTag("payment-receipt-share"),
-    ) {
-        Text("ذخیره و اشتراک‌گذاری")
-    }
-    OutlinedButton(onBack, Modifier.fillMaxWidth()) { Text("بازگشت") }
-}
-
-@Composable
 internal fun PaymentSource(accountKey: String) {
     val account = AccountFixture.accounts.find { it.key == accountKey }
     TransferValue("مبدا", account?.let { "${it.type} · ${it.number}" } ?: "")
@@ -527,13 +526,12 @@ internal fun PaymentSource(accountKey: String) {
 @Composable
 internal fun PaymentActions(
     label: String,
-    title: String,
+    receipt: String?,
+    otp: Boolean,
     onBack: () -> Unit,
-    onUnavailable: (String) -> Unit,
+    action: () -> BankResult,
 ) {
-    Button({ onUnavailable(title) }, Modifier.fillMaxWidth().testTag("payment-submit")) {
-        Text("$label — در دسترس نیست")
-    }
+    BankButton(label, "payment-submit", receipt, otp, action)
     OutlinedButton(onBack, Modifier.fillMaxWidth().testTag("payment-cancel")) { Text("انصراف") }
 }
 

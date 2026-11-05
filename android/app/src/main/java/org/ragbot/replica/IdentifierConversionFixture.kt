@@ -55,10 +55,24 @@ internal data class ConversionResult(
 
 /** IDENTIFIER-RECOVERY: presentation rules only; bank namespaces and records are synthetic. */
 internal object ConversionFixture {
-    const val account = "0000000000001"
-    const val card = "0000000000000001"
-    const val iban = "IR220000000000000000000001"
-    val cards = listOf(card, "0000000000000002")
+    private val sample
+        get() = MockData.current.conversion
+
+    val account
+        get() = sample.account
+
+    val fee
+        get() = sample.fee
+
+    val card
+        get() = sample.cards.first()
+
+    val iban
+        get() = sample.iban
+
+    val cards
+        get() = sample.cards
+
     val banks =
         listOf(
             ConversionBank("internal", "بانک داخلی ساختگی", true),
@@ -120,7 +134,7 @@ internal object ConversionFixture {
                 else -> identifier == account && draft.bankKey == banks[0].key
             }
         return if (known) {
-            ConversionResult("دارندهٔ ساختگی", banks[0].title, account, iban, cards)
+            ConversionResult(sample.owner, banks[0].title, account, iban, cards)
         } else null
     }
 

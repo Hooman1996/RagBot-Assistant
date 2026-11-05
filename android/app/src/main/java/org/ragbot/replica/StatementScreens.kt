@@ -39,29 +39,15 @@ internal fun dateDaysAgo(days: Int): String {
 }
 
 internal fun statementFixtures(account: PreviewAccount?): List<PreviewStatement> =
-    listOf(
+    MockData.current.statement.map {
         PreviewStatement(
-            "statement-1",
-            2_000_000L,
-            account?.balance,
-            dateDaysAgo(1),
-            "واریز نمایشی",
-        ),
-        PreviewStatement(
-            "statement-2",
-            -750_000L,
-            account?.balance?.minus(2_000_000L),
-            dateDaysAgo(2),
-            "برداشت نمایشی",
-        ),
-        PreviewStatement(
-            "statement-3",
-            1_000_000L,
-            account?.balance?.minus(1_250_000L),
-            dateDaysAgo(5),
-            "واریز نمایشی دوم",
-        ),
-    )
+            it.key,
+            it.amount,
+            account?.balance?.minus(it.balanceOffset),
+            dateDaysAgo(it.daysAgo),
+            it.description,
+        )
+    }
 
 internal fun bankStatementDateError(
     start: String,

@@ -1,0 +1,240 @@
+{
+  "unit": "IRR",
+  "fee": 150000,
+  "digitalFee": 50000,
+  "books": [
+    {
+      "reference": "DEMO-BOOK-01",
+      "accountKey": "account-1",
+      "pageCount": 25,
+      "startNo": "534001",
+      "endNo": "534025",
+      "issueDate": "۱۴۰۵/۰۲/۱۰",
+      "docType": "دسته چک کاغذی",
+      "summary": [
+        ["نقد شده", 6],
+        ["ثبت شده", 3],
+        ["برگشتی و مسدود", 1],
+        ["قابل استفاده", 14],
+        ["سایر", 1]
+      ]
+    },
+    {
+      "reference": "DEMO-BOOK-02",
+      "accountKey": "account-2",
+      "pageCount": 10,
+      "startNo": "229901",
+      "endNo": "229910",
+      "issueDate": "۱۴۰۵/۰۶/۰۱",
+      "docType": "دسته چک دیجیتال",
+      "summary": [
+        ["نقد شده", 0],
+        ["ثبت شده", 1],
+        ["برگشتی و مسدود", 0],
+        ["قابل استفاده", 9],
+        ["سایر", 0]
+      ]
+    }
+  ],
+  "papers": {
+    "DEMO-BOOK-01": [
+      {
+        "no": "534001",
+        "amount": 12500000,
+        "sayadId": "00000000000100",
+        "branch": "شعبه نمایشی",
+        "date": "۱۴۰۵/۰۷/۱۰",
+        "statusDesc": "نقد شده",
+        "lastStatusDate": "۱۴۰۵/۰۷/۲۰"
+      },
+      {
+        "no": "534002",
+        "amount": 3000000,
+        "sayadId": "00000000000101",
+        "branch": "شعبه نمایشی",
+        "date": "۱۴۰۵/۰۷/۱۱",
+        "statusDesc": "برگشتی",
+        "lastStatusDate": "۱۴۰۵/۰۷/۲۱"
+      },
+      {
+        "no": "534003",
+        "amount": 7250000,
+        "sayadId": "00000000000102",
+        "branch": "شعبه نمایشی",
+        "date": "۱۴۰۵/۰۷/۱۲",
+        "statusDesc": "ثبت شده",
+        "lastStatusDate": "۱۴۰۵/۰۷/۲۲"
+      },
+      {
+        "no": "534004",
+        "amount": null,
+        "sayadId": "00000000000103",
+        "branch": "شعبه نمایشی",
+        "date": "۱۴۰۵/۰۷/۱۳",
+        "statusDesc": "استفاده نشده",
+        "lastStatusDate": "۱۴۰۵/۰۷/۲۳"
+      }
+    ],
+    "DEMO-BOOK-02": [
+      {
+        "no": "229901",
+        "amount": 12500000,
+        "sayadId": "00000000000100",
+        "branch": "شعبه نمایشی",
+        "date": "۱۴۰۵/۰۷/۱۰",
+        "statusDesc": "نقد شده",
+        "lastStatusDate": "۱۴۰۵/۰۷/۲۰"
+      },
+      {
+        "no": "229902",
+        "amount": 3000000,
+        "sayadId": "00000000000101",
+        "branch": "شعبه نمایشی",
+        "date": "۱۴۰۵/۰۷/۱۱",
+        "statusDesc": "برگشتی",
+        "lastStatusDate": "۱۴۰۵/۰۷/۲۱"
+      },
+      {
+        "no": "229903",
+        "amount": 7250000,
+        "sayadId": "00000000000102",
+        "branch": "شعبه نمایشی",
+        "date": "۱۴۰۵/۰۷/۱۲",
+        "statusDesc": "ثبت شده",
+        "lastStatusDate": "۱۴۰۵/۰۷/۲۲"
+      },
+      {
+        "no": "229904",
+        "amount": null,
+        "sayadId": "00000000000103",
+        "branch": "شعبه نمایشی",
+        "date": "۱۴۰۵/۰۷/۱۳",
+        "statusDesc": "استفاده نشده",
+        "lastStatusDate": "۱۴۰۵/۰۷/۲۳"
+      }
+    ]
+  },
+  "report": [
+    {
+      "no": "880001",
+      "amount": 4000000,
+      "date": "۱۴۰۵/۰۷/۰۵",
+      "type": "INTERNAL",
+      "subtype": "PASSED"
+    },
+    {
+      "no": "880002",
+      "amount": 9500000,
+      "date": "۱۴۰۵/۰۷/۰۸",
+      "type": "INTERNAL",
+      "subtype": "PASSED"
+    },
+    {
+      "no": "880003",
+      "amount": 1800000,
+      "date": "۱۴۰۵/۰۷/۰۹",
+      "type": "INTERNAL",
+      "subtype": "RETURNED"
+    },
+    {
+      "no": "990001",
+      "amount": 2200000,
+      "date": "۱۴۰۵/۰۷/۱۱",
+      "type": "OTHER",
+      "subtype": "PASSED"
+    },
+    {
+      "no": "990002",
+      "amount": 6000000,
+      "date": "۱۴۰۵/۰۷/۱۲",
+      "type": "OTHER",
+      "subtype": "RECEIVING"
+    }
+  ],
+  "issuance": [
+    {
+      "trace": "DEMO-TRACE-201",
+      "accountKey": "account-1",
+      "media": "PAPER",
+      "pageCount": "25",
+      "date": "۱۴۰۵/۰۷/۰۱",
+      "status": "در حال بررسی",
+      "rejectReason": null
+    },
+    {
+      "trace": "DEMO-TRACE-202",
+      "accountKey": "account-2",
+      "media": "DIGITAL",
+      "pageCount": "10",
+      "date": "۱۴۰۵/۰۶/۲۰",
+      "status": "رد شده",
+      "rejectReason": "دلیل رد نمایشی"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-1",
+      "tab": "WAITING",
+      "processKey": "cheque_book_request_process",
+      "processName": "درخواست دسته چک",
+      "issuer": "عضو نمایشی",
+      "date": "۱۴۰۵/۰۷/۲۵",
+      "statusDesc": "در انتظار تایید",
+      "amount": 150000
+    },
+    {
+      "id": "task-2",
+      "tab": "WAITING",
+      "processKey": "pichak_issue_process",
+      "processName": "صدور چک کاغذی",
+      "issuer": "عضو نمایشی",
+      "date": "۱۴۰۵/۰۷/۲۶",
+      "statusDesc": "در انتظار تایید",
+      "amount": 5000000
+    },
+    {
+      "id": "task-3",
+      "tab": "DONE",
+      "processKey": "cheque_book_request_process",
+      "processName": "درخواست دسته چک",
+      "issuer": "کاربر نمایشی",
+      "date": "۱۴۰۵/۰۶/۱۰",
+      "statusDesc": "تایید شده",
+      "amount": 150000
+    }
+  ],
+  "digital": [
+    {
+      "sayadId": "0000000000000201",
+      "amount": 8000000,
+      "dueDate": "۱۴۰۵/۰۹/۱۰",
+      "bank": "بانک نمایشی",
+      "branch": "شعبه نمایشی",
+      "status": "صادر شده",
+      "guarantee": "بدون ضمانت",
+      "block": "مسدود نشده",
+      "lock": "قابل نقد",
+      "holderStatus": "پذیرفته شده",
+      "reason": "بابت نمایشی",
+      "description": "شرح نمایشی",
+      "holders": ["کاربر نمایشی"],
+      "digitalIban": "IR000000000000000000000201"
+    },
+    {
+      "sayadId": "0000000000000202",
+      "amount": 2500000,
+      "dueDate": "۱۴۰۵/۱۰/۰۱",
+      "bank": "بانک نمایشی",
+      "branch": "شعبه نمایشی",
+      "status": "صادر شده",
+      "guarantee": "بدون ضمانت",
+      "block": "مسدود نشده",
+      "lock": "قابل نقد",
+      "holderStatus": "در انتظار پذیرش",
+      "reason": "بابت نمایشی دوم",
+      "description": "",
+      "holders": ["کاربر نمایشی", "دارندهٔ نمایشی"],
+      "digitalIban": "IR000000000000000000000202"
+    }
+  ]
+}

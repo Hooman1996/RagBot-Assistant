@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: transactions",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "recent",
+    "statement",
+    "groupFiles",
+    "groupHistory",
+    "standingOrders",
+    "repetitive"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "recent": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "title",
+          "amount",
+          "unit",
+          "time",
+          "source",
+          "destination"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "unit": {
+            "const": "IRR",
+            "type": "string"
+          },
+          "time": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "statement": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "amount",
+          "balanceOffset",
+          "daysAgo",
+          "description"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "balanceOffset": {
+            "type": "integer"
+          },
+          "daysAgo": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "groupFiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "name",
+          "sheet",
+          "rejected"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sheet": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "rejected": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "groupHistory": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "traceId",
+          "date",
+          "status",
+          "source",
+          "sourceName",
+          "withdrawId",
+          "sourceDescription",
+          "note",
+          "rows"
+        ],
+        "properties": {
+          "traceId": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "sourceName": {
+            "type": "string"
+          },
+          "withdrawId": {
+            "type": "string"
+          },
+          "sourceDescription": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "iban",
+                "amount",
+                "reason",
+                "paymentId",
+                "description"
+              ],
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "iban": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "paymentId": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "standingOrders": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "traceId",
+          "name",
+          "type",
+          "source",
+          "destination",
+          "amount",
+          "created",
+          "start",
+          "end",
+          "frequency",
+          "cancelled",
+          "executions"
+        ],
+        "properties": {
+          "traceId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "created": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "frequency": {
+            "type": "string"
+          },
+          "cancelled": {
+            "type": "boolean"
+          },
+          "executions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "date",
+                "status"
+              ],
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "repetitive": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "type",
+          "title",
+          "source",
+          "destination",
+          "destinationName",
+          "bank",
+          "amount",
+          "created"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "destinationName": {
+            "type": "string"
+          },
+          "bank": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "created": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

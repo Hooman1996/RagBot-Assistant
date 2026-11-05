@@ -6,7 +6,7 @@ import org.junit.Test
 class IndividualTransferRulesTest {
     @Test
     fun cardPreviewRejectsMalformedEqualAndOverflowingInputs() {
-        val valid = CardTransferFixture.receipt
+        val valid = CardTransferDraft("0000000000000018", "0000000000000026", "250000")
         assertTrue(CardTransferRules.errors(valid).isEmpty())
         assertTrue(CardTransferRules.errors(valid.copy(source = "123")).containsKey("source"))
         assertTrue(

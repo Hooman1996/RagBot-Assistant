@@ -20,9 +20,8 @@ internal data class CardTransferDraft(
 ) : Serializable
 
 internal object CardTransferFixture {
-    const val source = "0000000000000001"
-    const val destination = "0000000000000002"
-    val receipt = CardTransferDraft(source, destination, "250000")
+    val source
+        get() = MockData.current.cards.first().number
 }
 
 internal object CardTransferRules {

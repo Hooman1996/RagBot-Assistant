@@ -39,50 +39,10 @@ internal data class LoanGroupOption(
 
 /** LG-FIXTURE: synthetic catalogue and eligibility examples; Designed for mock. */
 internal object LoanGroupFixture {
-    val groups =
-        listOf(
-            LoanGroup(
-                "standard",
-                "گروه تسهیلات نمونه",
-                listOf("نمایش شرایط ساختگی", "بررسی گزینه‌های بازپرداخت"),
-            ),
-            LoanGroup(
-                "inactive",
-                "گروه غیرفعال نمونه",
-                listOf("این گروه در دسترس نیست."),
-                active = false,
-            ),
-            LoanGroup(
-                "recent",
-                "حساب تازه نمونه",
-                listOf("بررسی مدت افتتاح حساب"),
-                accountOpenElapsed = false,
-            ),
-            LoanGroup(
-                "credit",
-                "گروه نیازمند استعلام نمونه",
-                listOf("نیازمند بررسی رتبه اعتباری"),
-                needsCredit = true,
-            ),
-        )
-    val options =
-        listOf(
-            LoanGroupOption(
-                "normal",
-                "گزینه عادی نمونه",
-                100_000_000L,
-                subtitle = "بازپرداخت نمونه",
-                details = listOf("شرایط صرفاً برای نمایش است."),
-            ),
-            LoanGroupOption(
-                "limited",
-                "گزینه با دوره محدود نمونه",
-                100_000_000L,
-                availableMonths = 6,
-                details = listOf("دوره در دسترس بر اساس امتیاز نمونه محدود است."),
-            ),
-            LoanGroupOption("inactive", "گزینه غیرفعال نمونه", 200_000_000L, active = false),
-        )
+    val groups
+        get() = MockData.current.loanGroups
+    val options
+        get() = MockData.current.loanOptions
 
     fun unavailableReason(group: LoanGroup): String? =
         when {

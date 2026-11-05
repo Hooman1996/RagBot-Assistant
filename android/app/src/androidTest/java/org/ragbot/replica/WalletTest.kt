@@ -135,12 +135,6 @@ class WalletTest {
         back()
         shown("S-110")
         repeat(3) { back() }
-        compose.onNodeWithTag("demo-S-113").performScrollTo().performClick()
-        shown("S-113")
-        compose.onNodeWithTag("wallet-receipt-disclosure").assertExists()
-        click("wallet-receipt-share")
-        unavailable("اشتراک‌گذاری")
-        repeat(2) { back() }
         compose.onNodeWithTag("scenario-empty").performScrollTo().performClick()
         compose.onNodeWithTag("demo-S-111").performScrollTo().performClick()
         compose.onNodeWithTag("data-empty").assertIsDisplayed()

@@ -62,6 +62,16 @@ class RecurringTransfersTest {
         shown("S-180")
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun scheduleValidationCorrectionAndContinuousFormNeverSubmit() {
         openMenu()
@@ -99,8 +109,7 @@ class RecurringTransfersTest {
         shown("S-173")
         compose.onNodeWithTag("account-transfer-schedule").assertExists()
         click("account-transfer-submit")
-        compose.onNodeWithTag("unavailable").assertIsDisplayed()
-        back()
+        otpPrompt()
         back()
         back()
         shown("S-177")
@@ -173,7 +182,7 @@ class RecurringTransfersTest {
         shown("S-176")
         compose
             .onNodeWithTag("card-transfer-review-destination")
-            .assertTextContains(CardTransferFixture.destination, substring = true)
+            .assertTextContains("0000000000000026", substring = true)
         back()
         click("repetitive-repeat-charge-repeat")
         shown("S-212")

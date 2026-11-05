@@ -83,8 +83,16 @@ internal fun DigitalChequePage(
                                 "کارمزد درخواست:",
                                 "${persianNumber(DigitalChequeFixture.FEE)} ریال",
                             )
-                            // The transfer is signed and sent by the user; nothing is sent here.
-                            PaymentActions("تایید", "واگذاری چک دیجیتال", onBack, onUnavailable)
+                            // The transfer is signed and sent by the user.
+                            PaymentActions("تایید", null, true, onBack) {
+                                MockBank.pay(
+                                    "digital-cheque",
+                                    "واگذاری چک دیجیتال",
+                                    transfer.accountKey,
+                                    DigitalChequeFixture.FEE,
+                                    it.sayadId,
+                                )
+                            }
                         }
                 }
             }

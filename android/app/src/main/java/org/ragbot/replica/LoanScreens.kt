@@ -312,9 +312,17 @@ private fun LoanReview(
         "مبلغ قابل پرداخت: ${persianNumber(LoanFixture.payableIrr(loan, selected))} ریال",
         Modifier.testTag("loan-payable"),
     )
-    Text("این بازبینی محلی است؛ هیچ پرداختی انجام نمی‌شود.")
     OutlinedButton(onBack, Modifier.fillMaxWidth().testTag("loan-correct")) {
         Text("اصلاح انتخاب اقساط و مبدا")
     }
-    PaymentActions("تایید و پرداخت", "پرداخت تسهیلات", onBack, onUnavailable)
+    PaymentActions("تایید و پرداخت", null, true, onBack) {
+        MockBank.pay(
+            "loan-installment",
+            "پرداخت قسط تسهیلات",
+            source,
+            LoanFixture.payableIrr(loan, selected),
+            loan.fileNumber,
+            settles = selected.map { "loan:${loan.id}:${loan.installments[it].number}" },
+        )
+    }
 }

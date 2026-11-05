@@ -145,12 +145,15 @@ internal fun ChequePage(
                                 Modifier.testTag("cheque-cardboard-note"),
                             )
                         // Recovered: confirming asks for an OTP; it stays with the user.
-                        PaymentActions(
-                            "تایید تراکنش",
-                            "تایید تراکنش با رمز پویا",
-                            onBack,
-                            onUnavailable,
-                        )
+                        PaymentActions("تایید تراکنش", null, true, onBack) {
+                            MockBank.pay(
+                                "cheque-book",
+                                issue.media.request,
+                                issue.accountKey,
+                                ChequeFixture.FEE,
+                                issue.media.title,
+                            )
+                        }
                     }
                     ChequeDestinations.ISSUANCE ->
                         ChequeFixture.issuance.forEach {
@@ -519,19 +522,13 @@ private fun ChequeTaskDetail(
         TransferValue("کارمزد درخواست:", "${persianNumber(task.amount)} ریال")
         TransferValue("امضاداران", "کاربر نمایشی، عضو نمایشی")
     }
-    // Recovered actions (approve, reject, cancel) need the user's OTP; none is performed here.
+    // Recovered actions (approve, reject, cancel) need the user's OTP.
     if (task.tab == "WAITING") {
-        Button(
-            { onUnavailable("تایید درخواست کارتابل") },
-            Modifier.fillMaxWidth().testTag("cardboard-act"),
-        ) {
-            Text("تایید — در دسترس نیست")
+        BankButton("تایید", "cardboard-act", null, otp = true) {
+            MockBank.request("cardboard", "تایید ${task.processName}", task.issuer)
         }
-        OutlinedButton(
-            { onUnavailable("رد درخواست کارتابل") },
-            Modifier.fillMaxWidth().testTag("cardboard-reject"),
-        ) {
-            Text("رد — در دسترس نیست")
+        BankButton("رد", "cardboard-reject", null, otp = true) {
+            MockBank.request("cardboard", "رد ${task.processName}", task.issuer)
         }
     }
     OutlinedButton(onBack, Modifier.fillMaxWidth().testTag("cardboard-back")) { Text("بازگشت") }

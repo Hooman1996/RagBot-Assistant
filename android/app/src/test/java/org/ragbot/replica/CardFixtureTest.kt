@@ -22,12 +22,12 @@ class CardFixtureTest {
 
     @Test
     fun numbersAreGroupedWithoutClientSideMasking() {
-        assertEquals("۰۰۰۰ ۰۰۰۰ ۰۰۰۰ ۰۰۰۱", cardNumberGroups("0000000000000001"))
-        assertEquals("۰۰۰۰ ۰۰** **** ۰۰۰۳", cardNumberGroups("000000******0003"))
+        assertEquals("۰۰۰۰ ۰۰۰۰ ۰۰۰۰ ۰۰۱۸", cardNumberGroups("0000000000000018"))
+        assertEquals("۰۰۰۰ ۰۰** **** ۰۰۳۴", cardNumberGroups("000000******0034"))
         val second = CardFixture.cards[1]
-        assertTrue(cardMatches(second, "۰۰۰۲"))
+        assertTrue(cardMatches(second, "۰۰۲۶"))
         assertTrue(cardMatches(second, "کاربر"))
-        assertFalse(cardMatches(second, "0001"))
+        assertFalse(cardMatches(second, "0018"))
     }
 
     @Test
@@ -38,7 +38,7 @@ class CardFixtureTest {
         assertEquals(setOf("cvv2", "password"), secureFormErrors(null, "123", "۰۵/۰۸", "1234").keys)
         assertEquals(
             emptyMap<String, String>(),
-            secureFormErrors("0000000000000001", "1234", "05/08", "12345"),
+            secureFormErrors("0000000000000018", "1234", "05/08", "12345"),
         )
         assertTrue("expiry" in secureFormErrors(null, "1234", "13/08", "12345"))
     }

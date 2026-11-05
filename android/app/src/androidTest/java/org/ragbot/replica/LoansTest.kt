@@ -31,6 +31,16 @@ class LoansTest {
         shown("S-331")
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun installmentReviewKeepsSelectionsAndAllowsCorrectionWithoutPayment() {
         click("demo-S-324")
@@ -65,8 +75,7 @@ class LoansTest {
         compose.onNodeWithTag("loan-payable").assertTextEquals("مبلغ قابل پرداخت: ۹٬۷۵۰٬۰۰۰ ریال")
         compose.activityRule.scenario.recreate()
         click("payment-submit")
-        compose.onNodeWithTag("unavailable").assertTextContains("پرداخت تسهیلات", substring = true)
-        back()
+        otpPrompt()
         shown("S-331")
         click("loan-correct")
         shown("S-306")

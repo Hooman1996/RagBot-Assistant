@@ -110,7 +110,8 @@ internal object PaymentRules {
             }
         return when {
             bill == null -> null to "قبضی با این شناسه‌ها در دادهٔ نمایشی یافت نشد."
-            bill.paid -> null to "این قبض در دادهٔ نمایشی پرداخت شده است."
+            bill.paid || MockBank.settled("bill:${bill.billId}") ->
+                null to "این قبض در دادهٔ نمایشی پرداخت شده است."
             else -> bill to null
         }
     }
@@ -138,15 +139,15 @@ internal object PaymentRules {
 }
 
 internal object PaymentFixture {
-    const val NOTICE = "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ پرداخت یا استعلامی ارسال نمی‌شود."
-    const val insuredName = "بیمه‌شدهٔ نمایشی"
-    const val insuredNationalCode = "0000000000"
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
+    val insuredName
+        get() = MockData.current.insuredName
 
-    val bills =
-        listOf(
-            BillInquiry("9000000000001", "1250001", "شرکت آب نمایشی", 1_250_000L, false),
-            BillInquiry("9000000000002", "430002", "شرکت برق نمایشی", 430_000L, true),
-        )
+    val insuredNationalCode
+        get() = MockData.current.insuredNationalCode
+
+    val bills
+        get() = MockData.current.bills
 
     // Status titles come from the service; these are Designed for mock.
     val statusTitles =
@@ -157,64 +158,16 @@ internal object PaymentFixture {
             PaymentRules.DUE_DATE to "سررسید",
         )
 
-    val policies =
-        listOf(
-            InsurancePolicy(
-                "policy-1",
-                "DEMO-POLICY-0001",
-                "۱۴۰۵/۰۱/۰۱",
-                "۱۴۰۵/۱۲/۲۹",
-                "فعال",
-                0,
-                listOf(
-                    Installment(
-                        1,
-                        1405,
-                        "۱۴۰۵/۰۲/۰۱",
-                        2_000_000L,
-                        0L,
-                        "1000001",
-                        PaymentRules.PAID,
-                    ),
-                    Installment(
-                        2,
-                        1405,
-                        "۱۴۰۵/۰۳/۰۱",
-                        2_000_000L,
-                        2_000_000L,
-                        "1000002",
-                        PaymentRules.VERIFICATION_WAITING,
-                    ),
-                    Installment(
-                        3,
-                        1405,
-                        "۱۴۰۵/۰۴/۰۱",
-                        2_000_000L,
-                        1_500_000L,
-                        "1000003",
-                        PaymentRules.POSTPONED,
-                    ),
-                    Installment(
-                        4,
-                        1405,
-                        "۱۴۰۵/۰۵/۰۱",
-                        2_000_000L,
-                        2_000_000L,
-                        "1000004",
-                        PaymentRules.DUE_DATE,
-                    ),
-                ),
-            ),
-            InsurancePolicy(
-                "policy-2",
-                "DEMO-POLICY-0002",
-                "۱۴۰۴/۰۱/۰۱",
-                "۱۴۰۴/۱۲/۲۹",
-                "خاتمه یافته",
-                1,
-                listOf(
-                    Installment(1, 1404, "۱۴۰۴/۰۲/۰۱", 900_000L, 0L, "2000001", PaymentRules.PAID)
-                ),
-            ),
-        )
+    val policies
+        get() =
+            MockData.current.policies.map { policy ->
+                policy.copy(
+                    installments =
+                        policy.installments.map {
+                            if (MockBank.settled("installment:${it.paymentId}"))
+                                it.copy(remained = 0, status = PaymentRules.PAID)
+                            else it
+                        }
+                )
+            }
 }

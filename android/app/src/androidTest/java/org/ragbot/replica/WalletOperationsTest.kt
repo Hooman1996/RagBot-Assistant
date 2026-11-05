@@ -94,6 +94,16 @@ class WalletOperationsTest {
         shown("S-111")
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun walletToWalletChecksTheDestinationAndBalanceThenKeepsTheDraftForCorrection() {
         wallet()
@@ -125,7 +135,7 @@ class WalletOperationsTest {
         compose.onNodeWithText("یادداشت آزمون").assertExists()
         compose.onNodeWithTag("wallet-op-favorite").assertIsOn()
         click("wallet-op-submit")
-        unavailable("امضا و انجام کیف به کیف")
+        otpPrompt()
         shown("S-117")
         click("wallet-op-edit")
         shown("S-116")
@@ -155,7 +165,7 @@ class WalletOperationsTest {
         shown("S-105")
         compose.onNodeWithText("حساب مبدا").assertExists()
         click("wallet-op-submit")
-        unavailable("تایید تراکنش با رمز پویا")
+        otpPrompt()
         compose.onNodeWithTag("otp-code").assertDoesNotExist()
         click("wallet-op-cancel")
         shown("S-111")
@@ -178,7 +188,7 @@ class WalletOperationsTest {
         shown("S-107")
         compose.onNodeWithText("۱۸٬۰۰۰٬۰۰۰").assertExists()
         click("wallet-op-submit")
-        unavailable("رمز پویا")
+        otpPrompt()
     }
 
     @Test
@@ -203,7 +213,7 @@ class WalletOperationsTest {
         shown("S-101")
         compose.onNodeWithText("فروشگاه نمایشی").assertExists()
         click("wallet-op-submit")
-        unavailable("خرید با کیف")
+        otpPrompt()
     }
 
     @Test
@@ -243,7 +253,7 @@ class WalletOperationsTest {
         compose.onNodeWithText("شرکت آب نمایشی").assertExists()
         compose.onNodeWithText("۱٬۲۵۰٬۰۰۰").assertExists()
         click("wallet-op-submit")
-        unavailable("پرداخت قبض")
+        otpPrompt()
     }
 
     @Test

@@ -219,7 +219,7 @@ private fun FaqPage(page: String, scenario: String, onOpen: (String) -> Unit) {
                         Text("ادامه نمایشی")
                     }
                 } else {
-                    Text("کد نمایشی 12345 را وارد کنید. این کد ذخیره نمی‌شود.")
+                    Text("کد نمایشی $PREVIEW_OTP را وارد کنید. این کد ذخیره نمی‌شود.")
                     OutlinedTextField(
                         otp,
                         {
@@ -235,7 +235,7 @@ private fun FaqPage(page: String, scenario: String, onOpen: (String) -> Unit) {
                     )
                     Button(
                         {
-                            if (latinDigits(otp) == "12345") {
+                            if (latinDigits(otp) == PREVIEW_OTP) {
                                 otp = ""
                                 identityStep = 0
                                 onOpen(SupportDestinations.MESSAGE)
@@ -247,7 +247,7 @@ private fun FaqPage(page: String, scenario: String, onOpen: (String) -> Unit) {
                     }
                     TextButton({
                         otp = ""
-                        error = "کد نمونه همان 12345 است؛ پیامکی ارسال نشد."
+                        error = "کد نمونه همان $PREVIEW_OTP است؛ پیامکی ارسال نشد."
                     }) {
                         Text("ارسال مجدد نمایشی")
                     }

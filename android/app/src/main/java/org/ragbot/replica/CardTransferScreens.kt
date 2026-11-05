@@ -38,7 +38,7 @@ internal fun CardTransferPage(
         onBack,
     ) {
         Text(
-            "پیش‌نمایش محلی • اطلاعات ساختگی؛ هیچ انتقال یا استعلامی انجام نمی‌شود.",
+            "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود.",
             Modifier.fillMaxWidth().background(Color(0xFFEAF3EE)).padding(12.dp),
             color = ServiceGreen,
             fontSize = 12.sp,
@@ -51,7 +51,12 @@ internal fun CardTransferPage(
                     CardTransferForm(page, draft, onChange, onBack, onReview, onTyped, onUnavailable)
                 CardTransferDestinations.CONFIRM ->
                     CardTransferConfirmation(draft, onChange, onBack, onUnavailable)
-                CardTransferDestinations.RECEIPT -> CardTransferReceipt(onUnavailable)
+                CardTransferDestinations.RECEIPT ->
+                    Column(
+                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)
+                    ) {
+                        BankReceipt(onBack, onUnavailable)
+                    }
             }
     }
 }
@@ -67,18 +72,42 @@ private fun CardTransferForm(
     onUnavailable: (String) -> Unit,
 ) {
     var attempted by rememberSaveable { mutableStateOf(false) }
+    var contacts by rememberSaveable { mutableStateOf(false) }
+    var sources by rememberSaveable { mutableStateOf(false) }
     val errors = if (attempted) CardTransferRules.errors(draft) else emptyMap()
+    if (contacts)
+        CardPicker(
+            "مقصدهای ذخیره‌شده",
+            SavedDestinationFixture.records
+                .filter { it.type == "CARD" }
+                .map { Triple(it.id, it.name, it.destination) },
+            "card-transfer-contact",
+            { contacts = false },
+        ) {
+            onChange(draft.copy(destination = it))
+        }
+    if (sources)
+        CardPicker(
+            "کارت مبدا",
+            CardFixture.of(CardKind.DEBIT)
+                .filter { "*" !in it.number }
+                .map { Triple(it.key, it.owner, it.number) },
+            "card-transfer-source",
+            { sources = false },
+        ) {
+            onChange(draft.copy(source = it))
+        }
     Column(
         Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         if (page == CardTransferDestinations.ANONYMOUS) {
-            Text("کارت مبدا • انتخاب نمونه محلی")
+            Text("کارت مبدا")
             OutlinedButton(
-                { onChange(draft.copy(source = CardTransferFixture.source)) },
+                { sources = true },
                 Modifier.fillMaxWidth().testTag("card-transfer-source-picker"),
             ) {
-                Text(draft.source.ifEmpty { "انتخاب کارت نمونه" })
+                Text(draft.source.ifEmpty { "انتخاب کارت" })
             }
             TextButton(onTyped, Modifier.testTag("card-transfer-typed")) {
                 Text("ورود دستی کارت مبدا")
@@ -112,7 +141,7 @@ private fun CardTransferForm(
             }
             if (page == CardTransferDestinations.ANONYMOUS)
                 TextButton(
-                    { onUnavailable("انتخاب مقصد کارت ذخیره‌شده در پیش‌نمایش در دسترس نیست.") },
+                    { contacts = true },
                     Modifier.testTag("card-transfer-favorites"),
                 ) {
                     Text("مقصدهای ذخیره‌شده")
@@ -172,7 +201,10 @@ private fun TransferCardField(
 private fun CardTransferSummary(draft: CardTransferDraft) {
     Text("کارت مبدا: ${draft.source}", Modifier.testTag("card-transfer-review-source"))
     Text("کارت مقصد: ${draft.destination}", Modifier.testTag("card-transfer-review-destination"))
-    Text("دارنده مقصد: گیرنده نمونه • پاسخ ساختگی")
+    Text(
+        "دارنده مقصد: ${MockBank.recipient(draft.destination) ?: "نامشخص"}",
+        Modifier.testTag("card-transfer-review-holder"),
+    )
     Text("مبلغ: ${draft.amount} ریال", Modifier.testTag("card-transfer-review-amount"))
 }
 
@@ -216,10 +248,10 @@ private fun CardTransferConfirmation(
         CardTransferSecret("رمز دوم", password, "card-transfer-password") { password = it }
         if (dynamic)
             OutlinedButton(
-                { onUnavailable("دریافت رمز پویا در دسترس نیست؛ هیچ پیامکی ارسال نمی‌شود.") },
+                { onUnavailable("رمز پویای نمایشی $PREVIEW_OTP است؛ هیچ پیامکی ارسال نمی‌شود.") },
                 Modifier.testTag("card-transfer-otp"),
             ) {
-                Text("درخواست رمز پویا — غیرفعال")
+                Text("درخواست رمز پویا")
             }
         OutlinedTextField(
             draft.note,
@@ -243,11 +275,8 @@ private fun CardTransferConfirmation(
             )
             Text("افزودن به مقصدهای ذخیره‌شده • فقط انتخاب محلی")
         }
-        Button(
-            { onUnavailable("پرداخت و ارسال در پیش‌نمایش در دسترس نیست؛ هیچ انتقالی انجام نشد.") },
-            Modifier.fillMaxWidth().testTag("card-transfer-submit"),
-        ) {
-            Text("تایید و پرداخت — در دسترس نیست")
+        BankButton("تایید و پرداخت", "card-transfer-submit", CardTransferDestinations.RECEIPT) {
+            MockBank.cardTransfer(draft, latinDigits(cvv2), latinDigits(expiry), latinDigits(password))
         }
         OutlinedButton(onBack, Modifier.fillMaxWidth().testTag("card-transfer-edit")) {
             Text("بازگشت و ویرایش")
@@ -274,30 +303,31 @@ internal fun CardTransferSecret(
 }
 
 @Composable
-private fun CardTransferReceipt(onUnavailable: (String) -> Unit) {
-    Column(
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text(
-            "رسید نمونه مستقل • نتیجه تراکنش نیست",
-            Modifier.testTag("card-transfer-receipt-synthetic"),
-            color = ServiceGreen,
-        )
-        CardTransferSummary(CardTransferFixture.receipt)
-        Text("وضعیت: نمونه نمایشی؛ هیچ پرداختی انجام نشده است")
-        Text("شناسه نمونه: DEMO-CARD-008")
-        TextButton(
-            { onUnavailable("پیگیری تراکنش در پیش‌نمایش در دسترس نیست.") },
-            Modifier.testTag("card-transfer-track"),
-        ) {
-            Text("پیگیری")
-        }
-        TextButton(
-            { onUnavailable("اشتراک‌گذاری و ذخیره رسید در دسترس نیست.") },
-            Modifier.testTag("card-transfer-share"),
-        ) {
-            Text("اشتراک‌گذاری رسید")
-        }
-    }
+private fun CardPicker(
+    title: String,
+    items: List<Triple<String, String, String>>,
+    tag: String,
+    onClose: () -> Unit,
+    onPick: (String) -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onClose,
+        title = { Text(title) },
+        text = {
+            Column(Modifier.verticalScroll(rememberScrollState())) {
+                items.forEach { (key, name, number) ->
+                    TextButton(
+                        {
+                            onPick(number)
+                            onClose()
+                        },
+                        Modifier.testTag("$tag-$key"),
+                    ) {
+                        Text("$name · $number")
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClose) { Text("انصراف") } },
+    )
 }
