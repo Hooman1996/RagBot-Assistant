@@ -139,6 +139,11 @@ internal class MockFiles(read: (String) -> Json) {
                 pairs(it["rate"]),
             )
         }
+    val wageLimit = customerFile.long("wageLimit")
+    val creditProductLimit = customerFile.long("creditProductLimit")
+    val creditProductGuide = pairs(customerFile["creditProductGuide"])
+    val rewardPoints = customerFile.long("rewardPoints")
+    val rewardHistory = pairs(customerFile["rewardHistory"])
     private val accountFile = read("accounts")
     val accounts =
         accountFile.list("accounts") {

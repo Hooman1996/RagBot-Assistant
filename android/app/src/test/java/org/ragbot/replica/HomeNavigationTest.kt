@@ -212,7 +212,6 @@ class HomeNavigationTest {
         // Host container S-138 and received-card confirmation S-004 are not pages.
         // S-183 is a wage-advance receipt, not part of the group-transfer journey.
         listOf(
-                "S-183",
                 // S-199 hosts only the S-200 repetitive-transactions route.
                 "S-199",
                 "S-194",

@@ -43,7 +43,7 @@ internal val tracedHomeTiles =
 
 /** Home tiles of Designed-for-mock services, by tile key. */
 internal val designedHomeTiles =
-    mapOf("inquiry" to "S-443", "open-account" to "S-062", "performance" to FinanceDestinations.MAIN)
+    mapOf("inquiry" to "S-443", "open-account" to "S-062", "performance" to FinanceDestinations.MAIN, "wage" to "S-414", "loyalty" to "S-432")
 
 /** Screens the owner traced below Home; they have real routes, so no Home demo path. */
 private val ownerTraced =
@@ -401,6 +401,7 @@ internal object ReplicaGraph {
                 Edge(LoanDestinations.MENU, LoanDestinations.SUMMARY, "loan-current"),
                 Edge(LoanDestinations.MENU, LoanDestinations.GROUP, "loan-groups"),
                 Edge(LoanDestinations.MENU, "S-287", "loan-request"),
+                Edge(LoanDestinations.MENU, "S-407", "loan-credit-product"),
                 Edge(LoanDestinations.SUMMARY, LoanDestinations.DETAIL, "loan-*"),
                 Edge(
                     LoanDestinations.DETAIL,

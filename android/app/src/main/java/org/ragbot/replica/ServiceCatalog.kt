@@ -372,7 +372,13 @@ internal object ServiceCatalog {
                         Triple("credit-report", "گزارش اعتباری", "S-442"),
                         Triple("bounced-cheques", "استعلام چک برگشتی", "S-442"),
                         Triple("credit-rate", "رتبه اعتباری", "S-442"),
-                    ))
+                    )),
+            "S-432" to
+                ("باشگاه مشتریان" to
+                    listOf(
+                        Triple("rewards-history", "سوابق امتیاز", "S-426"),
+                        Triple("rewards-transfer", "انتقال امتیاز", "S-428"),
+                    )),
         )
 
     private fun product(values: Map<String, String>) =
@@ -549,7 +555,111 @@ internal object ServiceCatalog {
             )
         }
 
-    val flows = sayad + vehicle + inquiries + loanRequest + accountOpening
+    private fun agreement(page: String, title: String) =
+        FlowStep(page, title, listOf(choice("agree", title) { listOf("yes" to "می‌پذیرم") }))
+
+    private val extras =
+        listOf(
+            ServiceFlow(
+                "wage-advance",
+                listOf(
+                    FlowStep(
+                        "S-414",
+                        "مساعده",
+                        show = {
+                            total("سقف مساعده", MockData.current.wageLimit) +
+                                total("قابل دریافت", MockBank.wageAvailable)
+                        },
+                    ),
+                    FlowStep(
+                        "S-419",
+                        "مبلغ مساعده",
+                        listOf(
+                            money("amount", "مبلغ (ریال)"),
+                            accountChoice("target", "حساب واریز"),
+                        ),
+                    ),
+                    agreement("S-417", "شرایط مساعده"),
+                    FlowStep(
+                        "S-418",
+                        "تایید مساعده",
+                        show = { rows("مبلغ (ریال)" to amount(it)) },
+                    ),
+                ),
+                "S-183",
+            ) {
+                MockBank.wageAdvance(
+                    latinDigits(it.getValue("amount")).toLong(),
+                    it.getValue("target"),
+                )
+            },
+            ServiceFlow(
+                "credit-product",
+                listOf(
+                    FlowStep(
+                        "S-407",
+                        "اعتبار خرید",
+                        show = { total("سقف اعتبار", MockData.current.creditProductLimit) },
+                    ),
+                    FlowStep(
+                        "S-406",
+                        "راهنمای اعتبار خرید",
+                        show = { MockData.current.creditProductGuide },
+                    ),
+                    agreement("S-408", "فعال‌سازی اعتبار خرید"),
+                ),
+                "S-409",
+            ) {
+                MockBank.request(
+                    "credit-product",
+                    "فعال‌سازی اعتبار خرید",
+                    MockData.current.customer.name,
+                    listOf("وضعیت" to "فعال شد"),
+                )
+            },
+            ServiceFlow(
+                "rewards-history",
+                listOf(
+                    FlowStep(
+                        "S-426",
+                        "سوابق امتیاز",
+                        show = {
+                            listOf("امتیاز شما" to persianNumber(MockBank.points)) +
+                                MockData.current.rewardHistory
+                        },
+                    )
+                ),
+            ),
+            ServiceFlow(
+                "rewards-transfer",
+                listOf(
+                    FlowStep(
+                        "S-428",
+                        "انتقال امتیاز",
+                        listOf(
+                            FlowField("mobile", "تلفن همراه گیرنده", check = digits(11)),
+                            FlowField("points", "امتیاز", "text", check = ::amountCheck),
+                        ),
+                        { listOf("امتیاز شما" to persianNumber(MockBank.points)) },
+                    ),
+                    FlowStep(
+                        "S-427",
+                        "تایید انتقال امتیاز",
+                        show = {
+                            rows("گیرنده" to it["mobile"], "امتیاز" to it["points"])
+                        },
+                    ),
+                ),
+                "S-431",
+            ) {
+                MockBank.transferPoints(
+                    latinDigits(it.getValue("points")).toLong(),
+                    it.getValue("mobile"),
+                )
+            },
+        )
+
+    val flows = sayad + vehicle + inquiries + loanRequest + accountOpening + extras
 
     /** Result pages: each shows the receipt of the service that opened it. */
     val results
