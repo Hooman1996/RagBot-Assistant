@@ -293,4 +293,48 @@ class ServicesTest {
         failure("loan-over-limit")
         shown("S-336")
     }
+
+    private fun login(password: String) {
+        compose.onNodeWithTag("login-username").performTextReplacement("demo.user")
+        compose.onNodeWithTag("login-password").performTextReplacement(password)
+        click("login-submit")
+    }
+
+    @Test
+    fun theDemoUserLogsInThroughTheWelcomePagesAndCanLogOut() {
+        click("login-start")
+        shown("S-048")
+        click("intro-next")
+        shown("S-049")
+        click("welcome-login")
+        shown("S-027")
+        login("wrong")
+        compose.onNodeWithTag("login-error").assertTextEquals(LoginRules.WRONG)
+        login(MockData.current.customer.password)
+        shown("S-026")
+        click("header-LOGOUT")
+        shown("S-027")
+        compose.onNodeWithTag("login-password").assertTextEquals("رمز عبور", "")
+        login(MockData.current.customer.password)
+        shown("S-026")
+    }
+
+    @Test
+    fun backingOutOfLoginReturnsToTheFrontPageNotHome() {
+        click("login-start")
+        shown("S-048")
+        click("page-back")
+        shown("demo-entry")
+        compose.onNodeWithTag("S-026").assertDoesNotExist()
+    }
+
+    @Test
+    fun aLoginPasswordIsGoneAfterRecreation() {
+        click("login-start")
+        click("intro-next")
+        click("welcome-login")
+        compose.onNodeWithTag("login-password").performTextReplacement("Demo@1234")
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("login-password").assertTextEquals("رمز عبور", "")
+    }
 }

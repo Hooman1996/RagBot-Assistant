@@ -34,7 +34,8 @@ object HomeDestinations {
             DigitalChequeDestinations.implemented +
             VehicleDestinations.implemented +
             TollDestinations.implemented +
-            ServiceCatalog.implemented
+            ServiceCatalog.implemented +
+            LoginDestinations.implemented
 }
 
 enum class HomeControl(val title: String) {
