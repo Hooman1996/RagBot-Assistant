@@ -10,18 +10,18 @@ Menus, labels and validation rules stay in Kotlin. They are the app's structure,
 
 | File | Holds |
 |---|---|
-| `customer.json` | The demo user: name, login, OTP, transfer limits, addresses |
-| `accounts.json` | Accounts and balances; the sample used by identifier conversion and its fee |
+| `customer.json` | The demo user: name, login, OTP, transfer limits, addresses; credit inquiries, wage advance, credit product and reward points |
+| `accounts.json` | Accounts and balances; the identifier-conversion sample and fee; account types and branches for opening |
 | `cards.json` | Cards, candidates for the fetch page, credit summaries, file loans |
 | `contacts.json` | `people` (such as رضا) with a card, account, IBAN and wallet; other saved destinations |
 | `bills.json` | Bills by bill ID and payment ID |
 | `operators.json` | Mobile operators with prefixes, limits and suggested amounts |
 | `charities.json` | Charities |
-| `loans.json` | Loans, loan groups and their options |
-| `cheques.json` | Cheque books and leaves, reports, requests, card board tasks, digital cheques, fees |
-| `vehicles.json` | Saved plates, contacts and licences; toll items, fees and pollution quota |
+| `loans.json` | Loans, loan groups and their options; products of the loan request |
+| `cheques.json` | Cheque books and leaves, reports, requests, card board tasks, digital cheques, Sayad cheques, fees |
+| `vehicles.json` | Saved plates, contacts and licences; toll items, fees, pollution quota; violations, transfer tax, documents, licence status and points |
 | `wallets.json` | Wallets, known wallet destinations, statement rows |
-| `transactions.json` | Recent transactions, statement rows, group files and history, standing orders |
+| `transactions.json` | Recent transactions, statement rows, group files and history, standing orders; spending and budgets |
 | `insurance.json` | The insured person and policies |
 | `scenarios.json` | Forced outcomes and the Persian failure messages |
 
@@ -85,7 +85,9 @@ Operations: `card-transfer`, `account-transfer`, `group-transfer`, `standing-ord
 `charge`, `charity`, `insurance`, `credit-repayment`, `loan-installment`, `toll`, `toll-inquiry`,
 `funding`, `cheque-book`, `digital-cheque`, `cardboard`, `card-block`, `card-request`,
 `conversion-fee`, `wallet-charge`, `wallet-decharge`, `wallet-w2w`, `wallet-buy`, `wallet-mobile`,
-`wallet-bill`.
+`wallet-bill`, `card-balance`, `sayad`, `sayad-inquiry`, `violation`, `transfer-tax`,
+`credit-report`, `bounced-cheques`, `credit-rate`, `loan-request`, `account-opening`,
+`wage-advance`, `credit-product`, `rewards-transfer`.
 
 Common outcomes: `insufficient-balance`, `wrong-otp`, `service-unavailable`.
 

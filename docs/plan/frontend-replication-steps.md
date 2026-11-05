@@ -1,5 +1,8 @@
 # Frontend replication steps
 
+> **D-022 (owner, 5 Nov 2026):** the replica is completed on JSON mock data and a local mock bank.
+> The rows below show what was built. Everything still marked deferred stays deferred.
+
 > **D-021 (owner, 31 Oct 2026):** Stage 1 ends after FR-01 to FR-13 plus, in order, FR-35, FR-23,
 > FR-14 (without the QR scanner), FR-15, FR-19, FR-20, FR-16 and FR-17. Every other batch is
 > deferred. From now on a batch writes no separate inspection or requirements report: it adds its
@@ -345,7 +348,7 @@ Private recovery, captures and logs: `local/evidence/tolls/`. Stage 1's D-021 ba
 
 ### FR-18 — Vehicle status, violations, tax and document inquiries
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-046. **Existing nodes:** S-238–S-239, S-243–S-245, S-247, S-255, S-277–S-281 (12 primary allocations). **Dependencies:** FR-16, FR-17.
+**Status:** done under D-022 (#108). Violations and transfer tax with a user-only payment; negative points, licence, active plates and document inquiries. **Families:** F-046. **Existing nodes:** S-238–S-239, S-243–S-245, S-247, S-255, S-277–S-281 (12 primary allocations). **Dependencies:** FR-16, FR-17.
 
 **What opens afterward:** Inspect active-plate/license/negative-point/document queries and violation/transfer-tax charge previews.
 
@@ -427,7 +430,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-21 — Cheque acceptance, payment and agent flows
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-038. **Existing nodes:** S-160–S-172 (13 primary allocations). **Dependencies:** FR-19, FR-20.
+**Status:** done under D-022 (#106). Register, confirm or reject, transfer, inquiry and history. S-160 and S-161 stay unbuilt. **Families:** F-038. **Existing nodes:** S-160–S-172 (13 primary allocations). **Dependencies:** FR-19, FR-20.
 
 **What opens afterward:** Inspect cheque-ID/type/receiver/agent entry, inquiry/validation, preview and history/detail states.
 
@@ -469,7 +472,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-24 — Credit and bounced-cheque inquiries
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-059. **Existing nodes:** S-440–S-445, S-452–S-453 (8 primary allocations). **Dependencies:** FR-02, FR-13, FR-22.
+**Status:** done under D-022 (#110). Credit report, bounced cheques and credit rate with a fee. S-452 stays unbuilt. **Families:** F-059. **Existing nodes:** S-440–S-445, S-452–S-453 (8 primary allocations). **Dependencies:** FR-02, FR-13, FR-22.
 
 **What opens afterward:** Inspect inquiry menu/fee, bounced-cheque and credit-report/rating results with their detail and unsuccessful states.
 
@@ -483,7 +486,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-25 — Rewards, referral and agent history
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-057, F-060, F-061. **Existing nodes:** S-426–S-433, S-454–S-462 (17 primary allocations). **Dependencies:** FR-02, FR-07.
+**Status:** partial under D-022 (#120). Rewards: points, history and point transfer. Referral and agent history stay deferred. **Families:** F-057, F-060, F-061. **Existing nodes:** S-426–S-433, S-454–S-462 (17 primary allocations). **Dependencies:** FR-02, FR-07.
 
 **What opens afterward:** Inspect points/reward detail/history, local coin-transfer request review and referral/proxy-plan/agent history.
 
@@ -497,7 +500,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-26 — Personal finance dashboard, budgets and stories
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-058. **Existing nodes:** S-434–S-439 (6 primary allocations). **Dependencies:** FR-02.
+**Status:** done under D-022 (#116). Spending by category and budgets. Stories stay unbuilt. **Families:** F-058. **Existing nodes:** S-434–S-439 (6 primary allocations). **Dependencies:** FR-02.
 
 **What opens afterward:** Open financial-performance detail, inspect synthetic budgets/category detail and recovered story/list presentation.
 
@@ -581,7 +584,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-32 — Wage-advance onboarding and dashboard
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-056. **Existing nodes:** S-410–S-416, S-420, S-423–S-425 (11 primary allocations). **Dependencies:** FR-02.
+**Status:** partial under D-022 (#120). Wage-advance dashboard and request. Onboarding stays deferred. **Families:** F-056. **Existing nodes:** S-410–S-416, S-420, S-423–S-425 (11 primary allocations). **Dependencies:** FR-02.
 
 **What opens afterward:** Inspect service entry, activation conditions/account/agreement/rating, dashboard and history.
 
@@ -595,7 +598,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-33 — Wage-advance request and settlement previews
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-056. **Existing nodes:** S-417–S-419, S-421–S-422 (5 primary allocations). **Dependencies:** FR-32.
+**Status:** partial under D-022 (#120). Wage-advance request. Settlement stays deferred. **Families:** F-056. **Existing nodes:** S-417–S-419, S-421–S-422 (5 primary allocations). **Dependencies:** FR-32.
 
 **What opens afterward:** Inspect advance amount/agreement/review and settlement amount/receipt preview.
 
@@ -609,7 +612,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-34 — Credit-product guide and onboarding
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-055. **Existing nodes:** S-406–S-409 (4 primary allocations). **Dependencies:** FR-02, FR-13.
+**Status:** done under D-022 (#120). Credit-product main, guide and activation. **Families:** F-055. **Existing nodes:** S-406–S-409 (4 primary allocations). **Dependencies:** FR-02, FR-13.
 
 **What opens afterward:** Inspect product guide/onboarding and recovered main state with explicit eligibility/error fixtures.
 
@@ -635,7 +638,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-36 — Child-loan application and guarantor preview
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-048. **Existing nodes:** S-289–S-301 (13 primary allocations). **Dependencies:** FR-29, FR-31, FR-35.
+**Status:** partial under D-022 (#112). One generic loan application stands for the families; the child-loan screens stay deferred. **Families:** F-048. **Existing nodes:** S-289–S-301 (13 primary allocations). **Dependencies:** FR-29, FR-31, FR-35.
 
 **What opens afterward:** Inspect conditions/calculator, applicant/guarantor/document inputs, inquiry/prevalidation, promissory selection and result preview.
 
@@ -677,7 +680,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-39 — Other loans, calculation and promissory/guarantor states
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-048. **Existing nodes:** S-285–S-286, S-308, S-325–S-329, S-332–S-335 (12 primary allocations). **Dependencies:** FR-31, FR-35, FR-38.
+**Status:** partial under D-022 (#112). The generic application uses the calculator, agreement, guarantor and promissory screens as mock steps. **Families:** F-048. **Existing nodes:** S-285–S-286, S-308, S-325–S-329, S-332–S-335 (12 primary allocations). **Dependencies:** FR-31, FR-35, FR-38.
 
 **What opens afterward:** Inspect remaining loan type/detail/entry/confirmation/result, shared agreement/customer/calculator and loan-note guarantor states.
 
@@ -705,7 +708,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-41 — Intro, launcher/router and login presentation
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-001, F-002, F-015, F-017, F-018. **Existing nodes:** F-001, F-002, S-027–S-029, S-048–S-050 (8 primary allocations). **Dependencies:** FR-02, FR-05.
+**Status:** done under D-022 (#114). Intro, welcome and login with the demo user. Router, lockout and activation are not reproduced. **Families:** F-001, F-002, F-015, F-017, F-018. **Existing nodes:** F-001, F-002, S-027–S-029, S-048–S-050 (8 primary allocations). **Dependencies:** FR-02, FR-05.
 
 **What opens afterward:** Inspect recovered welcome/login/activation/first-run account selection and return to the replica demo identity.
 
@@ -733,7 +736,7 @@ Private recovery, captures and logs: `local/evidence/digital-cheques/`. Stop bef
 
 ### FR-43 — Account-opening applications
 
-**Status:** deferred by D-021; built only if the owner picks its feature. **Families:** F-020. **Existing nodes:** S-052–S-062 (11 primary allocations). **Dependencies:** FR-02, FR-05, FR-41, FR-42.
+**Status:** done under D-022 (#118). One application through type, contact, documents, branch, agreement and a mock result. **Families:** F-020. **Existing nodes:** S-052–S-062 (11 primary allocations). **Dependencies:** FR-02, FR-05, FR-41, FR-42.
 
 **What opens afterward:** Inspect account type/information/agreement, branch/contact/additional/document selection and application result preview.
 

@@ -13,7 +13,7 @@ class ServicesTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
     private fun click(tag: String) {
-        compose.waitForIdle()
+        compose.closeKeyboard(compose.activity)
         val node = compose.onNodeWithTag(tag)
         try {
             node.performScrollTo()
