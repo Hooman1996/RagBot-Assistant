@@ -31,6 +31,7 @@ internal fun VehiclePage(
     onRecord: (String) -> Unit,
     onDelete: (String) -> Unit,
     onToll: (VehicleRecord?) -> Unit,
+    onService: (VehicleRecord?) -> Unit,
     onOpen: (String) -> Unit,
     onBack: () -> Unit,
     onRetry: () -> Unit,
@@ -102,6 +103,7 @@ internal fun VehiclePage(
                             onRecord,
                             onDelete,
                             onToll,
+                            onService,
                             onOpen,
                             onUnavailable,
                         )
@@ -130,6 +132,7 @@ private fun VehicleList(
     onRecord: (String) -> Unit,
     onDelete: (String) -> Unit,
     onToll: (VehicleRecord?) -> Unit,
+    onService: (VehicleRecord?) -> Unit,
     onOpen: (String) -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
@@ -146,7 +149,7 @@ private fun VehicleList(
         OutlinedCard(
             Modifier.fillMaxWidth().testTag("vehicle-${record.id}").clickable(role = Role.Button) {
                 // Selecting continues to the inquiry form, which is not built (FR-17/18).
-                if (toll) onToll(record) else onUnavailable("استعلام $service")
+                if (toll) onToll(record) else onService(record)
             }
         ) {
             Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -172,7 +175,7 @@ private fun VehicleList(
         }
     }
     OutlinedButton(
-        { if (toll) onToll(null) else onUnavailable("استعلام $service") },
+        { if (toll) onToll(null) else onService(null) },
         Modifier.fillMaxWidth().testTag("vehicle-new"),
     ) {
         Text(

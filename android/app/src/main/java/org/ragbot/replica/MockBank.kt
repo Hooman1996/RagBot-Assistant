@@ -165,6 +165,8 @@ internal object MockBank {
 
     fun incomplete() = failure("incomplete")
 
+    fun nothingToPay() = failure("nothing-to-pay")
+
     /** The Sayad cheques known now: the mock file with this session's changes on top. */
     val sayadCheques
         get() = (MockData.current.sayad.associateBy { it.sayadId } + current.sayad).values.toList()

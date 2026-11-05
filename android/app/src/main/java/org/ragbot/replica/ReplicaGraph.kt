@@ -502,6 +502,13 @@ internal object ReplicaGraph {
                 )
                 .map { Edge(it, VehicleDestinations.INQUIRY_HISTORY, "vehicle-history-*") } +
             Edge(VehicleDestinations.HISTORY_MENU, AccountDestinations.HISTORY, "vehicle-paid-*") +
+            ServiceCatalog.vehicleMenu.flatMap { (key, flow) ->
+                val first = ServiceCatalog.flow(flow).steps.first().page
+                listOf(
+                    Edge(VehicleDestinations.MENU, first, "vehicle-menu-$key > vehicle-new"),
+                    Edge(VehicleRules.target(key), first, "vehicle-*", EdgeKind.STEP),
+                )
+            } +
             TollService.entries.flatMap { service ->
                 // The plate list's onward move depends on the menu item that opened it.
                 listOfNotNull(
