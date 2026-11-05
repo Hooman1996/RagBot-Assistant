@@ -43,7 +43,7 @@ internal val tracedHomeTiles =
 
 /** Home tiles of Designed-for-mock services, by tile key. */
 internal val designedHomeTiles =
-    mapOf("inquiry" to "S-443", "performance" to FinanceDestinations.MAIN)
+    mapOf("inquiry" to "S-443", "open-account" to "S-062", "performance" to FinanceDestinations.MAIN)
 
 /** Screens the owner traced below Home; they have real routes, so no Home demo path. */
 private val ownerTraced =
