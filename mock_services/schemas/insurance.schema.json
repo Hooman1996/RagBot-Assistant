@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: insurance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "insuredName",
+    "insuredNationalCode",
+    "policies"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "insuredName": {
+      "type": "string"
+    },
+    "insuredNationalCode": {
+      "type": "string"
+    },
+    "policies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "number",
+          "begin",
+          "end",
+          "state",
+          "addendum",
+          "installments"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "begin": {
+            "type": "string"
+          },
+          "end": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "addendum": {
+            "type": "integer"
+          },
+          "installments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "number",
+                "year",
+                "dueDate",
+                "amount",
+                "remained",
+                "paymentId",
+                "status"
+              ],
+              "properties": {
+                "number": {
+                  "type": "integer"
+                },
+                "year": {
+                  "type": "integer"
+                },
+                "dueDate": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer"
+                },
+                "remained": {
+                  "type": "integer"
+                },
+                "paymentId": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

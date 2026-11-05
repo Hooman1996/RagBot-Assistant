@@ -49,130 +49,27 @@ internal object LoanFixture {
     const val PAID_ERROR = "این قسط پرداخت شده است."
     const val SOURCE_ERROR = "حساب مبدا را انتخاب کنید."
 
-    val loans =
-        listOf(
-            LoanRecord(
-                "loan-personal",
-                "تسهیلات شخصی نمایشی",
-                "900000000001",
-                15_000_000L,
-                5_000_000L,
-                10_000_000L,
-                250_000L,
-                "000.000.000001.1",
-                listOf(
-                    LoanInstallment(
-                        1,
-                        "۱۴۰۵/۰۷/۰۱",
-                        LoanInstallmentStatus.PAID,
-                        5_000_000L,
-                        0L,
-                        5_000_000L,
-                        0L,
-                    ),
-                    LoanInstallment(
-                        2,
-                        "۱۴۰۵/۰۸/۰۱",
-                        LoanInstallmentStatus.UNPAID,
-                        5_000_000L,
-                        0L,
-                        0L,
-                        5_000_000L,
-                    ),
-                    LoanInstallment(
-                        3,
-                        "۱۴۰۵/۰۹/۰۱",
-                        LoanInstallmentStatus.UNPAID,
-                        5_000_000L,
-                        0L,
-                        0L,
-                        5_000_000L,
-                    ),
-                ),
-            ),
-            LoanRecord(
-                "loan-overdue",
-                "تسهیلات دارای بدهی نمایشی",
-                "900000000002",
-                12_000_000L,
-                0L,
-                12_150_000L,
-                0L,
-                "000.000.000001.1",
-                listOf(
-                    LoanInstallment(
-                        1,
-                        "۱۴۰۵/۰۶/۰۱",
-                        LoanInstallmentStatus.TRACKABLE_OVERDUE,
-                        4_000_000L,
-                        100_000L,
-                        0L,
-                        4_100_000L,
-                    ),
-                    LoanInstallment(
-                        2,
-                        "۱۴۰۵/۰۷/۰۱",
-                        LoanInstallmentStatus.TRACKABLE_OVERDUE,
-                        4_000_000L,
-                        50_000L,
-                        0L,
-                        4_050_000L,
-                    ),
-                    LoanInstallment(
-                        3,
-                        "۱۴۰۵/۰۹/۰۱",
-                        LoanInstallmentStatus.UNPAID,
-                        4_000_000L,
-                        0L,
-                        0L,
-                        4_000_000L,
-                    ),
-                ),
-            ),
-            LoanRecord(
-                "loan-corporate",
-                "تسهیلات سازمانی نمایشی",
-                "900000000003",
-                8_000_000L,
-                0L,
-                8_000_000L,
-                0L,
-                "000.000.000002.2",
-                listOf(
-                    LoanInstallment(
-                        1,
-                        "۱۴۰۵/۰۸/۱۵",
-                        LoanInstallmentStatus.UNPAID,
-                        8_000_000L,
-                        0L,
-                        0L,
-                        8_000_000L,
-                    )
-                ),
-                corporateTitle = "سازمان نمایشی",
-            ),
-            LoanRecord(
-                "loan-paid",
-                "تسهیلات تسویه‌شدهٔ نمایشی",
-                "900000000004",
-                3_000_000L,
-                3_000_000L,
-                0L,
-                0L,
-                "000.000.000001.1",
-                listOf(
-                    LoanInstallment(
-                        1,
-                        "۱۴۰۵/۰۷/۱۵",
-                        LoanInstallmentStatus.PAID,
-                        3_000_000L,
-                        0L,
-                        3_000_000L,
-                        0L,
-                    )
-                ),
-            ),
-        )
+    val loans
+        get() =
+            MockData.current.loans.map { loan ->
+                val paid =
+                    loan.installments.filter { MockBank.settled("loan:${loan.id}:${it.number}") }
+                val amount = paid.sumOf { it.remainingIrr }
+                loan.copy(
+                    paidIrr = loan.paidIrr + amount,
+                    totalDebtIrr = loan.totalDebtIrr - amount,
+                    installments =
+                        loan.installments.map {
+                            if (it in paid)
+                                it.copy(
+                                    status = LoanInstallmentStatus.PAID,
+                                    paidIrr = it.paidIrr + it.remainingIrr,
+                                    remainingIrr = 0,
+                                )
+                            else it
+                        },
+                )
+            }
 
     /** Original list indices preserve the due-date order returned by the detail response. */
     fun selectionError(loan: LoanRecord, selected: List<Int>, index: Int): String? {

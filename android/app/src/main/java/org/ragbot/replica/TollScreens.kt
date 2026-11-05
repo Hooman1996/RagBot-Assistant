@@ -36,7 +36,7 @@ internal fun TollPage(
             ) {
                 Text(TollFixture.NOTICE, style = MaterialTheme.typography.bodySmall)
                 when {
-                    service == null -> TollReceipt(onBack, onUnavailable)
+                    service == null -> BankReceipt(onBack, onUnavailable)
                     page == service.inquiry -> TollInquiry(draft, onDraft, onOpen)
                     page == service.result -> TollResult(draft, onDraft, onOpen)
                     else -> TollConfirm(draft, onDraft, onBack, onUnavailable)
@@ -130,6 +130,9 @@ private fun TollInquiry(draft: TollDraft, onDraft: (TollDraft) -> Unit, onOpen: 
     var errors by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     var fee by rememberSaveable { mutableStateOf(false) }
     var otp by rememberSaveable { mutableStateOf(false) }
+    var feeSource by rememberSaveable { mutableStateOf("") }
+    val pollutionFee = draft.service == TollService.POLLUTION
+    val bank = LocalBank.current
     fun change(next: TollDraft) {
         errors = emptyMap()
         onDraft(next)
@@ -191,6 +194,7 @@ private fun TollInquiry(draft: TollDraft, onDraft: (TollDraft) -> Unit, onOpen: 
                         TextButton(
                             {
                                 fee = false
+                                feeSource = key
                                 otp = true
                             },
                             Modifier.testTag("toll-fee-$key"),
@@ -208,8 +212,28 @@ private fun TollInquiry(draft: TollDraft, onDraft: (TollDraft) -> Unit, onOpen: 
         OtpStep(
             {
                 otp = false
-                onDraft(draft.copy(selected = emptyList()))
-                onOpen(draft.service.result)
+                // The inquiry fee is the first bank step of every toll service.
+                val paid =
+                    if (pollutionFee)
+                        MockBank.walletPay(
+                            "toll-inquiry",
+                            "استعلام ${draft.service.title}",
+                            feeSource,
+                            TollFixture.INQUIRY_FEE,
+                            TollRules.plateNumber(draft),
+                        )
+                    else
+                        MockBank.pay(
+                            "toll-inquiry",
+                            "استعلام ${draft.service.title}",
+                            feeSource,
+                            TollFixture.INQUIRY_FEE,
+                            TollRules.plateNumber(draft),
+                        )
+                if (bank.accepted(paid)) {
+                    onDraft(draft.copy(selected = emptyList()))
+                    onOpen(draft.service.result)
+                }
             },
             { otp = false },
         )
@@ -322,23 +346,15 @@ private fun TollConfirm(
         "مبلغ کل: ${persianNumber(TollRules.total(draft))} ریال",
         Modifier.testTag("toll-confirm-total"),
     )
-    // Recovered: payment needs the user's OTP and signature; nothing is paid here.
-    PaymentActions("تایید و پرداخت", "پرداخت ${draft.service.title}", onBack, onUnavailable)
-}
-
-@Composable
-private fun TollReceipt(onBack: () -> Unit, onUnavailable: (String) -> Unit) {
-    Text(
-        "رسید ساختگی مستقل برای بازبینی؛ حاصل پرداخت نیست.",
-        Modifier.testTag("toll-receipt-disclosure"),
-    )
-    TransferValue("نوع تراکنش", "پرداخت عوارض شهرداری | موفق")
-    TransferValue("مبلغ (ریال)", persianNumber(205_000L))
-    TransferValue("پلاک", TollFixture.DUES_PLATE)
-    TransferValue("زمان", "۱۴۰۵/۰۸/۱۰ - ۱۰:۰۰")
-    TransferValue("شماره پیگیری", "DEMO-TOLL-0001")
-    Button({ onUnavailable("پیگیری تراکنش") }, Modifier.fillMaxWidth().testTag("toll-track")) {
-        Text("پیگیری")
+    // Recovered: payment needs the user's OTP and signature.
+    PaymentActions("تایید و پرداخت", TollDestinations.RECEIPT, true, onBack) {
+        MockBank.pay(
+            "toll",
+            draft.service.title,
+            draft.account,
+            TollRules.total(draft),
+            TollRules.plateNumber(draft),
+            settles = draft.selected.map { "toll:$it" },
+        )
     }
-    OutlinedButton(onBack, Modifier.fillMaxWidth()) { Text("بازگشت") }
 }

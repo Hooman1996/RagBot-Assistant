@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: bills",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "bills"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "bills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "billId",
+          "payId",
+          "company",
+          "amount",
+          "paid"
+        ],
+        "properties": {
+          "billId": {
+            "type": "string"
+          },
+          "payId": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          },
+          "paid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

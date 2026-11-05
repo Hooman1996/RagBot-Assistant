@@ -45,8 +45,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // A launch reads the mock files and starts a fresh session; a rotation keeps both.
+        val error = if (savedInstanceState == null) MockData.load(this) else null
+        if (savedInstanceState == null) MockBank.reset()
         // No incoming Intent data, extras, nested intents or deep links are interpreted.
-        setContent { ReplicaApp() }
+        setContent {
+            if (error != null)
+                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                    MockDataErrorPage(error)
+                }
+            else ReplicaApp()
+        }
     }
 }
 
@@ -60,6 +69,8 @@ fun ReplicaApp() {
         mutableStateOf<List<String>>(HomeFixture.services.map { it.key })
     }
     var notice by rememberSaveable { mutableStateOf<String?>(null) }
+    var bankFailure by rememberSaveable { mutableStateOf<String?>(null) }
+    var bankDone by rememberSaveable { mutableStateOf<String?>(null) }
     val navigation = remember { HomeNavigation() }
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -250,6 +261,31 @@ fun ReplicaApp() {
             )
         groupCancel = false
     }
+    // A finished service leaves its flow: Back from the receipt goes Home and cannot resubmit.
+    fun finishBank(result: BankResult, receipt: String?) {
+        if (result is BankResult.Failed) {
+            bankFailure = result.message
+            return
+        }
+        if (receipt != null) check(ReplicaGraph.declared(stack.last(), receipt))
+        focus.clearFocus()
+        keyboard?.hide()
+        stack.drop(1).forEach(::forgetPage)
+        stack = listOfNotNull(HomeDestinations.HOME, receipt)
+        cardTransferDrafts = emptyMap()
+        accountTransferDrafts = emptyMap()
+        billDrafts = emptyMap()
+        topUpDrafts = emptyMap()
+        charityDraft = null
+        walletOperationDrafts = emptyMap()
+        walletPreview = null
+        creditRepayment = null
+        groupDraft = GroupTransferDraft()
+        tollDraft = TollDraft()
+        if (receipt == null)
+            bankDone = (result as BankResult.Done).receipt.let { "${it.title} · ${it.trace}" }
+    }
+    val bankActions = remember { BankActions { result, page -> finishBank(result, page) } }
     fun unavailable(title: String) {
         notice = "$title در این پیش‌نمایش آماده نیست. در همین صفحه می‌مانید."
     }
@@ -330,6 +366,7 @@ fun ReplicaApp() {
     CompositionLocalProvider(
         LocalLayoutDirection provides LayoutDirection.Rtl,
         LocalPageValues provides pageValues,
+        LocalBank provides bankActions,
     ) {
         MaterialTheme(
             colorScheme =
@@ -1116,6 +1153,33 @@ fun ReplicaApp() {
                             },
                         )
                     }
+                }
+                bankFailure?.let { message ->
+                    AlertDialog(
+                        onDismissRequest = { bankFailure = null },
+                        title = { Text("عملیات ناموفق") },
+                        text = { Text(message, Modifier.testTag("bank-failure")) },
+                        confirmButton = {
+                            TextButton(
+                                { bankFailure = null },
+                                Modifier.testTag("bank-failure-close"),
+                            ) {
+                                Text("بستن")
+                            }
+                        },
+                    )
+                }
+                bankDone?.let { message ->
+                    AlertDialog(
+                        onDismissRequest = { bankDone = null },
+                        title = { Text("عملیات موفق") },
+                        text = { Text(message, Modifier.testTag("bank-done")) },
+                        confirmButton = {
+                            TextButton({ bankDone = null }, Modifier.testTag("bank-done-close")) {
+                                Text("بستن")
+                            }
+                        },
+                    )
                 }
                 notice?.let { message ->
                     AlertDialog(

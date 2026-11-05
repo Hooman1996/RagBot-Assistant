@@ -118,7 +118,7 @@ class ProfileFlowsTest {
         compose.onNodeWithTag("edit-ok").performClick()
         compose.onNodeWithTag("otp-code").performTextReplacement("12345")
         compose.onNodeWithTag("otp-ok").performClick()
-        compose.onNodeWithTag("security-result").assertTextContains("هیچ تغییری", substring = true)
+        compose.onNodeWithTag("security-result").assertTextContains("بانک نمایشی", substring = true)
         compose.onNodeWithTag("security-done").performClick()
         compose.onNodeWithTag("profile-settings").performScrollTo().performClick()
         compose.onNodeWithTag("S-025").assertIsDisplayed()

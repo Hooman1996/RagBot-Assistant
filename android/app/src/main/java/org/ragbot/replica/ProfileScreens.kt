@@ -51,9 +51,15 @@ object ProfileDestinations {
 
 /** PF-FIXTURE: invented profile values, menus, facilities, notifications and versions. */
 object ProfileFixture {
-    const val CUSTOMER_NUMBER = "۰۰۰۰۰۱"
-    const val LAST_LOGIN = "۱۴۰۵/۰۸/۰۷ - ۰۹:۳۰"
-    const val INVITE_CODE = "PREVIEW01"
+    val CUSTOMER_NUMBER
+        get() = MockData.current.customer.customerNumber
+
+    val LAST_LOGIN
+        get() = MockData.current.customer.lastLogin
+
+    val INVITE_CODE
+        get() = MockData.current.customer.inviteCode
+
     val menu =
         listOf(
             CardAction("edit", "ویرایش پروفایل", ProfileDestinations.EDIT),

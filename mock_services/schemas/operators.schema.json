@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: operators",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "operators"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "operators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operator",
+          "title",
+          "min",
+          "max",
+          "multiplier",
+          "defaults",
+          "prefixes"
+        ],
+        "properties": {
+          "operator": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "min": {
+            "type": "integer"
+          },
+          "max": {
+            "type": "integer"
+          },
+          "multiplier": {
+            "type": "integer"
+          },
+          "defaults": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            }
+          },
+          "prefixes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

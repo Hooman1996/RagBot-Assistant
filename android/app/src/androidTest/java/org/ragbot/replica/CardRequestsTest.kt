@@ -66,7 +66,7 @@ class CardRequestsTest {
         compose.onNodeWithTag("address-ok").performScrollTo().performClick()
         compose.onNodeWithTag("color-color-1").performClick()
         compose.onNodeWithTag("color-ok").performScrollTo().performClick()
-        compose.onNodeWithText("۰۰۰۰ ۰۰۰۰ ۰۰۰۰ ۰۰۰۲").assertIsDisplayed()
+        compose.onNodeWithText("۰۰۰۰ ۰۰۰۰ ۰۰۰۰ ۰۰۲۶").assertIsDisplayed()
         compose.onNodeWithText("تغییر رنگ کارت").assertExists()
         compose.onNodeWithText("شماره حساب:").assertDoesNotExist()
         compose.onNodeWithText("شعبه:").assertDoesNotExist()

@@ -1,0 +1,19 @@
+{
+  "unit": "IRR",
+  "bills": [
+    {
+      "billId": "9000000000001",
+      "payId": "1250001",
+      "company": "شرکت آب نمایشی",
+      "amount": 1250000,
+      "paid": false
+    },
+    {
+      "billId": "9000000000002",
+      "payId": "430002",
+      "company": "شرکت برق نمایشی",
+      "amount": 430000,
+      "paid": true
+    }
+  ]
+}

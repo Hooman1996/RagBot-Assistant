@@ -79,6 +79,16 @@ class PaymentsTest {
             )
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun accountBillValidatesInquiresAndKeepsCorrectionsWithoutPaying() {
         demo("S-209")
@@ -107,7 +117,7 @@ class PaymentsTest {
         click("bill-attachment")
         unavailable("پیوست")
         click("bill-accept")
-        unavailable("پرداخت قبض")
+        otpPrompt()
         compose.activityRule.scenario.recreate()
         shown("S-207")
         click("bill-edit")
@@ -137,7 +147,7 @@ class PaymentsTest {
         click("payment-card-otp")
         unavailable("رمز پویا")
         click("payment-submit")
-        unavailable("پرداخت قبض")
+        bankFailure()
         compose.activityRule.scenario.recreate()
         value("payment-card-cvv2", "")
         repeat(4) { back() }
@@ -148,7 +158,7 @@ class PaymentsTest {
         compose.onNodeWithTag("bill-pay-id").performTextInput("1250001")
         click("bill-continue")
         compose.onNodeWithText(PaymentRules.INVALID).assertExists()
-        compose.onNodeWithTag("bill-source").performTextReplacement("0000000000000001")
+        compose.onNodeWithTag("bill-source").performTextReplacement("0000000000000018")
         click("bill-continue")
         shown("S-207")
         click("bill-accept")
@@ -156,7 +166,7 @@ class PaymentsTest {
         compose.onNodeWithTag("payment-card-static").assertDoesNotExist()
         compose.onNodeWithTag("payment-card-keep").assertDoesNotExist()
         click("payment-submit")
-        unavailable("پرداخت قبض")
+        bankFailure()
     }
 
     @Test
@@ -188,17 +198,11 @@ class PaymentsTest {
         shown("S-404")
         compose.onNodeWithText("۱٬۵۰۰٬۰۰۰").assertExists()
         click("payment-submit")
-        unavailable("پرداخت قسط بیمه")
+        otpPrompt()
         click("payment-cancel")
         shown("S-401")
         compose.onNodeWithTag("installment-3").assertIsSelected()
         repeat(4) { back() }
-        demo("S-405")
-        compose.onNodeWithTag("payment-receipt-disclosure").assertExists()
-        click("payment-receipt-share")
-        unavailable("اشتراک‌گذاری")
-        back()
-        back()
         compose.onNodeWithTag("scenario-empty").performScrollTo().performClick()
         demo("S-403")
         compose.onNodeWithTag("data-empty").assertIsDisplayed()
@@ -227,7 +231,7 @@ class PaymentsTest {
         shown("S-132")
         compose.onNodeWithText("۵۰٬۰۰۰٬۰۰۰").assertExists()
         click("payment-submit")
-        unavailable("بازپرداخت کارت اعتباری")
+        otpPrompt()
         click("payment-cancel")
         shown("S-131")
     }

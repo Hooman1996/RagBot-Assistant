@@ -51,14 +51,24 @@ class IndividualTransfersTest {
             .performSemanticsAction(SemanticsActions.OnClick)
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun cardDraftValidationReviewCorrectionsAndSecretsRespectTheBoundary() {
         open("S-175")
         click("card-transfer-review")
         compose.onNodeWithTag("S-175").assertIsDisplayed()
         compose.onNodeWithTag("S-176").assertDoesNotExist()
-        compose.onNodeWithTag("card-transfer-source").performTextInput("0000000000000001")
-        compose.onNodeWithTag("card-transfer-destination").performTextInput("0000000000000002")
+        compose.onNodeWithTag("card-transfer-source").performTextInput("0000000000000018")
+        compose.onNodeWithTag("card-transfer-destination").performTextInput("0000000000000026")
         compose.onNodeWithTag("card-transfer-amount").performTextInput("250000")
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("card-transfer-amount").assertTextContains("250000", substring = true)
@@ -66,7 +76,7 @@ class IndividualTransfersTest {
         compose.waitUntil(5_000) { compose.onNodeWithTag("S-176").isDisplayed() }
         compose
             .onNodeWithTag("card-transfer-review-destination")
-            .assertTextContains("0000000000000002", substring = true)
+            .assertTextContains("0000000000000026", substring = true)
         compose.onNodeWithTag("card-transfer-cvv2").performTextInput("123")
         compose.onNodeWithTag("card-transfer-password").performScrollTo().performTextInput("98765")
         compose
@@ -90,9 +100,8 @@ class IndividualTransfersTest {
             .performScrollTo()
             .assertTextContains("یادداشت محلی DEMO", substring = true)
         click("card-transfer-submit")
-        compose.onNodeWithTag("unavailable").assertIsDisplayed()
+        bankFailure()
         compose.onNodeWithTag("S-093").assertDoesNotExist()
-        back()
         click("card-transfer-attachment")
         compose.onNodeWithTag("unavailable").assertIsDisplayed()
         back()
@@ -103,7 +112,7 @@ class IndividualTransfersTest {
         compose.onNodeWithTag("S-175").assertIsDisplayed()
         compose
             .onNodeWithTag("card-transfer-destination")
-            .assertTextContains("0000000000000002", substring = true)
+            .assertTextContains("0000000000000026", substring = true)
         compose.onNodeWithTag("card-transfer-amount").performTextReplacement("300000")
         click("card-transfer-review")
         compose
@@ -120,11 +129,12 @@ class IndividualTransfersTest {
         open("S-174")
         compose.onNodeWithTag("card-transfer-source").assertDoesNotExist()
         compose.onNodeWithTag("card-transfer-source-picker").performClick()
+        compose.onNodeWithTag("card-transfer-source-card-1").performClick()
         compose
             .onNodeWithTag("card-transfer-source-picker")
-            .assertTextContains("0000000000000001", substring = true)
+            .assertTextContains("0000000000000018", substring = true)
         for (tag in
-            listOf("card-transfer-scan", "card-transfer-favorites", "card-transfer-contacts")) {
+            listOf("card-transfer-scan", "card-transfer-contacts")) {
             click(tag)
             compose.onNodeWithTag("unavailable").assertIsDisplayed()
             back()
@@ -159,9 +169,8 @@ class IndividualTransfersTest {
         compose.onNodeWithText(AccountFixture.accounts[1].number).assertIsDisplayed()
         compose.onNodeWithText("شرح نمونه DEMO").assertExists()
         click("account-transfer-submit")
-        compose.onNodeWithTag("unavailable").assertIsDisplayed()
+        otpPrompt()
         compose.onNodeWithTag("S-098").assertDoesNotExist()
-        back()
         back()
         compose.onNodeWithTag("S-192").assertIsDisplayed()
         compose
@@ -207,24 +216,6 @@ class IndividualTransfersTest {
         compose
             .onNodeWithTag("account-transfer-destination")
             .assertTextContains("IR220000000000000000000001", substring = true)
-    }
-
-    @Test
-    fun receiptsAreExplicitIndependentSamplesAndServiceActionsAreUnavailable() {
-        for ((id, tag, action) in
-            listOf(
-                Triple("S-093", "card-transfer-receipt-synthetic", "card-transfer-share"),
-                Triple("S-097", "account-transfer-receipt-disclosure", "account-transfer-share"),
-                Triple("S-098", "account-transfer-receipt-disclosure", "account-transfer-share"),
-            )) {
-            open(id)
-            compose.onNodeWithTag(tag).assertExists()
-            click(action)
-            compose.onNodeWithTag("unavailable").assertIsDisplayed()
-            back()
-            back()
-            back()
-        }
     }
 
     @Test

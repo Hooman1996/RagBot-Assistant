@@ -58,23 +58,29 @@ internal fun TopUpCharityPage(
                         TopUpForm(page, topUp, onTopUp, onBack, onOpen, onUnavailable)
                     TopUpDestinations.CONFIRM -> {
                         TopUpSummary(topUpForm, topUp)
-                        Button(
-                            {
-                                when (topUpForm) {
-                                    // Recovered: account purchase asks for a signature or OTP.
-                                    TopUpDestinations.ACCOUNT -> onUnavailable("خرید شارژ")
-                                    TopUpDestinations.CARD -> onOpen(TopUpDestinations.CARD_INFO)
-                                    else -> onOpen(TopUpDestinations.CARD_INFO_NO_LOGIN)
-                                }
-                            },
-                            Modifier.fillMaxWidth().testTag("topup-accept"),
-                        ) {
-                            Text(
-                                if (topUpForm == TopUpDestinations.ACCOUNT)
-                                    "تایید و پرداخت — در دسترس نیست"
-                                else "تایید"
-                            )
-                        }
+                        // Recovered: account purchase asks for a signature or OTP.
+                        if (topUpForm == TopUpDestinations.ACCOUNT)
+                            BankButton(
+                                "تایید و پرداخت",
+                                "topup-accept",
+                                TopUpDestinations.RECEIPT,
+                                otp = true,
+                            ) {
+                                MockBank.topUp(topUp)
+                            }
+                        else
+                            Button(
+                                {
+                                    onOpen(
+                                        if (topUpForm == TopUpDestinations.CARD)
+                                            TopUpDestinations.CARD_INFO
+                                        else TopUpDestinations.CARD_INFO_NO_LOGIN
+                                    )
+                                },
+                                Modifier.fillMaxWidth().testTag("topup-accept"),
+                            ) {
+                                Text("تایید")
+                            }
                         OutlinedButton(onBack, Modifier.fillMaxWidth().testTag("topup-edit")) {
                             Text("بازگشت و ویرایش")
                         }
@@ -84,10 +90,12 @@ internal fun TopUpCharityPage(
                         TopUpSummary(topUpForm, topUp)
                         CardPaymentInfo(
                             page == TopUpDestinations.CARD_INFO,
-                            "خرید شارژ",
+                            TopUpDestinations.RECEIPT,
                             onBack,
                             onUnavailable,
-                        )
+                        ) { password ->
+                            MockBank.topUp(topUp, password)
+                        }
                     }
                     CharityDestinations.PICKER -> {
                         Text("خیریه مورد نظر خود را برای حمایت مالی انتخاب کنید.")
@@ -127,9 +135,19 @@ internal fun TopUpCharityPage(
                             ) {
                                 Text("افزودن یادداشت و پیوست تراکنش")
                             }
-                            PaymentActions("تایید", "کمک به خیریه", onBack, onUnavailable)
+                            PaymentActions("تایید", CharityDestinations.RECEIPT, true, onBack) {
+                                MockBank.pay(
+                                    "charity",
+                                    "کمک به خیریه",
+                                    charity.sourceId,
+                                    latinDigits(charity.amount).toLong(),
+                                    TopUpCharityFixture.charities
+                                        .first { it.id == charity.charityId }
+                                        .name,
+                                )
+                            }
                         }
-                    else -> TopUpCharityReceipt(page, onBack, onUnavailable)
+                    else -> BankReceipt(onBack, onUnavailable)
                 }
             }
         }
@@ -382,31 +400,4 @@ private fun CharityForm(
         )
     }
     BackHandler(picker) { picker = false }
-}
-
-@Composable
-private fun TopUpCharityReceipt(page: String, onBack: () -> Unit, onUnavailable: (String) -> Unit) {
-    Text(
-        "رسید ساختگی مستقل برای بازبینی؛ حاصل پرداخت نیست.",
-        modifier = Modifier.testTag("payment-receipt-disclosure"),
-    )
-    TransferValue("مبدا", "0000000000001")
-    if (page == TopUpDestinations.RECEIPT) {
-        TransferValue("تلفن همراه", "09000000000")
-        TransferValue("اپراتور", "همراه اول")
-        TransferValue("مبلغ (ریال)", persianNumber(100_000L))
-    } else {
-        TransferValue("خیریه", "خیریهٔ نمایشی آموزش")
-        TransferValue("مقصد", "0000000000009")
-        TransferValue("مبلغ (ریال)", persianNumber(500_000L))
-    }
-    TransferValue("زمان", "۱۴۰۵/۰۸/۰۱ - ۱۰:۰۰")
-    TransferValue("کد رهگیری ساختگی", "DEMO-PAYMENT-0002")
-    Button(
-        { onUnavailable("ذخیره و اشتراک‌گذاری رسید") },
-        Modifier.fillMaxWidth().testTag("payment-receipt-share"),
-    ) {
-        Text("ذخیره و اشتراک‌گذاری")
-    }
-    OutlinedButton(onBack, Modifier.fillMaxWidth()) { Text("بازگشت") }
 }

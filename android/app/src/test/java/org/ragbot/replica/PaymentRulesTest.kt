@@ -30,7 +30,7 @@ class PaymentRulesTest {
         assertTrue(
             PaymentRules.billErrors(
                     BillPaymentDestinations.WITHOUT_SOURCE,
-                    typed.copy(source = "0000000000000001"),
+                    typed.copy(source = "0000000000000018"),
                 )
                 .isEmpty()
         )

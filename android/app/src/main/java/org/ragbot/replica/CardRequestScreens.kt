@@ -54,11 +54,8 @@ object CardRequestFixture {
     const val NOTICE = "کارمزد صدور یا تغییر کارت از حساب انتخابی برداشت می‌شود."
     const val BRANCH = "شعبه نمایشی مرکزی، خیابان نمونه، پلاک ۱"
     const val PHONE = "۰۰۰۰۰۰۰۰۰۰۰"
-    val addresses =
-        listOf(
-            PreviewAddress("address-1", "خانه", "خیابان نمونه، کوچه یک، پلاک ۲", "۰۰۰۰۰۰۰۰۰۱"),
-            PreviewAddress("address-2", "محل کار", "میدان نمونه، ساختمان دو", "۰۰۰۰۰۰۰۰۰۲"),
-        )
+    val addresses
+        get() = MockData.current.customer.addresses
     val colors =
         listOf(
             PreviewCardColor("color-1", "سبز", 0xFF237641),
@@ -288,7 +285,18 @@ private fun RequestConfirm(
         }
         InfoRow("رنگ کارت:", color?.title ?: "—")
     }
-    Buttons(true, "request-submit", { tracking = "۰۰۰۰۰۱" }, onClose, "ثبت درخواست")
+    val bank = LocalBank.current
+    Buttons(
+        true,
+        "request-submit",
+        {
+            val result = MockBank.request("card-request", "درخواست کارت", "شعبه")
+            if (bank.accepted(result) && result is BankResult.Done)
+                tracking = result.receipt.trace
+        },
+        onClose,
+        "ثبت درخواست",
+    )
     tracking?.let { number ->
         AlertDialog(
             onDismissRequest = {},

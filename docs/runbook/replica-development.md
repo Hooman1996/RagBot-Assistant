@@ -4,6 +4,9 @@ Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
 No credentials, banking service, INTERNET permission, assistant or bridge is present.
 
+Data comes from the JSON files in `mock_services/fixtures/`, and every service runs against the
+local mock bank. See the [mock data runbook](mock-data.md).
+
 ## Pinned build inputs
 
 | Input | Version / reason |

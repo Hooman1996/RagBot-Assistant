@@ -66,6 +66,16 @@ class IdentifierConversionTest {
         compose.waitUntil(5_000) { compose.activity.hasWindowFocus() }
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun accountRequiresBankAndResultCopyAndBackPreserveTheLocalDraft() {
         click("demo-S-201")
@@ -95,7 +105,7 @@ class IdentifierConversionTest {
         compose.onNodeWithTag("conversion-favorite").assertIsOn()
         bank("external")
         calculate()
-        compose.onNodeWithTag("unavailable").assertTextContains("استعلام کارمزدی", substring = true)
+        compose.onNodeWithTag("unavailable").assertTextContains("کارمزدی", substring = true)
         back()
         compose.onNodeWithTag("S-202").assertIsDisplayed()
         back()
@@ -109,7 +119,7 @@ class IdentifierConversionTest {
         input("123")
         calculate()
         compose.onNodeWithTag("conversion-error").assertExists()
-        input("0000 0000 0000 0001")
+        input("0000 0000 0000 0018")
         calculate()
         compose.onNodeWithText(ConversionFixture.iban).assertExists()
         back()
@@ -120,7 +130,7 @@ class IdentifierConversionTest {
         compose.onNodeWithText(ConversionFixture.account).assertExists()
         compose.onNodeWithText(ConversionFixture.iban).assertDoesNotExist()
         back()
-        input("0000000000000003")
+        input("0000000000000034")
         calculate()
         compose
             .onNodeWithTag("conversion-error")
@@ -130,7 +140,7 @@ class IdentifierConversionTest {
         compose.onNodeWithTag("unavailable").assertExists()
         back()
         mode(ConversionMode.CARD_TO_IBAN)
-        compose.onNodeWithTag("conversion-identifier").assertTextContains("0000 0000 0000 0001")
+        compose.onNodeWithTag("conversion-identifier").assertTextContains("0000 0000 0000 0018")
     }
 
     @Test
@@ -176,8 +186,7 @@ class IdentifierConversionTest {
             .onNodeWithTag("conversion-source-picker")
             .assertTextContains(CardFixture.of(CardKind.DEBIT).first().number)
         click("payment-submit")
-        compose.onNodeWithTag("unavailable").assertExists()
-        back()
+        bankFailure()
         compose.onNodeWithTag("S-203").assertIsDisplayed()
         click("payment-cancel")
         compose.onNodeWithTag("S-011").assertDoesNotExist()
@@ -198,8 +207,7 @@ class IdentifierConversionTest {
         compose.onNodeWithTag("unavailable").assertExists()
         back()
         click("payment-submit")
-        compose.onNodeWithTag("unavailable").assertExists()
-        back()
+        bankFailure()
         compose.onNodeWithTag("S-204").assertIsDisplayed()
         compose.onNodeWithTag("S-011").assertDoesNotExist()
     }

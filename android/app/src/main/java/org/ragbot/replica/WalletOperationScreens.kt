@@ -366,24 +366,20 @@ private fun WalletOperationConfirm(
         }
     }
     // Recovered: charge and withdrawal ask for an OTP, the others for a signature; both stay with
-    // the user and nothing is sent.
+    // the user.
     val otp = operation == WalletOperation.CHARGE || operation == WalletOperation.DECHARGE
-    Button(
-        {
-            onUnavailable(
-                if (otp) "تایید تراکنش با رمز پویا" else "امضا و انجام ${operation.title}"
-            )
+    BankButton(
+        when {
+            otp -> "تایید تراکنش"
+            operation == WalletOperation.BUY || operation == WalletOperation.MOBILE ->
+                "تایید و ادامه"
+            else -> "ادامه"
         },
-        Modifier.fillMaxWidth().testTag("wallet-op-submit"),
+        "wallet-op-submit",
+        WalletOverviewDestinations.RECEIPT,
+        otp = true,
     ) {
-        Text(
-            when {
-                otp -> "تایید تراکنش — در دسترس نیست"
-                operation == WalletOperation.BUY || operation == WalletOperation.MOBILE ->
-                    "تایید و ادامه — در دسترس نیست"
-                else -> "ادامه — در دسترس نیست"
-            }
-        )
+        WalletOperationRules.submit(operation, draft, preview)
     }
     OutlinedButton(onBack, Modifier.fillMaxWidth().testTag("wallet-op-edit")) {
         Text("بازگشت و ویرایش")

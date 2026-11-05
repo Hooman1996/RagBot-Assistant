@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: customer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "customerNumber",
+    "lastLogin",
+    "inviteCode",
+    "nationalCode",
+    "mobile",
+    "username",
+    "password",
+    "otp",
+    "perTransferLimit",
+    "dailyLimit",
+    "unit",
+    "addresses"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "customerNumber": {
+      "type": "string"
+    },
+    "lastLogin": {
+      "type": "string"
+    },
+    "inviteCode": {
+      "type": "string"
+    },
+    "nationalCode": {
+      "type": "string"
+    },
+    "mobile": {
+      "type": "string"
+    },
+    "username": {
+      "type": "string"
+    },
+    "password": {
+      "type": "string"
+    },
+    "otp": {
+      "type": "string"
+    },
+    "perTransferLimit": {
+      "type": "integer"
+    },
+    "dailyLimit": {
+      "type": "integer"
+    },
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "addresses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "title",
+          "address",
+          "postalCode"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "postalCode": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

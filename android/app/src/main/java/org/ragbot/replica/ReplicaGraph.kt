@@ -91,27 +91,17 @@ internal object DemoPaths {
         entries(
             CardTransferDestinations.ANONYMOUS to "کارت به کارت بدون ورود با انتخاب مبدا",
             CardTransferDestinations.WITHOUT_SOURCE to "کارت به کارت بدون انتخابگر مبدا",
-            CardTransferDestinations.RECEIPT to "رسید مستقل کارت به کارت — نمونه",
             AccountTransferDestinations.MENU to "منوی انتقال — نمونهٔ مستقل",
-            AccountTransferDestinations.INTERNAL_RECEIPT to "رسید مستقل انتقال داخلی — نمونه",
-            AccountTransferDestinations.IBAN_RECEIPT to "رسید مستقل انتقال شبا — نمونه",
             GroupTransferDestinations.HISTORY to "سوابق تراکنش گروهی — نمونه",
-            GroupTransferDestinations.RECEIPT to "رسید مستقل انتقال گروهی — نمونه",
             BillPaymentDestinations.ACCOUNT to "پرداخت قبض با حساب",
             BillPaymentDestinations.CARD to "پرداخت قبض با کارت",
             BillPaymentDestinations.WITHOUT_SOURCE to "پرداخت قبض بدون ورود",
-            BillPaymentDestinations.RECEIPT to "رسید مستقل قبض — نمونه",
             InsuranceDestinations.MENU to "منوی بیمه — نمونهٔ مستقل",
-            InsuranceDestinations.RECEIPT to "رسید مستقل قسط بیمه — نمونه",
-            CreditRepaymentDestinations.RECEIPT to "رسید مستقل بازپرداخت کارت اعتباری — نمونه",
             TopUpDestinations.ACCOUNT to "خرید شارژ با حساب",
             TopUpDestinations.CARD to "خرید شارژ با کارت",
             TopUpDestinations.WITHOUT_SOURCE to "خرید شارژ بدون ورود",
-            TopUpDestinations.RECEIPT to "رسید مستقل شارژ — نمونه",
             CharityDestinations.PICKER to "کمک به خیریه",
-            CharityDestinations.RECEIPT to "رسید مستقل خیریه — نمونه",
             WalletOverviewDestinations.MAIN to "کیف پول",
-            WalletOverviewDestinations.RECEIPT to "رسید مستقل کیف پول — نمونه",
             ConversionDestinations.LOGIN to "تبدیل شناسه با ورود — نمونه",
             ConversionDestinations.NO_LOGIN to "تبدیل شناسه بدون ورود — نمونه",
             ConversionDestinations.PAID to "استعلام کارمزدی با انتخابگر — نمونهٔ مستقل",
@@ -119,7 +109,6 @@ internal object DemoPaths {
             LoanDestinations.MENU to "منوی تسهیلات — نمونهٔ مستقل",
             LoanDestinations.SUMMARY to "تسهیلات جاری و پرداخت اقساط",
             LoanDestinations.GROUP to "گروه‌های تسهیلات — فقط مشاهده",
-            TollDestinations.RECEIPT to "رسید مستقل عوارض — نمونه",
             // The in-flow callers (wage advance) are deferred.
             FundingFlow.ACCOUNT_IN_FLOW.amount to "افزایش موجودی حساب درون جریان — نمونهٔ مستقل",
             FundingFlow.WALLET_IN_FLOW.amount to "افزایش موجودی کیف درون جریان — نمونهٔ مستقل",
@@ -546,8 +535,60 @@ internal object ReplicaGraph {
                 Edge(SupportDestinations.TICKETS, SupportDestinations.TICKET, "ticket-*"),
             )
 
+    /** A receipt follows only the user's confirm, so none of these reach the executor. */
+    private val receipts =
+        listOf(
+                CardTransferDestinations.CONFIRM to
+                    (CardTransferDestinations.RECEIPT to "card-transfer-submit"),
+                AccountTransferDestinations.CONFIRM to
+                    (AccountTransferDestinations.INTERNAL_RECEIPT to "account-transfer-submit"),
+                AccountTransferDestinations.CONFIRM to
+                    (AccountTransferDestinations.IBAN_RECEIPT to "account-transfer-submit"),
+                GroupTransferDestinations.VERIFY to
+                    (GroupTransferDestinations.RECEIPT to "group-verify-accept"),
+                BillPaymentDestinations.CONFIRM to
+                    (BillPaymentDestinations.RECEIPT to "bill-accept"),
+                BillPaymentDestinations.CARD_INFO to
+                    (BillPaymentDestinations.RECEIPT to "payment-submit"),
+                BillPaymentDestinations.CARD_INFO_NO_LOGIN to
+                    (BillPaymentDestinations.RECEIPT to "payment-submit"),
+                TopUpDestinations.CONFIRM to (TopUpDestinations.RECEIPT to "topup-accept"),
+                TopUpDestinations.CARD_INFO to (TopUpDestinations.RECEIPT to "payment-submit"),
+                TopUpDestinations.CARD_INFO_NO_LOGIN to
+                    (TopUpDestinations.RECEIPT to "payment-submit"),
+                CharityDestinations.CONFIRM to (CharityDestinations.RECEIPT to "payment-submit"),
+                InsuranceDestinations.CONFIRM to
+                    (InsuranceDestinations.RECEIPT to "payment-submit"),
+                CreditRepaymentDestinations.CONFIRM to
+                    (CreditRepaymentDestinations.RECEIPT to "payment-submit"),
+            )
+            .map { (from, target) ->
+                Edge(from, target.first, target.second, EdgeKind.USER_ONLY)
+            } +
+            WalletOperation.entries.map {
+                Edge(
+                    it.confirm,
+                    WalletOverviewDestinations.RECEIPT,
+                    "wallet-op-submit",
+                    EdgeKind.USER_ONLY,
+                )
+            } +
+            TollService.entries.mapNotNull { service ->
+                service.confirm?.let {
+                    Edge(it, TollDestinations.RECEIPT, "payment-submit", EdgeKind.USER_ONLY)
+                }
+            }
+
     val edges =
-        home + accountsAndCards + transfers + payments + wallet + cheques + vehicles + support
+        home +
+            accountsAndCards +
+            transfers +
+            payments +
+            wallet +
+            cheques +
+            vehicles +
+            support +
+            receipts
 
     private val moves = edges.map { it.from to it.to }.toSet()
 

@@ -1,0 +1,72 @@
+{
+  "unit": "IRR",
+  "insuredName": "بیمه‌شدهٔ نمایشی",
+  "insuredNationalCode": "0000000000",
+  "policies": [
+    {
+      "id": "policy-1",
+      "number": "DEMO-POLICY-0001",
+      "begin": "۱۴۰۵/۰۱/۰۱",
+      "end": "۱۴۰۵/۱۲/۲۹",
+      "state": "فعال",
+      "addendum": 0,
+      "installments": [
+        {
+          "number": 1,
+          "year": 1405,
+          "dueDate": "۱۴۰۵/۰۲/۰۱",
+          "amount": 2000000,
+          "remained": 0,
+          "paymentId": "1000001",
+          "status": "PAID"
+        },
+        {
+          "number": 2,
+          "year": 1405,
+          "dueDate": "۱۴۰۵/۰۳/۰۱",
+          "amount": 2000000,
+          "remained": 2000000,
+          "paymentId": "1000002",
+          "status": "VERIFICATION_WAITING"
+        },
+        {
+          "number": 3,
+          "year": 1405,
+          "dueDate": "۱۴۰۵/۰۴/۰۱",
+          "amount": 2000000,
+          "remained": 1500000,
+          "paymentId": "1000003",
+          "status": "POSTPONED"
+        },
+        {
+          "number": 4,
+          "year": 1405,
+          "dueDate": "۱۴۰۵/۰۵/۰۱",
+          "amount": 2000000,
+          "remained": 2000000,
+          "paymentId": "1000004",
+          "status": "DUE_DATE"
+        }
+      ]
+    },
+    {
+      "id": "policy-2",
+      "number": "DEMO-POLICY-0002",
+      "begin": "۱۴۰۴/۰۱/۰۱",
+      "end": "۱۴۰۴/۱۲/۲۹",
+      "state": "خاتمه یافته",
+      "addendum": 1,
+      "installments": [
+        {
+          "number": 1,
+          "year": 1404,
+          "dueDate": "۱۴۰۴/۰۲/۰۱",
+          "amount": 900000,
+          "remained": 0,
+          "paymentId": "2000001",
+          "status": "PAID"
+        }
+      ]
+    }
+  ]
+}

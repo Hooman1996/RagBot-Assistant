@@ -404,12 +404,11 @@ private fun WalletReceipt(
     onBack: () -> Unit,
     onUnavailable: (String) -> Unit,
 ) {
-    Text(
-        "رسید ساختگی مستقل برای بازبینی؛ حاصل تراکنش نیست.",
-        modifier = Modifier.testTag("wallet-receipt-disclosure"),
-    )
-    if (funding != null) {
-        // FN-RECOVERY: the standalone wallet top-up hands its result to this receipt.
+    if (funding == null) {
+        BankReceipt(onBack, onUnavailable)
+        return
+    }
+    // FN-RECOVERY: the standalone wallet top-up hands its result to this receipt.
         val status =
             when (funding.outcome) {
                 FundingOutcome.FAILED -> "ناموفق"
@@ -419,15 +418,8 @@ private fun WalletReceipt(
         TransferValue("نوع تراکنش", "افزایش موجودی | $status")
         TransferValue("مبلغ (ریال)", persianNumber(FundingRules.amount(funding.amount)))
         TransferValue("کیف مقصد", funding.target)
-    } else {
-        TransferValue("نوع تراکنش", "انتقال کیف به کیف | موفق")
-        TransferValue("مبلغ (ریال)", persianNumber(400_000L))
-        TransferValue("کیف مبدا", "0000000000101")
-        TransferValue("کیف مقصد", "0000000000201")
-        TransferValue("نام مقصد", "طرف نمایشی")
-    }
-    TransferValue("زمان", "۱۴۰۵/۰۸/۰۱ - ۱۰:۰۰")
-    TransferValue("شماره پیگیری ساختگی", "DEMO-WALLET-0001")
+    TransferValue("زمان", MockBank.clock())
+    TransferValue("شماره پیگیری", FundingFixture.TRACKING)
     Button(
         { onUnavailable("اشتراک‌گذاری رسید") },
         Modifier.fillMaxWidth().testTag("wallet-receipt-share"),

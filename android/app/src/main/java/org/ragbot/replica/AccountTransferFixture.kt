@@ -26,7 +26,7 @@ object AccountTransferDestinations {
 }
 
 internal object AccountTransferFixture {
-    const val NOTICE = "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ وجهی منتقل نمی‌شود."
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
     val reasons = listOf("بابت نمونهٔ اول — ساختگی", "بابت نمونهٔ دوم — ساختگی")
 
     fun validate(draft: AccountTransferDraft): String? {

@@ -110,6 +110,24 @@ NAV_LABELS = ("Observed", "Recovered", "Inferred", "Unknown")
 # Replica pages with no recovered node, such as a menu the owner traced (D-022).
 NAV_NODE_LABELS = NAV_LABELS + ("Designed for mock",)
 API_STRUCTURE = "app_profiles/api-structure.json"
+MOCK_FIXTURES = "mock_services/fixtures"
+MOCK_SCHEMAS = "mock_services/schemas"
+MOCK_FILES = (
+    "accounts",
+    "bills",
+    "cards",
+    "charities",
+    "cheques",
+    "contacts",
+    "customer",
+    "insurance",
+    "loans",
+    "operators",
+    "scenarios",
+    "transactions",
+    "vehicles",
+    "wallets",
+)
 
 # Plan §12 and §15: the project's own resources on the shared dev PostgreSQL and Qdrant.
 PROJECT_TARGETS = {
@@ -696,6 +714,46 @@ def check_profile(root: Path, report: Report) -> None:
         report.check(export == text, "committed profile matches a fresh export", PROFILE_EXPORT)
 
 
+def valid_card(number: str) -> bool:
+    digits = [int(ch) for ch in reversed(number)]
+    return sum(d if i % 2 == 0 else d * 2 - 9 * (d > 4) for i, d in enumerate(digits)) % 10 == 0
+
+
+def valid_iban(iban: str) -> bool:
+    return int(iban[4:] + "1827" + iban[2:4]) % 97 == 1
+
+
+def check_mock_data(root: Path, report: Report) -> None:
+    """The editable mock files: one schema each, exact money, and valid synthetic identifiers."""
+    from jsonschema import Draft202012Validator
+
+    found = sorted(path.stem for path in (root / MOCK_FIXTURES).glob("*.json"))
+    report.check(found == sorted(MOCK_FILES), "every mock file exists", ", ".join(found))
+    data = {}
+    for name in sorted(set(found) & set(MOCK_FILES)):
+        data[name] = load_json(root / MOCK_FIXTURES / f"{name}.json")
+        schema = load_json(root / MOCK_SCHEMAS / f"{name}.schema.json")
+        errors = "; ".join(e.message for e in Draft202012Validator(schema).iter_errors(data[name]))
+        report.check(not errors, f"{name}.json matches its schema", errors)
+    if set(data) != set(MOCK_FILES):
+        return
+    cards = [
+        c["number"] for c in data["cards"]["cards"] + data["cards"]["candidates"] if "*" not in c["number"]
+    ]
+    cards += [p["card"] for p in data["contacts"]["people"]]
+    cards += [d["destination"] for d in data["contacts"]["destinations"] if d["type"] == "CARD"]
+    bad = [number for number in cards if not valid_card(number)]
+    report.check(not bad, "every mock card passes its checksum", ", ".join(bad))
+    ibans = [a["iban"] for a in data["accounts"]["accounts"]]
+    ibans += [p["iban"] for p in data["contacts"]["people"]]
+    ibans += [d["destination"] for d in data["contacts"]["destinations"] if d["type"] == "IBAN"]
+    bad = [iban for iban in ibans if not valid_iban(iban)]
+    report.check(not bad, "every mock IBAN passes its checksum", ", ".join(bad))
+    keys = {a["key"] for a in data["accounts"]["accounts"]}
+    loose = [b["reference"] for b in data["cheques"]["books"] if b["accountKey"] not in keys]
+    report.check(not loose, "every cheque book names a mock account", ", ".join(loose))
+
+
 def check_apk_baseline(root: Path, report: Report) -> None:
     record = read(root, APK_RECORD)
     report.check(record is not None, f"{APK_RECORD} exists")
@@ -743,13 +801,21 @@ SUITES = {
     "navgraph": (check_navgraph,),
     "api-structure": (check_api_structure,),
     "profile": (check_profile,),
+    "mock-data": (check_mock_data,),
 }
 SUITES["all"] = (
     SUITES["foundation"]
     + SUITES["baseline"]
     + SUITES["contracts"]
     + SUITES["isolation"]
-    + (check_apk_baseline, check_rea_environment, check_navgraph, check_api_structure, check_profile)
+    + (
+        check_apk_baseline,
+        check_rea_environment,
+        check_navgraph,
+        check_api_structure,
+        check_profile,
+        check_mock_data,
+    )
 )
 
 

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Mock data: accounts",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unit",
+    "accounts",
+    "conversion"
+  ],
+  "properties": {
+    "unit": {
+      "const": "IRR",
+      "type": "string"
+    },
+    "accounts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "number",
+          "owner",
+          "type",
+          "iban",
+          "balance",
+          "unit",
+          "ownership"
+        ],
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "number": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "iban": {
+            "type": "string"
+          },
+          "balance": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "unit": {
+            "const": "IRR",
+            "type": "string"
+          },
+          "ownership": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "conversion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "account",
+        "iban",
+        "cards",
+        "fee"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "account": {
+          "type": "string"
+        },
+        "iban": {
+          "type": "string"
+        },
+        "cards": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fee": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

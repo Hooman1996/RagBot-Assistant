@@ -84,41 +84,11 @@ internal object WalletRules {
 }
 
 internal object WalletFixture {
-    const val NOTICE = "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ عملیات کیف پولی انجام نمی‌شود."
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
 
-    val wallets =
-        listOf(
-            PreviewWallet(
-                "0000000000101",
-                "کیف نمایشی شخصی",
-                "کاربر نمایشی",
-                "حقیقی",
-                "ACTIVE",
-                "فعال",
-                true,
-                3_250_000L,
-            ),
-            PreviewWallet(
-                "0000000000102",
-                "کیف نمایشی تجاری",
-                "کاربر نمایشی",
-                "حقوقی",
-                "ACTIVE",
-                "فعال",
-                false,
-                18_000_000L,
-            ),
-            PreviewWallet(
-                "0000000000103",
-                "کیف نمایشی غیرفعال",
-                "کاربر نمایشی",
-                "حقیقی",
-                "INACTIVE",
-                "غیرفعال",
-                true,
-                0L,
-            ),
-        )
+    val wallets
+        get() =
+            MockData.current.wallets.map { it.copy(balance = MockBank.walletBalance(it.number)) }
 
     // Menu keys and their targets are recovered; titles are server-supplied, so synthetic here.
     // The charge action opens a payment-type sheet instead of a page.
@@ -181,35 +151,22 @@ internal object WalletFixture {
             )
             .map { (key, title) -> WalletMenuItem(key, title, AccountDestinations.HISTORY) }
 
-    private val types =
-        listOf(
-            WalletTranType.CHARGE to "شارژ کیف",
-            WalletTranType.TRANSFER to "کیف به کیف",
-            WalletTranType.WALLET_BILL_PAYMENT to "پرداخت قبض",
-            WalletTranType.WALLET_MOBILE_CREDIT to "خرید شارژ",
-            WalletTranType.IPG to "پرداخت اینترنتی",
-            WalletTranType.DE_CHARGE to "برداشت از کیف",
-        )
-
-    /** Twelve rows a day apart so the first page of ten has a second page. */
     fun statement(wallet: PreviewWallet): List<WalletStatementRow> =
-        (0 until 12).map { i ->
-            val (type, description) = types[i % types.size]
-            val credit = type == WalletTranType.CHARGE
+        MockData.current.walletStatement.mapIndexed { i, row ->
             WalletStatementRow(
                 "wallet-row-$i",
-                100_000L * (i + 1),
-                credit,
-                wallet.balance - 50_000L * i,
-                type,
-                description,
-                dateDaysAgo(i),
-                "۱۰:۱۵",
-                "DEMO-TRACE-${100 + i}",
-                "DEMO-TX-${100 + i}",
-                if (credit) "0000000000001" else "0000000000201",
-                if (credit) "حساب نمایشی" else "طرف نمایشی",
-                "یادداشت نمایشی ${i + 1}",
+                row.amount,
+                row.credit,
+                wallet.balance - row.balanceOffset,
+                row.type,
+                row.typeDescription,
+                dateDaysAgo(row.daysAgo),
+                row.time,
+                row.traceId,
+                row.transactionId,
+                row.participant,
+                row.participantName,
+                row.description,
             )
         }
 }

@@ -68,6 +68,16 @@ class DigitalChequesTest {
         click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_$key")
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun activationStopsBeforeTheExternalAppInBothStates() {
         menu("CHAKAD_ACTIVATION")
@@ -118,7 +128,7 @@ class DigitalChequesTest {
         compose.onNodeWithText("بله").assertExists()
         compose.onNodeWithText("۵۰٬۰۰۰ ریال").assertExists()
         click("payment-submit")
-        unavailable("واگذاری چک دیجیتال")
+        otpPrompt()
         click("payment-cancel")
         shown("S-151")
         back()

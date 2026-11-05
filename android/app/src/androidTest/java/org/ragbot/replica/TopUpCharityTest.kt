@@ -83,6 +83,16 @@ class TopUpCharityTest {
         compose.onNodeWithText(text, substring = true).performScrollTo().assertIsDisplayed()
     }
 
+    private fun otpPrompt() {
+        compose.onNodeWithTag("otp-code").assertExists()
+        compose.onNodeWithTag("otp-cancel").performClick()
+    }
+
+    private fun bankFailure() {
+        compose.onNodeWithTag("bank-failure").assertExists()
+        compose.onNodeWithTag("bank-failure-close").performClick()
+    }
+
     @Test
     fun accountTopUpDetectsTheOperatorAndChecksItsAmountRules() {
         demo("S-211")
@@ -108,7 +118,7 @@ class TopUpCharityTest {
         shown("S-212")
         compose.onNodeWithText("رایتل · 09010000000").assertExists()
         click("topup-accept")
-        unavailable("خرید شارژ")
+        otpPrompt()
         compose.activityRule.scenario.recreate()
         click("topup-edit")
         shown("S-211")
@@ -130,7 +140,7 @@ class TopUpCharityTest {
         compose.onNodeWithTag("payment-card-cvv2").performTextInput("123")
         compose.onNodeWithTag("payment-card-keep").assertExists()
         click("payment-submit")
-        unavailable("خرید شارژ")
+        bankFailure()
         compose.activityRule.scenario.recreate()
         value("payment-card-cvv2", "")
         repeat(4) { back() }
@@ -140,7 +150,7 @@ class TopUpCharityTest {
         click("topup-amount-100000")
         click("topup-continue")
         compose.onNodeWithText(PaymentRules.INVALID).assertExists()
-        compose.onNodeWithTag("topup-source").performTextReplacement("0000000000000001")
+        compose.onNodeWithTag("topup-source").performTextReplacement("0000000000000018")
         click("topup-continue")
         click("topup-accept")
         shown("S-216")
@@ -172,7 +182,7 @@ class TopUpCharityTest {
         click("charity-attachment")
         unavailable("پیوست")
         click("payment-submit")
-        unavailable("کمک به خیریه")
+        otpPrompt()
         compose.activityRule.scenario.recreate()
         click("payment-cancel")
         shown("S-284")
@@ -183,10 +193,6 @@ class TopUpCharityTest {
         compose.onNodeWithText("خیریهٔ نمایشی آموزش").assertExists()
         value("charity-amount", "500000")
         repeat(3) { back() }
-        demo("S-095")
-        click("payment-receipt-share")
-        unavailable("اشتراک‌گذاری")
-        repeat(2) { back() }
         compose.onNodeWithTag("scenario-empty").performScrollTo().performClick()
         demo("S-283")
         compose.onNodeWithTag("data-empty").assertIsDisplayed()

@@ -131,43 +131,12 @@ internal object CharityRules {
 }
 
 internal object TopUpCharityFixture {
-    const val NOTICE = "پیش‌نمایش محلی با دادهٔ ساختگی؛ هیچ خرید یا کمکی ارسال نمی‌شود."
+    const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
 
     // Operator keys and titles are recovered; limits, amounts and prefixes are synthetic.
-    val operators =
-        listOf(
-            OperatorConfig(
-                "HAMRAH_AVAL",
-                "همراه اول",
-                50_000L,
-                5_000_000L,
-                50_000L,
-                listOf(100_000L, 200_000L, 500_000L, 1_000_000L),
-                listOf("0900"),
-            ),
-            OperatorConfig(
-                "IRANCELL",
-                "ایرانسل",
-                50_000L,
-                5_000_000L,
-                50_000L,
-                listOf(100_000L, 200_000L, 500_000L, 1_000_000L),
-                listOf("0901"),
-            ),
-            OperatorConfig(
-                "RIGHTEL",
-                "رایتل",
-                100_000L,
-                2_000_000L,
-                100_000L,
-                listOf(200_000L, 500_000L, 1_000_000L),
-                listOf("0902"),
-            ),
-        )
+    val operators
+        get() = MockData.current.operators
 
-    val charities =
-        listOf(
-            Charity(1, "خیریهٔ نمایشی آموزش", "حمایت از آموزش — نمونه", "0000000000009"),
-            Charity(2, "خیریهٔ نمایشی سلامت", "حمایت از درمان — نمونه", "0000000000008"),
-        )
+    val charities
+        get() = MockData.current.charities
 }
