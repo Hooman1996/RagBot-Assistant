@@ -139,7 +139,6 @@ class AccountsTest {
         compose.onNodeWithTag("demo-history").performClick()
         compose.onNodeWithTag("S-091").assertIsDisplayed()
         compose.onNodeWithTag("history-filter").assertIsNotEnabled()
-        compose.onNodeWithTag("history-more").performClick()
         compose.onNodeWithTag("history-search").performTextReplacement("۷۵۰٬۰۰۰")
         compose.onNodeWithTag("history-preview-1").assertDoesNotExist()
         compose.onNodeWithTag("history-preview-2").performClick()
