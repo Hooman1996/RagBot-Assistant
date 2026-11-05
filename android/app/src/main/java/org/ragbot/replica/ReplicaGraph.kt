@@ -392,6 +392,7 @@ internal object ReplicaGraph {
                 Edge(CharityDestinations.TRANSFER, CharityDestinations.CONFIRM, "charity-continue"),
                 Edge(LoanDestinations.MENU, LoanDestinations.SUMMARY, "loan-current"),
                 Edge(LoanDestinations.MENU, LoanDestinations.GROUP, "loan-groups"),
+                Edge(LoanDestinations.MENU, "S-287", "loan-request"),
                 Edge(LoanDestinations.SUMMARY, LoanDestinations.DETAIL, "loan-*"),
                 Edge(
                     LoanDestinations.DETAIL,

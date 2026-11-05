@@ -246,4 +246,51 @@ class ServicesTest {
         shown("S-453")
         compose.onNodeWithText("خوب").assertExists()
     }
+
+    private fun loanApplication(amount: String) {
+        click("demo-entry")
+        click("menu-loan")
+        click("loan-request")
+        shown("S-287")
+        click("svc-product-personal")
+        next()
+        shown("S-308")
+        fill("amount", amount)
+        fill("months", "12")
+        compose.onNodeWithText("قسط ماهانه (ریال)").assertExists()
+        next()
+        shown("S-286")
+        fill("job", "کارمند")
+        next()
+        shown("S-335")
+        fill("guarantor", "رضا")
+        fill("guarantorCode", "0000000019")
+        next()
+        shown("S-285")
+        click("svc-agree-yes")
+        next()
+        shown("S-334")
+        click("svc-note-issue")
+        next()
+        shown("S-378")
+        click("svc-sign-sign")
+        next()
+        shown("S-336")
+        confirm()
+    }
+
+    @Test
+    fun aLoanRequestWalksEveryStepToItsMockResult() {
+        loanApplication("120000000")
+        shown("S-337")
+        compose.onNodeWithText("تایید اولیه").assertExists()
+        compose.onNodeWithText(persianNumber(11_800_000L)).assertExists()
+    }
+
+    @Test
+    fun aLoanOverTheProductLimitIsRefused() {
+        loanApplication("900000000")
+        failure("loan-over-limit")
+        shown("S-336")
+    }
 }

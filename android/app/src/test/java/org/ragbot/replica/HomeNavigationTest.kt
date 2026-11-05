@@ -225,7 +225,6 @@ class HomeNavigationTest {
                 // here.
                 "S-288",
                 "S-330",
-                "S-308",
                 // The fast-payment QR scanner is deferred by D-021.
                 "S-108",
                 // Top-up hosts, the legacy amount/result pages and the unresolved web views.
