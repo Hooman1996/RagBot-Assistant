@@ -300,8 +300,8 @@ profile `S-065` (credential changes use OTP `12345` and a labelled result),
 additional information `S-064`, account management `S-063`, card management
 `S-126`, saved addresses `S-464` → add `S-463`, the settings menu `S-025`
 (biometric `S-070`, services `S-072`, storefront `S-073`, card display
-`S-130`), invitation `S-069` and changelog `S-074`. Notification settings
-`S-071` has a labelled review entry on the demo page. Profile, address and
+`S-130`, notification settings `S-071`), invitation `S-069` and changelog
+`S-074`. Profile, address and
 toggle changes stay in the app's saved UI state only. The card-request and
 wallet address steps now open add address `S-463`. See the
 [FR-05 report](../reports/profile-inspection.md).
@@ -328,7 +328,7 @@ Scenario controls remain on the demo page. The unanswered/answered/closed
 fixture tickets exercise editing, a long thread with continuation controls,
 and read-only closed state. No server support-menu snapshot, ticket delivery,
 attachment control, session-expiry service or real authentication is claimed.
-S-071 remains independent. See the [inspection](../reports/notifications-support-inspection.md)
+See the [inspection](../reports/notifications-support-inspection.md)
 and [requirements](../reports/notifications-support-requirements.md). FR-07 was
 subsequently approved in #58; later batches still require owner approval.
 

@@ -123,7 +123,9 @@ class ReplicaProfileTest {
         val traced = listOf("S-193", "S-187", "S-178", "S-209", "S-283", "S-338", "S-071", "S-463")
         val real = reachable(ReplicaGraph.edges.filter { it.kind == EdgeKind.REAL })
         val demo =
-            ReplicaGraph.edges.filter { it.kind == EdgeKind.DEMO && it.from == "S-026" }.map { it.to }
+            ReplicaGraph.edges
+                .filter { it.kind == EdgeKind.DEMO && it.from == HomeDestinations.HOME }
+                .map { it.to }
         traced.forEach {
             assertTrue(it, it in real)
             assertFalse(it, it in demo)
