@@ -169,6 +169,7 @@ internal object ReplicaGraph {
             Edge(HOME, AccountDestinations.LIST, "control-ACCOUNT > account-list"),
             Edge(HOME, AccountDestinations.STATEMENT_LIST, "control-ACCOUNT > account-statement"),
             Edge(HOME, AccountDestinations.MANAGEMENT, "control-ACCOUNT > account-management"),
+            Edge(HOME, AccountDestinations.TRANSACTION, "transaction-*"),
         ) +
             tracedHomeTiles.map { (key, to) -> Edge(HOME, to, "menu-$key") } +
             CardFixture.actions.flatMap { (kind, actions) ->
@@ -500,6 +501,7 @@ internal object ReplicaGraph {
                     VehicleDestinations.LICENCES,
                 )
                 .map { Edge(it, VehicleDestinations.INQUIRY_HISTORY, "vehicle-history-*") } +
+            Edge(VehicleDestinations.HISTORY_MENU, AccountDestinations.HISTORY, "vehicle-paid-*") +
             TollService.entries.flatMap { service ->
                 // The plate list's onward move depends on the menu item that opened it.
                 listOfNotNull(

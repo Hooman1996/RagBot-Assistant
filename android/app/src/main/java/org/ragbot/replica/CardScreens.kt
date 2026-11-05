@@ -352,7 +352,7 @@ internal fun CardPage(
                     CardDestinations.VISIBILITY -> CardVisibility(onUnavailable)
                     CardDestinations.CREDIT -> CreditDetail(onBack, onRepay)
                     CardDestinations.FILE_LOAN -> FileLoans(onUnavailable)
-                    else -> SecureBalanceForm(page, onBack, onUnavailable)
+                    else -> SecureBalanceForm(page, onBack)
                 }
             }
     }
@@ -754,7 +754,8 @@ private fun FileLoans(onUnavailable: (String) -> Unit) {
 
 /** S-119/S-120: recovered fields and checks only. No PIN is processed and no balance is shown. */
 @Composable
-private fun SecureBalanceForm(page: String, onBack: () -> Unit, onUnavailable: (String) -> Unit) {
+private fun SecureBalanceForm(page: String, onBack: () -> Unit) {
+    val bank = LocalBank.current
     val anonymous = page == CardDestinations.ANONYMOUS_BALANCE
     var number by pageValue("secure-number", "")
     var cvv2 by remember { mutableStateOf("") }
@@ -806,7 +807,13 @@ private fun SecureBalanceForm(page: String, onBack: () -> Unit, onUnavailable: (
         Button(
             {
                 errors = secureFormErrors(if (anonymous) number else null, cvv2, expiry, password)
-                if (errors.isEmpty()) onUnavailable("استعلام امن موجودی کارت")
+                if (errors.isEmpty())
+                    bank.finish(
+                        MockBank.cardBalance(
+                            if (anonymous) number else CardFixture.of(CardKind.BON).first().number
+                        ),
+                        null,
+                    )
             },
             Modifier.weight(1f).testTag("secure-ok"),
         ) {

@@ -108,10 +108,19 @@ private fun AccountTransferForm(
     var sourcePicker by rememberSaveable { mutableStateOf(false) }
     var reasonPicker by rememberSaveable { mutableStateOf(false) }
     var extra by rememberSaveable { mutableStateOf(false) }
+    var contacts by rememberSaveable { mutableStateOf(false) }
     var error by rememberSaveable { mutableStateOf<String?>(null) }
     val focus = LocalFocusManager.current
     val internal = page == AccountTransferDestinations.INTERNAL
     val source = AccountFixture.accounts.find { it.key == draft.sourceId }
+    if (contacts)
+        DestinationPicker(
+            if (internal) "ACCOUNT" else "IBAN",
+            "account-transfer-contact",
+            { contacts = false },
+        ) {
+            onChange(draft.copy(destination = it))
+        }
     Text("حساب مبدأ")
     OutlinedButton(
         {
@@ -132,7 +141,7 @@ private fun AccountTransferForm(
     TextButton(
         {
             focus.clearFocus()
-            onUnavailable("انتخاب مقصد ذخیره‌شده در این پیش‌نمایش در دسترس نیست.")
+            contacts = true
         },
         Modifier.testTag("account-transfer-favorites"),
     ) {

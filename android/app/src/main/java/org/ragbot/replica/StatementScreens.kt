@@ -39,6 +39,9 @@ internal fun dateDaysAgo(days: Int): String {
 }
 
 internal fun statementFixtures(account: PreviewAccount?): List<PreviewStatement> =
+    account?.let { MockBank.spentFrom(it.number) }.orEmpty().map {
+        PreviewStatement(it.key, -it.amount, null, todayPersian(), it.title)
+    } +
     MockData.current.statement.map {
         PreviewStatement(
             it.key,

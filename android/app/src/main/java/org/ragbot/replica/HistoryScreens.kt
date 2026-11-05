@@ -86,7 +86,7 @@ internal fun TransactionDetail(key: String, onBack: () -> Unit, onUnavailable: (
                     "از" to transaction.source,
                     "به" to transaction.destination,
                     "زمان" to transaction.time,
-                    "شماره پیگیری" to "DEMO-${transaction.key}",
+                    "شماره پیگیری" to transaction.key,
                 )
                 .forEach { (label, value) ->
                     Row(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {

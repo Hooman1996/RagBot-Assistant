@@ -135,6 +135,7 @@ private fun WalletOperationForm(
     var errors by rememberSaveable { mutableStateOf(mapOf<String, String>()) }
     var failure by rememberSaveable { mutableStateOf<String?>(null) }
     var balanceShown by rememberSaveable { mutableStateOf(false) }
+    var contacts by rememberSaveable { mutableStateOf(false) }
     fun change(key: String, next: WalletOperationDraft) {
         // An edited field drops its stale error until the next Continue.
         errors = errors - key
@@ -184,8 +185,11 @@ private fun WalletOperationForm(
             ) {
                 change("destination", draft.copy(destination = it))
             }
-            // The familiar-destination picker (S-330) is not built.
-            TextButton({ onUnavailable("مقصدهای آشنا") }, Modifier.testTag("wallet-op-familiar")) {
+            if (contacts)
+                DestinationPicker("WALLET", "wallet-op-contact", { contacts = false }) {
+                    change("destination", draft.copy(destination = it))
+                }
+            TextButton({ contacts = true }, Modifier.testTag("wallet-op-familiar")) {
                 Text("انتخاب از مقصدهای آشنا")
             }
         }

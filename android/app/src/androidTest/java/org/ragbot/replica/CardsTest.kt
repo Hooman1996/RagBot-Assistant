@@ -147,10 +147,8 @@ class CardsTest {
         compose.onNodeWithTag("secure-expiry").performTextReplacement("05/08")
         compose.onNodeWithTag("secure-password").performTextReplacement("12345")
         compose.onNodeWithTag("secure-ok").performClick()
-        unavailable("استعلام امن")
-        compose.onNodeWithText("ریال", substring = true).assertDoesNotExist()
-        compose.onNodeWithTag("card-kind-GIFT").assertDoesNotExist()
-        back()
+        compose.onNodeWithTag("bank-done").assertTextContains("موجودی", substring = true)
+        compose.onNodeWithTag("bank-done-close").performClick()
         compose.onNodeWithTag("card-kind-GIFT").performSemanticsAction(SemanticsActions.OnClick)
         compose.onNodeWithTag("card-empty").assertIsDisplayed()
         // The legacy list search runs last because its soft keyboard stays open.
