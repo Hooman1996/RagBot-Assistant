@@ -197,16 +197,17 @@ class RecurringTransfersTest {
             ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
                 ?.isVisible(WindowInsetsCompat.Type.ime()) == true
         }
-        compose.onNodeWithTag("schedule-continue").performScrollTo().assertIsDisplayed()
+        // The keyboard is visible from the start of its animation; the page shrinks during it.
         val metrics = compose.activity.resources.displayMetrics
-        val keyboardHeight =
-            checkNotNull(ViewCompat.getRootWindowInsets(compose.activity.window.decorView))
-                .getInsets(WindowInsetsCompat.Type.ime())
-                .bottom
-        val keyboardTop = (metrics.heightPixels - keyboardHeight) / metrics.density
-        org.junit.Assert.assertTrue(
-            compose.onNodeWithTag("schedule-continue").getUnclippedBoundsInRoot().bottom.value <=
-                keyboardTop
-        )
+        compose.waitUntil(5_000) {
+            val keyboardHeight =
+                checkNotNull(ViewCompat.getRootWindowInsets(compose.activity.window.decorView))
+                    .getInsets(WindowInsetsCompat.Type.ime())
+                    .bottom
+            val keyboardTop = (metrics.heightPixels - keyboardHeight) / metrics.density
+            compose.onNodeWithTag("schedule-continue").performScrollTo()
+            compose.onNodeWithTag("schedule-continue").getUnclippedBoundsInRoot().bottom.value <= keyboardTop
+        }
+        compose.onNodeWithTag("schedule-continue").assertIsDisplayed()
     }
 }
