@@ -42,7 +42,8 @@ internal val tracedHomeTiles =
     )
 
 /** Home tiles of Designed-for-mock services, by tile key. */
-internal val designedHomeTiles = mapOf("inquiry" to "S-443")
+internal val designedHomeTiles =
+    mapOf("inquiry" to "S-443", "performance" to FinanceDestinations.MAIN)
 
 /** Screens the owner traced below Home; they have real routes, so no Home demo path. */
 private val ownerTraced =
@@ -168,6 +169,8 @@ internal object ReplicaGraph {
             Edge(HOME, ShortcutDestinations.SCREEN, "header-SEARCH"),
             Edge(HOME, RecurringTransferDestinations.REPETITIVE, "header-SHORTCUTS"),
             Edge(HOME, FundingFlow.ACCOUNT_STANDALONE.amount, "home-increase"),
+            Edge(FinanceDestinations.MAIN, FinanceDestinations.BUDGETS, "finance-budgets"),
+            Edge(FinanceDestinations.BUDGETS, FinanceDestinations.BUDGET, "budget-*"),
             Edge(HOME, LoginDestinations.INTRO, "login-start", EdgeKind.STEP),
             Edge(HOME, LoginDestinations.LOGIN, "header-LOGOUT"),
             Edge(LoginDestinations.INTRO, LoginDestinations.WELCOME, "intro-next"),

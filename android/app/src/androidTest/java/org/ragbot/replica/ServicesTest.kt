@@ -337,4 +337,37 @@ class ServicesTest {
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("login-password").assertTextEquals("رمز عبور", "")
     }
+
+    @Test
+    fun theDashboardTotalAgreesWithItsCategoriesAndABudgetCanChange() {
+        click("demo-entry")
+        click("menu-performance")
+        shown("S-436")
+        val total = FinanceRules.spending().sumOf { it.amount }
+        assert(total == 5_735_000L)
+        compose
+            .onNodeWithTag("finance-total")
+            .assertTextContains(persianNumber(total), substring = true)
+        click("finance-budgets")
+        shown("S-434")
+        click("budget-food")
+        shown("S-435")
+        compose.onNodeWithTag("budget-limit").performScrollTo().performTextReplacement("abc")
+        click("budget-save")
+        compose.onNodeWithText(PaymentRules.INVALID, substring = true).assertExists()
+        compose.onNodeWithTag("budget-limit").performTextReplacement("1000000")
+        compose.onNodeWithTag("budget-over").assertExists()
+        click("budget-save")
+        shown("S-434")
+        assert(MockBank.budget("food") == 1_000_000L)
+    }
+
+    @Test
+    fun aPaidBillAppearsInItsCategory() {
+        MockBank.clock = { "۱۴۰۵/۰۸/۱۴ - ۱۰:۰۰" }
+        val before = FinanceRules.spending().first { it.category == "bills" }.amount
+        MockBank.bill("account-1", "9000000000001", "1250001")
+        val after = FinanceRules.spending().first { it.category == "bills" }.amount
+        assert(after == before + 1_250_000L)
+    }
 }

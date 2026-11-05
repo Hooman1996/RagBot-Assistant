@@ -10,7 +10,10 @@
     "groupFiles",
     "groupHistory",
     "standingOrders",
-    "repetitive"
+    "repetitive",
+    "categories",
+    "spending",
+    "budgets"
   ],
   "properties": {
     "unit": {
@@ -326,6 +329,41 @@
             "type": "string"
           }
         }
+      }
+    },
+    "categories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "spending": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "category",
+          "title",
+          "amount"
+        ],
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "budgets": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer"
       }
     }
   }
