@@ -16,10 +16,12 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import java.text.ParsePosition
 
+private const val HISTORY_PAGE = 10
+
 @Composable
 internal fun HistoryScreen(onTransaction: (String) -> Unit) {
     var query by rememberSaveable { mutableStateOf("") }
-    var shown by rememberSaveable { mutableIntStateOf(1) }
+    var shown by rememberSaveable { mutableIntStateOf(HISTORY_PAGE) }
     val rows = HomeFixture.transactions.filter { historyMatches(it, query) }
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(16.dp)) {
@@ -27,7 +29,7 @@ internal fun HistoryScreen(onTransaction: (String) -> Unit) {
                 query,
                 {
                     query = it
-                    shown = 1
+                    shown = HISTORY_PAGE
                 },
                 Modifier.weight(1f).testTag("history-search"),
                 label = { Text("جستجوی مبلغ یا نام مقصد") },
@@ -61,7 +63,7 @@ internal fun HistoryScreen(onTransaction: (String) -> Unit) {
                 }
             }
             if (shown < rows.size)
-                TextButton({ shown += 1 }, Modifier.testTag("history-more")) { Text("نمایش بیشتر") }
+                TextButton({ shown += HISTORY_PAGE }, Modifier.testTag("history-more")) { Text("نمایش بیشتر") }
         }
     }
 }

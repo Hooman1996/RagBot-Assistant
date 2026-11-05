@@ -157,7 +157,7 @@ internal object MockBank {
         rows: List<Pair<String, String>>,
     ): BankResult {
         val time = clock()
-        val trace = "MOCK-%06d".format(state.trace + 1)
+        val trace = "MOCK-%06d".format(Locale.US, state.trace + 1)
         val done = Receipt(trace, title, amount, source, destination, time, rows)
         val entry = PreviewTransaction(trace, title, amount, "IRR", time, source, destination)
         session = state.copy(added = listOf(entry) + state.added, trace = state.trace + 1)
