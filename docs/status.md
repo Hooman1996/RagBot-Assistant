@@ -6,7 +6,7 @@ Last updated: 6 November 2026. This page is updated whenever a task changes stat
 
 **D-022 (5 Nov 2026):** the replica was completed before the bridge. See the
 [decision](decisions/0022-complete-replica-with-mock-data.md). The owner approved it on 6 Nov 2026,
-and #93 and #94 are in progress on `sub/bridge-graph`. See [the bridge](bridge/README.md).
+#93 is merged into `sub/bridge-graph`, and #94 is in review. See [the bridge](bridge/README.md).
 
 ## Status key
 
@@ -46,6 +46,8 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #94 S3-03 Dev command loop and interactive graph view | In review | FastAPI command loop on `127.0.0.1:8100`, one test-harness path and the graph page at `/graph`. [Try it](bridge/try-it.md). The contract change waits for the owner's review |
+| #93 S3-02 Replica bridge: in-app executor | Done on `sub/bridge-graph` | Executor for the five operations through the screens' own handlers; 77 features; policy tests prove rule 4. [Docs](bridge/README.md) |
 | #92 S3-01 Core-journey graph and replica profile | Done | Owner traces recorded in the [graph validation sheet](reports/graph-validation.md); every matching trace is a real Home route. Runs through `sub/bridge-graph` to `main`. |
 | #96 S1-FIX Flaky schedule test and card secrets | Done | The schedule test's touch could miss while the page kept its keyboard height (a test bug); it now uses the click action. S-119/S-120 no longer save CVV2 or the second password. 100 JVM / 124 device tests in three full runs in a row (0 skipped); lint 0 errors / 117 warnings. One earlier full run crashed in the system graphics library and did not recur on a fresh emulator; cause unproved. |
 | #91 S1-CHECK Stage 1 recheck and bridge readiness | Done | Verdict: ready with gaps. 189 registered IDs valid; 106 screens reachable from Home, 83 demo-only. Records drift fixed; no app code changed. [Report](reports/stage1-readiness.md). |

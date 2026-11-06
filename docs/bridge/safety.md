@@ -17,6 +17,10 @@ A command has to pass all of these to touch a control.
 
 `show_review` is safe because it stops: on a page in `Reviews.pages` it taps nothing.
 
+The backend adds its own limits. `assistant/command_queue.py` builds only `navigate` commands. The
+harness takes a device and a destination, and refuses any other field. The graph page can only call
+the harness. `test_no_route_can_confirm_submit_or_pay` pins the full list of backend routes.
+
 ## What the tests prove
 
 All of these are JVM tests in `android/app/src/test/java/org/ragbot/replica/bridge/PolicyTest.kt`,

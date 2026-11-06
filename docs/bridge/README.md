@@ -29,6 +29,8 @@ flowchart LR
 The app always starts the conversation. It polls the backend, so the backend never needs to reach
 into the device. The parts marked "later" are not built yet.
 
+To see it work, follow [try it](try-it.md).
+
 ## Read the code in this order
 
 All Kotlin files are in `android/app/src/main/java/org/ragbot/replica/bridge/`.
@@ -51,6 +53,20 @@ All Kotlin files are in `android/app/src/main/java/org/ragbot/replica/bridge/`.
 | `BridgeConfig.kt` | The debug setting and the device ID |
 | `BridgeState.kt` | The current page, as `ReplicaApp` publishes it |
 
+The Python files are in `assistant/`.
+
+| File | What it does |
+|---|---|
+| `__main__.py` | Starts the server on `127.0.0.1:8100` |
+| `app.py` | Puts the routes together |
+| `command_queue.py` | One outstanding command per device: delivery, repeats, expiry, stale commands |
+| `contract_check.py` | Checks what the app posts against `contracts/schemas/` |
+| `mobile_api.py` | The two calls the app makes: resume and post a result |
+| `test_harness_api.py` | The development call that queues a `navigate` |
+| `graph_data.py` | Reads `app_profiles/` and places every node |
+| `graph_page.py` | Serves the page, its data and the live state |
+| `static/graph.html` | The page: plain SVG and JavaScript |
+
 The tests show each rule at work:
 
 | Test | Where | Proves |
@@ -61,9 +77,13 @@ The tests show each rule at work:
 | `BridgeJourneysTest` | `android/app/src/androidTest/.../bridge/` | The demo walk's journeys, on the device |
 | `BridgeServicesTest` | same | One journey per service group, on the device |
 | `BridgeReachTest` | same | Every screen is reached, or stops for a stated reason |
+| `test_command_queue.py` | `tests/backend/` | Delivery, repeats, expiry and stale commands |
+| `test_api.py` | `tests/backend/` | The routes, the harness and the graph data |
+| `tools/bridge_e2e.py` | run by hand | A click moves the real replica on the emulator |
 
 ## More pages
 
 - [One command, end to end](command-lifecycle.md)
 - [How rule 4 is enforced](safety.md)
 - [What changes for production](production.md)
+- [Try it](try-it.md)
