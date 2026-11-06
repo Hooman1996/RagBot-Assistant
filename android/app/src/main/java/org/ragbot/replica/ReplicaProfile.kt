@@ -38,6 +38,8 @@ internal object ReplicaProfile {
             text("card-transfer-destination"),
             money("card-transfer-amount"),
         )
+    private val cardTransferPicked =
+        listOf(ref("card-transfer-source")) + cardTransfer.drop(1)
     private val accountTransfer =
         listOf(
             ref("account-transfer-source"),
@@ -102,11 +104,14 @@ internal object ReplicaProfile {
             text("field-address"),
         )
 
+    /** A commitment in the user's own name: accepting terms, a note or a signature. */
+    private val consentFields = setOf("agree", "note", "sign")
+
     val forms =
         listOf(
             ProfileForm("S-027", listOf(text("login-username"), secret("login-password"))),
             ProfileForm("S-435", listOf(money("budget-limit"))),
-            ProfileForm("S-174", cardTransfer),
+            ProfileForm("S-174", cardTransferPicked),
             ProfileForm("S-175", cardTransfer),
             ProfileForm(
                 "S-176",
@@ -274,7 +279,9 @@ internal object ReplicaProfile {
                         steps
                             .flatMap { it.fields }
                             .distinct()
-                            .map { FormField("svc-${it.key}", it.type) },
+                            .map {
+                                FormField("svc-${it.key}", it.type, it.key in consentFields)
+                            },
                     )
                 }
 
@@ -290,6 +297,33 @@ internal object ReplicaProfile {
     private val accounts = listOf("accounts")
     private val cards = listOf("cards")
     private val wallets = listOf("wallets")
+    private val cheques = listOf("cheques")
+    private val vehicles = listOf("vehicles")
+
+    /** What each D-022 service does, and the data it looks up. */
+    private val serviceFeatures =
+        mapOf(
+            "sayad-register" to ("Prepare a Sayad cheque registration up to its review." to accounts),
+            "sayad-answer" to ("Prepare the answer to a received Sayad cheque." to cheques),
+            "sayad-transfer" to ("Prepare a Sayad cheque transfer up to its review." to cheques),
+            "sayad-inquiry" to ("Check a Sayad cheque by its ID." to cheques),
+            "sayad-history" to ("Show the Sayad cheque history." to cheques),
+            "violations" to ("Prepare a driving violations inquiry." to vehicles),
+            "transfer-tax" to ("Prepare a vehicle transfer tax inquiry." to vehicles),
+            "documents" to ("Prepare a vehicle documents inquiry." to vehicles),
+            "active-plates" to ("Prepare an active plates inquiry." to vehicles),
+            "licence" to ("Prepare a driving licence status inquiry." to vehicles),
+            "negative-points" to ("Prepare a negative points inquiry." to vehicles),
+            "credit-report" to ("Prepare a paid credit report up to its fee." to accounts),
+            "bounced-cheques" to ("Prepare a paid bounced-cheque inquiry." to accounts),
+            "credit-rate" to ("Prepare a paid credit rating inquiry." to accounts),
+            "loan-request" to ("Prepare a loan request; consent steps stay with the user." to accounts),
+            "account-opening" to ("Prepare an account opening; consent stays with the user." to accounts),
+            "wage-advance" to ("Prepare a wage advance; consent stays with the user." to accounts),
+            "credit-product" to ("Prepare the credit product; consent stays with the user." to accounts),
+            "rewards-history" to ("Show the reward points history." to emptyList()),
+            "rewards-transfer" to ("Prepare a reward points transfer." to emptyList()),
+        )
 
     /** One per built journey. Independent receipts are never a destination. */
     val features =
@@ -297,8 +331,8 @@ internal object ReplicaProfile {
             feature(
                 "card_transfer",
                 "Prepare a card-to-card transfer up to its review.",
-                "S-175",
-                "S-175",
+                "S-174",
+                "S-174",
                 listOf("card-transfer-source", "card-transfer-destination", "card-transfer-amount"),
                 cards,
             ),
@@ -600,7 +634,29 @@ internal object ReplicaProfile {
                 "S-257",
                 "S-257",
             ),
-        )
+            feature("service_inquiries", "Show the paid inquiries menu.", "S-443", null),
+            feature("finance_dashboard", "Show spending and budgets.", "S-436", null),
+            feature(
+                "budget_limit",
+                "Set a category's monthly budget limit.",
+                "S-435",
+                "S-435",
+                listOf("budget-limit"),
+            ),
+            feature("rewards", "Show the rewards menu.", "S-432", null),
+        ) +
+            serviceFeatures.map { (key, info) ->
+                val first = ServiceCatalog.flow(key).steps.first()
+                val (description, lookups) = info
+                feature(
+                    key.replace('-', '_'),
+                    description,
+                    first.page,
+                    first.page.takeIf { first.fields.isNotEmpty() },
+                    first.fields.map { "svc-${it.key}" },
+                    lookups,
+                )
+            }
 
     /** Every confirm, submit, pay, PIN, OTP and password control. No exported edge uses these. */
     val userOnlyActions =
@@ -612,6 +668,7 @@ internal object ReplicaProfile {
             "apply-accounts",
             "bill-accept",
             "block-ok",
+            "budget-save",
             "card-transfer-otp",
             "card-transfer-submit",
             "card-visible",
@@ -621,6 +678,7 @@ internal object ReplicaProfile {
             "delete-ok",
             "digital-activate",
             "digital-confirm",
+            "digital-confirm-*",
             "digital-deactivate",
             "digital-update",
             "edit-ok",
@@ -649,7 +707,10 @@ internal object ReplicaProfile {
             "login-password",
             "login-submit",
             "statement-request",
+            "svc-agree-*",
             "svc-confirm",
+            "svc-note-*",
+            "svc-sign-*",
             "suggestion-submit",
             "support-identity-continue",
             "support-mobile",

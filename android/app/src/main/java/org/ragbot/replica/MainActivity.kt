@@ -40,6 +40,10 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
+import java.lang.ref.WeakReference
+import org.ragbot.replica.bridge.BridgeConfig
+import org.ragbot.replica.bridge.BridgeState
+import org.ragbot.replica.bridge.CommandPoller
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +53,8 @@ class MainActivity : ComponentActivity() {
         val error =
             if (savedInstanceState == null || !MockData.loaded) MockData.load(this) else null
         if (savedInstanceState == null) MockBank.reset()
+        BridgeState.activity = WeakReference(this)
+        if (BridgeConfig.enabled(this)) CommandPoller.start()
         // No incoming Intent data, extras, nested intents or deep links are interpreted.
         setContent {
             if (error != null)
@@ -373,6 +379,8 @@ fun ReplicaApp() {
     val activity = checkNotNull(LocalActivity.current)
     val homeVisible = entered && page == HomeDestinations.HOME
     SideEffect {
+        BridgeState.screen = if (entered) page else HomeDestinations.FRONT
+        BridgeState.homeTab = tab.name
         val bars = WindowCompat.getInsetsController(activity.window, activity.window.decorView)
         bars.isAppearanceLightStatusBars = !homeVisible
         bars.isAppearanceLightNavigationBars = !homeVisible

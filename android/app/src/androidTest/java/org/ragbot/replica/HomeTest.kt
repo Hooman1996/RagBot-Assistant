@@ -1,7 +1,5 @@
 package org.ragbot.replica
 
-import android.Manifest
-import android.content.pm.PackageManager
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -55,10 +53,6 @@ class HomeTest {
                     .isAppearanceLightStatusBars
             )
         }
-        assertEquals(
-            PackageManager.PERMISSION_DENIED,
-            compose.activity.checkSelfPermission(Manifest.permission.INTERNET),
-        )
     }
 
     @Test

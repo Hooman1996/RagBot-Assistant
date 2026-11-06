@@ -99,6 +99,14 @@ class ReplicaProfileTest {
     }
 
     @Test
+    fun everyServiceHasAFeature() {
+        val intents = ReplicaProfile.features.map { it.intent }
+        ServiceCatalog.flows
+            .filterNot { it.key.endsWith("-detail") }
+            .forEach { assertTrue(it.key, it.key.replace('-', '_') in intents) }
+    }
+
+    @Test
     fun noExportedEdgeUsesAUserOnlyAction() {
         exported.forEach { edge ->
             tags(edge.action).forEach { tag ->
