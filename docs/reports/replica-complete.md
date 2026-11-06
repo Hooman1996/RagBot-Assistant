@@ -63,15 +63,20 @@ The `adb push` override was checked by hand on the installed build. A bad `bills
 error page naming the file, and removing it restored the app. The process-kill check
 `android/tools/check_secret_state.py` passes.
 
+## Owner answers (6 Nov 2026)
+
+- **Opening page.** The app does not need to open on login, so it stays on the demo front page.
+  That page carries the public-build disclosure and the review entries. ورود با کاربر نمایشی
+  starts the login.
+- **S-118, S-122 and S-221.** The owner left these to the best fit with the hierarchy, and their
+  demo paths stay. S-118 and S-122 are the block without login, so a route from Home does not fit,
+  and the owner's picker is S-121. S-221 is the in-flow page, and Home opens the standalone S-222.
+  See notes 8 and 9 of the sheet.
+- **S-089.** The owner accepted the later answer. The demo path stays, and the سوابق tile opens
+  S-091 as a designed route.
+
 ## Left open
 
-- **The app opens on the demo front page, not login.** That page carries the public-build
-  disclosure and the review entries. ورود با کاربر نمایشی starts the login. The owner may want
-  login first.
-- **Three traces kept their demo paths.** S-118 and S-122 are typed-card forms, but the owner's
-  picker is S-121. S-221 is the same page as S-222. See notes 8 and 9 of the sheet.
-- **S-089 has two owner answers.** A first trace through سوابق, then not found. The later answer
-  stands, and the سوابق tile opens S-091 as a designed route.
 - **The profile's feature list is unchanged, at 53.** The new services have forms, edges and
   user-only actions in the profile, but no assistant intents yet. That belongs with #93.
 - **The native crash is not explained.** One device run stopped in `libhwui` on the render thread,

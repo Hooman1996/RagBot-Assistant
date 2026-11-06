@@ -43,7 +43,7 @@ screen shows.
    labels, and the transfer menu uses the four real labels.
 2. **S-089.** The owner first traced Home → سوابق → سوابق انتقال وجه گروهی, then marked S-089 not
    found in the final list. The later answer stands, so the demo path stays. Home → سوابق opens
-   S-091 directly, a Designed-for-mock route. This is one to confirm with the owner.
+   S-091 directly, a Designed-for-mock route. The owner confirmed this on 6 Nov 2026.
 3. **S-211.** Final answer: S-211 is the mobile charge purchase, Home → شارژ. The first trace
    (Home → افزایش موجودی) was the balance top-up, so it belongs to S-221 and S-222.
 4. **S-086.** Final answer: Home → صورتحساب opens the transaction list S-016. The request form S-086
@@ -56,9 +56,11 @@ screen shows.
    confirms a transaction. They are results of the user-only confirm, not navigation targets.
 8. **S-118 and S-122.** The owner's card picker is the replica's S-121, which already shows that
    prompt. S-118 and S-122 are forms with a typed card number, so the trace does not land on them
-   and their demo paths stay.
-9. **S-221.** Home → افزایش موجودی opens S-222. One control cannot open two screen IDs, and the two
-   pages are the same form, so the S-221 demo path stays.
+   and their demo paths stay. They are the block without login, so a route from Home would not fit
+   either. The owner left this to the best fit on 6 Nov 2026.
+9. **S-221.** Home → افزایش موجودی opens S-222, the standalone page. S-221 is the in-flow form, and
+   one control cannot open two screen IDs, so the S-221 demo path stays. The owner left this to the
+   best fit on 6 Nov 2026.
 10. **S-091.** The owner's page of six سوابق entries is the replica's S-110. Its labels now match,
     and each entry opens S-091.
 11. **S-275 and S-250.** The owner found one entry, عوارض آزادراهی خودرو و موتور, for both. It opens
