@@ -160,6 +160,8 @@ internal object ReplicaGraph {
     private val home =
         listOf(
             Edge(HOME, HomeDestinations.MENU, "home-scroll", EdgeKind.STEP),
+            Edge(HomeDestinations.FRONT, HOME, "demo-entry", EdgeKind.DEMO),
+            Edge(HOME, HomeDestinations.FRONT, "back", EdgeKind.STEP),
             Edge(HOME, WalletOverviewDestinations.MAIN, "menu-wallet"),
             Edge(HOME, SupportDestinations.FAQ, "header-SUPPORT"),
             Edge(HOME, ChequeDestinations.MENU, "menu-cheque"),
@@ -619,17 +621,32 @@ internal object ReplicaGraph {
                 menu.second.map { (key, _, to) -> Edge(page, to, "svc-menu-$key") }
             }
 
+    /**
+     * Pairs of pages joined by several entries that mean different things, such as the paper and
+     * digital chequebook. A destination cannot say which, so each pair is one row-choice edge.
+     */
+    private val choices =
+        mapOf(
+            ("S-026" to "S-127") to "control-CARD > card-kind-DEBIT > card-action-*",
+            ("S-147" to "S-143") to "cheque-menu-*",
+            ("S-147" to "S-148") to "cheque-menu-*",
+            ("S-253" to "S-246") to "vehicle-menu-*",
+            ("S-443" to "S-442") to "svc-menu-*",
+        )
+
     val edges =
-        home +
-            accountsAndCards +
-            transfers +
-            payments +
-            wallet +
-            cheques +
-            vehicles +
-            support +
-            receipts +
-            services
+        (home +
+                accountsAndCards +
+                transfers +
+                payments +
+                wallet +
+                cheques +
+                vehicles +
+                support +
+                receipts +
+                services)
+            .map { edge -> choices[edge.from to edge.to]?.let { edge.copy(action = it) } ?: edge }
+            .distinct()
 
     private val moves = edges.map { it.from to it.to }.toSet()
 

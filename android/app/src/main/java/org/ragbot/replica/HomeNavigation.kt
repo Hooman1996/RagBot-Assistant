@@ -4,8 +4,10 @@ package org.ragbot.replica
 object HomeDestinations {
     const val HOME = "S-026"
     const val MENU = "F-066"
+    /** The demo front page before Home. It has no recovered node, so it is a designed one. */
+    const val FRONT = "D-000"
     val implemented =
-        setOf(HOME, MENU) +
+        setOf(HOME, MENU, FRONT) +
             AccountDestinations.implemented +
             CardDestinations.implemented +
             CardRequestDestinations.implemented +

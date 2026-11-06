@@ -3873,6 +3873,14 @@
       "note": "Compose screen; destination recovered from its route and content."
     },
     {
+      "id": "D-000",
+      "name": "Demo: front page",
+      "area": "F-000",
+      "label": "Designed for mock",
+      "dynamic": false,
+      "note": "The replica's page before Home, with the public-build notice; no recovered node."
+    },
+    {
       "id": "D-001",
       "name": "Support: menu",
       "area": "F-026",
