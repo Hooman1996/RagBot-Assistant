@@ -7,8 +7,7 @@ package org.ragbot.replica.bridge
  */
 
 /** The only operations the executor accepts. None of them submits or authorizes. */
-internal val SUPPORTED_OPERATIONS =
-    listOf("observe", "navigate", "fill_form", "select_candidate", "show_review")
+internal val SUPPORTED_OPERATIONS = listOf("observe", "navigate", "fill_form", "show_review")
 
 /** A value in fill_form: plain text, or a whole number of rials. */
 internal sealed interface FieldValue {
@@ -33,7 +32,7 @@ internal data class Command(
     val destination: String? = null,
     val form: String? = null,
     val values: Map<String, FieldValue> = emptyMap(),
-    val ref: String? = null,
+    val arguments: Map<String, String> = emptyMap(),
 )
 
 internal data class ObservedField(val ref: String, val value: String)

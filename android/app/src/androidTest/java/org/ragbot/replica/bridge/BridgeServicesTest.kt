@@ -43,16 +43,22 @@ class BridgeServicesTest {
 
     @Test
     fun charity() {
-        rig.navigate("S-284")
-        rig.choose("1", "S-284")
+        rig.reach("S-284", "charity" to "1")
         rig.fill("S-284", "charity-amount" to rials(100_000), "charity-source" to text("account-1"))
         rig.expect(rig.review(), "S-282")
     }
 
+    /** A row key on a step the user's confirm would follow still stops before the user's step. */
+    @Test
+    fun loanRepaymentChoosesItsRowAndSourceAndStopsAtTheReview() {
+        rig.reach("S-306", "loan" to "loan-personal")
+        rig.fill("S-306", "loan-installment" to text("1"))
+        rig.reach("S-331", "loan-source" to "account-1")
+    }
+
     @Test
     fun loanRepaymentChoosesItsLoanRow() {
-        rig.navigate("S-306")
-        rig.choose("loan-personal", "S-306")
+        rig.reach("S-306", "loan" to "loan-personal")
     }
 
     @Test
@@ -77,8 +83,8 @@ class BridgeServicesTest {
 
     @Test
     fun chequebookChoosesPaperOrDigital() {
-        rig.navigate("S-143")
-        rig.choose("AUTHENTICATED_HOME_CHEQUE_FACILITIES_ISSUANCE_PAPER_CHECKBOOK", "S-143")
+        val paper = "AUTHENTICATED_HOME_CHEQUE_FACILITIES_ISSUANCE_PAPER_CHECKBOOK"
+        rig.reach("S-143", "cheque-kind" to paper)
         rig.fill("S-143", "cheque-account" to text("account-1"))
     }
 
@@ -100,8 +106,7 @@ class BridgeServicesTest {
 
     @Test
     fun paidCreditInquiryChoosesItsMenuEntry() {
-        rig.navigate("S-442")
-        rig.choose("bounced-cheques", "S-442")
+        rig.reach("S-442", "inquiry-kind" to "bounced-cheques")
         rig.fill("S-442", "svc-source" to text("account-1"))
         rig.expect(rig.review(), "S-442")
     }

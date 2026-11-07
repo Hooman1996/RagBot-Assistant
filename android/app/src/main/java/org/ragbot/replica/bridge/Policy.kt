@@ -21,7 +21,7 @@ internal object Policy {
 
     private val forms = ReplicaProfile.forms.associateBy { it.id }
 
-    /** A candidate or choice key: plain characters, so it cannot name another step or tag. */
+    /** A row or choice key: plain characters, so it cannot name another step or tag. */
     private val safeKey = Regex("[\\p{L}\\p{N}_-]+")
 
     /** True when [tag] fits [pattern], where * stands for a row key. */

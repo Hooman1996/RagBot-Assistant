@@ -1,0 +1,75 @@
+package org.ragbot.replica
+
+/*
+ * Every control only the user may touch.
+ * Read by the profile export and by the bridge's Policy, which refuses each one on every screen.
+ * Patterns may hold *, which stands for a row key. Nothing may ever be removed from this list to
+ * make a journey work: a journey stops here, and the user acts.
+ */
+internal object ProfileUserOnly {
+    /** Every confirm, submit, pay, PIN, OTP and password control. No exported edge uses these. */
+    val actions =
+        listOf(
+            "account-transfer-submit",
+            "activation-send",
+            "additional-ok",
+            "address-save",
+            "apply-accounts",
+            "bill-accept",
+            "block-ok",
+            "budget-save",
+            "card-transfer-otp",
+            "card-transfer-submit",
+            "card-visible",
+            "cardboard-act",
+            "cardboard-reject",
+            "continuous-confirm",
+            "delete-ok",
+            "digital-activate",
+            "digital-confirm",
+            "digital-confirm-*",
+            "digital-deactivate",
+            "digital-update",
+            "edit-ok",
+            "facility-ok",
+            "facility-password",
+            "faq-support",
+            "fetch-ok",
+            "funding-confirm",
+            "funding-fetch",
+            "funding-outcome-*",
+            "group-verify-accept",
+            "noLogin-ok",
+            "notification-delete-confirm",
+            "notify-off",
+            "otp-code",
+            "otp-ok",
+            "payment-card-otp",
+            "payment-submit",
+            "pin-confirm",
+            "pin-ok",
+            "repetitive-delete-confirm",
+            "request-submit",
+            "saved-delete-confirm",
+            "secret-*",
+            "secure-ok",
+            "login-password",
+            "login-submit",
+            "statement-request",
+            "svc-agree-*",
+            "svc-confirm",
+            "svc-note-*",
+            "svc-sign-*",
+            "suggestion-submit",
+            "support-identity-continue",
+            "support-mobile",
+            "support-otp",
+            "support-otp-continue",
+            "support-send",
+            "toll-fee-*",
+            "topup-accept",
+            "vehicle-delete-confirm",
+            "wallet-op-submit",
+            "wallet-submit",
+        )
+}

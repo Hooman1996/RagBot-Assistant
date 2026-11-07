@@ -1,65 +1,115 @@
-# One command, end to end
+# One task, end to end
 
-This page follows "card to card to رضا, 250000 IRR". The JSON below was captured from a real run
-of `BridgeJourneysTest.cardToCardToReza`, shortened where marked.
+This page follows "card to card to رضا, 250000 IRR". The plan, commands and observations below come
+from a real run on the emulator, shortened where marked.
 
-The task takes three commands: `navigate`, `fill_form` and `show_review`. It then stops. The user
-reads the review page, enters the card secrets and taps confirm.
+First the backend plans and asks. Only then does anything move. The task takes three commands,
+`navigate`, `fill_form` and `show_review`, and then it stops. The user reads the review page, enters
+the card secrets and taps confirm.
 
 ```mermaid
 sequenceDiagram
-    participant B as Backend
+    participant U as User
+    participant R as Task runner
+    participant N as Navigator
+    participant K as Lookups
     participant P as CommandPoller
     participant E as Executor
-    participant S as Screens
-    participant U as User
-    P->>B: resume, with an observation
-    B-->>P: command: navigate to S-174
+    R->>N: from D-000 to S-174
+    N-->>R: the route and three requirements
+    R->>U: the three questions, at once
+    U-->>R: card-1, رضا, 250000
+    R->>K: رضا as a card
+    K-->>R: 0000000000000091
+    P->>R: resume, with an observation
+    R-->>P: command: navigate to S-174
     P->>E: execute
-    E->>S: tap demo-entry, then menu-card-transfer
-    E-->>P: result: succeeded, screen S-174
-    P->>B: post the result
-    B-->>P: command: fill_form on S-174
+    E-->>R: result: succeeded, screen S-174
+    R-->>P: command: fill_form on S-174
     P->>E: execute
-    E->>S: pick the card, type the number and amount
-    E-->>P: result: succeeded, draft version 1
-    P->>B: post the result
-    B-->>P: command: show_review
+    E-->>R: result: succeeded, values shown
+    R-->>P: command: show_review
     P->>E: execute
-    E->>S: tap card-transfer-review
-    E-->>P: result: succeeded, screen S-176
-    P->>B: post the result
-    U->>S: enters secrets and taps confirm
+    E-->>R: result: succeeded, screen S-176
+    U->>E: enters secrets and taps confirm, by hand
 ```
 
-## Step 1: navigate
+## Step 1: the navigator's plan
 
-The backend sends the screen ID and the observation version it last saw.
+`Navigator.plan_feature` runs a plain breadth-first search over the profile's edges, from the
+replica's screen to the feature's target. Then it collects what the route needs: each screen's
+required fields, and each edge's selections. Secret fields are never listed. This route has no
+selection, and `S-174` has three required fields.
+
+```json
+{
+  "target": "S-174",
+  "route": [
+    { "from": "D-000", "to": "S-026", "action": "demo-entry" },
+    { "from": "S-026", "to": "S-174", "action": "menu-card-transfer" }
+  ],
+  "requirements": [
+    {
+      "screen": "S-174", "ref": "card-transfer-source", "kind": "field", "type": "ref",
+      "ask": "از کدام کارت انتقال انجام شود؟", "description": "کارت مبدا", "lookup": "cards"
+    },
+    {
+      "screen": "S-174", "ref": "card-transfer-destination", "kind": "field", "type": "ref",
+      "ask": "به چه کسی یا کدام کارت منتقل شود؟", "description": "کارت مقصد", "lookup": "contacts.card"
+    },
+    {
+      "screen": "S-174", "ref": "card-transfer-amount", "kind": "field", "type": "money",
+      "ask": "چند ریال منتقل شود؟", "description": "مبلغ انتقال", "lookup": null
+    }
+  ]
+}
+```
+
+A destination behind a row, such as `S-284`, would also list a selection: `charity`, with its own
+question, kind `selection` and lookup `charities`.
+
+## Step 2: the questions and the lookups
+
+The user gets all three questions together. The graph page shows them with their inputs, and the
+assistant will ask them in one message later. `TaskRunner.prepared` then turns the answers into what
+the app takes, before the app moves:
+
+- `card-1` is the key of a card in the `cards` lookup.
+- `رضا` goes through `contacts.card`, and becomes `0000000000000091`.
+- `250000` becomes `{ "value": 250000, "unit": "IRR" }`.
+
+If a value is missing, a contact is unknown, two contacts match, or an amount is not a whole number,
+the run stops here with a reason, and the app has not moved.
+
+## Step 3: navigate
+
+The runner sends the screen and the observation version it last saw. Any selections would travel in
+an `arguments` object next to `destination`. This command has none.
 
 ```json
 {
   "protocol_version": 1,
   "profile_version": 1,
-  "task_id": "task-1",
+  "task_id": "graph-…",
   "task_revision": 1,
-  "command_id": "cmd-1",
+  "command_id": "…",
   "device_id": "replica-dev",
   "session_id": "replica-dev",
   "operation": "navigate",
   "arguments": { "destination": "S-174" },
   "expected_observation_version": 1,
-  "expires_at": "2100-01-01T00:00:00Z"
+  "expires_at": "2026-11-07T12:00:30Z"
 }
 ```
 
-The executor first checks the command (see [Every way it can stop](#every-way-it-can-stop)). Then
-`Navigator` finds a route over the profile's edges. The app is on its demo front page, `D-000`, so
-the route has two edges. For each edge it taps the listed tags through their own click handlers,
-then waits for the new screen.
+The executor first checks the command (see [Every way it can stop](#every-way-it-can-stop)). How the
+app reaches the screen is its own business. The replica walks the declared edges, tapping each tag
+through its own click handler and waiting for the new screen. The runner checks that
+`observation.screen` is `S-174`.
 
 ```json
 {
-  "command_id": "cmd-1",
+  "command_id": "…",
   "outcome": "succeeded",
   "postcondition": "screen_is_S-174",
   "observation": {
@@ -75,7 +125,7 @@ then waits for the new screen.
       { "ref": "card-transfer-amount", "value": "" }
     ],
     "draft": null,
-    "supported_operations": ["observe", "navigate", "fill_form", "select_candidate", "show_review"]
+    "supported_operations": ["observe", "navigate", "fill_form", "show_review"]
   },
   "draft_version": 0,
   "trace": [
@@ -85,10 +135,9 @@ then waits for the new screen.
 }
 ```
 
-## Step 2: fill_form
+## Step 4: fill_form
 
-Later, a lookup tool will turn "رضا" into a card number. For now the command carries it directly.
-Money is a whole number with its unit.
+One generic command fills every form, driven by field tags. Money is a whole number with its unit.
 
 ```json
 {
@@ -113,11 +162,12 @@ Money is a whole number with its unit.
   the value back.
 
 This is the same state a user types into, so the form's own rules apply. The result reports a new
-draft, and card numbers come back masked.
+draft, and card numbers come back masked. The runner compares each field with what it sent, and
+stops if one disagrees: a masked number by its last four digits, and an amount by its digits.
 
 ```json
 {
-  "command_id": "cmd-2",
+  "command_id": "…",
   "outcome": "succeeded",
   "postcondition": "form_filled_S-174",
   "observation": {
@@ -136,7 +186,7 @@ draft, and card numbers come back masked.
 
 (The observation is shortened here.)
 
-## Step 3: show_review
+## Step 5: show_review
 
 ```json
 {
@@ -152,7 +202,7 @@ opens the review. On that page the executor stops, and no command can go further
 
 ```json
 {
-  "command_id": "cmd-3",
+  "command_id": "…",
   "outcome": "succeeded",
   "postcondition": "review_shown_S-176",
   "observation": {
@@ -166,7 +216,8 @@ opens the review. On that page the executor stops, and no command can go further
 ```
 
 `review_version` now equals `draft_version`: the review shows exactly the draft that was filled.
-The CVV2, expiry and password fields on this page never appear in an observation.
+The CVV2, expiry and password fields on this page never appear in an observation. This is the one
+moment the user verifies, and only the user confirms.
 
 ## Every way it can stop
 
@@ -178,9 +229,9 @@ The CVV2, expiry and password fields on this page never appear in an observation
 | `rejected_stale` | `stale_draft` | The draft changed, for example the user edited a field |
 | `rejected_expired` | `expired` | `expires_at` has passed |
 | `rejected_policy` | `wrong_device`, `wrong_protocol`, `wrong_profile` | The command is not for this app |
-| `rejected_policy` | `unknown_operation`, `unknown_screen` | Not one of the five operations, or not a profile screen |
+| `rejected_policy` | `unknown_operation`, `unknown_screen` | Not one of the four operations, or not a profile screen |
 | `rejected_policy` | `field_not_fillable` | A secret, consent or unknown field |
-| `rejected_policy` | `invalid_candidate` | The ref is not one plain word |
+| `rejected_policy` | `unknown_argument`, `invalid_argument` | An argument no edge declares, or a key that is not one plain word |
 
 A repeated `command_id` runs nothing. The journal returns the first result.
 
@@ -189,16 +240,15 @@ A repeated `command_id` runs nothing. The journal returns the first result.
 | `needs` | Meaning |
 |---|---|
 | `no_executor_route` | Only a user step reaches this screen, such as a receipt. Nothing was tapped |
-| `select_candidate` | The next step opens a row. Send `select_candidate` with the row's key |
-| `candidate_not_shown` | No row has that key |
-| Field refs, such as `bill-id` | The form's own validation refused. These fields show an error |
+| `missing_argument` | The next step opens a row, and `navigate` has no key for it. The navigator would have listed it |
+| Field refs, such as `bill-id` | The form's own validation refused. These fields show an error. The observation schema has no error field, so the result reports them beside the fresh observation |
 | `valid_form` | The page stayed where it was, but no field shows an error |
 | `control_disabled:<tag>` | The control is disabled, so it was not fired. Something on the page must be chosen first |
 | `control_not_shown:<tag>` | The control is not on the page |
-| `form_chose_another_page` | The form's values led to a different page than the route expected |
+| `unexpected_screen` | The app landed on a page with no way on, such as a form that chose another page |
 | `close_dialog` | A dialog is open, and the user must close it |
 | `navigate` | `fill_form` was sent for a form that is not on screen |
-| `no_review_here` | This screen has no review step |
+| `no_review_here` | This screen has no review step. The runner reports the task as arrived |
 
 **Failed or uncertain:**
 
@@ -209,5 +259,11 @@ A repeated `command_id` runs nothing. The journal returns the first result.
 | `failed` | `route_too_long` | More than 40 steps without arriving |
 | `failed` | `invalid_value`, `control_not_clickable` | A bad choice key, or a control with no click handler |
 | `uncertain` | `executor_error` | The app did not answer. Only a fresh observation can tell what happened |
+
+**Stopped by the task runner:** it stops with a plain reason, and shows the last observation, when a
+`navigate` does not arrive, a `fill_form` is refused, a page shows a different value from the one
+sent, or the review does not open. A `stale_observation` is the one thing it repeats, up to three
+times, because the contract says the command did not run. A `stale_draft` means the user changed
+something, so it stops.
 
 Commands follow `contracts/transitions/command.json`.

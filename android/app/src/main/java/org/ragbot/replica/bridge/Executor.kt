@@ -60,13 +60,19 @@ internal class Executor(
             "observe",
             "show_review" -> null
             "navigate" ->
-                if (command.destination in screens) null else "unknown_screen"
+                if (command.destination in screens) argumentProblem(command) else "unknown_screen"
             "fill_form" -> fillProblem(command)
-            "select_candidate" ->
-                if (Policy.isSafeKey(command.ref.orEmpty())) null else "invalid_candidate"
             else -> "unknown_operation"
         }
     }
+
+    /** Each argument must name a declared selection, and its key must be one plain word. */
+    private fun argumentProblem(command: Command): String? =
+        when {
+            !Routes.selections.containsAll(command.arguments.keys) -> "unknown_argument"
+            !command.arguments.values.all(Policy::isSafeKey) -> "invalid_argument"
+            else -> null
+        }
 
     /** Every field must belong to the form and be one the executor may fill. */
     private fun fillProblem(command: Command): String? {
@@ -79,8 +85,7 @@ internal class Executor(
     private fun run(command: Command): Ending =
         try {
             when (command.operation) {
-                "navigate" -> navigator.navigate(checkNotNull(command.destination))
-                "select_candidate" -> navigator.selectCandidate(checkNotNull(command.ref))
+                "navigate" -> navigator.navigate(checkNotNull(command.destination), command.arguments)
                 "fill_form" -> fill(command)
                 "show_review" -> review()
                 else -> succeeded("observed")
@@ -106,7 +111,6 @@ internal class Executor(
 
     /** Adds the fresh observation that every result must carry. */
     private fun report(command: Command, ending: Ending): CommandResult {
-        val moved = command.operation == "navigate" || command.operation == "select_candidate"
         val observation = observer.observe()
         return CommandResult(
             command.command_id,
@@ -116,7 +120,7 @@ internal class Executor(
             observer.draftVersion,
             ending.needs,
             ending.error_code,
-            if (moved) navigator.trace else emptyList(),
+            if (command.operation == "navigate") navigator.trace else emptyList(),
         )
     }
 

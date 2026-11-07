@@ -10,6 +10,11 @@
 > clickable graph (#94) start only after the owner approves the replica. Work is grouped into
 > parts, not one issue per FR. See `docs/decisions/0022-complete-replica-with-mock-data.md`.
 
+> **Revised by D-023 (owner, 7 Nov 2026).** Route finding and requirement checking live in a
+> deterministic navigator in the Python backend, and the bridge offers four operations only. The
+> profile carries each screen's requirements. Stages 3, 6b and 8 and the runtime loop below are
+> updated. See `docs/decisions/0023-python-navigator-thin-bridge.md`.
+
 **Approved by the owner, 29 Oct 2026.** This revises the order and scope set by decision
 **D-019** and is recorded as decision **D-020**. The master plan
 (`RagBot_Assistant_Final_Project_Plan_v2.md`) stays the reference for goals and gates; where
@@ -61,10 +66,12 @@ These feed the assistant in stage 6 but block nothing before it.
    enriched with each node and edge's prerequisites and stopping points, and validated against the
    real app. **Validation source: the owner checks the real app directly** (owner decision,
    29 Oct 2026). No observation pass is run from our environment.
-3. **Implement the replica's bridge and the interactive graph.** The in-app executor bound to the
-   replica maps semantic node/action IDs to the replica's navigation and form handlers. Alongside
-   it, the interactive graph view: click a node and the replica moves to that screen, side by side.
-   The real app gets its own bindings only at stage 8.
+3. **Implement the replica's bridge, the navigator and the interactive graph.** The bridge in the
+   replica offers four operations: `observe`, `navigate` with the arguments the screen needs,
+   `fill_form` and `show_review`. The Python navigator plans the route over the profile and collects
+   its requirements, and a scripted task runner carries the plan out. Alongside them, the interactive
+   graph view: click a node to see the route and its questions, fill them, and watch the replica go
+   to the review, side by side. The real app gets its own bridge only at stage 8.
 4. **Explore and choose features (P1b, on a live replica).** The owner navigates the replica and
    the interactive graph, with each feature annotated by its data dependencies and estimated effort
    (from the API-structure map: mock services, DB tables, draft/version flows, rated easy / medium /
@@ -81,49 +88,55 @@ These feed the assistant in stage 6 but block nothing before it.
    - **6a — scripted executor demo (P5).** Navigation, form filling and review work end-to-end from
      a fixed, non-LLM script, from several starting screens. Policy tests confirm no assistant
      operation reaches the user-only confirm handler.
-   - **6b — conversational assistant (P6).** The LLM for RAG answers and for constrained intent and
-     slot extraction, revalidated in deterministic code; a LangGraph workflow (clarify → resolve →
-     prepare → verify → ready-for-user); exact-integer money; the assistant panel; mixed
-     knowledge-plus-task requests.
+   - **6b — conversational assistant (P6).** The LLM for RAG answers and for constrained intent
+     selection: semantic search over the profile's features narrows them to the closest few, and the
+     model chooses among those in a fixed JSON shape (an intent, "knowledge question" or "not sure",
+     plus the slot values). Code checks every answer, and the model never sees the graph, the forms
+     or the user-only list. A LangGraph workflow (clarify → resolve → prepare → verify →
+     ready-for-user); exact-integer money; the assistant panel; mixed knowledge-plus-task requests.
    - **6c — the runtime loop** (below).
    - **6d — evaluation gates (P6).** A frozen Persian evaluation set (≥100 held-out cases); gates:
      zero critical wrong actions, ≥95% on the unambiguous set, ≥95% task preparation.
 7. **Demonstrate on the replica, hardened (P7).** Fault scenarios, restart and resume, a bounded
    latency baseline, three clean repeatable runs on the pinned emulator, an honest acceptance report
    and presentation that identifies any remaining reconstruction differences.
-8. **Integrate with the app team (P8) — after the demo, only if they accept.** The team validates
-   the transitions our static map could not, implements the real bridge bindings in their codebase,
-   and provides the real service contracts, real menu IDs and trusted user context. (Menu IDs alone
-   are not enough — prerequisites, arguments, behaviour and results all need verification.) The
-   accepted scenarios run on their staging build, with compatibility differences resolved before any
-   production claim.
+8. **Integrate with the app team (P8) — after the demo, only if they accept.** We keep the
+   assistant, the tools, the adapter, the command loop and the navigator. The team provides the four
+   bridge operations in their app, field tags on their forms, the real graph with each screen's
+   requirements, the real lookup APIs and trusted user context, and keeps confirm and every
+   money-moving service. (Menu IDs alone are not enough — prerequisites, arguments, behaviour and
+   results all need verification.) The accepted scenarios run on their staging build, with
+   compatibility differences resolved before any production claim.
 
 ## The runtime loop (what happens on every user request)
 
 Built in stage 6, shown in stage 7, reused unchanged by the app team in stage 8.
 
-9. **Receive request + current state.** The assistant API interprets the intent, maintains the
-   task, and determines the intended destination or operation.
-10. **Determine required information** from three sources together: the **feature contract** (which
-    fields and rules a feature needs, known in advance), the **live screen/form state** the app
-    reports, and the **services** (current cards, recipients, balances). The assistant asks the user
-    about anything missing or ambiguous.
-11. **Request navigation with context.** The backend sends a semantic destination ID plus validated
-    arguments; the deterministic navigator picks a valid route or traverses the intermediate steps.
-12. **Execute and report.** The bridge verifies each transition and returns fresh state, errors or
-    missing prerequisites. Transport is a **pull-based HTTP command/result loop** — the app asks, the
+9. **Receive request + current state.** The assistant API picks the intent, maintains the task, and
+   determines the target screen. The app's latest observation gives the current screen.
+10. **Plan the route and its requirements.** The Python navigator finds the route over the profile's
+    edges and collects every requirement along it: each screen's required fields and each edge's
+    selections, with their `ask` questions and lookups. The lookup adapter resolves names to records,
+    such as "رضا" to a card. The assistant asks for everything still missing or ambiguous before
+    anything moves, ideally in one question.
+11. **Request navigation with its arguments.** For each screen with requirements, the backend sends
+    `navigate` with that screen and the arguments it needs. Screens without requirements pass inside
+    `navigate`. How the app gets there is the app's business.
+12. **Execute and report.** The bridge reports the observation after every operation, including an
+    unexpected screen. Transport is a **pull-based HTTP command/result loop** — the app asks, the
     backend returns at most one command, the app performs it and reports the result with a fresh
     observation; there is no push channel. A WebSocket is not in scope; it could be considered later
     if it earns its place.
-13. **Populate and validate the form.** Fill from what the user supplied and what services resolved,
-    through the app's normal handlers; the backend checks the resulting draft. Filling may happen
-    during navigation as prerequisites arise.
-14. **Present the verified review; the user authorizes.** The assistant never submits. It stays
-    available to explain, correct or cancel; any correction produces a fresh review.
+13. **Populate and check each page.** `fill_form` fills through the app's normal handlers, driven by
+    field tags. The backend compares the new observation with what it sent. It comes back to the user
+    only when something fails or is ambiguous.
+14. **Present the verified review; the user authorizes.** `show_review` opens the review. The user
+    verifies once, here, and only the user confirms. The assistant never submits. It stays available
+    to explain, correct or cancel; any correction produces a fresh review.
 
-**Step-10 distinction:** the navigation graph says *where and how to move*; the feature contracts
-say *what information is required*; the app and services say *what the current values are*. LangGraph
-coordinates all three.
+**Step-10 distinction:** the profile says *where and how to move and what each step needs*; the app
+and the lookups say *what the current values are*. The navigator combines them, and LangGraph
+coordinates the conversation around it.
 
 ## Relationship to the phase specs
 
@@ -132,7 +145,7 @@ coordinates all three.
 | T1, T2 | P2, P3 |
 | 1 Reconstruct frontend (whole app) | P4-05/06, widened to the whole app |
 | 2 Validate navigation graph | P1a-04 (done) + validation |
-| 3 Replica bridge + interactive graph | P5 core, pulled earlier; interactive graph is new |
+| 3 Replica bridge, navigator + interactive graph | P5 core, pulled earlier; interactive graph is new |
 | 4 Explore and choose | P1b, on a live replica |
 | 5a Study picked features | P1d |
 | 5b Mocks for picked features | P4-02/03/04 |

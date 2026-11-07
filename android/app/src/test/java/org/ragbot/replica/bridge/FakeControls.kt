@@ -16,6 +16,9 @@ internal class FakeControls(var screen: String = HomeDestinations.HOME) : Contro
     var rows = setOf<String>()
     var pressedBack = 0
 
+    /** Set to land somewhere the tapped edge does not lead, as a page choosing for itself. */
+    var landOn: String? = null
+
     /** Tags that exist on this screen though no edge names them, such as a form's fields. */
     var extra = setOf<String>()
 
@@ -47,7 +50,7 @@ internal class FakeControls(var screen: String = HomeDestinations.HOME) : Contro
     override fun click(tag: String) {
         tapped += tag
         val edge = edges().firstOrNull { Policy.matches(it.action.split(" > ").last(), tag) } ?: return
-        if (tag !in errors) screen = edge.to
+        if (tag !in errors) screen = landOn ?: edge.to
     }
 
     override fun setText(tag: String, text: String) {
