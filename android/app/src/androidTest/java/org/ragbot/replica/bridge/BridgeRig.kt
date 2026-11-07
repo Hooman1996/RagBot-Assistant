@@ -16,7 +16,7 @@ internal class BridgeRig(patienceMs: Long = 3_000) {
         destination: String? = null,
         form: String? = null,
         values: Map<String, FieldValue> = emptyMap(),
-        ref: String? = null,
+        arguments: Map<String, String> = emptyMap(),
     ): CommandResult {
         val seen = executor.observer.observe()
         count += 1
@@ -37,22 +37,19 @@ internal class BridgeRig(patienceMs: Long = 3_000) {
                 destination,
                 form,
                 values,
-                ref,
+                arguments,
             )
         )
     }
 
-    fun navigate(destination: String) = run("navigate", destination = destination)
-
-    fun select(ref: String) = run("select_candidate", ref = ref)
+    fun navigate(destination: String, vararg arguments: Pair<String, String>) =
+        run("navigate", destination = destination, arguments = arguments.toMap())
 
     fun review() = run("show_review")
 
-    /** Moves to [screen] and checks that the observation agrees. */
-    fun reach(screen: String) = expect(navigate(screen), screen)
-
-    /** Opens the row [ref], which leads to [screen]. */
-    fun choose(ref: String, screen: String) = expect(select(ref), screen)
+    /** Moves to [screen], choosing rows by [arguments], and checks the observation agrees. */
+    fun reach(screen: String, vararg arguments: Pair<String, String>) =
+        expect(navigate(screen, *arguments), screen)
 
     /** Fills [form], which is on screen, and checks the fill. */
     fun fill(form: String, vararg values: Pair<String, FieldValue>) =

@@ -100,7 +100,7 @@ OPENAPI_FILES = (
 USER_ONLY_API = "user_only_app.json"
 FINAL_ACTION_WORDS = ("submit", "authoriz", "confirm")
 HTTP_METHODS = ("get", "put", "post", "delete", "patch")
-COMMAND_OPERATIONS = ["observe", "navigate", "fill_form", "select_candidate", "show_review"]
+COMMAND_OPERATIONS = ["observe", "navigate", "fill_form", "show_review"]
 PROFILE_DIR = "app_profiles"
 PROFILE_SCHEMA = "app_profiles/profile.schema.json"
 NAV_GRAPH = "app_profiles/navigation-graph.json"
@@ -654,6 +654,50 @@ def check_api_structure(root: Path, report: Report) -> None:
     report.check(not bad_refs, "every model reference names a known model", "; ".join(bad_refs))
 
 
+def check_requirements(profile: dict, report: Report) -> None:
+    """Every requirement can be asked for, and none of them is the user's alone."""
+    fields = [field for form in profile["forms"] for field in form["fields"]]
+    no_ask = [field["ref"] for field in fields if field.get("requires") and not field.get("ask")]
+    report.check(not no_ask, "every required field has an ask and a type", f"{no_ask}")
+    secret = [field["ref"] for field in fields if field.get("secret") and field.get("requires")]
+    report.check(not secret, "no secret field is required of the assistant", f"{secret}")
+    unasked = [field["ref"] for field in fields if field.get("secret") and field.get("ask")]
+    report.check(not unasked, "no secret field has a question", f"{unasked}")
+    rows = [edge["action"] for edge in profile["edges"] if ("*" in edge["action"]) != ("requires" in edge)]
+    report.check(not rows, "every row edge, and only a row edge, lists its selection", f"{rows}")
+
+
+def check_routes(root: Path, profile: dict, report: Report) -> None:
+    """Lookups exist, and every feature has a route from Home that stays off user-only actions."""
+    sys.path.insert(0, str(root))
+    from assistant.lookups import is_known
+    from assistant.navigator import HOME, CrossesUserOnly, Navigator, NoRoute
+
+    fields = [field for form in profile["forms"] for field in form["fields"]]
+    selections = [need for edge in profile["edges"] for need in edge.get("requires", [])]
+    refs = [field for field in fields + selections if field["type"] == "ref"]
+    unknown = [field["ref"] for field in refs if not is_known(field.get("lookup", ""))]
+    report.check(not unknown, "every ref names a known lookup", f"{unknown}")
+    named = {name for feature in profile["features"] for name in feature["lookups"]}
+    report.check(all(is_known(name) for name in named), "every feature lookup is known", f"{sorted(named)}")
+
+    navigator = Navigator(profile)
+    no_route, crossing = [], []
+    for feature in profile["features"]:
+        try:
+            plan = (
+                navigator.plan_feature(HOME, feature)
+                if feature["form"]
+                else navigator.plan(HOME, feature["destination"])
+            )
+        except (NoRoute, CrossesUserOnly) as problem:
+            no_route.append(f"{feature['intent']}: {type(problem).__name__}")
+            continue
+        crossing += [feature["intent"] for edge in plan.route if navigator.crosses_user_only(edge)]
+    report.check(not no_route, "every feature has a route from Home", "; ".join(no_route))
+    report.check(not crossing, "no feature's route passes through a user-only action", f"{crossing}")
+
+
 def check_profile(root: Path, report: Report) -> None:
     """The replica profile the executor runs on. Needs the pinned jsonschema."""
     from jsonschema import Draft202012Validator
@@ -706,6 +750,8 @@ def check_profile(root: Path, report: Report) -> None:
         ):
             bad_features.append(feature["intent"])
     report.check(not bad_features, "every feature has a valid target and fillable slots", f"{bad_features}")
+    check_requirements(profile, report)
+    check_routes(root, profile, report)
 
     export = read(root, PROFILE_EXPORT)
     if export is None:

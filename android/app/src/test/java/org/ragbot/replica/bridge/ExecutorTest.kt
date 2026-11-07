@@ -15,11 +15,11 @@ class ExecutorTest {
         destination: String? = null,
         form: String? = null,
         values: Map<String, FieldValue> = emptyMap(),
-        ref: String? = null,
+        arguments: Map<String, String> = emptyMap(),
         draft: Long? = null,
     ) =
         executor.execute(
-            command(operation, id, destination, form, values, ref, version(), draft)
+            command(operation, id, destination, form, values, arguments, version(), draft)
         )
 
     @Test
@@ -41,20 +41,30 @@ class ExecutorTest {
     }
 
     @Test
-    fun navigateStopsWhereARowMustBeChosen() {
+    fun navigateStopsWhereARowKeyIsMissing() {
         val result = run("navigate", destination = "S-284")
         assertEquals("blocked", result.outcome)
-        assertEquals(listOf("select_candidate"), result.needs)
+        assertEquals(listOf("missing_argument"), result.needs)
         assertEquals("S-283", result.observation.screen)
     }
 
     @Test
-    fun selectCandidateOpensThatRow() {
-        run("navigate", destination = "S-284")
+    fun navigateAppliesItsArgumentAtTheRowStep() {
         controls.rows = setOf("charity-1")
-        val result = run("select_candidate", "cmd-2", ref = "1")
+        val result = run("navigate", destination = "S-284", arguments = mapOf("charity" to "1"))
         assertEquals("succeeded", result.outcome)
+        assertEquals("S-284", result.observation.screen)
         assertEquals(listOf("charity-1"), controls.tapped.takeLast(1))
+    }
+
+    @Test
+    fun navigateReportsAnUnexpectedScreenAndDecidesNothing() {
+        controls.screen = "S-174"
+        controls.landOn = "S-093"
+        val result = run("navigate", destination = "S-176")
+        assertEquals("blocked", result.outcome)
+        assertEquals(listOf("unexpected_screen"), result.needs)
+        assertEquals("S-093", result.observation.screen)
     }
 
     @Test

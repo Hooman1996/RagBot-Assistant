@@ -1,6 +1,8 @@
 package org.ragbot.replica.bridge
 
 import org.ragbot.replica.EdgeKind
+import org.ragbot.replica.ProfileForms
+import org.ragbot.replica.ProfileSelections
 import org.ragbot.replica.ReplicaGraph
 import org.ragbot.replica.ServiceCatalog
 
@@ -17,7 +19,7 @@ internal class FormFiller(private val actions: Actions, private val navigator: N
         for ((ref, value) in values) {
             val stop =
                 when (value) {
-                    is FieldValue.Money -> actions.type(ref, value.value.toString())
+                    is FieldValue.Money -> setField(ref, value.value.toString())
                     is FieldValue.Text -> setField(ref, value.text)
                 }
             if (stop != null) return stop
@@ -50,7 +52,9 @@ internal class FormFiller(private val actions: Actions, private val navigator: N
         val screen = actions.state().screen
         if (screen in Reviews.pages) return succeeded("review_shown_$screen")
         val edge =
-            Routes.exported.firstOrNull { it.from == screen && it.to in Reviews.pages }
+            Routes.exported.firstOrNull {
+                it.from == screen && it.to in Reviews.pages && ProfileSelections.of(it.action) == null
+            }
                 ?: return blocked("no_review_here")
         val steps = mutableListOf<TraceStep>()
         navigator.walk(edge, steps)?.let {
@@ -60,7 +64,7 @@ internal class FormFiller(private val actions: Actions, private val navigator: N
     }
 }
 
-/** The pages where the user's confirm waits. The executor stops on these. */
+/** The pages where the user's confirm or consent waits. The executor stops on these. */
 internal object Reviews {
     /** Confirmation pages whose confirm has no result page in the graph. */
     private val withoutResultPage = setOf("S-128", "S-139", "S-144", "S-152", "S-331")
@@ -68,8 +72,12 @@ internal object Reviews {
     private val serviceReviews =
         ServiceCatalog.flows.filter { it.submit != null }.map { it.steps.last().page }
 
+    private val consentPages =
+        ServiceCatalog.flows.flatMap { it.steps }.filter(ProfileForms::needsConsent).map { it.page }
+
     val pages =
         ReplicaGraph.edges.filter { it.kind == EdgeKind.USER_ONLY }.map { it.from }.toSet() +
             withoutResultPage +
-            serviceReviews
+            serviceReviews +
+            consentPages
 }

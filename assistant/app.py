@@ -1,7 +1,8 @@
-"""The FastAPI app: the command loop, the test harness and the graph page.
+"""The FastAPI app: the command loop, the test harness, the graph page and its task runs.
 
 Started by `python -m assistant`, and by tests through create_app. It listens on a local address
-only. It has no LLM, no RAG and no route to a bank or a mock bank.
+only. It has no LLM, no RAG and no route to a bank or a mock bank. Its only data is the read-only
+fixtures behind lookups.
 """
 
 import subprocess
@@ -9,8 +10,9 @@ import subprocess
 from fastapi import FastAPI
 
 from assistant.command_queue import CommandQueue
-from assistant.graph_data import built_screens, graph_payload
+from assistant.graph_data import built_screens, graph_payload, read_json
 from assistant.graph_page import build_graph_router
+from assistant.graph_tasks import GraphTasks
 from assistant.mobile_api import build_mobile_router
 from assistant.test_harness_api import build_harness_router
 
@@ -29,5 +31,6 @@ def create_app(queue: CommandQueue | None = None) -> FastAPI:
     app = FastAPI(title="RagBot Assistant development backend")
     app.include_router(build_mobile_router(commands))
     app.include_router(build_harness_router(commands, built_screens()))
-    app.include_router(build_graph_router(commands, graph_payload(), DEVICE_ID, source_revision()))
+    tasks = GraphTasks(commands, DEVICE_ID, read_json("replica.profile.json"))
+    app.include_router(build_graph_router(commands, tasks, graph_payload(), DEVICE_ID, source_revision()))
     return app

@@ -30,7 +30,7 @@ def build_harness_router(queue: CommandQueue, built_screens: set[str]) -> APIRou
         if request.destination not in built_screens:
             raise HTTPException(status_code=404, detail="screen_not_built")
         try:
-            return queue.queue_navigate(request.device_id, request.destination)
+            return queue.queue_command(request.device_id, "navigate", {"destination": request.destination})
         except DeviceNotSeen as error:
             raise HTTPException(status_code=409, detail="device_not_seen") from error
         except DeviceBusy as error:

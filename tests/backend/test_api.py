@@ -86,6 +86,10 @@ def test_no_route_can_confirm_submit_or_pay(client: TestClient) -> None:
         "/graph",
         "/graph/data",
         "/graph/state",
+        "/graph/graph_map.js",
+        "/graph/graph_task.js",
+        "/graph/plan/{screen}",
+        "/graph/run",
     }
 
 
@@ -97,7 +101,9 @@ def test_the_harness_route_is_in_the_contract() -> None:
 def test_the_graph_page_needs_nothing_from_the_internet(client: TestClient) -> None:
     page = client.get("/graph")
     assert page.status_code == 200
-    assert "http://" not in page.text.replace("http://www.w3.org/2000/svg", "")
+    scripts = client.get("/graph/graph_map.js").text + client.get("/graph/graph_task.js").text
+    assert "http://" not in (page.text + scripts).replace("http://www.w3.org/2000/svg", "")
+    assert "https://" not in page.text + scripts
     assert "https://" not in page.text
 
 
@@ -111,3 +117,35 @@ def test_the_graph_has_every_screen_with_built_ones_marked() -> None:
     assert built == set(profile["screens"])
     known = {(edge["from"], edge["to"]) for edge in payload["edges"]}
     assert {(edge["from"], edge["to"]) for edge in profile["edges"]} <= known
+
+
+def test_a_click_shows_the_route_questions_and_demo_values(client: TestClient) -> None:
+    report_in(client)
+    plan = client.get("/graph/plan/S-174").json()
+    assert plan["status"] == "ok"
+    assert plan["feature"] == "card_transfer"
+    refs = [item["ref"] for item in plan["requirements"]]
+    assert refs == ["card-transfer-source", "card-transfer-destination", "card-transfer-amount"]
+    assert all(item["ask"] for item in plan["requirements"])
+    assert plan["demo"]["card-transfer-destination"] == "رضا"
+
+
+def test_a_screen_behind_the_users_step_has_no_plan(client: TestClient) -> None:
+    assert client.get("/graph/plan/S-093").json() == {"status": "no_route"}
+
+
+def test_a_run_refuses_anything_but_a_screen_and_values(client: TestClient) -> None:
+    reply = client.post("/graph/run", json={"screen": "S-174", "values": {}, "operation": "confirm"})
+    assert reply.status_code == 422
+
+
+def test_a_run_to_a_screen_with_no_route_is_refused(client: TestClient) -> None:
+    assert client.post("/graph/run", json={"screen": "S-093", "values": {}}).status_code == 404
+
+
+def test_a_run_missing_a_value_stops_without_a_command(client: TestClient) -> None:
+    report_in(client)
+    assert client.post("/graph/run", json={"screen": "S-174", "values": {}}).status_code == 202
+    progress = client.get("/graph/run").json()
+    assert progress["steps"] == []
+    assert client.post(RESUME, json=observation()).json() == {"kind": "status", "task_state": "paused"}

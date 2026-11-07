@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Replica graph</title>
 <!--
-  The interactive graph. Plain SVG and plain JavaScript, with nothing from the internet.
-  Clicking a built node asks the test harness for a navigate command. It offers nothing else.
+  The interactive graph's layout. Plain SVG and plain JavaScript, with nothing from the internet.
+  graph_map.js draws the map, and graph_task.js shows a click's route and runs it.
+  Nothing on this page can confirm, submit or pay: a run always stops at the review.
 -->
 <style>
   body { margin: 0; display: flex; height: 100vh; font: 13px system-ui, sans-serif; color: #1c2b22; background: #f6f8f7; }
@@ -24,139 +25,36 @@
   .node { cursor: pointer; }
   .edge { stroke: #c8d3cc; stroke-width: 0.6; fill: none; }
   .edge.walked { stroke: #7fb893; stroke-width: 0.9; }
+  .node.route rect { stroke: #0a57c2; stroke-width: 3; }
+  label { display: block; margin-top: 8px; direction: rtl; text-align: right; }
+  label small { display: block; color: #66736b; }
+  button { margin: 8px 8px 0 0; padding: 6px 10px; }
+  .step { margin-top: 6px; padding-top: 6px; border-top: 1px solid #e3e8e5; }
 </style>
 </head>
 <body>
 <svg id="map"><g id="world"></g></svg>
 <div id="panel">
   <h1>Replica graph</h1>
-  <p>Green is built, grey is not, and amber is where the replica is. Click a green node to move
-  the replica there. Drag to pan, and use the wheel to zoom.</p>
+  <p>Green is built, grey is not, and amber is where the replica is. Click a green node to see its
+  route and questions. A node with no questions just moves the replica. Drag to pan, and use the
+  wheel to zoom.</p>
   <input id="search" placeholder="Find a screen by ID or name">
   <h2>Now</h2><pre id="now">Waiting for the replica</pre>
   <h2>Clicked</h2><pre id="clicked">Nothing yet</pre>
+  <h2>Route</h2><pre id="route">None yet</pre>
+  <div id="task" hidden>
+    <h2>What the route needs</h2>
+    <form id="questions"></form>
+    <button id="demo" type="button">Fill with demo values</button>
+    <button id="run" type="button">Run</button>
+  </div>
+  <h2>Run</h2><pre id="state">Nothing has run</pre>
+  <div id="steps"></div>
   <h2>Last result</h2><pre id="result">None yet</pre>
   <h2>Backend revision</h2><pre id="revision"></pre>
 </div>
-<script>
-const NODE_WIDTH = 270, NODE_HEIGHT = 20;
-const svgSpace = "http://www.w3.org/2000/svg";
-const world = document.getElementById("world");
-const map = document.getElementById("map");
-const elements = new Map();
-let deviceId = "";
-let view = { x: 20, y: 20, scale: 0.6 };
-
-function make(name, attributes) {
-  const element = document.createElementNS(svgSpace, name);
-  for (const key in attributes) element.setAttribute(key, attributes[key]);
-  return element;
-}
-
-function applyView() {
-  world.setAttribute("transform", `translate(${view.x} ${view.y}) scale(${view.scale})`);
-}
-
-function drawEdge(edge, places) {
-  const start = places.get(edge.from), end = places.get(edge.to);
-  const line = make("line", {
-    class: edge.walked ? "edge walked" : "edge",
-    x1: start.x + NODE_WIDTH, y1: start.y + NODE_HEIGHT / 2,
-    x2: end.x, y2: end.y + NODE_HEIGHT / 2,
-  });
-  world.append(line);
-}
-
-function drawNode(node) {
-  const group = make("g", { class: node.built ? "node" : "node grey", transform: `translate(${node.x} ${node.y})` });
-  group.append(make("rect", { width: NODE_WIDTH, height: NODE_HEIGHT, rx: 4 }));
-  const label = make("text", { x: 6, y: 14 });
-  label.textContent = `${node.id} ${node.name}`.slice(0, 44);
-  group.append(label);
-  group.addEventListener("click", () => clicked(node));
-  world.append(group);
-  elements.set(node.id, { group, node });
-}
-
-async function clicked(node) {
-  const shown = document.getElementById("clicked");
-  if (!node.built) {
-    shown.textContent = `${node.id} is not built`;
-    return;
-  }
-  shown.textContent = `Moving to ${node.id} ${node.name}`;
-  const reply = await fetch("/test-harness/v1/commands", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ device_id: deviceId, destination: node.id }),
-  });
-  if (!reply.ok) shown.textContent = `${node.id}: ${(await reply.json()).detail}`;
-}
-
-function describe(result) {
-  if (!result) return "None yet";
-  const lines = [`${result.outcome} at ${result.observation.screen}`];
-  if (result.needs) lines.push(`Needs: ${result.needs.join(", ")}`);
-  if (result.error_code) lines.push(`Error: ${result.error_code}`);
-  for (const step of result.trace || []) lines.push(`${step.from} → ${step.to}: ${step.action}`);
-  return lines.join("\n");
-}
-
-async function refresh() {
-  const state = await (await fetch("/graph/state")).json();
-  const screen = state.observation ? state.observation.screen : null;
-  for (const { group } of elements.values()) group.classList.remove("here");
-  if (elements.has(screen)) elements.get(screen).group.classList.add("here");
-  document.getElementById("now").textContent = screen
-    ? `${screen} ${elements.get(screen)?.node.name ?? ""}${state.waiting ? "\nA command is waiting" : ""}`
-    : "Waiting for the replica";
-  document.getElementById("result").textContent = describe(state.last_result);
-  document.getElementById("revision").textContent = state.source_revision;
-}
-
-function find(text) {
-  const wanted = text.trim().toLowerCase();
-  for (const { group, node } of elements.values()) {
-    const hit = wanted !== "" && `${node.id} ${node.name}`.toLowerCase().includes(wanted);
-    group.classList.toggle("found", hit);
-  }
-}
-
-function enablePanAndZoom() {
-  let last = null;
-  map.addEventListener("pointerdown", event => { last = event; });
-  window.addEventListener("pointerup", () => { last = null; });
-  window.addEventListener("pointermove", event => {
-    if (!last) return;
-    view.x += event.clientX - last.clientX;
-    view.y += event.clientY - last.clientY;
-    last = event;
-    applyView();
-  });
-  map.addEventListener("wheel", event => {
-    event.preventDefault();
-    const factor = event.deltaY < 0 ? 1.15 : 0.87;
-    view.x = event.offsetX - (event.offsetX - view.x) * factor;
-    view.y = event.offsetY - (event.offsetY - view.y) * factor;
-    view.scale *= factor;
-    applyView();
-  }, { passive: false });
-}
-
-async function start() {
-  const data = await (await fetch("/graph/data")).json();
-  deviceId = data.device_id;
-  const places = new Map(data.nodes.map(node => [node.id, node]));
-  data.edges.forEach(edge => drawEdge(edge, places));
-  data.nodes.forEach(drawNode);
-  applyView();
-  enablePanAndZoom();
-  document.getElementById("search").addEventListener("input", event => find(event.target.value));
-  setInterval(refresh, 1000);
-  refresh();
-}
-
-start();
-</script>
+<script src="/graph/graph_map.js"></script>
+<script src="/graph/graph_task.js"></script>
 </body>
 </html>

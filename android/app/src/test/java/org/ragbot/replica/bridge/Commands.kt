@@ -7,7 +7,7 @@ internal fun command(
     destination: String? = null,
     form: String? = null,
     values: Map<String, FieldValue> = emptyMap(),
-    ref: String? = null,
+    arguments: Map<String, String> = emptyMap(),
     observation: Long = 1,
     draft: Long? = null,
     expires: String = "2100-01-01T00:00:00Z",
@@ -28,5 +28,5 @@ internal fun command(
         destination,
         form,
         values,
-        ref,
+        arguments,
     )

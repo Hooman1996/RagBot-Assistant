@@ -2,7 +2,7 @@
 
 Called by mobile_api when the app reports in, and by test_harness_api when a command is queued.
 It holds state in memory: this is a development loop, not the task store of later stages.
-It builds only navigate commands. It must never build an operation that submits or confirms.
+It builds only the operations of OPERATIONS. It must never build one that submits or confirms.
 """
 
 import uuid
@@ -14,6 +14,8 @@ PROTOCOL_VERSION = 1
 PROFILE_VERSION = 1
 COMMAND_LIFETIME = timedelta(seconds=30)
 FINISHED_KEPT = 50
+OPERATIONS = ("observe", "navigate", "fill_form", "show_review")
+NEEDS_DRAFT_VERSION = ("fill_form", "show_review")
 
 
 class DeviceNotSeen(Exception):
@@ -60,15 +62,17 @@ class CommandQueue:
         """Returns the device's record, creating it the first time."""
         return self.devices.setdefault(device_id, Device())
 
-    def queue_navigate(self, device_id: str, destination: str) -> dict:
-        """Queues a navigate command. The same request while it waits returns the same command."""
+    def queue_command(self, device_id: str, operation: str, arguments: dict) -> dict:
+        """Queues a command. The same request while it waits returns the same command."""
+        if operation not in OPERATIONS:
+            raise ValueError(operation)
         device = self.device(device_id)
         if device.observation is None:
             raise DeviceNotSeen(device_id)
         self.drop_if_expired(device)
         waiting = device.outstanding
         if waiting is not None:
-            if waiting["arguments"].get("destination") == destination:
+            if waiting["operation"] == operation and waiting["arguments"] == arguments:
                 return waiting
             raise DeviceBusy(device_id)
         command = {
@@ -79,11 +83,14 @@ class CommandQueue:
             "command_id": uuid.uuid4().hex,
             "device_id": device_id,
             "session_id": device_id,
-            "operation": "navigate",
-            "arguments": {"destination": destination},
+            "operation": operation,
+            "arguments": arguments,
             "expected_observation_version": device.observation["observation_version"],
             "expires_at": format_time(self.now() + COMMAND_LIFETIME),
         }
+        if operation in NEEDS_DRAFT_VERSION:
+            draft = device.observation["draft"]
+            command["expected_draft_version"] = draft["draft_version"] if draft else 0
         device.outstanding = command
         device.delivered = False
         return command

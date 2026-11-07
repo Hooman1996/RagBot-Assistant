@@ -32,7 +32,7 @@ internal object ContractJson {
             if (arguments.has("destination")) arguments.str("destination") else null,
             if (arguments.has("form")) arguments.str("form") else null,
             if (arguments.has("values")) arguments["values"].map(::fieldValue) else emptyMap(),
-            if (arguments.has("ref")) arguments.str("ref") else null,
+            if (arguments.has("arguments")) arguments["arguments"].map { it.string() } else emptyMap(),
         )
     }
 

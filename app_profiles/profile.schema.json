@@ -23,7 +23,24 @@
         "properties": {
           "from": { "type": "string", "minLength": 1 },
           "to": { "type": "string", "minLength": 1 },
-          "action": { "type": "string", "minLength": 1 }
+          "action": { "type": "string", "minLength": 1 },
+          "requires": {
+            "description": "Selections needed before the move: the key replaces the * in the action.",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ref", "type", "ask"],
+              "properties": {
+                "ref": { "type": "string", "minLength": 1 },
+                "type": { "enum": ["ref", "choice"] },
+                "description": { "type": "string", "minLength": 1 },
+                "ask": { "description": "The question in Persian.", "type": "string", "minLength": 1 },
+                "lookup": { "description": "Where the records come from. Needed when type is ref.", "type": "string", "minLength": 1 }
+              }
+            }
+          }
         }
       }
     },
@@ -44,7 +61,11 @@
               "properties": {
                 "ref": { "type": "string", "minLength": 1 },
                 "type": { "enum": ["text", "money", "ref", "choice"] },
-                "secret": { "description": "True when only the user may enter it. Never filled.", "type": "boolean" }
+                "secret": { "description": "True when only the user may enter it. Never filled.", "type": "boolean" },
+                "requires": { "description": "True when the screen will not continue without it.", "type": "boolean" },
+                "ask": { "description": "The question in Persian.", "type": "string", "minLength": 1 },
+                "description": { "type": "string", "minLength": 1 },
+                "lookup": { "description": "Where a ref field's records come from.", "type": "string", "minLength": 1 }
               }
             }
           }

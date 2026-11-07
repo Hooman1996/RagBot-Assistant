@@ -5,30 +5,41 @@ and what never moves. Nothing here has been agreed with the app team yet.
 
 ## What stays ours, unchanged
 
-- The Python command loop, the graph page and, later, the assistant and its lookup tools.
+- The assistant, its tools, the lookup adapter's interface, the command loop, the navigator and the
+  task runner.
 - The contracts in `contracts/`: the command, observation and result schemas, the transition table
   and the pull API.
-- The idea of a profile: screens, edges, forms, features and user-only actions, as data.
-
-## What the app team builds
-
-The Kotlin executor has two halves. One half is logic that does not know the app, and can be
-ported as it is. The other half is bindings to the real screens.
-
-| Part | Files | What the app team does |
-|---|---|---|
-| Logic | `Contract.kt`, `ContractJson.kt`, `Policy.kt`, `Routes.kt`, `Actions.kt`, `Navigator.kt`, `FormFiller.kt`, `Observer.kt`, `Executor.kt`, `CommandPoller.kt`, `BackendClient.kt` | Copy, then point them at the real profile |
-| Bindings | `Controls.kt` (the interface), `ComposeControls.kt`, `BridgeState.kt` | Re-implement `Controls` for the real screens, fields and menu IDs |
-| Map | `app_profiles/replica.profile.json` | Replace it with a profile of the real app |
-
-The replica's tags, such as `menu-card-transfer`, are ours. The real app needs its own stable ID on
-every control the profile names. `ComposeControls.kt` reads Compose test tags and semantics. If
-real screens use Android views, or a mix, that file is what changes.
+- The idea of a profile: screens, edges, forms, requirements, features and user-only actions, as
+  data.
 
 ## What the app team provides
 
-The lookup tools read data through the adapter. Today the data is JSON in
-`mock_services/fixtures/`. In production, the adapter calls the app team's APIs instead.
+Exactly four things.
+
+**1. The four bridge operations, in their app.**
+
+| Operation | What it must do |
+|---|---|
+| `observe` | Report the screen, any dialog, a loading flag and the form's non-secret values |
+| `navigate` | Reach a screen in the right state, with the arguments it needs. How is their business: taps, a direct open or a deep link. Our replica walks its declared edges only because it has no direct open |
+| `fill_form` | One generic command for every form: set each field by its tag, through the form's own handlers, so its validation runs |
+| `show_review` | Open the form's review page, and stop |
+
+After each one, report the observation, including an unexpected screen or a validation error. The
+bridge does not plan routes or decide what is missing. Our Kotlin files show one way to do this:
+`Controls.kt` and `ComposeControls.kt` are the bindings to the screens, and `Routes.kt` is the part
+a direct open makes unnecessary.
+
+**2. Field tags on their forms.** A stable tag on every control the profile names. The replica's
+tags, such as `card-transfer-amount`, are ours.
+
+**3. The real graph, with each screen's requirements.** A profile that passes
+`python tools/project_checks.py profile`: screens, edges, and for each required field its type, a
+short description, an `ask` question and its lookup, and for each edge any selection it needs.
+
+**4. The real lookup APIs.** Today `assistant/lookups.py` reads the JSON in
+`mock_services/fixtures/`. In production, a real adapter with the same methods calls the app team's
+APIs instead.
 
 | Lookup | Replaces | Used for |
 |---|---|---|
@@ -46,23 +57,27 @@ for approved users.
 
 ## What never moves into the assistant
 
-The confirm and submit calls. No PIN, OTP, password, CVV2 or signature ever passes through the
-bridge, in either direction. The assistant prepares; the user confirms in the app. See
-[safety](safety.md). In the real app, these rules should be enforced a second time by the app
-itself, not only by the profile.
+The app team keeps confirm and every money-moving service. They never give the assistant:
+
+- The confirm or submit calls, or any route to them.
+- A PIN, OTP, password, CVV2 or signature, in either direction.
+- Any money-moving API. The lookups only read.
+
+The assistant prepares; the user confirms in the app. See [safety](safety.md). In the real app,
+these rules should be enforced a second time by the app itself, not only by the profile.
 
 ## Checklist for the app team
 
-1. Give every control in the profile a stable ID in the real app.
+1. Give every control in the profile a stable tag in the real app.
 2. List every user-only action and secret field in the real app. Review this list with us first.
-3. Write the real profile, and pass `python tools/project_checks.py profile`.
-4. Implement `Controls` for the real screens.
-5. Publish the current page, the open dialog and a loading flag from the app.
-6. Port the policy tests, and add every real user-only action to them.
-7. Run the journey tests against a test build. Check that no money moves.
-8. Agree how a device authenticates to the backend.
-9. Replace the mock data behind the adapter with the lookup APIs.
-10. Turn the loop off by default, and control who can turn it on.
+3. Write the real profile, with each screen's requirements, and pass
+   `python tools/project_checks.py profile`.
+4. Build the four operations, and publish the current page, the open dialog and a loading flag.
+5. Port the policy tests, and add every real user-only action to them.
+6. Run the journey tests against a test build. Check that no money moves.
+7. Agree how a device authenticates to the backend.
+8. Put the lookup APIs behind an adapter with `assistant/lookups.py`'s methods.
+9. Turn the loop off by default, and control who can turn it on.
 
 ## Open questions for the app team
 
@@ -73,6 +88,7 @@ itself, not only by the profile.
 - Which login and session does a command run under, and how does the backend prove it is ours?
 - What should happen if the app is in the background when a command arrives?
 - How do pickers fill in the real app: by key, as here, or by another reference?
+- Which screens can open directly with their arguments, and which need steps first?
 - `session_id` equals `device_id` in development, because the contract's resume call names only a
   session. What is the real mapping?
 - Where should a device's draft live: in the app, as now, or in the mock service's successor (D-006)?

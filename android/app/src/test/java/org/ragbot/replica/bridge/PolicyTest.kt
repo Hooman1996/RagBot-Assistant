@@ -5,6 +5,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import org.ragbot.replica.EdgeKind
 import org.ragbot.replica.HomeDestinations
+import org.ragbot.replica.ProfileSelections
 import org.ragbot.replica.ReplicaGraph
 import org.ragbot.replica.ReplicaProfile
 
@@ -136,7 +137,7 @@ class PolicyTest {
     }
 
     @Test
-    fun aCandidateCannotReachAUserOnlyRow() {
+    fun aRowKeyCannotReachAUserOnlyRow() {
         // S-159's rows are digital-*, and digital-confirm is user-only.
         val controls = FakeControls("S-159")
         controls.rows = setOf("digital-confirm")
@@ -144,7 +145,12 @@ class PolicyTest {
         val version = executor.observer.observe().observation_version
         val result =
             executor.execute(
-                command("select_candidate", ref = "confirm", observation = version)
+                command(
+                    "navigate",
+                    destination = "S-158",
+                    arguments = mapOf("digital-cheque" to "confirm"),
+                    observation = version,
+                )
             )
         assertEquals("failed", result.outcome)
         assertEquals("policy_refused", result.error_code)
@@ -152,20 +158,73 @@ class PolicyTest {
     }
 
     @Test
-    fun aCandidateWithStepsInItIsRefused() {
+    fun noRowKeyMakesATagPolicyAllows() {
+        val userOnly = ReplicaProfile.userOnlyActions.map(::concrete)
+        Routes.exported.forEach { edge ->
+            val row = ProfileSelections.rowTag(edge.action) ?: return@forEach
+            userOnly.filter { Policy.matches(row, it) }.forEach { tag ->
+                assertFalse("$row makes $tag", Policy.mayTap(tag, edge.from))
+            }
+        }
+    }
+
+    @Test
+    fun aRowKeyWithStepsInItIsRefused() {
         val controls = FakeControls("S-283")
         val executor = executor(controls)
         val version = executor.observer.observe().observation_version
         val result =
             executor.execute(
-                command("select_candidate", ref = "1 > payment-submit", observation = version)
+                command(
+                    "navigate",
+                    destination = "S-284",
+                    arguments = mapOf("charity" to "1 > payment-submit"),
+                    observation = version,
+                )
             )
         assertEquals("rejected_policy", result.outcome)
+        assertEquals("invalid_argument", result.error_code)
+        assertTrue(controls.tapped.isEmpty())
+    }
+
+    @Test
+    fun anArgumentNoEdgeDeclaresIsRefused() {
+        listOf("otp-code", "card-transfer-cvv2", "payment-card-password").forEach { name ->
+            val controls = FakeControls("S-283")
+            val executor = executor(controls)
+            val version = executor.observer.observe().observation_version
+            val result =
+                executor.execute(
+                    command(
+                        "navigate",
+                        destination = "S-284",
+                        arguments = mapOf(name to "1234"),
+                        observation = version,
+                    )
+                )
+            assertEquals(name, "rejected_policy", result.outcome)
+            assertEquals(name, "unknown_argument", result.error_code)
+            assertTrue(name, controls.tapped.isEmpty())
+        }
+    }
+
+    @Test
+    fun everyRowTagDeclaresItsSelection() {
+        Routes.exported
+            .filter { "*" in it.action }
+            .forEach { assertNotNull(it.action, ProfileSelections.of(it.action)) }
+    }
+
+    @Test
+    fun noSecretFieldIsMarkedNeeded() {
+        ReplicaProfile.forms.flatMap { it.fields }.forEach {
+            assertFalse(it.ref, it.secret && it.requires)
+        }
     }
 
     @Test
     fun anUnknownOperationIsRefused() {
-        listOf("submit", "confirm", "authorize", "pay").forEach { operation ->
+        listOf("submit", "confirm", "authorize", "pay", "select_candidate").forEach { operation ->
             val controls = FakeControls("S-176")
             val executor = executor(controls)
             val version = executor.observer.observe().observation_version
