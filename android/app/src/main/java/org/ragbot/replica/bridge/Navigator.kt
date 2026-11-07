@@ -2,6 +2,7 @@ package org.ragbot.replica.bridge
 
 import org.ragbot.replica.Edge
 import org.ragbot.replica.HomeDestinations
+import org.ragbot.replica.ProfileSelections
 import org.ragbot.replica.ReplicaProfile
 
 /*
@@ -36,7 +37,7 @@ internal class Navigator(private val actions: Actions) {
                 stepBack(steps, now.screen)
             } else {
                 val step = Routes.applied(edge, arguments) ?: return blocked("missing_argument")
-                walk(step, steps)?.let {
+                walk(step, steps, rowTagOf(edge, step))?.let {
                     return it
                 }
                 movedForward = true
@@ -45,15 +46,23 @@ internal class Navigator(private val actions: Actions) {
         return failed("route_too_long")
     }
 
+    /** The tag in [step] where [edge]'s row key went, or null when it has no row. */
+    private fun rowTagOf(edge: Edge, step: Edge): String? {
+        val row = ProfileSelections.rowTag(edge.action) ?: return null
+        return step.action.split(" > ")[edge.action.split(" > ").indexOf(row)]
+    }
+
     /**
      * Takes one edge to the page in front of the user. Null means it moved. A page may choose
      * another target, such as a form that skips a step, so any new page counts after the wait.
      */
-    fun walk(edge: Edge, steps: MutableList<TraceStep>): Ending? {
+    fun walk(edge: Edge, steps: MutableList<TraceStep>, row: String? = null): Ending? {
         for (tag in edge.action.split(" > ")) {
             actions.tap(tag)?.let {
                 return it
             }
+            // A chosen row turns selected on a later frame, and the next tap must see it.
+            if (tag == row) actions.waitUntil { actions.find(tag)?.selected != false }
         }
         actions.waitUntil { actions.state().screen == edge.to }
         if (actions.state().screen == edge.from) return stoppedOn(edge)
