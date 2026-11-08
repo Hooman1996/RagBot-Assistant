@@ -2,21 +2,23 @@ package org.ragbot.replica.bridge
 
 import org.ragbot.replica.Edge
 import org.ragbot.replica.HomeDestinations
+import org.ragbot.replica.ProfileSelections
 import org.ragbot.replica.ReplicaProfile
 
 /*
- * The navigate and select_candidate operations.
+ * The navigate operation.
  * Called by Executor. It moves one exported edge at a time, through the tags a user taps, and
- * checks the new screen after each step. It plans again after every step, because some pages
- * choose their own next page. It never opens a screen directly and never crosses a user-only step.
+ * checks the new screen after each step. navigate's arguments fill in the row keys. It walks again
+ * from wherever it lands, because some pages choose their own next page, and it reports where it
+ * stopped. It never opens a screen directly and never crosses a user-only step.
  */
 internal class Navigator(private val actions: Actions) {
     /** The steps taken by the last operation, for the result's trace. */
     var trace = emptyList<TraceStep>()
         private set
 
-    /** Moves to [destination], or stops where a user or a row choice is needed. */
-    fun navigate(destination: String): Ending {
+    /** Moves to [destination], or stops and says what stopped it. */
+    fun navigate(destination: String, arguments: Map<String, String>): Ending {
         val steps = mutableListOf<TraceStep>()
         trace = steps
         val start = actions.state().screen
@@ -29,13 +31,13 @@ internal class Navigator(private val actions: Actions) {
             val now = actions.state()
             if (now.modal != null) return blocked("close_dialog")
             if (now.screen == destination) return succeeded("screen_is_$destination")
-            val edge = Routes.find(now.screen, destination)?.firstOrNull()
-            if (edge == null && movedForward) return blocked("form_chose_another_page")
+            val edge = Routes.find(now.screen, destination, arguments)?.firstOrNull()
+            if (edge == null && movedForward) return blocked("unexpected_screen")
             if (edge == null || needsHomeTab(edge, now)) {
                 stepBack(steps, now.screen)
             } else {
-                if (Routes.needsCandidate(edge)) return blocked("select_candidate")
-                walk(edge, steps)?.let {
+                val step = Routes.applied(edge, arguments) ?: return blocked("missing_argument")
+                walk(step, steps, rowTagOf(edge, step))?.let {
                     return it
                 }
                 movedForward = true
@@ -44,47 +46,27 @@ internal class Navigator(private val actions: Actions) {
         return failed("route_too_long")
     }
 
-    /** Opens the row [ref] of a list on this screen, by the list's own row control. */
-    fun selectCandidate(ref: String): Ending {
-        val steps = mutableListOf<TraceStep>()
-        trace = steps
-        val screen = actions.state().screen
-        val candidates = Routes.exported.filter { it.from == screen && Routes.needsCandidate(it) }
-        val rows = candidates.map { it.copy(action = it.action.replace("*", ref)) }
-        val row = rows.firstOrNull { actions.find(it.action.split(" > ").first()) != null }
-        row ?: return blocked("candidate_not_shown")
-        tapAll(row)?.let {
-            return it
-        }
-        val targets = rows.filter { it.action == row.action }.map { it.to }
-        if (!actions.waitUntil { actions.state().screen in targets })
-            return stoppedOn(row)
-        val now = actions.state().screen
-        steps += TraceStep(screen, now, row.action)
-        return succeeded("screen_is_$now")
+    /** The tag in [step] where [edge]'s row key went, or null when it has no row. */
+    private fun rowTagOf(edge: Edge, step: Edge): String? {
+        val row = ProfileSelections.rowTag(edge.action) ?: return null
+        return step.action.split(" > ")[edge.action.split(" > ").indexOf(row)]
     }
 
     /**
      * Takes one edge to the page in front of the user. Null means it moved. A page may choose
      * another target, such as a form that skips a step, so any new page counts after the wait.
      */
-    fun walk(edge: Edge, steps: MutableList<TraceStep>): Ending? {
-        tapAll(edge)?.let {
-            return it
-        }
-        actions.waitUntil { actions.state().screen == edge.to }
-        if (actions.state().screen == edge.from) return stoppedOn(edge)
-        steps += TraceStep(edge.from, actions.state().screen, edge.action)
-        return null
-    }
-
-    /** Taps an edge's tags in order. Null means every tap was made. */
-    private fun tapAll(edge: Edge): Ending? {
+    fun walk(edge: Edge, steps: MutableList<TraceStep>, row: String? = null): Ending? {
         for (tag in edge.action.split(" > ")) {
             actions.tap(tag)?.let {
                 return it
             }
+            // A chosen row turns selected on a later frame, and the next tap must see it.
+            if (tag == row) actions.waitUntil { actions.find(tag)?.selected != false }
         }
+        actions.waitUntil { actions.state().screen == edge.to }
+        if (actions.state().screen == edge.from) return stoppedOn(edge)
+        steps += TraceStep(edge.from, actions.state().screen, edge.action)
         return null
     }
 

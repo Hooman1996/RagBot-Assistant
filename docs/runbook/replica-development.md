@@ -605,6 +605,9 @@ The address is set at build time by `-PreplicaBackend=`. Its default is `http://
 pinned emulator runs with `restrict=on`, so `10.0.2.2` refuses connections, and host port 8000 is an
 unrelated Docker service. `adb reverse` reaches the host without changing the emulator's isolation.
 
+To start the backend and open the graph beside the emulator, follow
+[try it](../bridge/try-it.md).
+
 `BridgeReachTest` asks for all screens one by one and takes about six minutes.
 
 ## Complete replica (D-022)

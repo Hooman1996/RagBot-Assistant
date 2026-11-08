@@ -10,14 +10,72 @@
       "post": {
         "operationId": "resetFixtures",
         "summary": "Reset the mock fixtures",
-        "responses": { "200": { "description": "Fixtures reset" } }
+        "responses": {
+          "200": {
+            "description": "Fixtures reset"
+          }
+        }
       }
     },
     "/test-harness/v1/scenario": {
       "post": {
         "operationId": "chooseScenario",
         "summary": "Choose a test scenario",
-        "responses": { "200": { "description": "Scenario chosen" } }
+        "responses": {
+          "200": {
+            "description": "Scenario chosen"
+          }
+        }
+      }
+    },
+    "/test-harness/v1/commands": {
+      "post": {
+        "operationId": "queueCommand",
+        "summary": "Queue a navigate command for a device",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "device_id",
+                  "destination"
+                ],
+                "properties": {
+                  "device_id": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "destination": {
+                    "description": "A profile screen ID.",
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The queued command",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "../schemas/command.schema.json"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The screen is not built"
+          },
+          "409": {
+            "description": "The device has not reported in, or is busy"
+          }
+        }
       }
     }
   }

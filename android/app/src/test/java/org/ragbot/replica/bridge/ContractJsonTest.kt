@@ -49,14 +49,14 @@ class ContractJsonTest {
                     null,
                     observation,
                     0,
-                    needs = listOf("select_candidate"),
+                    needs = listOf("missing_argument"),
                     trace = listOf(TraceStep("S-026", "S-283", "menu-charity")),
                 )
             )
         assertTrue(text, text.startsWith("""{"command_id":"c","outcome":"blocked","""))
         assertTrue(text, """"postcondition":null""" in text)
         assertTrue(text, """"value":"ر\"ض"""" in text)
-        assertTrue(text, """"needs":["select_candidate"]""" in text)
+        assertTrue(text, """"needs":["missing_argument"]""" in text)
         assertTrue(text, """"action":"menu-charity"""" in text)
         assertFalse(text, "error_code" in text)
     }

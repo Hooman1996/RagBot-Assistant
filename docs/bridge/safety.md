@@ -9,13 +9,23 @@ A command has to pass all of these to touch a control.
 
 | Wall | Where | What it does |
 |---|---|---|
-| 1. The operations | `contracts/schemas/command.schema.json`, `Executor.policyProblem` | There are five operations. None submits. Any other name is `rejected_policy` |
-| 2. The routes | `ReplicaGraph.kt`, `Routes.exported` | Only `REAL` and `DEMO` edges reach the executor. A `USER_ONLY` edge is not in its graph, so no route can cross one |
-| 3. The fields | `ReplicaProfile.forms`, `Policy.fillable` | A field marked `secret` is refused before the screen is touched |
+| 1. The operations | `contracts/schemas/command.schema.json`, `Executor.policyProblem` | There are four operations. None submits. Any other name is `rejected_policy` |
+| 2. The routes | `ReplicaGraph.kt`, `Routes.exported`, `assistant/navigator.py` | Only `REAL` and `DEMO` edges are exported. A `USER_ONLY` edge is in neither graph, and the navigator refuses any edge whose tags are user-only |
+| 3. The fields | `ProfileForms.kt`, `Policy.fillable`, `Navigator.fields_of` | A secret field is never a requirement, so nobody asks for it, and it is refused before the screen is touched |
 | 4. The last gate | `Policy.mayTap`, `Policy.mayType`, called from `Actions` | An allow-list. A tag is tapped only if an exported edge or a non-secret field names it, and anything on the user-only list is refused even then |
 | 5. The screen | `ComposeControls.setText`, `Actions.type`, `Actions.tap` | A password field is never written or read. A disabled control is never fired. A dialog hides what is behind it, as it does for a user |
 
 `show_review` is safe because it stops: on a page in `Reviews.pages` it taps nothing.
+
+`navigate`'s arguments carry row keys and nothing else. The executor refuses a name no edge
+declares and a key that is not one plain word, and the tag a key makes must still pass `Policy`.
+
+The backend adds its own limits. `assistant/command_queue.py` builds only the four operations, and
+`assistant/task_runner.py` only ever sends three of them. A run refuses any value its plan did not
+ask for, and it refuses a row key that would spell a user-only tag before the app sees it. The
+harness takes a device and a destination, and refuses any other field. `POST /graph/run` takes a
+screen and values, and refuses any other field. `test_no_route_can_confirm_submit_or_pay` pins the
+full list of backend routes.
 
 ## What the tests prove
 
@@ -31,20 +41,29 @@ unless marked.
 | Going to a screen behind a user step taps nothing | `navigatingToAScreenBehindAUserStepNeverTapsThatStep` |
 | Every secret field is refused before the screen is touched | `everySecretFieldIsRefusedBeforeTheScreenIsTouched` |
 | A field outside the form is refused | `aFieldOutsideTheFormIsRefused` |
-| A choice or candidate cannot spell a confirm tag | `aChoiceValueCannotNameAConfirmControl`, `aCandidateCannotReachAUserOnlyRow`, `aCandidateWithStepsInItIsRefused` |
-| `submit`, `confirm`, `authorize` and `pay` are refused | `anUnknownOperationIsRefused` |
+| A choice or row key cannot spell a confirm tag | `aChoiceValueCannotNameAConfirmControl`, `aRowKeyCannotReachAUserOnlyRow`, `noRowKeyMakesATagPolicyAllows`, `aRowKeyWithStepsInItIsRefused` |
+| An argument can only name a declared selection | `anArgumentNoEdgeDeclaresIsRefused` |
+| Every row edge declares what it needs | `everyRowTagDeclaresItsSelection` |
+| No secret field is marked as needed | `noSecretFieldIsMarkedNeeded` |
+| `submit`, `confirm`, `authorize`, `pay` and the old `select_candidate` are refused | `anUnknownOperationIsRefused` |
 | `show_review` taps nothing on any review page | `showReviewStopsOnEveryReviewPage` |
 | A secret value is never observed | `aSecretValueIsNeverObserved` |
 | A disabled control is never fired | `ExecutorTest.aDisabledControlIsNeverFired`, and on the device `BridgeJourneysTest.aDisabledControlStopsTheRoute` |
 | The demo journeys move no money | `BridgeJourneysTest` and `BridgeServicesTest` check the balance after each test (device) |
 | No exported edge uses a user-only action | `ReplicaProfileTest.noExportedEdgeUsesAUserOnlyAction` |
+| The navigator refuses a route over a user-only action | `test_navigator.py::test_a_route_that_crosses_a_user_only_action_is_refused` |
+| A secret field is never a requirement | `test_navigator.py::test_a_secret_field_is_never_a_requirement` |
+| A run refuses a value its plan did not ask for | `test_task_runner.py::test_a_value_the_plan_does_not_ask_for_is_refused` |
+| A row key spelling a user-only tag never reaches the app | `test_task_runner.py::test_a_row_key_that_spells_a_user_only_tag_never_reaches_the_app` |
+| Every feature sends only the allowed operations | `test_task_runner.py::test_no_feature_ever_sends_an_operation_outside_the_four` |
+| Every feature's route stays off user-only actions, and every requirement can be asked | `python tools/project_checks.py profile` |
 | This page lists every user-only action | `thisPageOfTheDocsListsEveryUserOnlyAction` |
 
 ## Each user-only action
 
-Every action below is blocked in the same two places, `Routes.exported` and `Policy.isUserOnly`,
-and proved by the first two tests above. The list comes from
-`ReplicaProfile.userOnlyActions`. A `*` stands for a row key.
+Every action below is blocked in the same places, `Routes.exported`, `Policy.isUserOnly` and
+`Navigator.is_user_only`, and proved by the first two tests above. The list comes from
+`ProfileUserOnly.kt`. A `*` stands for a row key.
 
 **Confirm, submit and pay**
 
@@ -66,8 +85,9 @@ and proved by the first two tests above. The list comes from
 
 Accepting terms, issuing a promissory note and signing are commitments in the user's own name, so
 `svc-agree-*`, `svc-note-*` and `svc-sign-*` are user-only even though each is only a choice on a
-page. The executor fills everything around them and stops. `BridgeJourneysTest.loanRequest` shows
-it: the route stops at each consent page until the test, playing the user, taps it.
+page. These fields are marked secret, so nobody asks for them. A feature with a consent ends on its
+first consent page. `BridgeJourneysTest.loanRequest` shows it: the route stops at each consent page
+until the test, playing the user, taps it.
 
 The toll inquiry and the account top-up have no review page of their own: the next step is already
 the user's fee choice and OTP, or the payment gateway. Their forms are where the executor stops.
@@ -75,5 +95,6 @@ the user's fee choice and OTP, or the payment gateway. Their forms are where the
 ## Adding a new screen
 
 1. Declare its edges in `ReplicaGraph.kt`. Give every confirm, submit or pay edge `USER_ONLY`.
-2. Add any tag of that kind to `userOnlyActions`, and mark secret fields in `ReplicaProfile.forms`.
+2. Add any tag of that kind to `ProfileUserOnly.kt`, and mark secret fields in `ProfileForms.kt`.
 3. Add the action to this page. A test fails until you do.
+4. Regenerate the profile, and run `python tools/project_checks.py profile`.

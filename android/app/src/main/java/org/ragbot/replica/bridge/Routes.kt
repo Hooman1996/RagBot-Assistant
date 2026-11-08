@@ -2,24 +2,34 @@ package org.ragbot.replica.bridge
 
 import org.ragbot.replica.Edge
 import org.ragbot.replica.EdgeKind
+import org.ragbot.replica.ProfileSelections
 import org.ragbot.replica.ReplicaGraph
 
 /*
- * Finds a path over the exported edges of the profile.
- * Called by Navigator. User-only edges are not in this graph, so a route can never contain one.
- * It only plans: it never touches the screen.
+ * How the replica's navigate gets to a screen: it walks the declared edges, as a user would tap.
+ * Called by Navigator. This is the app's own business, and an app team may open a screen directly
+ * instead. The assistant's plan comes from assistant/navigator.py: nothing here decides what is
+ * required. User-only edges are not in this graph, so a walk can never contain one.
  */
 internal object Routes {
     val exported = ReplicaGraph.edges.filter { it.kind == EdgeKind.REAL || it.kind == EdgeKind.DEMO }
 
-    /** A row-dependent edge: it needs a key from select_candidate. */
-    fun needsCandidate(edge: Edge) = "*" in edge.action
+    /** The argument names navigate accepts: the selections the edges declare. */
+    val selections = exported.mapNotNull { ProfileSelections.of(it.action)?.ref }.toSet()
 
-    /** The shortest route, preferring one that needs no row choice. */
-    fun find(from: String, to: String): List<Edge>? =
-        search(from, to, exported.filterNot(::needsCandidate)) ?: search(from, to, exported)
+    /** The edge with its row key in place, or null when [arguments] has no key for it. */
+    fun applied(edge: Edge, arguments: Map<String, String>): Edge? {
+        val selection = ProfileSelections.of(edge.action) ?: return edge
+        val key = arguments[selection.ref] ?: return null
+        return edge.copy(action = edge.action.replace("*", key))
+    }
 
-    /** Breadth-first search, so the first route found is a shortest one. */
+    /** The shortest walk, preferring one that [arguments] can complete. */
+    fun find(from: String, to: String, arguments: Map<String, String> = emptyMap()): List<Edge>? =
+        search(from, to, exported.filter { applied(it, arguments) != null })
+            ?: search(from, to, exported)
+
+    /** Breadth-first search, so the first walk found is a shortest one. */
     private fun search(from: String, to: String, edges: List<Edge>): List<Edge>? {
         if (from == to) return emptyList()
         val cameBy = mutableMapOf<String, Edge>()
@@ -36,7 +46,7 @@ internal object Routes {
         return null
     }
 
-    /** Walks the search's records back from [to] to list the route in order. */
+    /** Walks the search's records back from [to] to list the steps in order. */
     private fun pathTo(to: String, from: String, cameBy: Map<String, Edge>): List<Edge> {
         val path = mutableListOf<Edge>()
         var screen = to

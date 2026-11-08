@@ -1,12 +1,16 @@
 # Project Status
 
-Last updated: 6 November 2026. This page is updated whenever a task changes state.
+Last updated: 7 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Next are the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the interactive graph (#94), all approved. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
 
 **D-022 (5 Nov 2026):** the replica was completed before the bridge. See the
 [decision](decisions/0022-complete-replica-with-mock-data.md). The owner approved it on 6 Nov 2026,
-and #93 and #94 are in progress on `sub/bridge-graph`. See [the bridge](bridge/README.md).
+#93 is merged into `sub/bridge-graph`, and #94 is in review. See [the bridge](bridge/README.md).
+
+**D-023 (7 Nov 2026):** route finding and requirement checking moved into a Python navigator, and
+the bridge is down to four operations. See the [decision](decisions/0023-python-navigator-thin-bridge.md).
+The work is on #94's PR, waiting for the owner's check.
 
 ## Status key
 
@@ -46,6 +50,8 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #94 S3-03 Dev command loop, navigator and interactive graph view | In review | FastAPI command loop on `127.0.0.1:8100`, the Python navigator and task runner (D-023), one test-harness path and the graph page at `/graph`. [Try it](bridge/try-it.md). The schema and contract changes wait for the owner's review |
+| #93 S3-02 Replica bridge: in-app executor | Done on `sub/bridge-graph` | Executor through the screens' own handlers; 77 features; policy tests prove rule 4. Reduced to four operations by D-023 in #94's PR. [Docs](bridge/README.md) |
 | #92 S3-01 Core-journey graph and replica profile | Done | Owner traces recorded in the [graph validation sheet](reports/graph-validation.md); every matching trace is a real Home route. Runs through `sub/bridge-graph` to `main`. |
 | #96 S1-FIX Flaky schedule test and card secrets | Done | The schedule test's touch could miss while the page kept its keyboard height (a test bug); it now uses the click action. S-119/S-120 no longer save CVV2 or the second password. 100 JVM / 124 device tests in three full runs in a row (0 skipped); lint 0 errors / 117 warnings. One earlier full run crashed in the system graphics library and did not recur on a fresh emulator; cause unproved. |
 | #91 S1-CHECK Stage 1 recheck and bridge readiness | Done | Verdict: ready with gaps. 189 registered IDs valid; 106 screens reachable from Home, 83 demo-only. Records drift fixed; no app code changed. [Report](reports/stage1-readiness.md). |
