@@ -399,7 +399,7 @@ class NotificationsSupportTest {
     }
 
     @Test
-    fun previewAddsNoNetworkNotificationStorageOrBackgroundComponents() {
+    fun previewAddsOnlyTheBridgeNetworkAndNoNotificationStorageOrBackgroundComponents() {
         val info =
             compose.activity.packageManager.getPackageInfo(
                 compose.activity.packageName,
@@ -410,8 +410,12 @@ class NotificationsSupportTest {
                     PackageManager.GET_PROVIDERS,
             )
         // Existing AndroidX initialization/profile components are part of the pinned baseline.
+        // This is the debug build: INTERNET is the bridge's, and the main manifest has none.
         assertEquals(
-            listOf("org.ragbot.replica.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"),
+            listOf(
+                "android.permission.INTERNET",
+                "org.ragbot.replica.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+            ),
             info.requestedPermissions.orEmpty().toList(),
         )
         assertTrue(info.services.isNullOrEmpty())

@@ -64,3 +64,7 @@ Each item carries one label with a one-line basis:
 - `api-structure.md` — the human-readable API-structure map, grouped by feature area.
 - `profile.schema.json`, `synthetic.profile.json` — the executor profile schema and a synthetic
   example (not derived from any real app).
+- `replica.profile.json` — generated from the Kotlin declarations by the JVM test
+  `ReplicaProfileTest`, never edited by hand. Each required field carries `requires`, a Persian
+  `ask`, a `description` and, for a `ref`, a `lookup`. Each row edge lists what it needs chosen in
+  `requires`. To regenerate it, run that test with `UPDATE_REPLICA_PROFILE=1`.

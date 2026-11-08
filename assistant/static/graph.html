@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Replica graph</title>
+<!--
+  The interactive graph's layout. Plain SVG and plain JavaScript, with nothing from the internet.
+  graph_map.js draws the map, and graph_task.js shows a click's route and runs it.
+  Nothing on this page can confirm, submit or pay: a run always stops at the review.
+-->
+<style>
+  body { margin: 0; display: flex; height: 100vh; font: 13px system-ui, sans-serif; color: #1c2b22; background: #f6f8f7; }
+  #map { flex: 1; min-width: 0; cursor: grab; }
+  #panel { width: 320px; padding: 12px; overflow: auto; background: #fff; border-left: 1px solid #d5ddd8; }
+  h1 { font-size: 16px; margin: 0 0 8px; }
+  h2 { font-size: 13px; margin: 16px 0 4px; }
+  pre { white-space: pre-wrap; word-break: break-word; margin: 0; font-size: 12px; }
+  input { width: 100%; box-sizing: border-box; padding: 6px; }
+  .node rect { fill: #cfe9d8; stroke: #308a48; }
+  .node.grey rect { fill: #e7e9e8; stroke: #c4c9c6; }
+  .node.grey text { fill: #8b938e; }
+  .node.here rect { fill: #f5b942; stroke: #a86f00; stroke-width: 2; }
+  .node.found rect { stroke: #0a57c2; stroke-width: 2; }
+  .node { cursor: pointer; }
+  .edge { stroke: #c8d3cc; stroke-width: 0.6; fill: none; }
+  .edge.walked { stroke: #7fb893; stroke-width: 0.9; }
+  .node.route rect { stroke: #0a57c2; stroke-width: 3; }
+  label { display: block; margin-top: 8px; direction: rtl; text-align: right; }
+  label small { display: block; color: #66736b; }
+  button { margin: 8px 8px 0 0; padding: 6px 10px; }
+  .step { margin-top: 6px; padding-top: 6px; border-top: 1px solid #e3e8e5; }
+</style>
+</head>
+<body>
+<svg id="map"><g id="world"></g></svg>
+<div id="panel">
+  <h1>Replica graph</h1>
+  <p>Green is built, grey is not, and amber is where the replica is. Click a green node to see its
+  route and questions. A node with no questions just moves the replica. Drag to pan, and use the
+  wheel to zoom.</p>
+  <input id="search" placeholder="Find a screen by ID or name">
+  <h2>Now</h2><pre id="now">Waiting for the replica</pre>
+  <h2>Clicked</h2><pre id="clicked">Nothing yet</pre>
+  <h2>Route</h2><pre id="route">None yet</pre>
+  <div id="task" hidden>
+    <h2>What the route needs</h2>
+    <form id="questions"></form>
+    <button id="demo" type="button">Fill with demo values</button>
+    <button id="run" type="button">Run</button>
+  </div>
+  <h2>Run</h2><pre id="state">Nothing has run</pre>
+  <div id="steps"></div>
+  <h2>Last result</h2><pre id="result">None yet</pre>
+  <h2>Backend revision</h2><pre id="revision"></pre>
+</div>
+<script src="/graph/graph_map.js"></script>
+<script src="/graph/graph_task.js"></script>
+</body>
+</html>

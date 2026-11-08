@@ -14,20 +14,38 @@ class ReplicaProfileTest {
 
     private fun block(items: List<String>) = items.joinToString(",\n", "[\n", "\n  ]")
 
+    /** A string property, or nothing when [value] is absent. */
+    private fun optional(name: String, value: String?) =
+        value?.let { ", \"$name\": ${quote(it)}" }.orEmpty()
+
+    private fun fieldJson(field: FormField) =
+        "{\"ref\": ${quote(field.ref)}, \"type\": ${quote(field.type)}" +
+            (if (field.secret) ", \"secret\": true" else "") +
+            (if (field.requires) ", \"requires\": true" else "") +
+            optional("ask", field.ask) +
+            optional("description", field.description) +
+            optional("lookup", field.lookup) +
+            "}"
+
+    private fun selectionJson(selection: Selection) =
+        "{\"ref\": ${quote(selection.ref)}, \"type\": ${quote(selection.type)}" +
+            optional("ask", selection.ask) +
+            optional("description", selection.description) +
+            optional("lookup", selection.lookup) +
+            "}"
+
     private fun profileJson(): String {
         val screens = HomeDestinations.implemented.sorted().map { "    ${quote(it)}" }
         val edges =
             exported.map {
+                val selection = ProfileSelections.of(it.action)
+                val requires = selection?.let { one -> ", \"requires\": [${selectionJson(one)}]" }
                 "    {\"from\": ${quote(it.from)}, \"to\": ${quote(it.to)}, " +
-                    "\"action\": ${quote(it.action)}}"
+                    "\"action\": ${quote(it.action)}${requires.orEmpty()}}"
             }
         val forms =
             ReplicaProfile.forms.map { form ->
-                val fields =
-                    form.fields.joinToString(", ") {
-                        val secret = if (it.secret) ", \"secret\": true" else ""
-                        "{\"ref\": ${quote(it.ref)}, \"type\": ${quote(it.type)}$secret}"
-                    }
+                val fields = form.fields.joinToString(", ", transform = ::fieldJson)
                 "    {\"id\": ${quote(form.id)}, \"fields\": [$fields]}"
             }
         val features =
@@ -96,6 +114,14 @@ class ReplicaProfileTest {
         }
         // These sit behind the user's OTP, card secrets or payment step.
         listOf("S-242", "S-205", "S-215", "S-228", "S-081").forEach { assertFalse(it, it in seen) }
+    }
+
+    @Test
+    fun everyServiceHasAFeature() {
+        val intents = ReplicaProfile.features.map { it.intent }
+        ServiceCatalog.flows
+            .filterNot { it.key.endsWith("-detail") }
+            .forEach { assertTrue(it.key, it.key.replace('-', '_') in intents) }
     }
 
     @Test

@@ -585,6 +585,31 @@ Home → **مسیرهای نمایشی** (below the recent transactions) opens t
 
 The owner's second trace round (5 Nov 2026) added the Home tiles کارت به کارت, شارژ, صورتحساب, پشتیبانی, تسهیلات, تبدیل بانکی, بیمه and سوابق, and two menu pages with no recovered node, `D-001` (پشتیبانی) and `D-002` (چکاد). `D-` nodes are labelled `Designed for mock` in `navigation-graph.json`. The answers and what came of each are in the [validation sheet](../reports/graph-validation.md).
 
+## The bridge (S3-02, #93)
+
+The in-app executor lives in `android/app/src/main/java/org/ragbot/replica/bridge/`. Read
+[the bridge docs](../bridge/README.md) first. The pull loop is off by default and exists only in
+debug builds. To turn it on:
+
+```bash
+adb -s emulator-5554 reverse tcp:8100 tcp:8100
+adb -s emulator-5554 shell touch /sdcard/Android/data/org.ragbot.replica/files/bridge.enabled
+adb -s emulator-5554 shell am force-stop org.ragbot.replica
+adb -s emulator-5554 shell am start -n org.ragbot.replica/.MainActivity
+```
+
+Run the app once first, so Android creates the folder. Remove the file to turn the loop off.
+`connectedDebugAndroidTest` uninstalls the app, which removes the flag too.
+
+The address is set at build time by `-PreplicaBackend=`. Its default is `http://127.0.0.1:8100`. The
+pinned emulator runs with `restrict=on`, so `10.0.2.2` refuses connections, and host port 8000 is an
+unrelated Docker service. `adb reverse` reaches the host without changing the emulator's isolation.
+
+To start the backend and open the graph beside the emulator, follow
+[try it](../bridge/try-it.md).
+
+`BridgeReachTest` asks for all screens one by one and takes about six minutes.
+
 ## Complete replica (D-022)
 
 Tap **ورود با کاربر نمایشی** on the front page for the intro, welcome and login pages; the demo user is in `customer.json`. **ورود به خانه** still goes straight to Home.

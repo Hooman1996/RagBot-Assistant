@@ -191,14 +191,20 @@ internal fun StatementScreen(
                     Text(format.ifEmpty { "نوع فایل" })
                 }
                 DropdownMenu(choosingFormat, { choosingFormat = false }) {
-                    listOf("اکسل صورتحساب", "CSV صورتحساب", "PDF صورتحساب").forEach { label ->
+                    val formats =
+                        listOf(
+                            "EXCEL" to "اکسل صورتحساب",
+                            "CSV" to "CSV صورتحساب",
+                            "PDF" to "PDF صورتحساب",
+                        )
+                    formats.forEach { (key, label) ->
                         DropdownMenuItem(
                             { Text(label) },
                             {
                                 format = label
                                 choosingFormat = false
                             },
-                            Modifier.testTag("export-format-$label"),
+                            Modifier.testTag("export-format-$key"),
                         )
                     }
                 }
