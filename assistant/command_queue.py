@@ -5,14 +5,18 @@ It holds state in memory: this is a development loop, not the task store of late
 It builds only the operations of OPERATIONS. It must never build one that submits or confirms.
 """
 
+import os
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
+from assistant.steps import show
+
 PROTOCOL_VERSION = 1
 PROFILE_VERSION = 1
-COMMAND_LIFETIME = timedelta(seconds=30)
+DEBUGGING = os.environ.get("ASSISTANT_DEBUG") == "1"
+COMMAND_LIFETIME = timedelta(hours=1) if DEBUGGING else timedelta(seconds=30)
 FINISHED_KEPT = 50
 OPERATIONS = ("observe", "navigate", "fill_form", "show_review")
 NEEDS_DRAFT_VERSION = ("fill_form", "show_review")
@@ -91,6 +95,14 @@ class CommandQueue:
         if operation in NEEDS_DRAFT_VERSION:
             draft = device.observation["draft"]
             command["expected_draft_version"] = draft["draft_version"] if draft else 0
+        show(
+            "command queued",
+            command_id=command["command_id"][:8],
+            operation=operation,
+            arguments=arguments,
+            expected_observation_version=command["expected_observation_version"],
+            expires_at=command["expires_at"],
+        )
         device.outstanding = command
         device.delivered = False
         return command
@@ -107,6 +119,11 @@ class CommandQueue:
             self.close_unsent(device, "rejected_stale", "stale_observation")
             return None
         device.delivered = True
+        show(
+            "command handed to the app",
+            command_id=command["command_id"][:8],
+            observation_version=observation["observation_version"],
+        )
         return command
 
     def record_result(self, result: dict) -> None:
@@ -136,6 +153,7 @@ class CommandQueue:
     def close_unsent(self, device: Device, outcome: str, error_code: str) -> None:
         """Closes the outstanding command with a result written here, not by the app."""
         command = device.outstanding
+        show("command closed here", outcome=outcome, error_code=error_code)
         result = {
             "command_id": command["command_id"],
             "outcome": outcome,

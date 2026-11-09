@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 8 November 2026. This page is updated whenever a task changes state.
+Last updated: 9 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Stages 2 and 3 are done: the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the Python navigator and interactive graph (#94) are on `main`. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
 
@@ -50,6 +50,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #134 DEV-01 Step-by-step debugging and step prints | Done | `ASSISTANT_TRACE=1` prints every step numbered, with card numbers masked (`assistant/steps.py`); `ASSISTANT_DEBUG=1` keeps a command and its result wait for an hour so a breakpoint does not expire it; the app logs one `RagBotBridge` line per command and result, and waits up to an hour for each reply so a long pause does not lose a command. [Runbook](runbook/debugging.md). The owner checked it; merged to `main` in PR #135 |
 | #94 S3-03 Dev command loop, navigator and interactive graph view | Done | FastAPI command loop on `127.0.0.1:8100`, the Python navigator and task runner (D-023), one test-harness path and the graph page at `/graph`. [Try it](bridge/try-it.md). The owner reviewed the schema and contract changes; merged in PR #130, then to `main` in PR #131 |
 | #93 S3-02 Replica bridge: in-app executor | Done | Executor through the screens' own handlers; 77 features; policy tests prove rule 4. Reduced to four operations by D-023 in #94's PR. [Docs](bridge/README.md) |
 | #92 S3-01 Core-journey graph and replica profile | Done | Owner traces recorded in the [graph validation sheet](reports/graph-validation.md); every matching trace is a real Home route. Runs through `sub/bridge-graph` to `main`. |

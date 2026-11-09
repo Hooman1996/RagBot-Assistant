@@ -11,6 +11,7 @@ from typing import Protocol
 
 from assistant.lookups import Ambiguous, FixtureLookups, NotFound
 from assistant.navigator import Leg, Navigator, Plan, Requirement
+from assistant.steps import show
 
 PERSIAN_DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789")
 NO_REVIEW = "no_review_here"
@@ -97,12 +98,16 @@ class TaskRunner:
         if item.lookup is None:
             return text.strip()
         try:
-            return self.lookups.resolve(item.lookup, text.strip())
+            value = self.lookups.resolve(item.lookup, text.strip())
         except (NotFound, Ambiguous) as problem:
             raise TaskStopped(f"{item.description}: {problem}") from problem
+        show("resolve value", field=item.ref, lookup=item.lookup, said=text.strip(), sends=value)
+        return value
 
     def run(self, plan: Plan, values: dict[str, str], review: bool, report: TaskReport) -> TaskReport:
         """Runs the plan into report, which the caller may read while this runs."""
+        route = "\n".join(f"{step['from']} → {step['to']} ({step['action']})" for step in plan.route)
+        show("plan", target=plan.target, route=route, requirements=[item.ref for item in plan.requirements])
         try:
             sent = self.prepared(plan, values)
             for leg in plan.legs:
@@ -113,12 +118,17 @@ class TaskRunner:
         except TaskStopped as stop:
             report.state = "stopped"
             report.reason = str(stop)
+        show("run ended", state=report.state, **({"reason": report.reason} if report.reason else {}))
         return report
 
     def command(self, operation: str, arguments: dict, report: TaskReport) -> dict:
         """Sends one command and records it and its result for the side panel."""
+        show(f"send {operation}", arguments=arguments)
         result = self.bridge.send(operation, arguments)
         seen = result["observation"]
+        answer = {"outcome": result["outcome"], "screen": seen["screen"], "fields": seen["fields"]}
+        answer |= {key: result[key] for key in ("needs", "error_code") if result.get(key)}
+        show(f"answer to {operation}", **answer)
         report.steps.append(
             {
                 "operation": operation,
@@ -162,6 +172,7 @@ class TaskRunner:
         wrong = [item.ref for item in leg.fields if not shows(item, sent[item.ref], shown.get(item.ref))]
         if wrong:
             raise TaskStopped(f"مقدار این فیلدها روی صفحه درست نیست: {wrong}")
+        show("fields checked", shown=shown)
 
     def show_review(self, report: TaskReport) -> str:
         """Opens the review and stops there. Only the user goes further."""
