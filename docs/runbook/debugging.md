@@ -68,21 +68,21 @@ ASSISTANT_TRACE=1 python -m assistant
 Now the command loop prints as well. One `navigate` looks like this:
 
 ```text
-── 4 · send navigate ───────────────────────────
+── 6 · send navigate ───────────────────────────
    arguments   {"destination": "S-174"}
-── 5 · command queued ──────────────────────────
-   command_id                     3f9c1a2b
+── 7 · command queued ──────────────────────────
+   command_id                     2b4e56ac
    operation                      navigate
    arguments                      {"destination": "S-174"}
-   expected_observation_version   7
-   expires_at                     2026-11-09T10:00:30Z
-── 6 · command handed to the app ───────────────
-   command_id            3f9c1a2b
-   observation_version   7
-── 7 · answer to navigate ──────────────────────
+   expected_observation_version   2
+   expires_at                     2026-11-09T10:52:46Z
+── 8 · command handed to the app ───────────────
+   command_id            2b4e56ac
+   observation_version   2
+── 9 · answer to navigate ──────────────────────
    outcome   succeeded
    screen    S-174
-   fields    [{"ref": "card-transfer-source", "value": ""}, ...]
+   fields    [{"ref": "card-transfer-source", "value": "انتخاب کارت"}, {"ref": "card-transfer-destination", "value": ""}, {"ref": "card-transfer-amount", "value": ""}]
 ```
 
 When the backend closes a command itself, you see `command closed here` with `rejected_stale`,
@@ -153,10 +153,18 @@ Start with a breakpoint in `TaskRunner.run` (`assistant/task_runner.py`) and ste
 5. On the graph page, click `S-174`, press **Fill with demo values**, then **Run**.
 
 While the debugger is paused, **every thread is paused, the web server too**. The app's polls then
-fail with "Backend not reachable", and it tries again every 500 ms. After you press Continue, the
-next poll gets through and the run carries on. Because of `ASSISTANT_DEBUG=1`, the command waits up
-to an hour, so it is not expired when you come back. The graph page's side panel also stops
-updating while you are paused.
+fail with "Backend not reachable", and it tries again every 500 ms. The graph page's side panel also
+stops updating while you are paused. Because of `ASSISTANT_DEBUG=1`, a command waits up to an hour,
+so it is not expired when you come back.
+
+**Known limit (found on 9 Nov 2026, open in issue #134): with the replica connected, keep a backend
+pause under 5 seconds.** Each poll the app sends during a pause waits 5 s (`BackendClient`'s read
+timeout), then the app gives up on it. The backend still holds those requests. When you press
+Continue, it answers them, and one of them can take the next command. The app never receives it,
+the backend counts it as delivered, and the run waits until the command expires (an hour with
+`ASSISTANT_DEBUG=1`). Tested with a breakpoint in `TaskRunner.move`: a 3 s pause reached the
+review; a 70 s pause hung, twice. Restart the backend to clear a hung run. Long pauses work with
+the fake app (section 2), where no polls are involved.
 
 Check which version you are running: the graph page shows the revision, and it should equal
 `git rev-parse --short HEAD`.
