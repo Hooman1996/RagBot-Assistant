@@ -113,3 +113,5 @@ The tests show each rule at work:
 - [What changes for production](production.md)
 - [Try it](try-it.md)
 - [How the assistant will pick a feature](intent-selection.md)
+- [Every code file, block by block](../code-walkthrough.md)
+- [What we ask of the app team](../app-team-handover.md)
