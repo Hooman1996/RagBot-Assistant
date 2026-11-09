@@ -6,8 +6,9 @@ covered. The backend files in `assistant/` are explained block by block, with li
 every line is accounted for. The Kotlin bridge is explained function by function. What the app team
 must build is in [the app-team handover](app-team-handover.md).
 
-Line numbers match `main` at commit `95533cd` (8 Nov 2026). If a file changes, the numbers move,
-but the order of the blocks usually stays the same.
+Line numbers match `main` at commit `95533cd` (8 Nov 2026), except `command_queue.py`,
+`task_runner.py`, `bridge_link.py` and the new `steps.py`, which match #134 (9 Nov 2026). If a file
+changes, the numbers move, but the order of the blocks usually stays the same.
 
 ## Contents
 
@@ -235,44 +236,51 @@ Lifecycle in pictures: [command-lifecycle.md](bridge/command-lifecycle.md).
 | Lines | What it does |
 |---|---|
 | 1-6 | Docstring: one outstanding command per device; memory only; it must never build a submit or confirm. |
-| 8-11 | Imports: random IDs, a type for "a function", dataclasses, and time helpers. |
-| 13 | `PROTOCOL_VERSION = 1`: the wire version. The app refuses any other (`Executor.policyProblem`). |
-| 14 | `PROFILE_VERSION = 1`: the profile version. The app refuses any other. |
-| 15 | `COMMAND_LIFETIME`: a command expires 30 seconds after it is queued. |
-| 16 | `FINISHED_KEPT = 50`: remember the last 50 finished command IDs, to spot repeats. |
-| 17 | `OPERATIONS`: the only four operations it will ever build. |
-| 18 | `NEEDS_DRAFT_VERSION`: these two must also say which draft version they expect. |
-| 21-22 | `DeviceNotSeen`: error when nobody has heard from the device yet, so there is no screen version to aim at. |
-| 25-26 | `DeviceBusy`: error when the device already has a different command waiting. |
-| 29-30 | `UnknownCommand`: error when a result arrives for a command we never sent. |
-| 33-41 | `Device`: what we know about one device. `observation` = its last report; `outstanding` = the command waiting or running; `delivered` = has the app picked it up?; `last_result` = the latest result; `finished` = recent finished IDs. |
-| 44-46 | `utc_now()`: the current time in UTC. Tests replace it with a clock they move by hand. |
-| 49-51 | `format_time()`: writes a time as `2026-11-08T10:00:30Z`, the exact shape the schema requires. |
-| 54-59 | `CommandQueue.__init__`: keeps the clock and an empty dictionary of devices. |
-| 61-63 | `device(id)`: returns that device's record, creating an empty one the first time. |
-| 65-66 | `queue_command(device_id, operation, arguments)`: **Input** device, operation, arguments. **Output** the full command dictionary. |
-| 67-68 | Refuses any operation outside the four. This is one of the walls of rule 4. |
-| 69-71 | Refuses a device that has not reported in (`DeviceNotSeen`). |
-| 72 | Throws away a waiting command that has expired (see 125). |
-| 73-77 | If a command is already waiting: the same request again gets the same command back (safe to repeat); a different one is `DeviceBusy`. |
-| 78-90 | Builds the command: versions, a new `task_id` and `command_id`, the device, `session_id` (the same as the device in development), the operation and arguments, `expected_observation_version` (the screen version this command was planned against) and `expires_at` (now + 30 s). |
-| 91-93 | For `fill_form` and `show_review`, adds `expected_draft_version`: the draft version the app last reported, or 0 when there is no draft. |
-| 94-96 | Stores it as outstanding, not yet delivered, and returns it. |
-| 98-99 | `next_command(device_id, observation)`: called on every poll. **Input** the app's observation. **Output** a command to run, or `None`. |
-| 100-101 | Stores the observation as the latest. |
-| 102 | Drops an expired command first. |
-| 103-105 | Nothing waiting, or already handed over: nothing to send. A command is never delivered twice. |
-| 106-108 | If the screen changed since the command was planned (version differs), the command is closed as `rejected_stale` and not sent. `bridge_link` will try again with the new version. |
-| 109-110 | Otherwise marks it delivered and returns it. |
-| 112-113 | `record_result(result)`: called when the app posts a result. |
-| 114-117 | If this command already finished, a repeat changes nothing (the network may resend). |
-| 118-122 | If it is the outstanding command, store the result's fresh observation and finish it. |
-| 123 | Otherwise `UnknownCommand`. |
-| 125-126 | `drop_if_expired(device)`: closes a command that is past its time, so it can never run late. |
-| 127-129 | Nothing waiting, or not expired yet: do nothing. (The times are compared as text, which works because of the fixed format.) |
-| 130-134 | If the app had already picked it up, it may have run, so the result is `uncertain` (`no_result_before_expiry`). If not, it is `rejected_expired`. |
-| 136-147 | `close_unsent()`: writes a result on the backend's side (not the app's), with the last known observation and draft version 0, and finishes. |
-| 149-154 | `finish()`: keeps the result as `last_result`, clears the outstanding command, and adds its ID to the last 50 finished. |
+| 8-12 | Imports: environment variables, random IDs, a type for "a function", dataclasses, and time helpers. |
+| 14 | `show` from `steps.py`: prints a step when `ASSISTANT_TRACE=1`, otherwise does nothing. |
+| 16 | `PROTOCOL_VERSION = 1`: the wire version. The app refuses any other (`Executor.policyProblem`). |
+| 17 | `PROFILE_VERSION = 1`: the profile version. The app refuses any other. |
+| 18 | `DEBUGGING`: true when the backend was started with `ASSISTANT_DEBUG=1`. Read once, at import. |
+| 19 | `COMMAND_LIFETIME`: a command expires 30 seconds after it is queued, or one hour when debugging, so a paused breakpoint does not expire it ([debugging](runbook/debugging.md)). |
+| 20 | `FINISHED_KEPT = 50`: remember the last 50 finished command IDs, to spot repeats. |
+| 21 | `OPERATIONS`: the only four operations it will ever build. |
+| 22 | `NEEDS_DRAFT_VERSION`: these two must also say which draft version they expect. |
+| 25-26 | `DeviceNotSeen`: error when nobody has heard from the device yet, so there is no screen version to aim at. |
+| 29-30 | `DeviceBusy`: error when the device already has a different command waiting. |
+| 33-34 | `UnknownCommand`: error when a result arrives for a command we never sent. |
+| 37-45 | `Device`: what we know about one device. `observation` = its last report; `outstanding` = the command waiting or running; `delivered` = has the app picked it up?; `last_result` = the latest result; `finished` = recent finished IDs. |
+| 48-50 | `utc_now()`: the current time in UTC. Tests replace it with a clock they move by hand. |
+| 53-55 | `format_time()`: writes a time as `2026-11-08T10:00:30Z`, the exact shape the schema requires. |
+| 58-63 | `CommandQueue.__init__`: keeps the clock and an empty dictionary of devices. |
+| 65-67 | `device(id)`: returns that device's record, creating an empty one the first time. |
+| 69-70 | `queue_command(device_id, operation, arguments)`: **Input** device, operation, arguments. **Output** the full command dictionary. |
+| 71-72 | Refuses any operation outside the four. This is one of the walls of rule 4. |
+| 73-75 | Refuses a device that has not reported in (`DeviceNotSeen`). |
+| 76 | Throws away a waiting command that has expired (see 142). |
+| 77-81 | If a command is already waiting: the same request again gets the same command back (safe to repeat); a different one is `DeviceBusy`. |
+| 82-94 | Builds the command: versions, a new `task_id` and `command_id`, the device, `session_id` (the same as the device in development), the operation and arguments, `expected_observation_version` (the screen version this command was planned against) and `expires_at` (now + `COMMAND_LIFETIME`). |
+| 95-97 | For `fill_form` and `show_review`, adds `expected_draft_version`: the draft version the app last reported, or 0 when there is no draft. |
+| 98-105 | Prints the step "command queued": the first 8 characters of the command ID, the operation, arguments, expected observation version and expiry. |
+| 106-108 | Stores it as outstanding, not yet delivered, and returns it. |
+| 110-111 | `next_command(device_id, observation)`: called on every poll. **Input** the app's observation. **Output** a command to run, or `None`. |
+| 112-113 | Stores the observation as the latest. |
+| 114 | Drops an expired command first. |
+| 115-117 | Nothing waiting, or already handed over: nothing to send. A command is never delivered twice. |
+| 118-120 | If the screen changed since the command was planned (version differs), the command is closed as `rejected_stale` and not sent. `bridge_link` will try again with the new version. |
+| 121 | Otherwise marks it delivered. |
+| 122-126 | Prints the step "command handed to the app": the command ID and the observation version it runs on. |
+| 127 | Returns the command. |
+| 129-130 | `record_result(result)`: called when the app posts a result. |
+| 131-134 | If this command already finished, a repeat changes nothing (the network may resend). |
+| 135-139 | If it is the outstanding command, store the result's fresh observation and finish it. |
+| 140 | Otherwise `UnknownCommand`. |
+| 142-143 | `drop_if_expired(device)`: closes a command that is past its time, so it can never run late. |
+| 144-146 | Nothing waiting, or not expired yet: do nothing. (The times are compared as text, which works because of the fixed format.) |
+| 147-151 | If the app had already picked it up, it may have run, so the result is `uncertain` (`no_result_before_expiry`). If not, it is `rejected_expired`. |
+| 153-155 | `close_unsent()`: closes the outstanding command on the backend's side. |
+| 156 | Prints the step "command closed here" with the outcome and error code (stale, expired or uncertain). |
+| 157-165 | Writes the result (not the app's), with the last known observation and draft version 0, and finishes. |
+| 167-172 | `finish()`: keeps the result as `last_result`, clears the outstanding command, and adds its ID to the last 50 finished. |
 
 ### 5.6 `mobile_api.py` — the two calls the app makes
 
@@ -401,33 +409,35 @@ text (ref → text), and whether to finish on the review. **Output:** a `TaskRep
 | Lines | What it does |
 |---|---|
 | 1-7 | Docstring: resolves every value before the app moves; checks each page; never confirms. |
-| 9-13 | Imports. |
-| 15 | `PERSIAN_DIGITS`: a table that turns `۲۵۰۰۰۰` into `250000`. |
-| 16 | `NO_REVIEW`: the `needs` code the app sends when a screen has no review page. |
-| 19-24 | `Bridge`: anything with `send(operation, arguments) -> result`. The real one is `BridgeLink`; tests pass a fake. |
-| 27-28 | `TaskStopped`: the run cannot go on; the message says why. |
-| 31-41 | `TaskReport`: `state` (`running`, `review`, `arrived`, `stopped`; `idle` before any run), `reason`, and `steps` (each command and what came back). `as_json` for the page. |
-| 44-46 | `plain_digits(text)`: only the digits, in Latin form. `"۲۵۰,۰۰۰"` → `"250000"`. |
-| 49-54 | `money_value(text)`: a whole number of rials as `{"value": 250000, "unit": "IRR"}`. Anything else (a decimal point, letters) stops the task. This is rule 6 (exact integers) in code. |
-| 57-67 | `shows(requirement, sent, shown)`: does the screen agree with what was sent? No value shown is fine only for a picker or choice. Money: compare digits. A masked number (`****0091`): compare the last four digits. Text: must be equal. Anything else: must not be empty. |
-| 70-76 | `TaskRunner`: keeps the bridge, the navigator and the lookups. |
-| 78-80 | `missing(plan, values)`: the requirements with no answer yet, so all can be asked at once. |
-| 82-83 | `prepared(plan, values)`: turns every answer into what the app takes. **Runs before the app moves**, so a bad value moves nothing. |
-| 84-87 | A value the plan did not ask for is refused (stops anyone smuggling in, say, a PIN field). |
-| 88-90 | A missing value stops the run. |
-| 91 | Prepares each one. |
-| 93-102 | `prepared_value(item, text)`: money → `money_value`; no lookup → the trimmed text; a lookup → `lookups.resolve`; a miss or a tie stops the run with the field's description. |
-| 104-105 | `run(plan, values, review, report)`: the main loop. The caller can read `report` while this runs. |
-| 107 | Prepare everything first. |
-| 108-111 | For each leg: move there; if it has fields, fill them. |
-| 112 | At the end: open the review if this is a feature with a form; otherwise the state is `arrived`. |
-| 113-116 | Any `TaskStopped`: the state becomes `stopped` with the reason. |
-| 118-134 | `command(operation, arguments, report)`: sends one command through the bridge and appends a step to the report (operation, arguments, outcome, screen, fields, needs, error, trace). |
-| 136-145 | `move(leg, sent, report)`: builds `navigate {"destination": ..., "arguments": {selection: key}}`, checks the keys first, sends it, and stops unless the outcome is `succeeded` **and** the screen is the leg's screen. |
-| 147-152 | `check_keys(leg, sent)`: refuses a chosen key that would spell a user-only tag, before the app ever sees it. |
-| 154-164 | `fill(leg, sent, report)`: sends `fill_form {"form": screen, "values": {...}}`; stops unless it succeeded on the same screen; then reads back each field from the observation and stops if any does not show what was sent. |
-| 166-173 | `show_review(report)`: sends `show_review`. Succeeded → `review`. The app says there is no review here → `arrived`. Anything else stops. **It never sends a confirm: there is no such operation.** |
-| 176-178 | `why(result)`: the app's own reason, from `needs`, `error_code` or the outcome. |
+| 9-14 | Imports, including `show` from `steps.py`, which prints a step when `ASSISTANT_TRACE=1`. |
+| 16 | `PERSIAN_DIGITS`: a table that turns `۲۵۰۰۰۰` into `250000`. |
+| 17 | `NO_REVIEW`: the `needs` code the app sends when a screen has no review page. |
+| 20-25 | `Bridge`: anything with `send(operation, arguments) -> result`. The real one is `BridgeLink`; tests pass a fake. |
+| 28-29 | `TaskStopped`: the run cannot go on; the message says why. |
+| 32-42 | `TaskReport`: `state` (`running`, `review`, `arrived`, `stopped`; `idle` before any run), `reason`, and `steps` (each command and what came back). `as_json` for the page. |
+| 45-47 | `plain_digits(text)`: only the digits, in Latin form. `"۲۵۰,۰۰۰"` → `"250000"`. |
+| 50-55 | `money_value(text)`: a whole number of rials as `{"value": 250000, "unit": "IRR"}`. Anything else (a decimal point, letters) stops the task. This is rule 6 (exact integers) in code. |
+| 58-68 | `shows(requirement, sent, shown)`: does the screen agree with what was sent? No value shown is fine only for a picker or choice. Money: compare digits. A masked number (`****0091`): compare the last four digits. Text: must be equal. Anything else: must not be empty. |
+| 71-77 | `TaskRunner`: keeps the bridge, the navigator and the lookups. |
+| 79-81 | `missing(plan, values)`: the requirements with no answer yet, so all can be asked at once. |
+| 83-84 | `prepared(plan, values)`: turns every answer into what the app takes. **Runs before the app moves**, so a bad value moves nothing. |
+| 85-88 | A value the plan did not ask for is refused (stops anyone smuggling in, say, a PIN field). |
+| 89-91 | A missing value stops the run. |
+| 92 | Prepares each one. |
+| 94-105 | `prepared_value(item, text)`: money → `money_value`; no lookup → the trimmed text; a lookup → `lookups.resolve`; a miss or a tie stops the run with the field's description. After a lookup resolves, line 104 prints the step "resolve value": the field, the lookup, what the user said and what will be sent (a card number masked). |
+| 107-108 | `run(plan, values, review, report)`: the main loop. The caller can read `report` while this runs. |
+| 109-110 | Prints the step "plan": the target, the route as `from → to (action)` lines, and the refs it needs. |
+| 112 | Prepare everything first. |
+| 113-116 | For each leg: move there; if it has fields, fill them. |
+| 117 | At the end: open the review if this is a feature with a form; otherwise the state is `arrived`. |
+| 118-120 | Any `TaskStopped`: the state becomes `stopped` with the reason. |
+| 121-122 | Prints the step "run ended" with the state and the reason, if any, and returns the report. |
+| 124-144 | `command(operation, arguments, report)`: prints "send …" with the arguments, sends one command through the bridge, prints "answer to …" (outcome, screen, fields, and `needs` and `error_code` when present), and appends a step to the report (operation, arguments, outcome, screen, fields, needs, error, trace). |
+| 146-155 | `move(leg, sent, report)`: builds `navigate {"destination": ..., "arguments": {selection: key}}`, checks the keys first, sends it, and stops unless the outcome is `succeeded` **and** the screen is the leg's screen. |
+| 157-162 | `check_keys(leg, sent)`: refuses a chosen key that would spell a user-only tag, before the app ever sees it. |
+| 164-175 | `fill(leg, sent, report)`: sends `fill_form {"form": screen, "values": {...}}`; stops unless it succeeded on the same screen; then reads back each field from the observation and stops if any does not show what was sent. When all agree, prints "fields checked" with the fields as shown on screen. |
+| 177-184 | `show_review(report)`: sends `show_review`. Succeeded → `review`. The app says there is no review here → `arrived`. Anything else stops. **It never sends a confirm: there is no such operation.** |
+| 187-189 | `why(result)`: the app's own reason, from `needs`, `error_code` or the outcome. |
 
 ### 5.11 `bridge_link.py` — send one command and wait for its answer
 
@@ -438,14 +448,14 @@ pushes.
 | Lines | What it does |
 |---|---|
 | 1-6 | Docstring: it only waits; its one decision is to resend when the screen moved before delivery. |
-| 8-11 | Imports. `TaskStopped` comes from the runner, so a failure here stops the run cleanly. |
-| 13 | `RESULT_TIMEOUT_SECONDS = 40`: give up after 40 s with no result. |
+| 8-11 | Imports. `DEBUGGING` comes from the queue; `TaskStopped` comes from the runner, so a failure here stops the run cleanly. |
+| 13 | `RESULT_TIMEOUT_SECONDS`: give up after 40 s with no result, or after one hour when the backend was started with `ASSISTANT_DEBUG=1`, so a paused breakpoint does not end the wait. |
 | 14 | `POLL_SECONDS = 0.1`: look for the result every tenth of a second. |
 | 15 | `STALE_TRIES = 3`: try at most three times when the screen keeps moving. |
 | 18-24 | `BridgeLink`: one device's end of the loop: the queue, the device, the timeout. |
 | 26-32 | `send(operation, arguments)`: queue, wait; if the result is `stale_observation` (the screen moved before the app picked it up, so it never ran), queue again with the new version. Up to three times, then return the last result. |
 | 34-41 | `queued(...)`: queues; turns `DeviceNotSeen` into "the app has not connected yet" and `DeviceBusy` into "another command is running", both as `TaskStopped` in Persian. |
-| 43-52 | `wait_for(command_id)`: checks the device's `last_result` every 0.1 s until it is for this command; after 40 s stops with "no answer came from the app". |
+| 43-52 | `wait_for(command_id)`: checks the device's `last_result` every 0.1 s until it is for this command; after the timeout stops with "no answer came from the app". |
 
 ### 5.12 `graph_tasks.py` — what the graph page asks of the backend
 
@@ -521,6 +531,27 @@ and a `built` flag, and edges with a `walked` flag.
 | 78-87 | `POST /graph/run`: starts a run. 409 when one is running; 404 when there is no route. Replies 202 with the first report. |
 | 89 | Returns the route group. |
 
+### 5.16 `steps.py` — numbered prints of every step
+
+For a person following a run while debugging ([debugging](runbook/debugging.md)). Off by default.
+
+**Called by:** `task_runner.py` and `command_queue.py`. **Input:** a title and named values.
+**Output:** printed lines when `ASSISTANT_TRACE=1`; nothing otherwise. It never changes what the
+callers do.
+
+| Lines | What it does |
+|---|---|
+| 1-6 | Docstring: off by default; it must never print a full card, account or IBAN number. |
+| 8-11 | Imports: a counter, JSON, environment variables and regular expressions. All standard library. |
+| 13 | `LONG_NUMBER`: any run of 12 or more digits. |
+| 14 | `counter`: one step number for the whole process, never reset. |
+| 17-19 | `masked(text)`: replaces each long number with `****` and its last 4 digits, so `0000000000000091` prints as `****0091`. |
+| 22-23 | `show(title, **values)`: prints one step. |
+| 24-25 | Reads `ASSISTANT_TRACE` on every call, so tests can switch it; anything but `1` prints nothing. |
+| 26 | The header: `── 3 · send navigate ─────`, numbered from the counter. |
+| 27-30 | One line per value, names aligned. Dicts and lists are written as JSON with Persian kept readable; a value of several lines is indented under the first. |
+| 31 | Masks the whole block and prints it at once (`flush=True`, so it shows straight away). |
+
 ## 6. The graph page in the browser
 
 Not Python, but it is how you drive everything today. Files in `assistant/static/`. How to use it:
@@ -554,7 +585,8 @@ files they replace are marked.
 | `BridgeConfig.kt` | `enabled(context)` | True only in a debug build **and** when the file `bridge.enabled` exists in the app's files folder (`adb shell touch ...`). `DEVICE_ID = "replica-dev"`. |
 | `BridgeState.kt` | object | Three values the app writes after each screen draw: current `screen`, Home `homeTab`, and the `activity`. Read by `ComposeControls`. |
 | `BackendClient.kt` | `resume(observation)` | POSTs to `/assistant/v1/sessions/replica-dev/resume` → the next command or null. |
-| | `postResult(result)` | POSTs to `/assistant/v1/results` → the next command or null. |
+| | `postResult(result)` | Logs `result <id>: <outcome> on <screen>` with the trace, `needs` and `error_code`, then POSTs to `/assistant/v1/results` → the next command or null. |
+| | `logged(command)` | Logs `command <id>: <operation> <destination or form>` for a command the backend handed over (tag `RagBotBridge`, read with `adb logcat -s RagBotBridge`). Never a field's value. Only here, because `Executor` and `CommandPoller` also run in JVM unit tests, where `android.util.Log` throws. |
 | | `post(path, body)` | One HTTP POST to `BuildConfig.BRIDGE_BACKEND` (a local development address set at build time), 5 s timeouts; any non-200 is an error. No credentials. |
 | `CommandPoller.kt` | `start()` | Once per process (Android 10+): makes `Executor(ComposeControls())` and `BackendClient`, starts a background thread. |
 | | `loop()` | Forever: `pollOnce`, ignore "backend not running", sleep 0.5 s. |
@@ -721,6 +753,7 @@ backend tests in `tests/backend/` are the ones that prove our runtime code.
 | `tests/backend/test_lookups.py` | 8 | رضا becomes her card; a typed number needs no contact; an unknown name is not guessed; two matches are ambiguous; every source finds records; the attribute picks what is sent; unknown lookups are unknown; it never writes. |
 | `tests/backend/test_task_runner.py` | 13 | Card to رضا navigates, fills and stops at the review; a missing value stops before the app moves; all missing values are found at once; an unknown contact stops first; money must be a whole number, Persian digits too; an unexpected screen or a blocked navigate stops the run; a page with the wrong amount stops before the review; a selection travels as a navigate argument; a value the plan does not ask for is refused; a crafted row key never reaches the app; **no feature ever sends an operation outside the four**. |
 | `tests/backend/test_api.py` | 17 | The HTTP routes: idle status; a click reaches the app and the result reaches the page; bodies outside the contract, unknown commands, unbuilt screens, extra fields, unseen devices are refused; a second destination waits; **no route can confirm, submit or pay**; the page loads nothing from the internet; plans, demo values and runs behave. |
+| `tests/backend/test_steps.py` | 4 | The step prints are silent unless `ASSISTANT_TRACE=1`; a card number is masked and Persian stays readable; a traced card-to-رضا run never prints the full card; `ASSISTANT_DEBUG=1` gives a one-hour command and result wait. |
 | `tests/backend/test_graph_run.py` | 2 | A whole run over the real routes, with a fake app that speaks the contract: card to رضا reaches the review and stops; a second run is refused. |
 | `tests/contracts/test_contracts.py` | 8 | The contracts suite and the transition tables. |
 | `tests/foundation/test_project_checks.py` | 14 | The foundation and baseline checks, on throwaway copies of the repository. |
@@ -738,7 +771,8 @@ The Kotlin tests (`PolicyTest`, `ExecutorTest`, the device tests `BridgeJourneys
 - **One device, one run.** `DEVICE_ID = "replica-dev"` on both sides; `session_id` equals the
   device ID. A real deployment needs a real session and device mapping.
 - **Timings.** App polls every 0.5 s; a command lives 30 s; the backend waits 40 s for a result and
-  checks every 0.1 s; the app waits 3 s for a control; a navigate takes at most 40 steps.
+  checks every 0.1 s; the app waits 3 s for a control; a navigate takes at most 40 steps. With
+  `ASSISTANT_DEBUG=1` the command and the wait both last an hour ([debugging](runbook/debugging.md)).
 - **Stale is normal.** If the screen changes between planning and delivery, the command is closed
   as stale and resent with the new version, up to three times.
 - **Who refuses a confirm, and where.** Five walls: the operations (no confirm operation exists),

@@ -7,10 +7,10 @@ between queueing and delivery, which the contract says did not run the command.
 
 import time
 
-from assistant.command_queue import CommandQueue, DeviceBusy, DeviceNotSeen
+from assistant.command_queue import DEBUGGING, CommandQueue, DeviceBusy, DeviceNotSeen
 from assistant.task_runner import TaskStopped
 
-RESULT_TIMEOUT_SECONDS = 40
+RESULT_TIMEOUT_SECONDS = 3600 if DEBUGGING else 40
 POLL_SECONDS = 0.1
 STALE_TRIES = 3
 

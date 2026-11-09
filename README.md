@@ -9,6 +9,7 @@ user always authorizes the transaction themselves.
 - Rules for contributors and coding agents: [`AGENTS.md`](AGENTS.md)
 - Current status: [`docs/status.md`](docs/status.md) · Phase specs: [`docs/phases/`](docs/phases/README.md)
 - Server setup: [`docs/runbook/server-setup.md`](docs/runbook/server-setup.md)
+- Debugging a task step by step: [`docs/runbook/debugging.md`](docs/runbook/debugging.md)
 
 ## Checks
 

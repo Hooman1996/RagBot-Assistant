@@ -116,3 +116,5 @@ local/toolchain/replica-viewer/stop.sh
 
 Then press Ctrl-C in the backend's terminal. To stop the emulator as well, run
 `adb -s emulator-5554 emu kill`.
+
+To follow a run line by line under a debugger, or with numbered prints, see [debugging](../runbook/debugging.md).
