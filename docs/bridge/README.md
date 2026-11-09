@@ -12,7 +12,7 @@ so the app validates everything as usual. After each command it reports what the
 ```mermaid
 flowchart LR
     subgraph backend [Python backend]
-        A[Assistant, later] --> R[Task runner]
+        A[Agent: agent_graph] --> R[Task runner]
         G[Graph page] --> R
         R --> N[Navigator]
         N --> F[Profile: screens, edges, requirements]
@@ -31,7 +31,8 @@ flowchart LR
 ```
 
 The app always starts the conversation. It polls the backend, so the backend never needs to reach
-into the device. The assistant is not built yet: today the graph page plays its part.
+into the device. The agent turns one Persian sentence into a task for the same runner: see
+[the agent](agent.md). The graph page's Run plays the user's part without the model.
 
 To see it work, follow [try it](try-it.md). The decision behind this shape is
 [D-023](../decisions/0023-python-navigator-thin-bridge.md).
@@ -55,6 +56,9 @@ Start in Python, where the decisions are. The files are in `assistant/`.
 | `graph_data.py` | Reads `app_profiles/` and places every node |
 | `graph_page.py` | Serves the page, its data, the live state, the plan and the run |
 | `static/graph.html`, `graph_map.js`, `graph_task.js` | The page: layout, the map, and a click's route and run |
+| `agent_graph.py`, `agent_nodes.py`, `agent_state.py` | The agent: one LangGraph graph from a sentence to the review ([agent.md](agent.md)) |
+| `intent.py`, `slots.py`, `models.py`, `replies.py` | Narrowing and the model's choice, the values and their check, the model clients, the Persian replies |
+| `agent_chat.py`, `static/graph_chat.js` | The graph page's chat box |
 | `app.py`, `__main__.py` | Put the routes together and start the server on `127.0.0.1:8100` |
 
 The requirements come from the profile, generated from these files in

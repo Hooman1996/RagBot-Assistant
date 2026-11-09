@@ -29,8 +29,13 @@ def numbers(messages: list[str]) -> list[str]:
 
 def hidden(messages: list[str]) -> list[str]:
     """The messages with each long number replaced by [number N], counting across them."""
-    counter = iter(range(1, len(numbers(messages)) + 1))
-    return [LONG_NUMBER.sub(lambda _: f"[number {next(counter)}]", text) for text in messages]
+    shown, count = [], 0
+    for text in messages:
+        for found in LONG_NUMBER.findall(text):
+            count += 1
+            text = text.replace(found, f"[number {count}]", 1)
+        shown.append(text)
+    return shown
 
 
 def extract_prompt(messages: list[str], wanted: list[dict]) -> str:

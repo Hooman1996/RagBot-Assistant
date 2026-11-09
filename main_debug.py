@@ -9,9 +9,8 @@ import os
 import sys
 
 os.environ["ASSISTANT_TRACE"] = "1"  # print every step the assistant takes
-os.environ["ASSISTANT_DEBUG"] = (
-    "1"  # set before the imports below: a paused breakpoint must not expire a command
-)
+# Set before the imports below, so a paused breakpoint cannot expire a command.
+os.environ["ASSISTANT_DEBUG"] = "1"
 
 from threading import Thread
 

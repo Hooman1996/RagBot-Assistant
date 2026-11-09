@@ -1,8 +1,9 @@
 # Debugging a task step by step
 
-This page shows how to follow one task, card to رضا, line by line. You can do it in three ways:
-read the numbered prints, step through it under a debugger with the tests' fake app, or step
-through it with the real replica on the emulator. Everything runs on the server, in
+This page shows how to follow one task, card to رضا, line by line. You can do it in four ways:
+read the numbered prints, step through it under a debugger with the tests' fake app, step
+through it with the real replica on the emulator, or step through the whole agent, from the
+Persian sentence to the review, in one process with `main_debug.py` (section 6). Everything runs on the server, in
 `/root/projects/assistant`, with `conda activate assistant`. You reach it from Windows with VS Code
 Remote SSH.
 
@@ -118,6 +119,7 @@ text). Pick "Card to رضا on the fake app" in the Run and Debug view and press
       "request": "launch",
       "module": "assistant",
       "cwd": "${workspaceFolder}",
+      "envFile": "${workspaceFolder}/.env",
       "justMyCode": true,
       "env": { "ASSISTANT_TRACE": "1", "ASSISTANT_DEBUG": "1" }
     }
@@ -225,3 +227,95 @@ in `.kt`, which are in `android/app/src/main/java/org/ragbot/replica/bridge/`.
 
 `resume` and `post_result` are defined inside `build_mobile_router`; a breakpoint on their first
 line works as usual.
+
+## 6. The agent in one process: `main_debug.py`
+
+`main_debug.py`, at the top of the repository, runs **the same agent** as the graph page's chat box
+([the agent](../bridge/agent.md)), top to bottom, in one process. It builds the same objects as
+`app.py`: the profile, the navigator, the lookups, `Chat`, `Embeddings`, the feature index and the
+compiled graph. Then it talks to the agent with plain `graph.invoke(...)` and
+`graph.invoke(Command(resume=...))` calls, one per user turn, and prints each reply. It uses the
+real Gemma and TEI services, so source `.env` first (VS Code does it with `envFile`).
+
+```bash
+cd /root/projects/assistant
+conda activate assistant
+set -a; source .env; set +a
+python main_debug.py                                   # the built-in example
+python main_debug.py "قبض برقمو پرداخت کن" "1"          # your own turns
+python main_debug.py --replica                         # the real replica (below)
+```
+
+The built-in example is «۲۵۰ هزار تومان به رضا کارت به کارت کن», then `1`: the first card in the
+options. A number answers with that option; anything else is your own words. If the agent still
+asks when the turns run out, it reads your answer from the keyboard. It sets `ASSISTANT_TRACE=1`,
+so every step is printed, and `ASSISTANT_DEBUG=1` before its imports, so a long pause on a
+breakpoint cannot expire a command.
+
+**How it differs from the real run.** By default a stand-in, `tools/stand_in_app.py`, takes the
+place of three things: `BridgeLink`, the HTTP routes and the Kotlin executor. It follows the
+profile and answers like the app, and every command still goes through the real
+`CommandQueue.queue_command`, `next_command`, the contract checks and `record_result`, all on one
+thread. Everything else is the same code as the server. There are no threads, no web server and no
+`sleep`.
+
+**VS Code.** Add this entry to `.vscode/launch.json` (section 2 has the rest of the file):
+
+```json
+{
+  "name": "Agent in one process (main_debug.py)",
+  "type": "debugpy",
+  "request": "launch",
+  "program": "${workspaceFolder}/main_debug.py",
+  "cwd": "${workspaceFolder}",
+  "envFile": "${workspaceFolder}/.env",
+  "console": "integratedTerminal",
+  "justMyCode": true
+}
+```
+
+For the replica, copy it with `"args": ["--replica"]`. `"console": "integratedTerminal"` lets you
+type an answer when the agent asks.
+
+**The first breakpoint.** Put it on the first `graph.invoke` line in `main()`,
+`result = graph.invoke(new_request(CONVERSATION, turn), config)`, and press F5. With `justMyCode`,
+**Step Into** (F11) on that line skips LangGraph's own code and lands in the first node,
+`Nodes.understand` in `assistant/agent_nodes.py`. Keep pressing Step Into: each node returns into
+LangGraph, and the next Step Into lands in the route function in `agent_graph.py` and then in the
+next node. Use Step Over (F10) on lines you do not want to enter, such as the sum in
+`FeatureIndex.closest`. The order for the example:
+
+| # | File | Where Step Into lands |
+|---|---|---|
+| 1 | `main_debug.py` | `main`, on the first `graph.invoke`; Step Into first enters `agent_state.new_request` (the argument) |
+| 2 | `assistant/agent_nodes.py` | `Nodes.understand`, the first node |
+| 3 | `assistant/slots.py`, `intent.py`, `models.py` | `hidden`; `FeatureIndex.closest` and `Embeddings.embed` (TEI); `choose` and `Chat.json` (Gemma) |
+| 4 | `assistant/steps.py`, `agent_state.py` | `show` (the printed step) and `moved` (the checked state change) |
+| 5 | `assistant/agent_graph.py` | `after_understand`, the route to the next node |
+| 6 | `assistant/agent_nodes.py`, `tools/stand_in_app.py`, `navigator.py` | `Nodes.plan`; `current_screen`; `plan_feature`, `route`, `legs` |
+| 7 | `assistant/agent_nodes.py`, `slots.py` | `Nodes.extract` and `slots.extract` (Gemma), then `Nodes.check`, `slots.checked`, `money` and `task_runner.money_value` |
+| 8 | `assistant/agent_nodes.py`, `replies.py`, `lookups.py` | `Nodes.clarify`: `lookup_options`, `candidates`, `option`, `question`; then `interrupt()` returns to `main_debug.py`, which prints the question |
+| 9 | `main_debug.py` | the second turn, `graph.invoke(Command(resume=...))`; `clarify` runs again from its first line and gets the answer |
+| 10 | `assistant/agent_nodes.py`, `lookups.py` | `Nodes.resolve`: `source_of`, `matching` |
+| 11 | `assistant/agent_nodes.py`, `task_runner.py` | `Nodes.prepare`, then `TaskRunner.run`, `prepared`, `lookups.resolve`, `move`, `command` |
+| 12 | `tools/stand_in_app.py` | `StandInApp.send` |
+| 13 | `assistant/command_queue.py` | `CommandQueue.queue_command` |
+
+Measured on 9 Nov 2026 by driving the same debugger VS Code uses (debugpy, `justMyCode` on) over
+its protocol: from the breakpoint to `queue_command` took 2,577 Step Into presses, passing through
+these 14 files and no library code. Stepping out of each generator expression (as Step Over would)
+skips the sum in `closest`.
+
+**`--replica`.** `python main_debug.py --replica` drives the real replica on the emulator. Stop any
+other backend on port 8100 first: it starts the backend's own app (`create_app` with the queue it
+shares) under uvicorn on `127.0.0.1:8100`, on one background daemon thread, so the replica can
+poll it. The agent runs on the main thread with `BridgeLink(queue, DEVICE_ID)`, exactly as the
+server runs it. The replica must have its loop on ([try it](../bridge/try-it.md), steps 3 and 4).
+
+While a breakpoint holds, VS Code pauses **every** thread, the web server too. The replica's poll
+that is in flight waits (it waits up to an hour for an answer), and after Continue the server
+answers it and the run carries on. Because of `ASSISTANT_DEBUG=1`, the command is not expired when
+you come back. Tested on 9 Nov 2026 with debugpy (the debugger VS Code uses) and the default example: a
+breakpoint in `TaskRunner.move` held for 70 s stopped all six threads, the web server's too; after
+Continue the replica reached the card-transfer review.
+

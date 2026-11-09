@@ -7,8 +7,10 @@ every line is accounted for. The Kotlin bridge is explained function by function
 must build is in [the app-team handover](app-team-handover.md).
 
 Line numbers match `main` at commit `95533cd` (8 Nov 2026), except `command_queue.py`,
-`task_runner.py`, `bridge_link.py` and the new `steps.py`, which match #134 (9 Nov 2026). If a file
-changes, the numbers move, but the order of the blocks usually stays the same.
+`task_runner.py`, `bridge_link.py` and `steps.py`, which match #134 (9 Nov 2026), and `app.py`,
+`graph_tasks.py`, `graph_page.py`, the agent's files (5.17 to 5.24), `tools/project_checks.py`,
+`tools/stand_in_app.py` and `main_debug.py`, which match #136 (9 Nov 2026). If a file changes, the
+numbers move, but the order of the blocks usually stays the same.
 
 ## Contents
 
@@ -53,8 +55,12 @@ The design decision is [D-023](decisions/0023-python-navigator-thin-bridge.md). 
 for the bridge is [docs/bridge/README.md](bridge/README.md). How to run it yourself is
 [docs/bridge/try-it.md](bridge/try-it.md).
 
-What is **not built yet**: the LLM, the chat, RAG answers, the real assistant API. Today the graph
-page plays the user's part: you click a screen and type the values.
+**The agent** (#136) sits on top of `task_runner`: it turns one Persian sentence into the feature,
+its values and one question for what is missing, with the Gemma model and the TEI embeddings, and
+drives the same runner ([the agent](bridge/agent.md), sections 5.17 to 5.24). The graph page has a
+chat box for it, and `main_debug.py` runs it in one process. The graph page's Run still plays the
+user's part without the model. What is **not built yet**: RAG answers, the in-app panel and the real
+assistant API.
 
 ## 2. One journey, file by file: card to رضا
 
@@ -175,7 +181,7 @@ then the graph page. The same order with one-line summaries is in
 
 | Lines | What it does |
 |---|---|
-| 1 | Marks `assistant/` as a Python package, so `from assistant.x import y` works. The docstring says what is in it today. |
+| 1 | Marks `assistant/` as a Python package, so `from assistant.x import y` works. The docstring says what is in it: the command loop, the graph page and the agent. |
 
 ### 5.2 `__main__.py` — start the server
 
@@ -192,24 +198,31 @@ then the graph page. The same order with one-line summaries is in
 
 ### 5.3 `app.py` — put every part together
 
-**Called by:** `__main__.py` and the tests. **Input:** optionally a `CommandQueue` (tests pass one
-with a fake clock). **Output:** a ready FastAPI app with all routes.
+**Called by:** `__main__.py`, `main_debug.py --replica` and the tests. **Input:** optionally a
+`CommandQueue` (tests pass one with a fake clock; `main_debug.py` shares its own). **Output:** a
+ready FastAPI app with all routes.
 
 | Lines | What it does |
 |---|---|
-| 1-6 | Docstring: what the app is, and what it does **not** have (no LLM, no RAG, no bank). |
-| 8 | `subprocess` lets Python run a command, here `git`. |
-| 10-17 | Imports the pieces: the web framework, the queue, the graph data readers, and the three groups of routes. |
-| 19 | `DEVICE_ID = "replica-dev"`: the one development device. The app uses the same name (`BridgeConfig.DEVICE_ID`). |
-| 22-25 | `source_revision()`: runs `git rev-parse --short HEAD` and returns, for example, `95533cd`. The graph page shows it, so you can check the running server is the code you expect (the AGENTS.md "Running services" rule). |
-| 28-29 | `create_app(queue=None)`: the builder. |
-| 30 | Use the queue passed in, or make a new one. |
-| 31 | Make an empty FastAPI app with a title. |
-| 32 | Add the app's two routes (`/assistant/v1/...`), sharing the queue. |
-| 33 | Add the development route (`/test-harness/v1/commands`), with the list of built screens so an unbuilt one is refused. |
-| 34 | Make the `GraphTasks` helper: the queue, the device ID and the replica profile. |
-| 35 | Add the graph page routes (`/graph/...`), with the drawn graph data and the git revision. |
-| 36 | Give the finished app back. |
+| 1-7 | Docstring: what the app is; the chat box's agent reads the models only when a turn runs; no RAG and no bank. |
+| 9 | `subprocess` lets Python run a command, here `git`. |
+| 11-24 | Imports: the web framework, the agent's pieces (chat box, graph, tools, feature index, model clients), the bridge link, the queue, the graph data readers, the graph tasks and the route groups. |
+| 26 | `DEVICE_ID = "replica-dev"`: the one development device. The app uses the same name (`BridgeConfig.DEVICE_ID`). |
+| 29-32 | `source_revision()`: runs `git rev-parse --short HEAD` and returns, for example, `95533cd`. The graph page shows it, so you can check the running server is the code you expect (the AGENTS.md "Running services" rule). |
+| 35-36 | `create_app(queue=None)`: the builder. |
+| 37 | Use the queue passed in, or make a new one. |
+| 38 | Make an empty FastAPI app with a title. |
+| 39 | Add the app's two routes (`/assistant/v1/...`), sharing the queue. |
+| 40 | Add the development route (`/test-harness/v1/commands`), with the list of built screens so an unbuilt one is refused. |
+| 41 | Read the replica profile once. |
+| 42 | Make the `GraphTasks` helper: the queue, the device ID and the profile. |
+| 43 | The feature index over the profile's features, with a TEI client. Nothing is embedded until the first chat turn. |
+| 44 | A `BridgeLink` to the replica: the agent's bridge, the same kind a Run uses. |
+| 45 | The agent's `Tools`: the chat model, the index, the graph tasks' navigator and lookups, the bridge, and `current_screen`. |
+| 46 | The chat box, with the compiled agent graph and the graph tasks. |
+| 47 | `tasks.chat_busy = chat.busy`: a Run is refused while a chat turn runs, and the chat refuses a turn while a Run goes. |
+| 48-50 | Add the graph page routes (`/graph/...`), with the chat, the drawn graph data and the git revision. |
+| 51 | Give the finished app back. |
 
 ### 5.4 `contract_check.py` — is this JSON allowed?
 
@@ -459,19 +472,20 @@ pushes.
 
 ### 5.12 `graph_tasks.py` — what the graph page asks of the backend
 
-**Called by:** `graph_page.py`. **Holds:** at most one run, on a background thread.
+**Called by:** `graph_page.py`, and by `app.py` for the agent's navigator, lookups and current
+screen. **Holds:** at most one run, on a background thread.
 
 | Lines | What it does |
 |---|---|
-| 1-6 | Docstring: everything goes through `navigator` and `task_runner`, so this file adds no way to reach a confirm. |
-| 8-16 | Imports. |
-| 19-20 | `RunInProgress`: a run is already going. |
-| 23-31 | `GraphTasks`: keeps the queue, the device, a `Navigator` over the profile, the lookups, and an `idle` report. |
-| 33-36 | `current_screen()`: the screen in the app's last observation; Home before the app reports in. |
-| 38-44 | `plan_for(screen)`: if a feature with a form ends on this screen, plan through that form; otherwise plan straight there. Returns the plan and the feature. |
-| 46-55 | `preview(screen)`: what a click shows. `{"status": "user_only"}` or `{"status": "no_route"}` when it cannot plan; otherwise `status: ok` + target + route + requirements + the feature's intent + a demo value for each requirement. |
-| 57-65 | `start(screen, values)`: refuses a second run; plans; decides whether to end on a review (only for a feature with a form); makes a `TaskRunner` with a `BridgeLink`; resets the report; starts `runner.run` on a background thread so the web request returns at once. |
-| 67-69 | `progress()`: the report so far, as a dictionary. |
+| 1-7 | Docstring: everything goes through `navigator` and `task_runner`, so this file adds no way to reach a confirm; a run is refused while the chat takes a turn. |
+| 9-18 | Imports. |
+| 21-22 | `RunInProgress`: a run (or a chat turn) is already going. |
+| 25-34 | `GraphTasks`: keeps the queue, the device, a `Navigator` over the profile, the lookups, an `idle` report, and `chat_busy`, which `app.py` sets to the chat's `busy`. |
+| 36-39 | `current_screen()`: the screen in the app's last observation; Home before the app reports in. The agent plans from it too. |
+| 41-47 | `plan_for(screen)`: if a feature with a form ends on this screen, plan through that form; otherwise plan straight there. Returns the plan and the feature. |
+| 49-58 | `preview(screen)`: what a click shows. `{"status": "user_only"}` or `{"status": "no_route"}` when it cannot plan; otherwise `status: ok` + target + route + requirements + the feature's intent + a demo value for each requirement. |
+| 60-68 | `start(screen, values)`: refuses a second run, or a run while a chat turn goes; plans; decides whether to end on a review (only for a feature with a form); makes a `TaskRunner` with a `BridgeLink`; resets the report; starts `runner.run` on a background thread so the web request returns at once. |
+| 70-72 | `progress()`: the report so far, as a dictionary. |
 
 ### 5.13 `demo_values.py` — the "Fill with demo values" button
 
@@ -517,19 +531,22 @@ and a `built` flag, and edges with a `walked` flag.
 
 | Lines | What it does |
 |---|---|
-| 1-6 | Docstring: a run takes only a target and values, so it cannot reach a confirm. |
-| 8-16 | Imports. |
-| 18-19 | Where the page files are. |
-| 22-28 | `RunRequest`: a run body may have only `screen` and `values` (ref → text). |
-| 31-35 | `build_graph_router(...)`: the route group. |
-| 37-40 | `GET /graph`: the HTML page. |
-| 42-50 | `GET /graph/graph_map.js` and `/graph/graph_task.js`: the two scripts. |
-| 52-55 | `GET /graph/data`: every node and edge, plus the device ID. |
-| 57-66 | `GET /graph/state`: the last observation, the last result, whether a command is waiting, and the git revision. The page asks every 0.5 s. |
-| 68-71 | `GET /graph/plan/{screen}`: the preview of a click. |
-| 73-76 | `GET /graph/run`: the current run's report. |
-| 78-87 | `POST /graph/run`: starts a run. 409 when one is running; 404 when there is no route. Replies 202 with the first report. |
-| 89 | Returns the route group. |
+| 1-7 | Docstring: a run takes only a target and values, and a chat turn only the user's words or an offered option, so neither can reach a confirm. |
+| 9-18 | Imports. |
+| 20-21 | Where the page files are. |
+| 24-30 | `RunRequest`: a run body may have only `screen` and `values` (ref → text). |
+| 33-46 | `ChatRequest`: a chat turn has exactly one of `text` or `option`, each non-empty; any other field is refused (422). |
+| 49-53 | `build_graph_router(...)`: the route group, around the queue, the tasks, the chat and the graph data. |
+| 55-59 | `GET /graph`: the HTML page; each load starts a new chat conversation. |
+| 61-74 | `GET /graph/graph_map.js`, `/graph/graph_task.js` and `/graph/graph_chat.js`: the three scripts. |
+| 76-79 | `GET /graph/data`: every node and edge, plus the device ID. |
+| 81-90 | `GET /graph/state`: the last observation, the last result, whether a command is waiting, and the git revision. The page asks every 0.5 s. |
+| 92-95 | `GET /graph/plan/{screen}`: the preview of a click. |
+| 97-100 | `GET /graph/run`: the current run's report. |
+| 102-111 | `POST /graph/run`: starts a run. 409 when a run or a chat turn is going; 404 when there is no route. Replies 202 with the first report. |
+| 113-116 | `GET /graph/chat`: the conversation, the pending question and options, the task state and the runner's report. |
+| 118-125 | `POST /graph/chat`: starts or resumes the agent. 409 with the reason (`turn_in_progress`, `run_in_progress`, `unknown_option`). Replies 202. |
+| 127 | Returns the route group. |
 
 ### 5.16 `steps.py` — numbered prints of every step
 
@@ -552,6 +569,152 @@ callers do.
 | 27-30 | One line per value, names aligned. Dicts and lists are written as JSON with Persian kept readable; a value of several lines is indented under the first. |
 | 31 | Masks the whole block and prints it at once (`flush=True`, so it shows straight away). |
 
+### 5.17 `models.py` — the two model clients
+
+**Called by:** `intent.py` and `slots.py`, through the agent's nodes. **Input:** a prompt and a
+JSON schema, or a list of texts. **Output:** a dictionary, or one vector per text. **Raises:**
+`ModelError` on any failure, so the task fails instead of guessing.
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring: read-only HTTP clients over `httpx`; addresses from `ASSISTANT_LLM_URL`, `ASSISTANT_LLM_MODEL` and `ASSISTANT_EMBED_URL`; any failure raises `ModelError`. |
+| 9-12 | Imports: JSON, environment variables and `httpx`. |
+| 14-15 | A 30 s timeout, and at most 400 answer tokens (the served model's whole context is 4,000). |
+| 18-19 | `ModelError`. |
+| 22-27 | `Chat`: reads the model's address and name when made. Nothing is called yet, so a test or `create_app` can make one with no network. |
+| 29-40 | `json(prompt, schema)`: the body: temperature 0, the prompt as one user turn, and `response_format` with the schema, strict. |
+| 41-46 | Posts to `/chat/completions` and reads the answer's text as JSON. An HTTP error, a missing key or text that is not JSON becomes `ModelError`, with only the error's type name. |
+| 47-49 | Refuses an answer that is not a JSON object; returns it. |
+| 52-57 | `Embeddings`: reads the TEI address; the batch size is learned on first use. |
+| 59-66 | `embed(texts, query=False)`: the first time, reads `/info` for `max_client_batch_size` (50 today). |
+| 67-74 | Posts the texts to `/embed` in batches, with `normalize: true`. A query (the user's words) adds `prompt_name: "query"`, as RagBot does; a feature's text has none. |
+| 75-79 | Any failure, or the wrong number of vectors, becomes `ModelError`; returns the vectors. |
+
+### 5.18 `agent_state.py` — what the agent remembers, and how its task state may change
+
+**Used by:** the nodes, `agent_chat.py`, `main_debug.py` and the tests.
+
+| Lines | What it does |
+|---|---|
+| 1-6 | Docstring: every change of `task_state` goes through `moved()`. |
+| 8-10 | Imports: JSON, paths and `TypedDict`. |
+| 12-16 | `TRANSITIONS`: `contracts/transitions/task.json`, read once. |
+| 19-33 | `AgentState`: the twelve keys of one request, each with a comment: conversation, messages, offered and chosen intents, plan, values, missing, pending note and options, task state, report, reply. |
+| 36-37 | `BadTransition`. |
+| 40-55 | `new_request(conversation_id, text)`: the state a new message starts from: the one message, `task_state` `created`, everything else empty, so nothing of an earlier request carries over. |
+| 58-65 | `moved(state, *path)`: walks `path` from the current state. Staying put is not a change; any other step must be in the table, or it raises `BadTransition`. Returns `{"task_state": last step}`. A feature without a form passes two steps, `ready_for_user` then `completed`. |
+
+### 5.19 `intent.py` — which feature the sentence means
+
+**Called by:** `Nodes.understand`. **Input:** the user's words. **Output:** the 8 closest features,
+then one intent, `knowledge_question` or `not_sure`.
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring: what the model sees and never sees. |
+| 9 | Imports the two clients' types. |
+| 11-13 | `CLOSEST = 8`, and the two fixed answers. |
+| 16-18 | `feature_text(feature)`: what is embedded: `title — description`. |
+| 21-27 | `FeatureIndex`: the features, the embeddings client, and no vectors yet. |
+| 29-37 | `closest(text)`: embeds every feature the first time only, embeds the text as a query, scores each feature by dot product (the vectors have unit length, so it is the cosine), sorts highest first (ties keep profile order) and keeps 8. |
+| 40-54 | `choice_prompt(text, offered)`: the instructions, one line per offered feature (`intent: «title» — description Values: slot refs`), the two fixed answers, and the user's words. Nothing else. |
+| 57-67 | `choose(chat, text, offered)`: the schema's `choice` is an enum of exactly the 8 intents and the 2 fixed answers; asks the model; anything else becomes `not_sure`. |
+
+### 5.20 `slots.py` — the values, and their check
+
+**Called by:** `Nodes.understand`, `Nodes.extract` and `Nodes.check`. **Input:** the user's
+messages and the offered requirements. **Output:** the model's values, then only the good ones.
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring: the model sees only the offered requirements and the words, with long numbers hidden; code keeps nothing the plan does not ask for. |
+| 9-12 | Imports, including `money_value` from `task_runner.py`, so money is made the same way everywhere. |
+| 14-15 | `LONG_NUMBER` (12 or more digits, Persian or Latin) and the `[number N]` placeholder. |
+| 16 | `UNITS`: `IRR` is 1, `IRT` (toman) is 10. |
+| 17-22 | `MONEY`: the schema of an amount: a whole number and a unit. |
+| 25-27 | `numbers(messages)`: every long number in the messages, in order, in Latin digits. |
+| 30-38 | `hidden(messages)`: the messages with each long number replaced by `[number 1]`, `[number 2]`..., counting across all of them. |
+| 41-57 | `extract_prompt(messages, wanted)`: one line per requirement (ref, type, Persian ask and description), how money is written (`هزار` is 1000, toman is `IRT`, no unit means `IRR`), and the messages with their numbers hidden. |
+| 60-70 | `extract(chat, messages, requirements)`: the schema allows exactly the offered refs, each a string (or an amount) or `null`, all required; asks the model; drops the nulls. |
+| 73-80 | `money(value)`: only a dict with a real integer (not `True`) and a known unit; multiplies toman by 10 and builds the contract's `{"value": int, "unit": "IRR"}` with `money_value`, which refuses a negative. Anything else is `None`. |
+| 83-92 | `text(value, messages)`: a non-empty text, trimmed; `[number N]` is turned back into the user's number. |
+| 95-105 | `checked(values, requirements, messages)`: keeps only refs the plan asks for, each through `money` or `text`; drops the rest. |
+
+### 5.21 `replies.py` — what the agent says in Persian
+
+**Called by:** the nodes. Plain text building; every value and label is masked.
+
+| Lines | What it does |
+|---|---|
+| 1-6 | Docstring. |
+| 8-9 | Imports: the lookups' types and `masked`. |
+| 11-21 | The fixed sentences: the knowledge message, "which one?", the failure messages, the review and page messages, and the notes for a name not found or found twice. |
+| 22 | `FEW, MANY = 2, 8`: a lookup with this many records offers them as options (owner, 9 Nov 2026). |
+| 25-28 | `option(ref, item)`: one record as a choice. Its ref is `field=key`, so the answer says which field and which record; its label is the record's label, plus its value when that differs (`رضا ****0091`), masked. |
+| 31-39 | `lookup_options(lookups, wanted)`: each missing ref field's records, when its lookup has 2 to 8. |
+| 42-44 | `question(note, asks)`: one message: the note, if any, then every question. |
+| 47-55 | `shown(value, item, lookups)`: an amount as `2,500,000 ریال`; a record by its option label; anything else masked. |
+| 58-68 | `ready(report, requirements, lookups)`: every value the runner sent (form values and navigate arguments), one line each by its Persian description, after "the review is open" or, when the app had no review, "the form is filled". |
+
+### 5.22 `agent_nodes.py` — the agent's nodes
+
+**Used by:** `agent_graph.build_graph`. Each node is one method that takes the state and returns
+only the keys it changes.
+
+| Lines | What it does |
+|---|---|
+| 1-6 | Docstring: the model only returns JSON; code acts; the only commands are the task runner's. |
+| 8-21 | Imports. |
+| 23 | `MODEL_SEES`: the four keys of a requirement the model may see. |
+| 26-35 | `Tools`: everything the nodes use: the chat model, the feature index, the navigator, the lookups, the bridge, and a function that says where the app is. Only the bridge and that function differ between the server and `main_debug.py`. |
+| 38-42 | `plan_for(navigator, start, feature)`: through the feature's form when it has one, as `graph_tasks.plan_for` does. |
+| 45-50 | `Nodes`: the tools, and the features by intent. |
+| 52-55 | `failed(state, reply)`: ends the task as `failed` with a masked Persian reason. |
+| 57-68 | `understand`: hides long numbers, narrows to 8, lets the model choose. A model failure fails the task. A feature moves the task to `resolving`; a knowledge question or "not sure" leaves it `created` (no task, plan §13). |
+| 70-83 | `plan`: plans from the app's current screen; no allowed route fails the task. Keeps the plan as JSON, with its start screen and intent, and lists every requirement as missing. |
+| 85-100 | `extract`: offers the model only the missing requirements, with only `MODEL_SEES`. Nothing missing: no model call. A value already held wins over the model's. |
+| 102-108 | `check`: code only: `slots.checked`, then what is still missing. |
+| 110-121 | `clarify`: one message with every missing question; the options are `resolve`'s, or the lookups' records. `interrupt()` pauses here; on resume this node runs again from its first line and gets the answer. An option's ref sets that field's key; text is added to the messages for `extract`. |
+| 123-145 | `resolve`: code only: each value with a lookup must match one record (a typed number to a contact needs none), and is replaced by that record's key. A tie or a miss removes the value and goes back to `clarify` with a note and, for a tie, the matches as options. |
+| 147-155 | `prepare`: plans again from the same start, turns each amount into the text the runner reads, and runs `TaskRunner.run` over the bridge, ending at the review when the feature has a form. |
+| 157-168 | `verify`: code only: a stopped run fails with the runner's reason; the last observed screen must be the feature's `review` (or destination), else it fails. |
+| 170-177 | `ready_for_user`: a feature without a form: "page open", and `completed`. Otherwise: the review message with every value. |
+| 179-188 | `reply`: the knowledge message; or "which one?" with the 8 offered features by title, paused with `interrupt()`. An offered intent goes on to `plan`; text goes back to `understand`. |
+
+### 5.23 `agent_graph.py` — the one graph
+
+**Called by:** `app.py` and `main_debug.py`. **Output:** the compiled graph, with its checkpointer.
+
+| Lines | What it does |
+|---|---|
+| 1-6 | Docstring: no edge leads past the review. |
+| 8-14 | Imports. |
+| 17-21 | `after_understand`: end on a failure; `reply` for a knowledge question or "not sure"; else `plan`. |
+| 24-28 | `after_reply`: new words go back to `understand`; a knowledge reply ends; a picked feature goes to `plan`. |
+| 31-43 | `after_plan`, `after_extract`, `after_verify`: on to the next node, unless the task failed. |
+| 46-48 | `until_complete`: back to `clarify` while something is missing. Used after `check` and after `resolve`. |
+| 51-64 | `build_graph(tools)`: one `StateGraph` over `AgentState`, one node per method. |
+| 66-76 | The edges, as in [the agent](bridge/agent.md#the-graph). |
+| 77 | Compiles with LangGraph's `InMemorySaver`: each conversation is kept by its `thread_id` while a question waits. |
+
+### 5.24 `agent_chat.py` — the graph page's chat box
+
+**Called by:** `graph_page.py`. **Holds:** one conversation per page load, and at most one turn,
+on a background thread.
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring: it and a graph-page Run refuse each other. |
+| 9-17 | Imports. |
+| 19 | The Persian line shown if a turn crashes. |
+| 22-23 | `TurnRefused`: its message is the reason code the route returns with 409. |
+| 26-33 | `AgentChat`: the compiled graph, the page's `GraphTasks`, no turn yet, a new conversation. |
+| 35-43 | `new_conversation()`: a fresh conversation ID and an empty transcript, unless a turn is running. `GET /graph` calls it. |
+| 45-47 | `busy()`: true while a turn's thread lives. `graph_tasks` asks it before a Run. |
+| 49-62 | `start(text, option)`: refuses during a turn or a Run; an option must be one the agent offered, and is shown by its label; starts the turn thread. |
+| 64-82 | `turn(answer)`: resumes the paused question with `Command(resume=...)`, or starts a new request. Reads the pending question from `__interrupt__`, the task state and the report, and adds the agent's line. A crash is printed and shown as one Persian line. |
+| 84-93 | `progress()`: what `GET /graph/chat` returns. |
+
 ## 6. The graph page in the browser
 
 Not Python, but it is how you drive everything today. Files in `assistant/static/`. How to use it:
@@ -559,7 +722,7 @@ Not Python, but it is how you drive everything today. Files in `assistant/static
 
 | File | Function | What it does |
 |---|---|---|
-| `graph.html` | (layout) | The SVG map on the left, the panel on the right: Now, Clicked, Route, questions, two buttons. No internet. |
+| `graph.html` | (layout) | The SVG map on the left, the panel on the right: the chat box, Now, Clicked, Route, questions, two buttons. No internet. |
 | `graph_map.js` | `start` | Reads `/graph/data`, draws every edge and node, turns on pan and zoom and search, and calls `refresh` every 0.5 s. |
 | | `drawNode`, `drawEdge`, `make`, `applyView` | Draw the boxes and lines, and move or zoom the view. |
 | | `refresh` | Reads `/graph/state`, paints the current screen amber, shows the last result and the backend revision. |
@@ -568,6 +731,9 @@ Not Python, but it is how you drive everything today. Files in `assistant/static
 | | `moveTo` | `POST /test-harness/v1/commands` with the destination. |
 | | `fillDemo` | Puts the plan's demo values into the inputs. |
 | | `run`, `follow`, `showProgress` | `POST /graph/run` with the answers, then reads `/graph/run` every 0.4 s and shows each step until it ends. |
+| `graph_chat.js` | `sendText`, `sendTurn` | `POST /graph/chat` with the typed words (Send or Enter), or with an option's ref when its button is pressed. |
+| | `followChat`, `showChat` | Reads `/graph/chat` every 0.5 s while a turn runs; shows the messages, one button per option, the task state, and the runner's steps in the side panel with `graph_task.js`'s `stepBlock`. |
+| | `chatLine`, `optionButton` | One message (right to left), and one option button. Text only, never HTML. |
 
 ## 7. The Kotlin bridge inside the replica
 
@@ -665,14 +831,15 @@ a fake pass (rule 7). Usage in its docstring, lines 1-17.
 | 594-654 | `check_api_structure` | The same kind of checks for `api-structure.json`: endpoints and models, unique IDs, known labels, every model reference exists. |
 | 657-667 | `check_requirements` | Every required field has a question; no secret field is required or asked; every row edge (with `*`), and only a row edge, lists what it needs chosen. |
 | 670-698 | `check_routes` | Imports our own `lookups` and `navigator`. Every `ref` names a known lookup; every feature has a route from Home; no feature's route touches a user-only action. |
-| 701-760 | `check_profile` | The replica profile matches the schema; its screens are in the graph; edges join profile screens; no edge uses a user-only action; forms are profile screens; every feature has a valid target and fillable, non-secret slots; then the two checks above; and the committed profile equals a fresh export if one was built (otherwise N/A). |
-| 763-769 | `valid_card`, `valid_iban` | The Luhn check for card numbers; the mod-97 check for IBANs. |
-| 772-800 | `check_mock_data` | Every mock file exists and matches its schema; every card and IBAN passes its checksum; every cheque book names a mock account. |
-| 803-820 | `check_apk_baseline` | The APK record lists sizes and hashes; if `local/evidence/` exists, the local APK files match; otherwise N/A. |
-| 823-837 | `check_rea_environment` | If `local/toolchain/` exists, each tool has its pinned version and hash; otherwise N/A. |
-| 840-866 | `SUITES` | Names each suite and what it runs; `all` runs every one. |
-| 868-872 | `run` | Runs one suite into a report. |
-| 875-898 | `main` | Reads the suite name and `--root`, prints PASS / FAIL / N/A and a total, and exits 1 if anything failed. |
+| 701-716 | `check_titles_and_reviews` | Every feature has a Persian title; a feature with a form has a `review` the assistant can reach from its form without a user-only step, and a feature without one has none. |
+| 719-779 | `check_profile` | The replica profile matches the schema; its screens are in the graph; edges join profile screens; no edge uses a user-only action; forms are profile screens; every feature has a valid target and fillable, non-secret slots; then the three checks above; and the committed profile equals a fresh export if one was built (otherwise N/A). |
+| 782-788 | `valid_card`, `valid_iban` | The Luhn check for card numbers; the mod-97 check for IBANs. |
+| 791-819 | `check_mock_data` | Every mock file exists and matches its schema; every card and IBAN passes its checksum; every cheque book names a mock account. |
+| 822-839 | `check_apk_baseline` | The APK record lists sizes and hashes; if `local/evidence/` exists, the local APK files match; otherwise N/A. |
+| 842-856 | `check_rea_environment` | If `local/toolchain/` exists, each tool has its pinned version and hash; otherwise N/A. |
+| 859-884 | `SUITES` | Names each suite and what it runs; `all` runs every one. |
+| 887-891 | `run` | Runs one suite into a report. |
+| 894-917 | `main` | Reads the suite name and `--root`, prints PASS / FAIL / N/A and a total, and exits 1 if anything failed. |
 
 ### 9.2 `tools/bridge_e2e.py` — the journey on the real emulator
 
@@ -739,6 +906,52 @@ Gradle with Android libraries, checking each download. It is never part of the a
 | 90-102 | Serve the file; report a broken connection, an HTTP error, or anything else as 502. |
 | 105 | Serves on `127.0.0.1:8766` until stopped. |
 
+### 9.5 `tools/stand_in_app.py` — a stand-in for the replica
+
+**Used by:** `main_debug.py` and the tests, as the task runner's bridge. It plays the app from the
+profile alone, and every command goes through the real queue and contract checks on one thread.
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring: it decides nothing for the assistant, never takes a user-only edge, never fills a secret field. |
+| 9-12 | Imports: the queue's operations, the contract check, the navigator's breadth-first `search`, and `plain_digits`. |
+| 15-16 | `StandInError`: the queue or a contract refused something. |
+| 19-23 | `must_match(schema, value)`: stops the run when a command or result breaks its schema. |
+| 26-30 | `shown(value)`: what the app shows: an amount as its digits (`2500000`, as the replica shows it), a 12+ digit value as `****` and its last 4 digits, anything else as given. |
+| 33-48 | `StandInApp`: a navigator over the profile (its edges are already free of user-only ones), the screens and features, the queue and device, Home, no fields, no draft. It reports in once, as the replica's first poll does, so a command can be queued. |
+| 50-52 | `current_screen()`: where it is; the agent's `Tools.screen`. |
+| 54-64 | `send(operation, arguments)`: the seven steps: `queue_command`, `next_command` with its observation, the command's schema, `run`, the result's schema, `record_result`, return. |
+| 66-84 | `run(command)`: performs the operation, then wraps it with a fresh observation and the draft version, as a contract result. |
+| 86-99 | `observe()`: a contract-valid observation; its version rises after every operation. |
+| 101-116 | `route(destination, arguments)`: the shortest walk, preferring edges whose selections the arguments name, first from here, then by way of Home (one `back` step), as `Routes.kt` does. |
+| 118-141 | `navigate(...)`: an unknown screen is `rejected_policy`; no walk is `blocked`. Walks each edge, putting the row key in place of `*` and recording the trace; a row edge with no key stops `blocked` with `missing_argument`. |
+| 143-161 | `fill(form, values)`: a field the form lacks, a secret or a user-only one is `rejected_policy` `field_not_fillable`; off the form it is `blocked` `navigate`. Shows each value, starts or raises the draft. |
+| 163-175 | `show_review()`: on a feature's form whose `review` is another screen, moves there and marks the draft reviewed; anywhere else `blocked` with `no_review_here`. |
+
+### 9.6 `main_debug.py` — the agent in one process
+
+At the top of the repository. How to use it, and its VS Code entry, are in
+[debugging](runbook/debugging.md#6-the-agent-in-one-process-main_debugpy).
+
+| Lines | What it does |
+|---|---|
+| 1-6 | Docstring: the two ways to run it; it stops at the review. |
+| 8-9 | `os` and `sys`. |
+| 11 | `ASSISTANT_TRACE=1`: print every step. |
+| 12-13 | `ASSISTANT_DEBUG=1`, before the imports below, because `command_queue` reads it when imported: a paused breakpoint cannot expire a command. |
+| 15-31 | Imports: a thread and uvicorn for `--replica`, LangGraph's `Command`, and the same pieces `app.py` uses, plus the stand-in. |
+| 33 | `EXAMPLE`: the card-transfer sentence, then `1` (the first card in the options). |
+| 34 | One conversation ID. |
+| 37-40 | `answer_for(turn, pending)`: an option's number becomes its ref; anything else is the user's words. |
+| 43-50 | `said(result)`: prints the reply or the question and its numbered options, and the task state; returns the pending question, if any. |
+| 53-57 | `main(chat, embeddings, turns, replica=False)`: the seam the test uses. Reads the profile, makes the navigator and the real queue. |
+| 58-67 | `--replica`: the backend's own app (`create_app` with the same queue) under uvicorn on `127.0.0.1:8100`, on a daemon thread; `BridgeLink`, as the server uses; and where the replica is. |
+| 68-70 | Otherwise the stand-in, with its own `current_screen`. |
+| 71-74 | The feature index, the tools, the compiled graph and the conversation's config: the same objects as `app.py`. |
+| 76-83 | One `graph.invoke` per turn: a new request, or `Command(resume=...)` while a question waits. Prints each reply. |
+| 84-87 | If the agent still asks when the turns run out, reads the answer from the keyboard; returns the last result. |
+| 90-93 | Run directly: `--replica` or not, the turns from the command line or the example, the real clients. |
+
 ## 10. The tests, and what each one proves
 
 Run all Python tests with `python -m pytest`. Each file's first line says what it covers. The
@@ -755,6 +968,11 @@ backend tests in `tests/backend/` are the ones that prove our runtime code.
 | `tests/backend/test_api.py` | 17 | The HTTP routes: idle status; a click reaches the app and the result reaches the page; bodies outside the contract, unknown commands, unbuilt screens, extra fields, unseen devices are refused; a second destination waits; **no route can confirm, submit or pay**; the page loads nothing from the internet; plans, demo values and runs behave. |
 | `tests/backend/test_steps.py` | 4 | The step prints are silent unless `ASSISTANT_TRACE=1`; a card number is masked and Persian stays readable; a traced card-to-رضا run never prints the full card; `ASSISTANT_DEBUG=1` gives a one-hour command and result wait. |
 | `tests/backend/test_graph_run.py` | 2 | A whole run over the real routes, with a fake app that speaks the contract: card to رضا reaches the review and stops; a second run is refused. |
+| `tests/backend/agent_fakes.py` | (helpers) | `FakeChat` (scripted answers; keeps every prompt and schema), `FakeEmbeddings` (fixed vectors), an unreachable embedding service, and `RecordingApp`, the stand-in app keeping every operation. No network. |
+| `tests/backend/test_agent.py` | 20 | The agent end to end. Card to رضا in one sentence reaches `ready_for_user` with exactly `navigate`, `fill_form`, `show_review` and `{"value": 2500000, "unit": "IRR"}` for «۲۵۰ هزار تومان»; a missing source card is one question with 7 card options, and an option reaches the review; an ambiguous name gets the matches as options; a name not found asks again and sends nothing; a choice or a slot that was not offered is refused; money that is not a whole number in a known unit is refused; a knowledge question gets the fixed message and sends nothing; a feature without a form ends `completed`; `verify` fails on another screen; a model that cannot be reached fails and sends nothing; **no prompt holds a screen ID, an edge action, a user-only tag or a full card number**; every task-state change in every test is allowed by `task.json`. |
+| `tests/backend/test_stand_in_app.py` | 6 | The stand-in's commands and results match the schemas, with rising versions, masked fields and a draft; no walk takes a user-only step; a row key replaces `*`, and a missing one is `blocked`; a secret or unknown field is refused; `show_review` away from a form has no review. |
+| `tests/backend/test_agent_chat.py` | 9 | A chat turn and a graph-page Run refuse each other; an option must be one the agent offered; a turn takes exactly one of `text` or `option`; a fresh page shows an empty conversation; the chat script loads nothing from the internet. |
+| `tests/backend/test_main_debug.py` | 1 | `main_debug.main` runs the built-in example to the review with the fakes, and never prints the full card. |
 | `tests/contracts/test_contracts.py` | 8 | The contracts suite and the transition tables. |
 | `tests/foundation/test_project_checks.py` | 14 | The foundation and baseline checks, on throwaway copies of the repository. |
 | `tests/isolation/test_isolation.py` | 9 | The reset guard, the development-host list and the isolation suite. |
@@ -767,7 +985,7 @@ The Kotlin tests (`PolicyTest`, `ExecutorTest`, the device tests `BridgeJourneys
 ## 11. Things worth knowing
 
 - **Everything in the backend is in memory.** Restarting the server forgets the device, the
-  outstanding command and the run. The app simply reports in again.
+  outstanding command, the run and the agent's conversations. The app simply reports in again.
 - **One device, one run.** `DEVICE_ID = "replica-dev"` on both sides; `session_id` equals the
   device ID. A real deployment needs a real session and device mapping.
 - **Timings.** App polls every 0.5 s; a command lives 30 s; the backend waits 40 s for a result and
@@ -783,5 +1001,6 @@ The Kotlin tests (`PolicyTest`, `ExecutorTest`, the device tests `BridgeJourneys
 - **Where amounts become integers.** `task_runner.money_value` (Python) and `ContractJson.fieldValue`
   (Kotlin); the contracts check refuses `1500.0`.
 - **What changes for production is small on our side:** a real `lookups` adapter, a real session and
-  device identity, and the assistant itself (stage 6, [intent-selection.md](bridge/intent-selection.md)).
+  device identity, and the rest of the assistant: RAG answers, the panel and its API (the agent is
+  built: [agent.md](bridge/agent.md)).
   The rest is the app team's: see [the handover](app-team-handover.md).

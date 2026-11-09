@@ -25,10 +25,13 @@ Use a second terminal, and keep it open. Ctrl-C stops the backend.
 ```bash
 cd /root/projects/assistant
 conda activate assistant
+set -a; source .env; set +a
 python -m assistant
 ```
 
-It listens on `127.0.0.1:8100`, not port 8000, which another service uses.
+It listens on `127.0.0.1:8100`, not port 8000, which another service uses. `.env` gives the chat
+box the addresses of the Gemma model and the TEI embeddings (`.env.example` lists them); without
+it, the graph and its Run still work, and a chat turn says the model could not be reached.
 
 ## 3. Turn on the app's loop
 
