@@ -152,19 +152,16 @@ Start with a breakpoint in `TaskRunner.run` (`assistant/task_runner.py`) and ste
 4. Put a breakpoint, for example in `TaskRunner.move`.
 5. On the graph page, click `S-174`, press **Fill with demo values**, then **Run**.
 
-While the debugger is paused, **every thread is paused, the web server too**. The app's polls then
-fail with "Backend not reachable", and it tries again every 500 ms. The graph page's side panel also
-stops updating while you are paused. Because of `ASSISTANT_DEBUG=1`, a command waits up to an hour,
-so it is not expired when you come back.
+While the debugger is paused, **every thread is paused, the web server too**. The app's poll that
+is in flight simply waits: `BackendClient` waits up to an hour for an answer, so it does not give up
+on a paused backend. The graph page's side panel also stops updating. After you press Continue, the
+backend answers that poll and the run carries on. Because of `ASSISTANT_DEBUG=1`, a command also
+waits up to an hour, so it is not expired when you come back. Tested with a breakpoint in
+`TaskRunner.move` held for 70 s: the run reached the review, twice.
 
-**Known limit (found on 9 Nov 2026, open in issue #134): with the replica connected, keep a backend
-pause under 5 seconds.** Each poll the app sends during a pause waits 5 s (`BackendClient`'s read
-timeout), then the app gives up on it. The backend still holds those requests. When you press
-Continue, it answers them, and one of them can take the next command. The app never receives it,
-the backend counts it as delivered, and the run waits until the command expires (an hour with
-`ASSISTANT_DEBUG=1`). Tested with a breakpoint in `TaskRunner.move`: a 3 s pause reached the
-review; a 70 s pause hung, twice. Restart the backend to clear a hung run. Long pauses work with
-the fake app (section 2), where no polls are involved.
+Why the app waits an hour: with a short wait (it was 5 s), the app gave up on its polls during a
+pause, but the backend still held them. On Continue it answered one of them with the next command,
+which the app never received, and the run hung.
 
 Check which version you are running: the graph page shows the revision, and it should equal
 `git rev-parse --short HEAD`.

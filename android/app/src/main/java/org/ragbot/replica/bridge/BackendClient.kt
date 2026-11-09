@@ -61,8 +61,8 @@ internal class BackendClient : Backend {
         val connection = URL(BuildConfig.BRIDGE_BACKEND + path).openConnection() as HttpURLConnection
         try {
             connection.requestMethod = "POST"
-            connection.connectTimeout = TIMEOUT_MS
-            connection.readTimeout = TIMEOUT_MS
+            connection.connectTimeout = CONNECT_TIMEOUT_MS
+            connection.readTimeout = READ_TIMEOUT_MS
             connection.doOutput = true
             connection.setRequestProperty("Content-Type", "application/json")
             connection.outputStream.use { it.write(body.toByteArray()) }
@@ -75,7 +75,11 @@ internal class BackendClient : Backend {
     }
 
     private companion object {
-        const val TIMEOUT_MS = 5_000
+        const val CONNECT_TIMEOUT_MS = 5_000
+
+        // An hour, so a backend paused at a breakpoint still answers this request on Continue.
+        // A shorter wait gives up on the request, and the backend may then hand it a command.
+        const val READ_TIMEOUT_MS = 3_600_000
         const val TAG = "RagBotBridge"
     }
 }

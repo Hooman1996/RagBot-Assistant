@@ -587,7 +587,7 @@ files they replace are marked.
 | `BackendClient.kt` | `resume(observation)` | POSTs to `/assistant/v1/sessions/replica-dev/resume` → the next command or null. |
 | | `postResult(result)` | Logs `result <id>: <outcome> on <screen>` with the trace, `needs` and `error_code`, then POSTs to `/assistant/v1/results` → the next command or null. |
 | | `logged(command)` | Logs `command <id>: <operation> <destination or form>` for a command the backend handed over (tag `RagBotBridge`, read with `adb logcat -s RagBotBridge`). Never a field's value. Only here, because `Executor` and `CommandPoller` also run in JVM unit tests, where `android.util.Log` throws. |
-| | `post(path, body)` | One HTTP POST to `BuildConfig.BRIDGE_BACKEND` (a local development address set at build time), 5 s timeouts; any non-200 is an error. No credentials. |
+| | `post(path, body)` | One HTTP POST to `BuildConfig.BRIDGE_BACKEND` (a local development address set at build time). It waits 5 s to connect and up to an hour for the answer, so a backend paused at a breakpoint still answers it on Continue ([debugging](runbook/debugging.md)); any non-200 is an error. No credentials. |
 | `CommandPoller.kt` | `start()` | Once per process (Android 10+): makes `Executor(ComposeControls())` and `BackendClient`, starts a background thread. |
 | | `loop()` | Forever: `pollOnce`, ignore "backend not running", sleep 0.5 s. |
 | | `pollOnce()` | Observe → resume; while a command comes back: execute it, post the result. One thread, so commands never overlap. |
@@ -771,7 +771,7 @@ The Kotlin tests (`PolicyTest`, `ExecutorTest`, the device tests `BridgeJourneys
 - **One device, one run.** `DEVICE_ID = "replica-dev"` on both sides; `session_id` equals the
   device ID. A real deployment needs a real session and device mapping.
 - **Timings.** App polls every 0.5 s; a command lives 30 s; the backend waits 40 s for a result and
-  checks every 0.1 s; the app waits 3 s for a control; a navigate takes at most 40 steps. With
+  checks every 0.1 s; the app waits up to an hour for each reply; the app waits 3 s for a control; a navigate takes at most 40 steps. With
   `ASSISTANT_DEBUG=1` the command and the wait both last an hour ([debugging](runbook/debugging.md)).
 - **Stale is normal.** If the screen changes between planning and delivery, the command is closed
   as stale and resent with the new version, up to three times.
