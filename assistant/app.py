@@ -1,19 +1,26 @@
-"""The FastAPI app: the command loop, the test harness, the graph page and its task runs.
+"""The FastAPI app: the command loop, the test harness, the graph page, its runs and its chat box.
 
-Started by `python -m assistant`, and by tests through create_app. It listens on a local address
-only. It has no LLM, no RAG and no route to a bank or a mock bank. Its only data is the read-only
-fixtures behind lookups.
+Started by `python -m assistant`, by tests through create_app, and by `main_debug.py --replica`.
+It listens on a local address only. The chat box's agent reads the Gemma model and the TEI
+embeddings, and only when a turn runs. There is no RAG and no route to a bank or a mock bank. Its
+only data is the read-only fixtures behind lookups.
 """
 
 import subprocess
 
 from fastapi import FastAPI
 
+from assistant.agent_chat import AgentChat
+from assistant.agent_graph import build_graph
+from assistant.agent_nodes import Tools
+from assistant.bridge_link import BridgeLink
 from assistant.command_queue import CommandQueue
 from assistant.graph_data import built_screens, graph_payload, read_json
 from assistant.graph_page import build_graph_router
 from assistant.graph_tasks import GraphTasks
+from assistant.intent import FeatureIndex
 from assistant.mobile_api import build_mobile_router
+from assistant.models import Chat, Embeddings
 from assistant.test_harness_api import build_harness_router
 
 DEVICE_ID = "replica-dev"
@@ -31,6 +38,14 @@ def create_app(queue: CommandQueue | None = None) -> FastAPI:
     app = FastAPI(title="RagBot Assistant development backend")
     app.include_router(build_mobile_router(commands))
     app.include_router(build_harness_router(commands, built_screens()))
-    tasks = GraphTasks(commands, DEVICE_ID, read_json("replica.profile.json"))
-    app.include_router(build_graph_router(commands, tasks, graph_payload(), DEVICE_ID, source_revision()))
+    profile = read_json("replica.profile.json")
+    tasks = GraphTasks(commands, DEVICE_ID, profile)
+    index = FeatureIndex(profile["features"], Embeddings())
+    bridge = BridgeLink(commands, DEVICE_ID)
+    tools = Tools(Chat(), index, tasks.navigator, tasks.lookups, bridge, tasks.current_screen)
+    chat = AgentChat(build_graph(tools), tasks)
+    tasks.chat_busy = chat.busy
+    app.include_router(
+        build_graph_router(commands, tasks, chat, graph_payload(), DEVICE_ID, source_revision())
+    )
     return app

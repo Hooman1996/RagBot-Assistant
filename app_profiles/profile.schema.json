@@ -77,14 +77,19 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["intent", "description", "required_slots", "lookups", "destination", "form"],
+        "required": ["intent", "title", "description", "required_slots", "lookups", "destination", "form", "review"],
         "properties": {
           "intent": { "type": "string", "minLength": 1 },
+          "title": { "description": "The short Persian name the user sees for this journey.", "type": "string", "minLength": 1 },
           "description": { "description": "One line.", "type": "string", "minLength": 1 },
           "required_slots": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "lookups": { "type": "array", "items": { "type": "string", "minLength": 1 } },
           "destination": { "description": "A screen ID.", "type": "string", "minLength": 1 },
-          "form": { "description": "A form ID, or null.", "type": ["string", "null"] }
+          "form": { "description": "A form ID, or null.", "type": ["string", "null"] },
+          "review": {
+            "description": "The screen where show_review stops: the review page, or the destination when none follows. Null without a form.",
+            "type": ["string", "null"]
+          }
         }
       }
     },

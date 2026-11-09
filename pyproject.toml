@@ -15,3 +15,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+# main_debug.py sets ASSISTANT_DEBUG before its imports, so a paused breakpoint cannot expire a command.
+"main_debug.py" = ["E402"]

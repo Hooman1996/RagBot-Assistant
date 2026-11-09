@@ -6,8 +6,9 @@
 <title>Replica graph</title>
 <!--
   The interactive graph's layout. Plain SVG and plain JavaScript, with nothing from the internet.
-  graph_map.js draws the map, and graph_task.js shows a click's route and runs it.
-  Nothing on this page can confirm, submit or pay: a run always stops at the review.
+  graph_map.js draws the map, graph_task.js shows a click's route and runs it, and graph_chat.js
+  is the chat box that talks to the agent. Nothing on this page can confirm, submit or pay: a run
+  and a chat task always stop at the review.
 -->
 <style>
   body { margin: 0; display: flex; height: 100vh; font: 13px system-ui, sans-serif; color: #1c2b22; background: #f6f8f7; }
@@ -30,6 +31,11 @@
   label small { display: block; color: #66736b; }
   button { margin: 8px 8px 0 0; padding: 6px 10px; }
   .step { margin-top: 6px; padding-top: 6px; border-top: 1px solid #e3e8e5; }
+  .chat { direction: rtl; text-align: right; margin-top: 6px; padding: 6px; border-radius: 4px; }
+  .chat.user { background: #e7f0fb; }
+  .chat.assistant { background: #eef6f0; }
+  #chat-text { direction: rtl; margin-top: 8px; }
+  #chat-options button { display: block; width: 100%; margin: 4px 0 0; direction: rtl; text-align: right; }
 </style>
 </head>
 <body>
@@ -40,6 +46,12 @@
   route and questions. A node with no questions just moves the replica. Drag to pan, and use the
   wheel to zoom.</p>
   <input id="search" placeholder="Find a screen by ID or name">
+  <h2>Chat with the agent</h2>
+  <div id="chat-messages"></div>
+  <div id="chat-options"></div>
+  <input id="chat-text" placeholder="درخواست خود را بنویسید">
+  <button id="chat-send" type="button">Send</button>
+  <pre id="chat-state">Task state: No task yet</pre>
   <h2>Now</h2><pre id="now">Waiting for the replica</pre>
   <h2>Clicked</h2><pre id="clicked">Nothing yet</pre>
   <h2>Route</h2><pre id="route">None yet</pre>
@@ -56,5 +68,6 @@
 </div>
 <script src="/graph/graph_map.js"></script>
 <script src="/graph/graph_task.js"></script>
+<script src="/graph/graph_chat.js"></script>
 </body>
 </html>
