@@ -9,8 +9,8 @@ Last updated: 9 November 2026. This page is updated whenever a task changes stat
 #93 and #94 reached `main` on 8 Nov 2026 (PR #131). See [the bridge](bridge/README.md).
 
 **D-024 (9 Nov 2026):** the agent loop is built before P1b, P1d and P4: a LangGraph agent over the
-Gemma model and the TEI embeddings drives the replica to the review (#136). See the
-[decision](decisions/0024-agent-loop-first.md).
+Gemma model and the TEI embeddings drives the replica to the review (#136), on `main` since
+10 Nov 2026 (PR #137). See the [decision](decisions/0024-agent-loop-first.md).
 
 **D-023 (7 Nov 2026):** route finding and requirement checking moved into a Python navigator, and
 the bridge is down to four operations. See the [decision](decisions/0023-python-navigator-thin-bridge.md).
@@ -54,7 +54,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
-| #136 AG-01 LangGraph agent loop on Gemma, with main_debug.py | Approved | One LangGraph graph from a Persian sentence to the review: TEI narrows the 77 features to 8, the Gemma model on vLLM chooses one and fills the values, code checks, resolves, runs and verifies; one question for what is missing; no RAG yet ([D-024](decisions/0024-agent-loop-first.md), [agent](bridge/agent.md)). Each feature gains a Persian `title` and its `review` screen. The graph page has a chat box; `python main_debug.py` runs the same agent in one process on a stand-in app, or on the replica with `--replica`. Waiting for the owner's check |
+| #136 AG-01 LangGraph agent loop on Gemma, with main_debug.py | Done | One LangGraph graph from a Persian sentence to the review: TEI narrows the 77 features to 8, the Gemma model on vLLM chooses one and fills the values, code checks, resolves, runs and verifies; one question for what is missing; no RAG yet ([D-024](decisions/0024-agent-loop-first.md), [agent](bridge/agent.md)). Each feature gains a Persian `title` and its `review` screen. The graph page has a chat box; `python main_debug.py` runs the same agent in one process on a stand-in app, or on the replica with `--replica`. The owner checked it; merged to `main` in PR #137 |
 | #134 DEV-01 Step-by-step debugging and step prints | Done | `ASSISTANT_TRACE=1` prints every step numbered, with card numbers masked (`assistant/steps.py`); `ASSISTANT_DEBUG=1` keeps a command and its result wait for an hour so a breakpoint does not expire it; the app logs one `RagBotBridge` line per command and result, and waits up to an hour for each reply so a long pause does not lose a command. [Runbook](runbook/debugging.md). The owner checked it; merged to `main` in PR #135 |
 | #94 S3-03 Dev command loop, navigator and interactive graph view | Done | FastAPI command loop on `127.0.0.1:8100`, the Python navigator and task runner (D-023), one test-harness path and the graph page at `/graph`. [Try it](bridge/try-it.md). The owner reviewed the schema and contract changes; merged in PR #130, then to `main` in PR #131 |
 | #93 S3-02 Replica bridge: in-app executor | Done | Executor through the screens' own handlers; 77 features; policy tests prove rule 4. Reduced to four operations by D-023 in #94's PR. [Docs](bridge/README.md) |
