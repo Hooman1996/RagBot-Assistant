@@ -14,7 +14,7 @@ their answers to the open questions) or as the formal request after the demo.
 
 | Part | Today (replica) | In production | Owner |
 |---|---|---|---|
-| The assistant: understanding the request, asking questions, RAG answers | Not built yet; the graph page stands in | Our backend | **Us** |
+| The assistant: understanding the request, asking questions, RAG answers | Understanding, the one question and preparing are built (#136, [the agent](bridge/agent.md)); RAG answers are not yet | Our backend | **Us** |
 | Route planning and the list of what a route needs | `assistant/navigator.py` | Unchanged | **Us** |
 | Running the plan and checking every screen | `assistant/task_runner.py` | Unchanged | **Us** |
 | The command loop and its API | `assistant/command_queue.py`, `mobile_api.py` | Unchanged, plus real authentication | **Us** |

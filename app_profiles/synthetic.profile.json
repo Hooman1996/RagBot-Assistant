@@ -18,11 +18,13 @@
   "features": [
     {
       "intent": "example_request",
+      "title": "درخواست نمونه",
       "description": "A made-up feature for contract tests; not taken from any real app.",
       "required_slots": ["recipient", "amount"],
       "lookups": ["example_recipients"],
       "destination": "example_form",
-      "form": "example_form"
+      "form": "example_form",
+      "review": "example_form"
     }
   ],
   "user_only_actions": ["confirm_example"]

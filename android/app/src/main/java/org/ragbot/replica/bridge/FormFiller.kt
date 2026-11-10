@@ -51,11 +51,7 @@ internal class FormFiller(private val actions: Actions, private val navigator: N
     fun showReview(): Ending {
         val screen = actions.state().screen
         if (screen in Reviews.pages) return succeeded("review_shown_$screen")
-        val edge =
-            Routes.exported.firstOrNull {
-                it.from == screen && it.to in Reviews.pages && ProfileSelections.of(it.action) == null
-            }
-                ?: return blocked("no_review_here")
+        val edge = Reviews.edgeFrom(screen) ?: return blocked("no_review_here")
         val steps = mutableListOf<TraceStep>()
         navigator.walk(edge, steps)?.let {
             return it
@@ -80,4 +76,13 @@ internal object Reviews {
             withoutResultPage +
             serviceReviews +
             consentPages
+
+    /** The edge show_review takes from [screen] to the review after it, or null when none does. */
+    fun edgeFrom(screen: String) =
+        Routes.exported.firstOrNull {
+            it.from == screen && it.to in pages && ProfileSelections.of(it.action) == null
+        }
+
+    /** Where show_review stops when it starts on [screen]: a review, or [screen] when none follows. */
+    fun stop(screen: String) = if (screen in pages) screen else edgeFrom(screen)?.to ?: screen
 }

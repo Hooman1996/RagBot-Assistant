@@ -90,6 +90,8 @@ def test_no_route_can_confirm_submit_or_pay(client: TestClient) -> None:
         "/graph/graph_task.js",
         "/graph/plan/{screen}",
         "/graph/run",
+        "/graph/chat",
+        "/graph/graph_chat.js",
     }
 
 

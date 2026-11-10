@@ -1,1 +1,1 @@
-"""The assistant backend. For now it holds only the development command loop and the graph page."""
+"""The assistant backend: the development command loop, the graph page and the agent."""

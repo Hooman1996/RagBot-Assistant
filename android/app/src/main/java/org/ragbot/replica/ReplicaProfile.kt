@@ -22,14 +22,19 @@ internal data class FormField(
 
 internal data class ProfileForm(val id: String, val fields: List<FormField>)
 
-/** [form] is the feature's first form; a route to [destination] passes through it. */
+/**
+ * [form] is the feature's first form; a route to [destination] passes through it. [title] is the
+ * Persian name the user sees. [review] is where show_review stops, or null without a form.
+ */
 internal data class ProfileFeature(
     val intent: String,
+    val title: String,
     val description: String,
     val requiredSlots: List<String>,
     val lookups: List<String>,
     val destination: String,
     val form: String?,
+    val review: String?,
 )
 
 /** What the replica exports. Generated into app_profiles/replica.profile.json. */

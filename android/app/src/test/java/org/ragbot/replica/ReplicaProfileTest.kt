@@ -51,11 +51,13 @@ class ReplicaProfileTest {
         val features =
             ReplicaProfile.features.map {
                 "    {\"intent\": ${quote(it.intent)}, " +
+                    "\"title\": ${quote(it.title)}, " +
                     "\"description\": ${quote(it.description)}, " +
                     "\"required_slots\": ${strings(it.requiredSlots)}, " +
                     "\"lookups\": ${strings(it.lookups)}, " +
                     "\"destination\": ${quote(it.destination)}, " +
-                    "\"form\": ${it.form?.let(::quote) ?: "null"}}"
+                    "\"form\": ${it.form?.let(::quote) ?: "null"}, " +
+                    "\"review\": ${it.review?.let(::quote) ?: "null"}}"
             }
         val userOnly = ReplicaProfile.userOnlyActions.map { "    ${quote(it)}" }
         return "{\n  \"profile_version\": 1,\n" +
@@ -160,6 +162,16 @@ class ReplicaProfileTest {
             assertTrue(it, it in real)
             assertFalse(it, it in demo)
         }
+    }
+
+    @Test
+    fun everyFeatureTitleIsAStringTheAppAlreadyShows() {
+        val source =
+            File("src/main/java")
+                .walkTopDown()
+                .filter { it.extension == "kt" && it.name != "ProfileFeatures.kt" }
+                .joinToString("\n") { it.readText() }
+        ReplicaProfile.features.forEach { assertTrue(it.intent, quote(it.title) in source) }
     }
 
     @Test

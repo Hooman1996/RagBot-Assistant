@@ -698,6 +698,24 @@ def check_routes(root: Path, profile: dict, report: Report) -> None:
     report.check(not crossing, "no feature's route passes through a user-only action", f"{crossing}")
 
 
+def check_titles_and_reviews(root: Path, profile: dict, report: Report) -> None:
+    """Every feature has a Persian title, and a feature with a form has a review the assistant can reach."""
+    sys.path.insert(0, str(root))
+    from assistant.navigator import Navigator, search
+
+    persian = re.compile("[\u0600-\u06ff]")
+    untitled = [item["intent"] for item in profile["features"] if not persian.search(item["title"])]
+    report.check(not untitled, "every feature has a Persian title", f"{untitled}")
+    edges = Navigator(profile).edges
+    bad = [
+        item["intent"]
+        for item in profile["features"]
+        if (item["form"] is None) != (item["review"] is None)
+        or (item["form"] is not None and search(item["form"], item["review"], edges) is None)
+    ]
+    report.check(not bad, "every form's review is reachable from it without a user-only step", f"{bad}")
+
+
 def check_profile(root: Path, report: Report) -> None:
     """The replica profile the executor runs on. Needs the pinned jsonschema."""
     from jsonschema import Draft202012Validator
@@ -752,6 +770,7 @@ def check_profile(root: Path, report: Report) -> None:
     report.check(not bad_features, "every feature has a valid target and fillable slots", f"{bad_features}")
     check_requirements(profile, report)
     check_routes(root, profile, report)
+    check_titles_and_reviews(root, profile, report)
 
     export = read(root, PROFILE_EXPORT)
     if export is None:

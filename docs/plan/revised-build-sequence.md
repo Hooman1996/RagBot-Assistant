@@ -15,6 +15,12 @@
 > profile carries each screen's requirements. Stages 3, 6b and 8 and the runtime loop below are
 > updated. See `docs/decisions/0023-python-navigator-thin-bridge.md`.
 
+> **Revised by D-024 (owner, 9 Nov 2026).** The conversational agent loop (stage 6b, without RAG)
+> is built now, right after stage 3 and before stages 4 and 5 (P1b, P1d, P4): every built journey
+> is already a feature and the mocks already run in the app. The new order is: 1, 2, 3, **6b
+> (agent loop, #136)**, then 4, 5, 6a, the rest of 6b (RAG answers, panel), 6c, 6d, 7, 8. See
+> `docs/decisions/0024-agent-loop-first.md`.
+
 **Approved by the owner, 29 Oct 2026.** This revises the order and scope set by decision
 **D-019** and is recorded as decision **D-020**. The master plan
 (`RagBot_Assistant_Final_Project_Plan_v2.md`) stays the reference for goals and gates; where
@@ -110,7 +116,10 @@ These feed the assistant in stage 6 but block nothing before it.
 
 ## The runtime loop (what happens on every user request)
 
-Built in stage 6, shown in stage 7, reused unchanged by the app team in stage 8.
+Built in stage 6, shown in stage 7, reused unchanged by the app team in stage 8. Since #136
+(D-024), steps 9, 10 and 14 run in `assistant/agent_graph.py`, and steps 11 to 13 through the
+existing task runner, from the graph page's chat box or `main_debug.py`
+([the agent](../bridge/agent.md)).
 
 9. **Receive request + current state.** The assistant API picks the intent, maintains the task, and
    determines the target screen. The app's latest observation gives the current screen.

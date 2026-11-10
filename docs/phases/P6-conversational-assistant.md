@@ -14,3 +14,19 @@ is no fabricated success and no implicit submission.
 | P6-05 | Assistant panel: open, minimize, reopen, cancel, clarification choices, progress |
 | P6-06 | Mixed requests: answer knowledge questions without losing the task |
 | P6-07 | Run the gates: zero critical wrong actions, at least 95% on the unambiguous set, at least 95% task preparation |
+
+## Progress (D-024, #136)
+
+The agent loop is built first, before RAG and before P1b, P1d and P4
+([D-024](../decisions/0024-agent-loop-first.md), [the agent](../bridge/agent.md)).
+
+| Task | Done in #136 | Left |
+|---|---|---|
+| P6-01 | Found read-only: vLLM 0.26.0 serving Gemma 4 E4B-it (`/app/model`, 4,000-token context); `response_format` with `json_schema` holds answers to the schema; TEI 1.9.3 with jina-embeddings-v5-text-small-retrieval; smoke call passed | GPU capacity and latency under load; whether a larger model is available |
+| P6-02 | 20 sentences measured, not committed ([numbers](../bridge/intent-selection.md#measured)) | The frozen set of at least 100 held-out cases, with separate tuning examples |
+| P6-03 | Narrowing to 8 with TEI, the constrained choice, the values with exact toman/rial handling, all checked in code; long numbers hidden from the model | Allowed keys for choice fields in the profile; more Persian words per feature or all 77 to the model, if the set shows misses |
+| P6-04 | One LangGraph graph: understand, plan, extract, check, clarify (one question, options for 2 to 8 records), resolve, prepare, verify, ready_for_user; every change checked against `task.json`; in-memory checkpointer | Cancel and correction (a new message after the review is a new request today), `paused` and `reconciling`, persistence (P7), the knowledge path with RAG |
+| P6-05 | The graph page's chat box stands in for the panel | The in-app panel and `/assistant/v1/messages` |
+| P6-06 | A knowledge question gets a fixed message | Answers with RAG, without losing the task |
+| P6-07 | — | The gates |
+

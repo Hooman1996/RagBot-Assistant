@@ -1,7 +1,7 @@
-# How the assistant will pick a feature
+# How the assistant picks a feature
 
-A short design note for stage 6. Nothing here is built yet. The decision is
-[D-023](../decisions/0023-python-navigator-thin-bridge.md), point 5.
+Built in #136, as [D-023](../decisions/0023-python-navigator-thin-bridge.md) point 5 planned it.
+The whole agent around it is described in [the agent](agent.md).
 
 ## The problem
 
@@ -13,37 +13,65 @@ gave. The model must not be able to invent a screen or an action.
 
 ```mermaid
 flowchart LR
-    U[User's sentence] --> S[Semantic search over the features]
-    S --> M[Model chooses among the closest few]
-    M --> C[Code checks the answer]
+    U[User's sentence] --> S[TEI narrows 77 features to 8]
+    S --> M[Model chooses among the 8]
+    M --> C[Code checks the choice]
     C --> N[Navigator: route and requirements]
-    N --> Q[One question for what is missing]
+    N --> X[Model fills the requirements]
+    X --> K[Code checks every value]
+    K --> Q[One question for what is missing]
 ```
 
-1. **Narrow.** Each feature's description is embedded once with the existing TEI embeddings. The
-   sentence is embedded and compared, and the closest few are kept.
-2. **Choose.** The model sees the sentence and only those few features, each with its intent, its
-   description and its slot names. It answers in one fixed JSON shape:
+1. **Narrow** (`intent.FeatureIndex.closest`). Each feature's `title — description` is embedded
+   once per process with the TEI embeddings. The sentence is embedded with the model's `query`
+   prompt and compared by cosine, and the closest 8 are kept.
+2. **Choose** (`intent.choose`). The model sees the sentence and only those 8 features, each with
+   its intent, Persian title, description and slot names, and answers `{"choice": ...}`, where
+   `choice` is held by the schema to the 8 intents, `"knowledge_question"` or `"not_sure"`. Code
+   turns anything else into `"not_sure"`.
+3. **Route** (`agent_nodes.plan_for`). The navigator plans the chosen feature from the replica's
+   current screen and lists every requirement on the route.
+4. **Fill** (`slots.extract`). The model sees only the missing requirements (ref, type, Persian
+   `ask` and `description`) and the user's words, and answers one value or `null` per ref. Money
+   is `{"value": whole number, "unit": "IRR" | "IRT"}`.
+5. **Check** (`slots.checked`). Code drops a ref the plan does not ask for and money that is not a
+   whole number in a known unit, and turns toman into rials ×10. What is still missing is asked in
+   one question, using each `ask`.
 
-   ```json
-   { "choice": "card_transfer", "slots": { "card-transfer-destination": "رضا", "card-transfer-amount": "250000" } }
-   ```
+The choice and the values are two calls, not one: the values the model is asked for are the
+navigator's requirements for the chosen feature, which are only known after step 3.
 
-   `choice` is one of the offered intents, `"knowledge_question"` or `"not_sure"`.
-3. **Check.** Code refuses a `choice` that was not offered and a slot the feature does not have, and
-   checks money as an exact whole number. Anything refused becomes `"not_sure"`.
-4. **Route.** `assistant/navigator.py` plans the feature. Code compares the requirements with the
-   slots, and asks for what is missing in one question, using each `ask`.
-
-`"knowledge_question"` goes to the RAG answer path. `"not_sure"` asks the user, with the closest
-features as choices.
+`"knowledge_question"` gets a fixed message for now (no RAG yet). `"not_sure"` asks the user, with
+the 8 closest features as choices by their Persian title.
 
 ## What the model never sees
 
-The graph, the forms, the field tags beyond the offered slots, and the user-only list. Those are
-used by code only. The model cannot name a route or a tap, so it has no way to reach a confirm.
+The graph, the screens, the forms beyond the offered requirements, the field tags beyond the
+offered slots, the user-only list, the lookups' records and any full card number (long numbers
+become `[number N]`). Those are used by code only. The model cannot name a route or a tap, so it
+has no way to reach a confirm.
+
+## Measured
+
+9 Nov 2026, Gemma 4 E4B-it on vLLM and jina-embeddings-v5-text-small-retrieval on TEI, with 20
+Persian sentences over 18 features (transfers, a bill, a top-up, a card balance, a statement, a
+loan, cheques, vehicles, notifications...) and 2 knowledge questions, run through `main_debug.py`'s
+agent. The sentences are not committed: the frozen evaluation set is P6-02.
+
+| Measure | Result |
+|---|---|
+| Right feature among the narrowed 8 | 18 of 18 (and both knowledge questions were answered as such: 20 of 20) |
+| Rank of the right feature in the 8 | 1st for 11, 2nd for 1, 3rd for 4, 5th for 1, 8th for 1 |
+| Model chose the right feature | 19 of 20 |
+| Amount read exactly (toman to rials) | 6 of 6 sentences with an amount |
+
+The miss: «قبض برقمو پرداخت کن» chose `wallet_bill` over `bill_payment`. Both are titled
+«پرداخت قبض» in the app, so only their English descriptions tell them apart. The closest call:
+«قسط وامم رو پرداخت کن» found `loan_repayment` 8th, because its title «تسهیلات در جریان و پرداخت»
+has neither «قسط» nor «وام». More Persian words per feature, or sending all 77 to the model, are
+the owner's choice if the evaluation set shows misses.
 
 ## How it will be tested
 
-The frozen Persian evaluation set of P6-02 scores the choice and the slots. A wrong `choice` that
+The frozen Persian evaluation set of P6-02 scores the choice and the values. A wrong `choice` that
 code cannot catch is a critical failure, so the gate there applies here.

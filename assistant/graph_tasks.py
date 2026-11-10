@@ -2,9 +2,11 @@
 
 Called by graph_page. It holds at most one run, on a background thread, because a run waits for
 the app. Everything it does goes through navigator and task_runner, so it adds no way to touch a
-confirm, submit or pay action, and nothing here chooses what is required.
+confirm, submit or pay action, and nothing here chooses what is required. It refuses a run while
+the page's chat is taking a turn, because both drive the same replica.
 """
 
+from collections.abc import Callable
 from dataclasses import asdict
 from threading import Thread
 
@@ -29,6 +31,7 @@ class GraphTasks:
         self.navigator = Navigator(profile)
         self.lookups = FixtureLookups()
         self.report = TaskReport(state="idle")
+        self.chat_busy: Callable[[], bool] | None = None  # set by app.py to the chat's busy()
 
     def current_screen(self) -> str:
         """Where the replica is. Before it reports in, plans start from Home."""
@@ -56,7 +59,7 @@ class GraphTasks:
 
     def start(self, screen: str, values: dict[str, str]) -> None:
         """Starts a run on a background thread. Only one may run at a time."""
-        if self.report.state == "running":
+        if self.report.state == "running" or (self.chat_busy is not None and self.chat_busy()):
             raise RunInProgress(screen)
         plan, feature = self.plan_for(screen)
         review = feature is not None and feature["form"] is not None
