@@ -110,7 +110,7 @@ internal fun AssistantOverlay() {
                 { state.open = true },
                 Modifier.align(Alignment.BottomStart).padding(16.dp).testTag("assistant-bubble"),
             ) {
-                Text("دستیار · ${STATE_WORDS[state.history.taskState] ?: "گفتگو"}")
+                Text("دستیار · ${STATE_WORDS[state.history.shownState] ?: "گفتگو"}")
             }
     }
 }
@@ -130,14 +130,14 @@ private fun Panel(state: AssistantPanelState, scope: CoroutineScope) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text("دستیار", style = MaterialTheme.typography.titleMedium)
                     Text(
-                        "  ${STATE_WORDS[history.taskState].orEmpty()}",
+                        "  ${STATE_WORDS[history.shownState].orEmpty()}",
                         Modifier.weight(1f).testTag("assistant-state"),
                         color = Color.Gray,
                     )
                     TextButton({ state.open = false }, Modifier.testTag("assistant-minimize")) {
                         Text("کوچک کردن")
                     }
-                    if (history.busy || history.taskState in CANCELLABLE)
+                    if (history.busy || history.shownState in CANCELLABLE)
                         OutlinedButton(
                             { act(state, scope) { AssistantClient.cancel() } },
                             Modifier.testTag("assistant-cancel"),

@@ -28,7 +28,11 @@ internal data class PanelHistory(
     val options: List<PanelOption> = emptyList(),
     val taskState: String? = null,
     val steps: List<String> = emptyList(),
-)
+) {
+    /** The state to show: a pending question means the task waits for the user. */
+    val shownState
+        get() = if (questionId != null) "clarifying" else taskState
+}
 
 internal object AssistantClient {
     /** POST /assistant/v1/messages with the user's words, or the option the user picked. */

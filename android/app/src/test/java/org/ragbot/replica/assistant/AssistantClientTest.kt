@@ -39,6 +39,7 @@ class AssistantClientTest {
         assertEquals("q1", history.questionId)
         assertEquals(listOf(PanelOption("cancel", "لغو")), history.options)
         assertNull(history.taskState)
+        assertEquals("a pending question waits for the user", "clarifying", history.shownState)
     }
 
     @Test
