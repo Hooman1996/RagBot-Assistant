@@ -10,7 +10,9 @@ Line numbers match `main` at commit `95533cd` (8 Nov 2026), except `command_queu
 `task_runner.py`, `bridge_link.py` and `steps.py`, which match #134 (9 Nov 2026), and `app.py`,
 `graph_tasks.py`, `graph_page.py`, the agent's files (5.17 to 5.24), `tools/project_checks.py`,
 `tools/stand_in_app.py` and `main_debug.py`, which match #136 (9 Nov 2026), and the evaluation
-runner (9.7 and 9.8), which matches #138 (14 Nov 2026). If a file changes, the numbers move, but the
+runner (9.7 and 9.8), which matches #138 (14 Nov 2026), and `lookups.py`, `models.py`, `intent.py`,
+`slots.py`, `replies.py`, `agent_nodes.py`, `amounts.py` and `words.py`, which match #140 (14 Nov
+2026). If a file changes, the numbers move, but the
 order of the blocks usually stays the same.
 
 ## Contents
@@ -392,23 +394,25 @@ as `contacts.card` and the user's words. **Output:** the value to send to the ap
 | Lines | What it does |
 |---|---|
 | 1-6 | Docstring: reads `mock_services/fixtures/` and never writes; standard library only. |
-| 8-10 | Imports. |
-| 12 | `FIXTURES`: the path of `mock_services/fixtures/`. |
-| 15-22 | `Source`: where one lookup's records are: the `file`, the list inside it (`rows`), the field that is the record's `key`, and the field shown to the user (`label`). |
-| 25-46 | `SOURCES`: twenty lookups. For example `contacts` reads `contacts.json`, list `people`, key `id`, label `name`. `loan_groups` and `loans` share a file. |
-| 49-50 | `NotFound`: nothing matches what the user said. |
-| 53-54 | `Ambiguous`: several match, so the user must choose. |
-| 57-63 | `Candidate`: one record: its `key`, the `value` to send to the app, and the `label` to show. |
-| 66-68 | `source_of("contacts.card")` returns `contacts`. |
-| 71-73 | `is_known(lookup)`: can this adapter serve it? Used by the profile check. |
-| 76-80 | `FixtureLookups`: the adapter. The folder can be changed for tests. |
-| 82-86 | `records(lookup)`: reads the file and returns its list of records. |
-| 88-93 | `candidates(lookup)`: every record as a `Candidate`. The part after the dot picks what is sent: `contacts.card` sends the card number; plain `contacts` sends the ID. Records without that attribute are skipped. |
-| 95-96 | `resolve(lookup, text)`: **the main method**. |
-| 97-99 | For contacts, a typed number is sent as is: the user may send to someone not saved. |
-| 100-104 | Find matches. None → `NotFound`. More than one → `Ambiguous`, listing their labels. |
-| 105 | Exactly one: return its value. |
-| 107-111 | `matching(lookup, text)`: first, records whose key, value or label equals the text exactly. If none, records whose label contains the text. |
+| 8-11 | Imports. |
+| 13 | `FIXTURES`: the path of `mock_services/fixtures/`. |
+| 14-15 | `IBAN` (`IR` and 24 digits), and `DIGITS`, which turns Persian and Arabic digits Latin. |
+| 16-18 | `GENERIC`: words a user puts before a name or number («کارت 0018», «حساب رضا») that name no record; `ENDINGS`: spoken endings such as «تجاریمو». |
+| 21-28 | `Source`: where one lookup's records are: the `file`, the list inside it (`rows`), the field that is the record's `key`, and the field shown to the user (`label`). |
+| 31-52 | `SOURCES`: twenty lookups. For example `contacts` reads `contacts.json`, list `people`, key `id`, label `name`. `loan_groups` and `loans` share a file. |
+| 55-56 | `NotFound`: nothing matches what the user said. |
+| 59-60 | `Ambiguous`: several match, so the user must choose. |
+| 63-69 | `Candidate`: one record: its `key`, the `value` to send to the app, and the `label` to show. |
+| 72-75 | `plain(text)`: the text as matching compares it: Latin digits, Persian ی and ک, no ZWNJ, «ٔ» or extra spaces. |
+| 78-83 | `typed(lookup, text)`: a contact the user typed in the field's own format: an IBAN for an IBAN field, else a number. |
+| 86-88 | `source_of("contacts.card")` returns `contacts`. |
+| 91-93 | `is_known(lookup)`: can this adapter serve it? Used by the profile check. |
+| 96-100 | `FixtureLookups`: the adapter. The folder can be changed for tests. |
+| 102-106 | `records(lookup)`: reads the file and returns its list of records. |
+| 108-113 | `candidates(lookup)`: every record as a `Candidate`. The part after the dot picks what is sent: `contacts.card` sends the card number; plain `contacts` sends the ID. Records without that attribute are skipped. |
+| 115-125 | `resolve(lookup, text)`: **the main method**. A typed number is sent as is (the user may send to someone not saved), and so is a typed IBAN that matches no saved record. Otherwise none → `NotFound`, more than one → `Ambiguous`, exactly one → its value. |
+| 127-144 | `matching(lookup, text)`: a bare number is never matched inside an IBAN. First, records whose key, value or label equals the text, compared `plain`. Else the words that are not generic and that some record holds; each must be in the record. When no such word is left, records whose label contains the whole text («حساب» stays ambiguous). |
+| 147-153 | `holds(item, word)`: the record's key, value or label contains the word, or the word without a spoken ending. |
 
 ### 5.10 `task_runner.py` — carry the plan out, checking every step
 
@@ -580,7 +584,7 @@ JSON schema, or a list of texts. **Output:** a dictionary, or one vector per tex
 |---|---|
 | 1-7 | Docstring: read-only HTTP clients over `httpx`; addresses from `ASSISTANT_LLM_URL`, `ASSISTANT_LLM_MODEL` and `ASSISTANT_EMBED_URL`; any failure raises `ModelError`. |
 | 9-12 | Imports: JSON, environment variables and `httpx`. |
-| 14-15 | A 30 s timeout, and at most 400 answer tokens (the served model's whole context is 4,000). |
+| 14-15 | A 30 s timeout, and at most 400 answer tokens. |
 | 18-19 | `ModelError`. |
 | 22-27 | `Chat`: reads the model's address and name when made. Nothing is called yet, so a test or `create_app` can make one with no network. |
 | 29-40 | `json(prompt, schema)`: the body: temperature 0, the prompt as one user turn, and `response_format` with the schema, strict. |
@@ -588,7 +592,7 @@ JSON schema, or a list of texts. **Output:** a dictionary, or one vector per tex
 | 47-49 | Refuses an answer that is not a JSON object; returns it. |
 | 52-57 | `Embeddings`: reads the TEI address; the batch size is learned on first use. |
 | 59-66 | `embed(texts, query=False)`: the first time, reads `/info` for `max_client_batch_size` (50 today). |
-| 67-74 | Posts the texts to `/embed` in batches, with `normalize: true`. A query (the user's words) adds `prompt_name: "query"`, as RagBot does; a feature's text has none. |
+| 67-74 | Posts the texts to `/embed` in batches, with `normalize: true` and the served model's own prompt: `query` for the user's words, as RagBot does, and `document` for a feature's text. |
 | 75-79 | Any failure, or the wrong number of vectors, becomes `ModelError`; returns the vectors. |
 
 ### 5.18 `agent_state.py` — what the agent remembers, and how its task state may change
@@ -613,13 +617,13 @@ then one intent, `knowledge_question` or `not_sure`.
 | Lines | What it does |
 |---|---|
 | 1-7 | Docstring: what the model sees and never sees. |
-| 9 | Imports the two clients' types. |
-| 11-13 | `CLOSEST = 8`, and the two fixed answers. |
-| 16-18 | `feature_text(feature)`: what is embedded: `title — description`. |
-| 21-27 | `FeatureIndex`: the features, the embeddings client, and no vectors yet. |
-| 29-37 | `closest(text)`: embeds every feature the first time only, embeds the text as a query, scores each feature by dot product (the vectors have unit length, so it is the cosine), sorts highest first (ties keep profile order) and keeps 8. |
-| 40-54 | `choice_prompt(text, offered)`: the instructions, one line per offered feature (`intent: «title» — description Values: slot refs`), the two fixed answers, and the user's words. Nothing else. |
-| 57-67 | `choose(chat, text, offered)`: the schema's `choice` is an enum of exactly the 8 intents and the 2 fixed answers; asks the model; anything else becomes `not_sure`. |
+| 9-10 | Imports the two clients' types and `feature_words`. |
+| 12-14 | `CLOSEST = 8`, and the two fixed answers. |
+| 17-19 | `feature_text(feature)`: what is embedded: the title and the assistant's Persian words for the feature (`title — words`). |
+| 22-28 | `FeatureIndex`: the features, the embeddings client, and no vectors yet. |
+| 30-38 | `closest(text)`: embeds every feature the first time only, embeds the text as a query, scores each feature by dot product (the vectors have unit length, so it is the cosine), sorts highest first (ties keep profile order) and keeps 8. |
+| 41-57 | `choice_prompt(text, offered)`: the instructions, one line per offered feature (`intent: «title» — Persian words. Values: slot refs`), when to answer knowledge or not sure (a question for information, even when a feature uses the same words; too vague to pick one), and the user's words. Nothing else. |
+| 60-70 | `choose(chat, text, offered)`: the schema's `choice` is an enum of exactly the 8 intents and the 2 fixed answers; asks the model; anything else becomes `not_sure`. |
 
 ### 5.20 `slots.py` — the values, and their check
 
@@ -628,18 +632,21 @@ messages and the offered requirements. **Output:** the model's values, then only
 
 | Lines | What it does |
 |---|---|
-| 1-7 | Docstring: the model sees only the offered requirements and the words, with long numbers hidden; code keeps nothing the plan does not ask for. |
-| 9-12 | Imports, including `money_value` from `task_runner.py`, so money is made the same way everywhere. |
-| 14-15 | `LONG_NUMBER` (12 or more digits, Persian or Latin) and the `[number N]` placeholder. |
-| 16 | `UNITS`: `IRR` is 1, `IRT` (toman) is 10. |
-| 17-22 | `MONEY`: the schema of an amount: a whole number and a unit. |
-| 25-27 | `numbers(messages)`: every long number in the messages, in order, in Latin digits. |
-| 30-38 | `hidden(messages)`: the messages with each long number replaced by `[number 1]`, `[number 2]`..., counting across all of them. |
-| 41-57 | `extract_prompt(messages, wanted)`: one line per requirement (ref, type, Persian ask and description), how money is written (`هزار` is 1000, toman is `IRT`, no unit means `IRR`), and the messages with their numbers hidden. |
-| 60-70 | `extract(chat, messages, requirements)`: the schema allows exactly the offered refs, each a string (or an amount) or `null`, all required; asks the model; drops the nulls. |
-| 73-80 | `money(value)`: only a dict with a real integer (not `True`) and a known unit; multiplies toman by 10 and builds the contract's `{"value": int, "unit": "IRR"}` with `money_value`, which refuses a negative. Anything else is `None`. |
-| 83-92 | `text(value, messages)`: a non-empty text, trimmed; `[number N]` is turned back into the user's number. |
-| 95-105 | `checked(values, requirements, messages)`: keeps only refs the plan asks for, each through `money` or `text`; drops the rest. |
+| 1-8 | Docstring: what the model sees (long numbers as `****` and 4 digits, a choice's labels); code keeps money only when the user wrote it, and a choice only as an allowed key. |
+| 10-15 | Imports: `amounts`, the lookups' `GENERIC` words, and `money_value` from `task_runner.py`, so money is made the same way everywhere. |
+| 17-19 | `LONG_NUMBER` (12 or more digits, Persian or Latin), `SHOWN` (how one is shown: `****1234`), and `PLAIN_KEY`. |
+| 20 | `UNITS`: `IRR` is 1, `IRT` (toman) is 10. |
+| 21-26 | `MONEY`: the schema of an amount: a whole number and a unit. |
+| 28 | `AROUND_NUMBER`: words that may stand around a number the model copied («کارت ****0091», «چک صیادی ****0311»). |
+| 31-33 | `numbers(messages)`: every long number in the messages, in order, in Latin digits. |
+| 36-41 | `hidden(messages)` and `shown_as`: each long number shown only as `****` and its last 4 digits. |
+| 44-62 | `extract_prompt(messages, wanted)`: one line per requirement (ref, type, Persian ask and description, and a choice's labels), how money is written (`هزار` is 1000, toman is `IRT`, no unit means `IRR`), that later messages replace what they change, and the messages with their numbers shown as `****1234`. |
+| 65-69 | `shape(item)`: money, one of a choice's labels (an enum), or text. |
+| 72-81 | `extract(chat, messages, requirements)`: the schema allows exactly the offered refs, each in its shape or `null`, all required; asks the model; drops the nulls. |
+| 84-103 | `money(value, messages)`: the amounts the user wrote, read in code; the newest answer's amount wins; else the model's amount (a real integer, not `True`, in a known unit) only if the user wrote it; else the one amount the user wrote; with no unit or scale word, only a number typed as it is. Built with `money_value`, which refuses a negative. Anything else is `None`, and the agent asks. |
+| 106-122 | `text(value, messages)`: a non-empty text, trimmed; each `****1234` is put back as the user's number; a number with only generic words around it becomes just the number; a `****1234` that cannot be put back is refused. |
+| 125-132 | `choice(value, options)`: the app's key for an allowed key or its label; with no list, a plain key only; anything else is `None`. |
+| 135-151 | `checked(values, requirements, messages)`: keeps only refs the plan asks for, each through `money`, `choice` or `text`; drops the rest. |
 
 ### 5.21 `replies.py` — what the agent says in Persian
 
@@ -652,10 +659,10 @@ messages and the offered requirements. **Output:** the model's values, then only
 | 11-21 | The fixed sentences: the knowledge message, "which one?", the failure messages, the review and page messages, and the notes for a name not found or found twice. |
 | 22 | `FEW, MANY = 2, 8`: a lookup with this many records offers them as options (owner, 9 Nov 2026). |
 | 25-28 | `option(ref, item)`: one record as a choice. Its ref is `field=key`, so the answer says which field and which record; its label is the record's label, plus its value when that differs (`رضا ****0091`), masked. |
-| 31-39 | `lookup_options(lookups, wanted)`: each missing ref field's records, when its lookup has 2 to 8. |
-| 42-44 | `question(note, asks)`: one message: the note, if any, then every question. |
-| 47-55 | `shown(value, item, lookups)`: an amount as `2,500,000 ریال`; a record by its option label; anything else masked. |
-| 58-68 | `ready(report, requirements, lookups)`: every value the runner sent (form values and navigate arguments), one line each by its Persian description, after "the review is open" or, when the app had no review, "the form is filled". |
+| 31-45 | `lookup_options(lookups, wanted)`: each missing choice's allowed keys by their labels, and each missing ref field's records when its lookup has 2 to 8. |
+| 48-50 | `question(note, asks)`: one message: the note, if any, then every question. |
+| 53-64 | `shown(value, item, lookups)`: an amount as `2,500,000 ریال`; a choice by its label; a record by its option label; anything else masked. |
+| 67-77 | `ready(report, requirements, lookups)`: every value the runner sent (form values and navigate arguments), one line each by its Persian description, after "the review is open" or, when the app had no review, "the form is filled". |
 
 ### 5.22 `agent_nodes.py` — the agent's nodes
 
@@ -665,22 +672,22 @@ only the keys it changes.
 | Lines | What it does |
 |---|---|
 | 1-6 | Docstring: the model only returns JSON; code acts; the only commands are the task runner's. |
-| 8-21 | Imports. |
-| 23 | `MODEL_SEES`: the four keys of a requirement the model may see. |
-| 26-35 | `Tools`: everything the nodes use: the chat model, the feature index, the navigator, the lookups, the bridge, and a function that says where the app is. Only the bridge and that function differ between the server and `main_debug.py`. |
-| 38-42 | `plan_for(navigator, start, feature)`: through the feature's form when it has one, as `graph_tasks.plan_for` does. |
-| 45-50 | `Nodes`: the tools, and the features by intent. |
-| 52-55 | `failed(state, reply)`: ends the task as `failed` with a masked Persian reason. |
-| 57-68 | `understand`: hides long numbers, narrows to 8, lets the model choose. A model failure fails the task. A feature moves the task to `resolving`; a knowledge question or "not sure" leaves it `created` (no task, plan §13). |
-| 70-83 | `plan`: plans from the app's current screen; no allowed route fails the task. Keeps the plan as JSON, with its start screen and intent, and lists every requirement as missing. |
-| 85-100 | `extract`: offers the model only the missing requirements, with only `MODEL_SEES`. Nothing missing: no model call. A value already held wins over the model's. |
-| 102-108 | `check`: code only: `slots.checked`, then what is still missing. |
-| 110-121 | `clarify`: one message with every missing question; the options are `resolve`'s, or the lookups' records. `interrupt()` pauses here; on resume this node runs again from its first line and gets the answer. An option's ref sets that field's key; text is added to the messages for `extract`. |
-| 123-145 | `resolve`: code only: each value with a lookup must match one record (a typed number to a contact needs none), and is replaced by that record's key. A tie or a miss removes the value and goes back to `clarify` with a note and, for a tie, the matches as options. |
-| 147-155 | `prepare`: plans again from the same start, turns each amount into the text the runner reads, and runs `TaskRunner.run` over the bridge, ending at the review when the feature has a form. |
-| 157-168 | `verify`: code only: a stopped run fails with the runner's reason; the last observed screen must be the feature's `review` (or destination), else it fails. |
-| 170-177 | `ready_for_user`: a feature without a form: "page open", and `completed`. Otherwise: the review message with every value. |
-| 179-188 | `reply`: the knowledge message; or "which one?" with the 8 offered features by title, paused with `interrupt()`. An offered intent goes on to `plan`; text goes back to `understand`. |
+| 8-22 | Imports, including `words` for the allowed keys, fixed values and field hints. |
+| 24 | `MODEL_SEES`: the four keys of a requirement the model may see. |
+| 27-36 | `Tools`: everything the nodes use: the chat model, the feature index, the navigator, the lookups, the bridge, and a function that says where the app is. Only the bridge and that function differ between the server and `main_debug.py`. |
+| 39-43 | `plan_for(navigator, start, feature)`: through the feature's form when it has one, as `graph_tasks.plan_for` does. |
+| 46-51 | `Nodes`: the tools, and the features by intent. |
+| 53-56 | `failed(state, reply)`: ends the task as `failed` with a masked Persian reason. |
+| 58-69 | `understand`: hides long numbers, narrows to 8, lets the model choose. A model failure fails the task. A feature moves the task to `resolving`; a knowledge question or "not sure" leaves it `created` (no task, plan §13). |
+| 71-94 | `plan`: plans from the app's current screen; no allowed route fails the task. Gives each choice its allowed keys; sets the values the feature decides and the choices with one key (`preset`), which are never asked; keeps the plan as JSON, with its start screen, intent and preset, and lists the rest as missing. |
+| 96-114 | `extract`: offers the model only the missing requirements, with only `MODEL_SEES`, the field's own words as its description when it has them, and a choice's labels. Nothing missing: no model call. A new value replaces one held before. |
+| 116-122 | `check`: code only: `slots.checked`, then what is still missing. |
+| 124-141 | `clarify`: one message with every missing question; the options are `resolve`'s, or the choices' keys and the lookups' records. `interrupt()` pauses here; on resume this node runs again from its first line and gets the answer. An option's ref sets that field's key; typed words are added to the messages and every value that is not preset is read again, so a correction counts. |
+| 143-165 | `resolve`: code only: each value with a lookup must match one record (a typed number, or a typed IBAN that matches no saved one, needs none), and is replaced by that record's key. A tie or a miss removes the value and goes back to `clarify` with a note and, for a tie, the matches as options. |
+| 167-175 | `prepare`: plans again from the same start, turns each amount into the text the runner reads, and runs `TaskRunner.run` over the bridge, ending at the review when the feature has a form. |
+| 177-188 | `verify`: code only: a stopped run fails with the runner's reason; the last observed screen must be the feature's `review` (or destination), else it fails. |
+| 190-197 | `ready_for_user`: a feature without a form: "page open", and `completed`. Otherwise: the review message with every value. |
+| 199-208 | `reply`: the knowledge message; or "which one?" with the 8 offered features by title, paused with `interrupt()`. An offered intent goes on to `plan`; text goes back to `understand`. |
 
 ### 5.23 `agent_graph.py` — the one graph
 
@@ -715,6 +722,35 @@ on a background thread.
 | 49-62 | `start(text, option)`: refuses during a turn or a Run; an option must be one the agent offered, and is shown by its label; starts the turn thread. |
 | 64-82 | `turn(answer)`: resumes the paused question with `Command(resume=...)`, or starts a new request. Reads the pending question from `__interrupt__`, the task state and the report, and adds the agent's line. A crash is printed and shown as one Persian line. |
 | 84-93 | `progress()`: what `GET /graph/chat` returns. |
+
+### 5.25 `amounts.py` — the amounts the user wrote, read in code
+
+**Called by:** `slots.money`. **Input:** one message. **Output:** every amount in it, in whole rials.
+It lets code refuse a model amount the user never wrote (the baseline's factor of 1,000).
+
+| Lines | What it does |
+|---|---|
+| 1-6 | Docstring: digits or number words up to the billions, تومان/تومن/ت and ریال; only a number with a scale word or a unit counts. |
+| 8 | Imports `re`. |
+| 10-21 | `DIGITS` (Persian and Arabic to Latin), `WORDS` (number words, spoken forms such as «پونصد» and «یه» too), `SCALES` (هزار, میلیون, میلیارد), and the toman and rial words. |
+| 24-29 | `tokens(text)`: the words, with digits made Latin, thousands separators dropped, and a number split from a word stuck to it («۵۰تومن»). |
+| 32-52 | `amounts(text)`: one pass over the words. A number starts an amount; a number word after «و» adds to it; a scale multiplies what came before and adds it; anything else ends the amount, which counts only with a scale word or a unit; toman is ×10. A number that cannot join the last one starts a new amount («یه دو میلیون» is two million). |
+
+### 5.26 `words.py` — the assistant's own words about the app
+
+**Called by:** `intent.py`, `Nodes.plan` and `Nodes.extract`. **Reads:**
+`app_profiles/assistant_words.json` (D-026): the bank's app is never changed, so this knowledge is
+the assistant's.
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring: it never shows the model a key, only labels. |
+| 9-12 | Imports. |
+| 14-18 | `WORDS`: the file, read once. |
+| 21-23 | `feature_words(intent)`: the feature's Persian words. |
+| 26-33 | `options(screen, ref, lookups)`: a choice's allowed keys with their labels: the screen's own list first (`"S-164 svc-kind"`), then the field's; a list given as a lookup takes that lookup's records. |
+| 36-38 | `field_words(ref)`: a hint that tells the model more about a field than its description. |
+| 41-43 | `fixed(intent)`: values the feature decides itself. |
 
 ## 6. The graph page in the browser
 
@@ -1003,16 +1039,19 @@ backend tests in `tests/backend/` are the ones that prove our runtime code.
 | `tests/backend/test_command_queue.py` | 13 | A device must report first; a queued command matches the contract; it is delivered once; one outstanding command per device; the same request returns the same command; a result frees the device; a repeated result changes nothing; unknown results are refused; an expired command is never delivered; a delivered one with no result ends `uncertain`; a stale one is closed, not delivered; each of the four builds a valid command and no other can be built. |
 | `tests/backend/test_bridge_link.py` | 6 | A result comes back; a stale observation is resent; it gives up on a screen that keeps moving; a stale draft is not resent; a device that cannot take it stops the task; no result stops the task. |
 | `tests/backend/test_navigator.py` | 10 | Direct and multi-step routes; selections and fields in order; screens without fields pass inside one navigate; no route; a user-only crossing is refused; secret and optional fields are never asked; going back by way of Home; a row key that spells a user-only tag is refused; a feature routes through its form. |
-| `tests/backend/test_lookups.py` | 8 | رضا becomes her card; a typed number needs no contact; an unknown name is not guessed; two matches are ambiguous; every source finds records; the attribute picks what is sent; unknown lookups are unknown; it never writes. |
+| `tests/backend/test_lookups.py` | 20 | رضا becomes her card; a typed number needs no contact; an unknown name is not guessed; two matches are ambiguous; every source finds records; the attribute picks what is sent; unknown lookups are unknown; it never writes.; «کارت 0018», «حساب رضا», «پس انداز», Arabic ي/ك, Persian digits and spoken endings are matched, «حساب» stays ambiguous and «علی» not found; a typed IBAN is kept unless it is a saved one; a typed number must fit its field. |
 | `tests/backend/test_task_runner.py` | 13 | Card to رضا navigates, fills and stops at the review; a missing value stops before the app moves; all missing values are found at once; an unknown contact stops first; money must be a whole number, Persian digits too; an unexpected screen or a blocked navigate stops the run; a page with the wrong amount stops before the review; a selection travels as a navigate argument; a value the plan does not ask for is refused; a crafted row key never reaches the app; **no feature ever sends an operation outside the four**. |
 | `tests/backend/test_api.py` | 17 | The HTTP routes: idle status; a click reaches the app and the result reaches the page; bodies outside the contract, unknown commands, unbuilt screens, extra fields, unseen devices are refused; a second destination waits; **no route can confirm, submit or pay**; the page loads nothing from the internet; plans, demo values and runs behave. |
 | `tests/backend/test_steps.py` | 4 | The step prints are silent unless `ASSISTANT_TRACE=1`; a card number is masked and Persian stays readable; a traced card-to-رضا run never prints the full card; `ASSISTANT_DEBUG=1` gives a one-hour command and result wait. |
 | `tests/backend/test_graph_run.py` | 2 | A whole run over the real routes, with a fake app that speaks the contract: card to رضا reaches the review and stops; a second run is refused. |
 | `tests/backend/agent_fakes.py` | (helpers) | `FakeChat` (scripted answers; keeps every prompt and schema), `FakeEmbeddings` (fixed vectors), an unreachable embedding service, and `RecordingApp`, the stand-in app keeping every operation. No network. |
-| `tests/backend/test_agent.py` | 20 | The agent end to end. Card to رضا in one sentence reaches `ready_for_user` with exactly `navigate`, `fill_form`, `show_review` and `{"value": 2500000, "unit": "IRR"}` for «۲۵۰ هزار تومان»; a missing source card is one question with 7 card options, and an option reaches the review; an ambiguous name gets the matches as options; a name not found asks again and sends nothing; a choice or a slot that was not offered is refused; money that is not a whole number in a known unit is refused; a knowledge question gets the fixed message and sends nothing; a feature without a form ends `completed`; `verify` fails on another screen; a model that cannot be reached fails and sends nothing; **no prompt holds a screen ID, an edge action, a user-only tag or a full card number**; every task-state change in every test is allowed by `task.json`. |
+| `tests/backend/test_agent.py` | 21 | The agent end to end. Card to رضا in one sentence reaches `ready_for_user` with exactly `navigate`, `fill_form`, `show_review` and `{"value": 2500000, "unit": "IRR"}` for «۲۵۰ هزار تومان»; a missing source card is one question with 7 card options, and an option reaches the review; an ambiguous name gets the matches as options; a name not found asks again and sends nothing; a choice or a slot that was not offered is refused; money that is not a whole number in a known unit is refused; a model amount the user never wrote is not used (the factor of 1,000), and the newest answer's amount wins; a knowledge question gets the fixed message and sends nothing; a feature without a form ends `completed`; `verify` fails on another screen; a model that cannot be reached fails and sends nothing; **no prompt holds a screen ID, an edge action, a user-only tag or a full card number**; every task-state change in every test is allowed by `task.json`. |
 | `tests/backend/test_stand_in_app.py` | 6 | The stand-in's commands and results match the schemas, with rising versions, masked fields and a draft; no walk takes a user-only step; a row key replaces `*`, and a missing one is `blocked`; a secret or unknown field is refused; `show_review` away from a form has no review. |
 | `tests/backend/test_agent_chat.py` | 9 | A chat turn and a graph-page Run refuse each other; an option must be one the agent offered; a turn takes exactly one of `text` or `option`; a fresh page shows an empty conversation; the chat script loads nothing from the internet. |
 | `tests/backend/test_main_debug.py` | 1 | `main_debug.main` runs the built-in example to the review with the fakes, and never prints the full card. |
+| `tests/backend/test_amounts.py` | 14 | Amounts in digits or words, with هزار/میلیون, separators, spoken forms and toman or rial, are read in whole rials; a number with no unit or scale word (a phone, a date, a count) is not an amount. |
+| `tests/backend/test_words.py` | 3 | Every feature has Persian words; every choice the agent can ask, in every feature's plan from Home, has plain allowed keys with unique labels that hold no full number; every fixed value is an allowed key of its feature. |
+| `tests/backend/test_agent_answers.py` | 8 | A correction in an answer replaces the held source and amount; a number hidden as `****0091` inside words is put back; a typed IBAN not saved reaches the review; a choice is one of its labels and reaches the app as its key, and its label is shown on the review; text that is no allowed key is asked again with the options and sends nothing; a selection the feature decides is set by code and never asked; an account number given for an IBAN is asked again. |
 | `tests/evaluation/conftest.py` | (helpers) | Lets the evaluation tests import `tests/backend/agent_fakes.py` (a site package named `tests` hides this repository's `tests` folder). |
 | `tests/evaluation/test_cases.py` | 6 | Both case files: the format, unique ids, the closed tag list, one turn per unambiguous case; every intent, ref, lookup key, money value and option turn is valid for the feature's plan from Home; an `e2e` case gives every value and ends right; the held-out counts and the tuning minimums; no held-out first turn in the tuning file; **the held-out file's SHA-256 equals the one in D-025**. |
 | `tests/evaluation/test_evaluate.py` | 7 | The runner on the fakes: a right card transfer passes every measure and exits 0; a wrong amount and another feature with a form are critical wrong actions (exit 1); a missing source that ends asking is a safe stop; an option not offered fails the case and the run goes on; a crash is recorded and the next case runs; unreachable embeddings exit 2. |

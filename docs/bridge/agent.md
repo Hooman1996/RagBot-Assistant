@@ -43,11 +43,11 @@ flowchart LR
 | Node | What it does | Code it calls | Task state |
 |---|---|---|---|
 | `understand` | Narrows the features to the closest 8, then lets the model choose one of them, `knowledge_question` or `not_sure`. The schema's `choice` is an enum of exactly those values, and code turns anything else into `not_sure`. | `intent.FeatureIndex.closest`, `intent.choose` | `resolving` for a feature; unchanged (`created`) otherwise |
-| `plan` | Plans the chosen feature from the app's current screen, as the graph page does. | `agent_nodes.plan_for` → `Navigator.plan_feature` / `plan` | `resolving`, or `failed` with no allowed route |
-| `extract` | The model fills the missing requirements only. It sees each one's ref, type, Persian `ask` and `description`, and the user's words. The schema allows exactly those refs. | `slots.extract` | `resolving` |
-| `check` | Code only. Drops anything the plan does not ask for. Money must be a whole number with `IRR` or `IRT`; toman becomes rials ×10 as a Python `int`. Lists what is still missing. | `slots.checked`, `slots.money` → `task_runner.money_value` | `resolving` |
-| `clarify` | `interrupt()` with one Persian message holding every missing `ask`. A missing ref field whose lookup has 2 to 8 records also gets its records as options (owner, 9 Nov 2026: 8, so the 7 cards fit). Resumes with the user's text or an option's ref. | `replies.question`, `replies.lookup_options` → `FixtureLookups.candidates` | `clarifying` |
-| `resolve` | Code only. Each named record must match exactly one record of its lookup. A tie goes back to `clarify` with the matches as options; a miss goes back saying it was not found. | `FixtureLookups.matching` | `resolving` |
+| `plan` | Plans the chosen feature from the app's current screen, as the graph page does. Each choice gets its allowed keys from [the assistant's words](#the-assistants-own-words-about-the-app). A value the feature decides, or a choice with one key, is set by code and never asked. | `agent_nodes.plan_for` → `Navigator.plan_feature` / `plan`, `words.options`, `words.fixed` | `resolving`, or `failed` with no allowed route |
+| `extract` | The model fills the missing requirements. It sees each one's ref, type, Persian `ask` and `description` (or the field's own words), a choice's Persian labels (never its keys), and the user's words. The schema allows exactly those refs, and a choice only one of its labels. A new value replaces one held before. | `slots.extract` | `resolving` |
+| `check` | Code only. Drops anything the plan does not ask for. Money: see [what code checks](#what-code-checks-whatever-the-model-says). A choice must be one of its allowed keys or labels. Lists what is still missing. | `slots.checked`, `slots.money`, `slots.choice` | `resolving` |
+| `clarify` | `interrupt()` with one Persian message holding every missing `ask`. A missing choice offers its allowed keys, and a missing ref field whose lookup has 2 to 8 records its records (owner, 9 Nov 2026: 8, so the 7 cards fit). Resumes with an option's ref, or with the user's words: then every value is read again, so a correction counts. | `replies.question`, `replies.lookup_options` | `clarifying` |
+| `resolve` | Code only. Each named record must match exactly one record of its lookup. A typed card, account or wallet number, or an IBAN that matches no saved one, needs no record. A tie goes back to `clarify` with the matches as options; a miss goes back saying it was not found. | `FixtureLookups.matching`, `lookups.typed` | `resolving` |
 | `prepare` | Runs the task runner with the resolved values, the same way the graph page's Run does. | `TaskRunner.run` over the bridge it is given | `preparing` |
 | `verify` | Code only. The last observation's screen must be the feature's `review` (or its `destination`, for a feature without a form). Anything else fails with the app's own reason. | the profile | `verifying_review`, or `failed` |
 | `ready_for_user` | Says the review is open and the user must check and confirm it, listing every prepared value masked. A feature without a form says the page is open. | `replies.ready` | `ready_for_user`; then `completed` for a feature without a form |
@@ -81,20 +81,52 @@ node then ends the task as `failed` with a plain Persian message and sends nothi
 | `Embeddings.embed(texts, query=False)` | `GET {ASSISTANT_EMBED_URL}/info` once, then `POST /embed` in batches of the server's `max_client_batch_size` | `normalize: true`. A user's words use the model's `query` prompt (`prompt_name`), as RagBot does; a feature's text has none. |
 
 What the server reported on 9 Nov 2026: vLLM 0.26.0 serving Gemma 4 E4B-it as `/app/model`, with a
-4,000-token context. `response_format` with `json_schema` holds the answer to the schema, enums
+4,000-token context (6,144 since 11 Nov 2026). `response_format` with `json_schema` holds the answer to the schema, enums
 included (`guided_json` is ignored by this version). TEI 1.9.3 serving
 jina-embeddings-v5-text-small-retrieval, 1,024 dimensions, batches of up to 50. The reranker is
 not used.
 
-Each feature is embedded once per process as `title + " — " + description`.
+Each feature is embedded once per process as `title + " — " + ` its Persian words from
+`app_profiles/assistant_words.json`, with TEI's `document` prompt (the user's words use `query`).
 
 ## What the model sees, and what it never sees
 
-It sees the user's words, the offered features (intent, Persian title, description and slot refs)
-and, in `extract`, the offered requirements. It never sees a screen ID, an edge, an action, a form
-beyond the offered requirements, the user-only list, a lookup's records, or a full card number:
-every run of 12 or more digits in the user's words becomes `[number N]` before the prompt, and
-code puts the number back afterwards (`slots.hidden`, `slots.text`). A test checks the prompts for all of these.
+It sees the user's words, the offered features (intent, Persian title, Persian words and slot
+refs) and, in `extract`, the offered requirements with a choice's Persian labels. It never sees a
+screen ID, an edge, an action, a form beyond the offered requirements, the user-only list, a
+lookup's records, an app key, or a full card number: every run of 12 or more digits in the user's
+words is shown as `****` and its last 4 digits, and code puts the number back wherever the model
+copies it (`slots.hidden`, `slots.text`). A test checks the prompts for all of these.
+
+## The assistant's own words about the app
+
+In production the bank's app cannot be changed, so what the assistant must know about it lives in
+a file the assistant owns, `app_profiles/assistant_words.json`, read by `assistant/words.py`
+([D-026](../decisions/0026-assistant-side-knowledge.md)):
+
+- `features`: Persian words for each of the 77 features, used for the embeddings and the model's
+  choice (the profile's descriptions are English, and two pairs of features share a title).
+- `choices`: the allowed keys of every choice field and row selection the agent can ask, each with
+  a Persian label, either listed or taken from a lookup's records. A key that is screen-specific is
+  listed as `"S-164 svc-kind"`.
+- `fixed`: values a feature decides itself, such as which paid inquiry the menu opens.
+- `fields`: words that tell the model more about a field than its short description.
+
+`tests/backend/test_words.py` checks that every feature has words and every choice the agent can
+ask has allowed keys.
+
+## What code checks, whatever the model says
+
+- **Money** is taken from the user's own words (`assistant/amounts.py` reads digits or number
+  words, هزار/میلیون/میلیارد and تومان/ریال): the amount in the newest answer wins; otherwise the
+  model's amount is used only if the user wrote it; otherwise the one amount the user wrote;
+  otherwise the agent asks.
+- **A choice** reaches the app only as one of its allowed keys, so no other text is ever sent as a
+  key.
+- **A record** is matched after making digits Latin, ي/ك Persian, and dropping ZWNJ, «ٔ», generic
+  words (کارت، حساب، کیف، شبا…), words no record holds, and spoken endings («تجاریمو»).
+- **A typed number** must fit its field: an IBAN field takes only an IBAN, and a bare number is
+  never matched inside a saved IBAN.
 
 The model has no tools. It returns JSON, and code acts. The agent reaches the app only through
 `TaskRunner`, so the only commands are `navigate`, `fill_form` and `show_review`. No node, prompt
@@ -122,9 +154,11 @@ evaluation set is P6-02): the right feature was among the narrowed 8 for 20 of 2
 chose it for 19 of 20. The miss: «قبض برقمو پرداخت کن» chose `wallet_bill` over `bill_payment`;
 both are titled «پرداخت قبض». The numbers are in [intent selection](intent-selection.md).
 
+The frozen evaluation set is the measure now: see [the P6-03 report](../reports/p6-03-fixes.md).
+
 ## What is not here
 
-No cancel or correction flow (a new message after the review is a new request), no saved-data
-questions, no persistence, no reranker, no RAG and no in-app panel (P6-05). Choice fields carry no
-list of allowed keys in the profile, so the model can only copy the user's words for them, and
-the app refuses a key it does not have.
+No cancel flow (a new message after the review is a new request), no saved-data questions, no
+persistence, no reranker, no RAG and no in-app panel (P6-05). The record-based choice lists
+(plates, Sayad cheques, addresses, branches) are written from the mock fixtures; in production they
+must come from the bank's lookup APIs.

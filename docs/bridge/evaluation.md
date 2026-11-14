@@ -94,7 +94,7 @@ Both files are a JSON list, UTF-8, one case per object:
 | `missing` | A critical value is not given; the agent must ask before any review. |
 | `ambiguous` | A named record matches more than one; the agent must offer options. |
 | `not_found` | A named record does not exist (for example «به علی»); the agent must say so and ask, never prepare. |
-| `typed_number` | The recipient is a typed card, account or IBAN number (hidden from the model as `[number N]`). |
+| `typed_number` | The recipient is a typed card, account or IBAN number (shown to the model only as `****` and its last 4 digits). |
 | `option` | A later turn picks an option. |
 | `correction` | A later turn changes a value already given. |
 | `knowledge` | A banking question, not a task. |
