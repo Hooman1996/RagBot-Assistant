@@ -351,10 +351,18 @@ local/toolchain/replica-viewer/stop.sh
 ```
 
 **Typing and speed (14 Nov 2026, #144).** The viewer acts as a physical keyboard
-(`scrcpy --keyboard=uhid`, the X keymap `ir,us`), and the phone maps keys with its Persian
-physical layout, so typing Persian in the browser works in every field, the assistant panel's too;
-English letters type as Persian there. It captures at 1200 px (`--max-size=1200`). For a smoother
-screen, the emulator's display is overridden for the viewer: `adb -s emulator-5554 shell wm size 720x1600`
+(`scrcpy --keyboard=uhid`), so the phone turns each key into a character with its own layout:
+the replica's debug build adds a full Persian layout («فارسی (استاندارد، با گ)»: Android's own has
+no «گ»), and x11vnc's remap sends each Persian character the browser types to the key that layout
+puts it on. So Persian typed with your own keyboard works in every field, digits too (they arrive
+as Persian digits); keys typed on an English layout give the Persian letter on that key. After a
+fresh install of the replica (a device-test run removes it), select the layout again with
+`local/toolchain/replica-viewer/keyboard_layout.sh`, which also turns off the on-screen keyboard.
+The remap is made from the layout file by `make_persian_remap.py` beside it.
+
+For speed: the viewer captures at 1200 px (`--max-size=1200`); x11vnc runs with `-nonap -wait 5
+-defer 5 -threads` (about 16 screen updates a second while the app scrolls, from 8); and the
+emulator's display is overridden for the viewer with `adb -s emulator-5554 shell wm size 720x1600`
 and `wm density 280` (the same 411 dp layout, less than half the pixels to draw in software).
 Before any visual-fidelity screenshot, return to the pinned profile with `wm size reset` and
 `wm density reset`.

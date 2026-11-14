@@ -11,7 +11,7 @@ Line numbers match `main` at commit `95533cd` (8 Nov 2026), except `command_queu
 `graph_tasks.py`, `graph_page.py`, the agent's files (5.17 to 5.24), `tools/project_checks.py`,
 `tools/stand_in_app.py` and `main_debug.py`, which match #136 (9 Nov 2026), and the evaluation
 runner (9.7 and 9.8), which matches #138 (14 Nov 2026), and `lookups.py`, `models.py`, `intent.py`,
-`slots.py`, `amounts.py` and `words.py`, which match #140 (14 Nov 2026), and `app.py`,
+`amounts.py` and `words.py`, which match #140 (14 Nov 2026), `slots.py`, which matches #144, and `app.py`,
 `task_runner.py`, `bridge_link.py`, `graph_page.py`, `replies.py`, `agent_nodes.py`,
 `agent_graph.py`, `agent_chat.py`, `lifecycle.py`, `agent_lifecycle.py` and `main_debug.py`, which
 match #142 (14 Nov 2026), except `app.py` and `agent_chat.py`, which match #144 with
@@ -629,17 +629,18 @@ messages and the offered requirements. **Output:** the model's values, then only
 | 10-15 | Imports: `amounts`, the lookups' `GENERIC` words, and `money_value` from `task_runner.py`, so money is made the same way everywhere. |
 | 17-19 | `LONG_NUMBER` (12 or more digits, Persian or Latin), `SHOWN` (how one is shown: `****1234`), and `PLAIN_KEY`. |
 | 20 | `UNITS`: `IRR` is 1, `IRT` (toman) is 10. |
-| 21-26 | `MONEY`: the schema of an amount: a whole number and a unit. |
-| 28 | `AROUND_NUMBER`: words that may stand around a number the model copied («کارت ****0091», «چک صیادی ****0311»). |
-| 31-33 | `numbers(messages)`: every long number in the messages, in order, in Latin digits. |
-| 36-41 | `hidden(messages)` and `shown_as`: each long number shown only as `****` and its last 4 digits. |
-| 44-62 | `extract_prompt(messages, wanted)`: one line per requirement (ref, type, Persian ask and description, and a choice's labels), how money is written (`هزار` is 1000, toman is `IRT`, no unit means `IRR`), that later messages replace what they change, and the messages with their numbers shown as `****1234`. |
-| 65-69 | `shape(item)`: money, one of a choice's labels (an enum), or text. |
-| 72-81 | `extract(chat, messages, requirements)`: the schema allows exactly the offered refs, each in its shape or `null`, all required; asks the model; drops the nulls. |
-| 84-103 | `money(value, messages)`: the amounts the user wrote, read in code; the newest answer's amount wins; else the model's amount (a real integer, not `True`, in a known unit) only if the user wrote it; else the one amount the user wrote; with no unit or scale word, only a number typed as it is. Built with `money_value`, which refuses a negative. Anything else is `None`, and the agent asks. |
-| 106-122 | `text(value, messages)`: a non-empty text, trimmed; each `****1234` is put back as the user's number; a number with only generic words around it becomes just the number; a `****1234` that cannot be put back is refused. |
-| 125-132 | `choice(value, options)`: the app's key for an allowed key or its label; with no list, a plain key only; anything else is `None`. |
-| 135-151 | `checked(values, requirements, messages)`: keeps only refs the plan asks for, each through `money`, `choice` or `text`; drops the rest. |
+| 21-22 | `SMALLEST`: 10,000 rials. A written amount under 1,000 toman is usually shorthand («شصت تمن» for sixty thousand), so it is asked, not used. |
+| 23-28 | `MONEY`: the schema of an amount: a whole number and a unit. |
+| 30 | `AROUND_NUMBER`: words that may stand around a number the model copied («کارت ****0091», «چک صیادی ****0311»). |
+| 33-35 | `numbers(messages)`: every long number in the messages, in order, in Latin digits. |
+| 38-43 | `hidden(messages)` and `shown_as`: each long number shown only as `****` and its last 4 digits. |
+| 46-64 | `extract_prompt(messages, wanted)`: one line per requirement (ref, type, Persian ask and description, and a choice's labels), how money is written (`هزار` is 1000, toman is `IRT`, no unit means `IRR`), that later messages replace what they change, and the messages with their numbers shown as `****1234`. |
+| 67-71 | `shape(item)`: money, one of a choice's labels (an enum), or text. |
+| 74-83 | `extract(chat, messages, requirements)`: the schema allows exactly the offered refs, each in its shape or `null`, all required; asks the model; drops the nulls. |
+| 86-106 | `money(value, messages)`: the amounts the user wrote (at least `SMALLEST`), read in code; the newest answer's amount wins; else the model's amount (a real integer, not `True`, in a known unit) only if the user wrote it; else the one amount the user wrote. With no unit or scale word, a bare number counts only as the answer to a question, never in the request itself («30 جابجا شه» is asked). Built with `money_value`, which refuses a negative. Anything else is `None`, and the agent asks. |
+| 109-125 | `text(value, messages)`: a non-empty text, trimmed; each `****1234` is put back as the user's number; a number with only generic words around it becomes just the number; a `****1234` that cannot be put back is refused. |
+| 128-135 | `choice(value, options)`: the app's key for an allowed key or its label; with no list, a plain key only; anything else is `None`. |
+| 138-154 | `checked(values, requirements, messages)`: keeps only refs the plan asks for, each through `money`, `choice` or `text`; drops the rest. |
 
 ### 5.21 `replies.py` — what the agent says in Persian
 
@@ -736,7 +737,7 @@ It lets code refuse a model amount the user never wrote (the baseline's factor o
 |---|---|
 | 1-6 | Docstring: digits or number words up to the billions, تومان/تومن/ت and ریال; only a number with a scale word or a unit counts. |
 | 8 | Imports `re`. |
-| 10-21 | `DIGITS` (Persian and Arabic to Latin), `WORDS` (number words, spoken forms such as «پونصد» and «یه» too), `SCALES` (هزار, میلیون, میلیارد), and the toman and rial words. |
+| 10-21 | `DIGITS` (Persian and Arabic to Latin), `WORDS` (number words, spoken forms such as «پونصد» and «یه» too), `SCALES` (هزار, میلیون, میلیارد), and the toman words (with spoken spellings such as «تمن») and rial words. |
 | 24-29 | `tokens(text)`: the words, with digits made Latin, thousands separators dropped, and a number split from a word stuck to it («۵۰تومن»). |
 | 32-52 | `amounts(text)`: one pass over the words. A number starts an amount; a number word after «و» adds to it; a scale multiplies what came before and adds it; anything else ends the amount, which counts only with a scale word or a unit; toman is ×10. A number that cannot join the last one starts a new amount («یه دو میلیون» is two million). |
 
@@ -888,8 +889,11 @@ What was built: [replica-complete.md](reports/replica-complete.md).
 | `ProfileForms.kt`, `ProfileWords.kt`, `ProfileSelections.kt`, `ProfileFeatures.kt`, `ProfileUserOnly.kt` | The forms and their fields, their Persian questions, row choices, the 77 features, and the user-only list. Exported to `replica.profile.json`. |
 | `MockBank.kt` | The in-app mock bank: every service screen calls it; it checks against the fixtures and returns a receipt or a Persian failure. In memory; resets on restart. Only the user's own confirm reaches it. |
 | `MockData.kt`, `MockJson.kt` | Read the fixtures packed into the app from `mock_services/fixtures/` at build time. |
+| `src/debug/.../devtools/KeyboardLayouts.kt`, `src/debug/res/raw/keyboard_layout_persian_standard.kcm` | **Debug build only.** Offers Android a full Persian physical-keyboard layout (Android's own has no «گ»), so the browser viewer's simulated keyboard types every Persian letter on the emulator ([the viewer](runbook/replica-development.md#desktop-viewer-and-stopping-the-simulation)). The receiver does nothing; Android reads its metadata. |
 | `*Screens.kt`, `*Fixture.kt` | The screens of each feature area, and their sample data. `SupportScreens.kt` adds the **دستیار** entry beside **چت بات** when the bridge loop is on. |
-| `assistant/AssistantPanel.kt` | The assistant panel (#144, [the panel](bridge/panel.md)): `AssistantPanelState` (open, conversation ID, history, draft; memory only), `AssistantOverlay` (the panel when open, the bubble when minimized, polling `/history` every 0.7 s while the agent works), the panel itself (state, **کوچک کردن**, a separate **لغو کار**, messages, progress, options, text box). It sits in the app's own window, never a dialog, catches no Back and shows no spinner, so the executor still sees and taps the screen. **The part the bank's team builds in their own app.** |
+| `assistant/AssistantPanel.kt` | The assistant's chat box (#144, [the panel](bridge/panel.md)): `AssistantOverlay` (the box when open, the bubble always, polling `/history` every 0.7 s while the agent works and stepping aside), the box itself at most 45% of the screen (state, **کوچک کردن**, a separate **لغو کار** that also closes it, messages, progress, options, text box). It sits in the app's own window, never a dialog, catches no Back and shows no spinner, so the executor still sees and taps the screen. **The part the bank's team builds in their own app.** |
+| `assistant/AssistantBubble.kt` | `Bubble`: the floating **دستیار** bubble, dragged anywhere (kept on screen, measured from the left edge in any layout direction), a tap opens or closes the box, and it shows the task state; `stepAside`: closes the box once the agent moves the app to another screen, and opens it again when the turn ends. |
+| `assistant/AssistantState.kt` | `AssistantPanelState` (open, conversation ID, history, draft, the bubble's place, the screen when a message went out; memory only), the task states in Persian, and the cancellable ones. |
 | `assistant/AssistantClient.kt` | The panel's three calls (`send`, `history`, `cancel`) to `BuildConfig.BRIDGE_BACKEND`, off the main thread; `requestBody` writes the contract's conversation request with the loop's last observation; `parseHistory` reads the history; `PanelHistory.shownState` is `clarifying` while a question waits. |
 
 ## 9. Tools: the check runner and the helper scripts

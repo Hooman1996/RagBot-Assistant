@@ -14,13 +14,14 @@ message (P6-06).
 
 | Control | What it does |
 |---|---|
-| **دستیار** in the support menu, beside **چت بات** | Opens the panel. The chatbot entry stays the chatbot. Shown only when the bridge loop is on (a debug build with the flag file). |
+| The floating **دستیار** bubble | Always on screen while the bridge loop is on (a debug build with the flag file). Drag it anywhere; tap it to open or close the small chat box. It shows the task state («منتظر پاسخ شما», «آماده بازبینی شما»…). |
+| **دستیار** in the support menu, beside **چت بات** | Also opens the chat box. The chatbot entry stays the chatbot. |
 | The text box and **ارسال** | Sends a request, an answer or a correction. |
 | An option button | Answers the pending question with that option: a card, an account, a choice's label, or «لغو». |
 | The state line | The task state in Persian («منتظر پاسخ شما», «در حال آماده‌سازی در برنامه», «آماده بازبینی شما»…). While the agent works it says «در حال انجام…» and, after a run, lists each command, its screen and how it ended. |
-| **کوچک کردن** (minimize) | Hides the panel. The conversation and any pending question stay; the agent keeps working while the app is open. A **دستیار** bubble with the task state stays on screen. |
-| The bubble | Reopens the panel and reloads the conversation from the backend. |
-| **لغو کار** (cancel task) | A separate, red control, shown only while the task can be cancelled. It stops a running task before its next command, or cancels a question, a review or a pause. A command already sent is never undone. |
+| **کوچک کردن** (minimize) | Closes the chat box. The conversation and any pending question stay; the agent keeps working while the app is open. Opening the box again reloads the conversation from the backend. |
+| Stepping aside | Once the agent moves the app to another screen, the chat box closes by itself so the app can be seen, and opens again when the agent is done (a question, the review, or a failure). |
+| **لغو کار** (cancel task) | A separate, red control, shown only while the task can be cancelled. It closes the chat box at once, and stops a running task before its next command, or cancels a question, a review or a pause. A command already sent is never undone; the app stays where it is. |
 
 The panel never confirms, submits or pays. The agent stops on the app's review; only the user's
 own tap on the app's confirm goes further.
@@ -36,7 +37,8 @@ treats any second window as an open dialog (`modal`). So the panel:
 - **shows no spinner**: an indeterminate progress indicator reads as `loading`, which the executor
   waits out;
 - uses tags that start with `assistant-`, which no profile edge or field uses, so the executor never
-  taps the panel.
+  taps the panel;
+- takes at most 45% of the screen when open, and only the bubble's own small size when closed.
 
 `AssistantPanelTest` proves the first three on the emulator: with the panel open, the observation has
 no dialog and no loading, and the executor reaches the card-transfer review behind it.
@@ -61,10 +63,11 @@ one of them runs at a time (`agent_chat.Chats.busy`).
 
 ## Try it
 
-Follow [try it](try-it.md) to step 6, then on the replica: open the support menu, tap **دستیار**,
-and write «۲۵۰ هزار تومان به رضا کارت به کارت کن». Pick a card from the options, tap **کوچک کردن**
-while the replica moves, and reopen it from the bubble once it says «آماده بازبینی شما». Then write
-«نه، مبلغ رو ۳۰۰ هزار تومن کن» for a fresh review, or tap **لغو کار**.
+Follow [try it](try-it.md) to step 6, then on the replica tap the **دستیار** bubble and write
+«شصت هزار تومن بزن برا رضا». Pick a card from the options: the box steps aside while the replica
+moves to the form and comes back on the review. Then write «نه، مبلغ رو ۳۰۰ هزار تومن کن» for a
+fresh review, or tap **لغو کار**. Typing Persian in the browser viewer works with your own keyboard
+([the viewer](../runbook/replica-development.md#desktop-viewer-and-stopping-the-simulation)).
 
 Checked on 14 Nov 2026 on the emulator against the live backend, Gemma and TEI: the question came
 with the 7 cards and «لغو»; minimize and reopen kept it; the option prepared review S-176 while the

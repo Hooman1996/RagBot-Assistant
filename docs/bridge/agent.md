@@ -131,9 +131,11 @@ ask has allowed keys.
 ## What code checks, whatever the model says
 
 - **Money** is taken from the user's own words (`assistant/amounts.py` reads digits or number
-  words, هزار/میلیون/میلیارد and تومان/ریال): the amount in the newest answer wins; otherwise the
-  model's amount is used only if the user wrote it; otherwise the one amount the user wrote;
-  otherwise the agent asks.
+  words, هزار/میلیون/میلیارد and تومان/تومن/تمن/ریال): the amount in the newest answer wins;
+  otherwise the model's amount is used only if the user wrote it; otherwise the one amount the user
+  wrote; otherwise the agent asks. An amount under 1,000 toman is asked, not used («شصت تمن» usually
+  means sixty thousand), and so is a bare number in a request («30 جابجا شه»); a bare number counts
+  only as the answer to «چند ریال…؟».
 - **A choice** reaches the app only as one of its allowed keys, so no other text is ever sent as a
   key.
 - **A record** is matched after making digits Latin, ي/ك Persian, and dropping ZWNJ, «ٔ», generic
