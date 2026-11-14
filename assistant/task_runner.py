@@ -26,7 +26,27 @@ class Bridge(Protocol):
 
 
 class TaskStopped(Exception):
-    """The task cannot go on. Its message says why."""
+    """The task cannot go on. Its message says why; state is how the report names the stop."""
+
+    state = "stopped"
+
+
+class Uncertain(TaskStopped):
+    """A command was sent, but whether it ran is unknown: no result came, or the app said uncertain."""
+
+    state = "uncertain"
+
+
+class Unreachable(TaskStopped):
+    """The app cannot be reached, so the command was not sent."""
+
+    state = "unreachable"
+
+
+class Cancelled(TaskStopped):
+    """The user cancelled; the run stopped before its next command."""
+
+    state = "cancelled"
 
 
 @dataclass
@@ -116,7 +136,7 @@ class TaskRunner:
                     self.fill(leg, sent, report)
             report.state = self.show_review(report) if review else "arrived"
         except TaskStopped as stop:
-            report.state = "stopped"
+            report.state = stop.state
             report.reason = str(stop)
         show("run ended", state=report.state, **({"reason": report.reason} if report.reason else {}))
         return report
@@ -141,6 +161,8 @@ class TaskRunner:
                 "trace": result.get("trace", []),
             }
         )
+        if result["outcome"] == "uncertain":
+            raise Uncertain(f"معلوم نیست {operation} انجام شد یا نه: {why(result)}")
         return result
 
     def move(self, leg: Leg, sent: dict, report: TaskReport) -> None:

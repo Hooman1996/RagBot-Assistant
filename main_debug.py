@@ -19,12 +19,12 @@ from langgraph.types import Command
 
 from assistant.agent_graph import build_graph
 from assistant.agent_nodes import Tools
-from assistant.agent_state import new_request
 from assistant.app import DEVICE_ID, create_app
 from assistant.bridge_link import BridgeLink
 from assistant.command_queue import CommandQueue
 from assistant.graph_data import read_json
 from assistant.intent import FeatureIndex
+from assistant.lifecycle import next_input
 from assistant.lookups import FixtureLookups
 from assistant.models import Chat, Embeddings
 from assistant.navigator import HOME, Navigator
@@ -77,7 +77,8 @@ def main(chat: Chat, embeddings: Embeddings, turns: list[str], replica: bool = F
     for turn in turns:
         print("user:", turn)
         if pending is None:
-            result = graph.invoke(new_request(CONVERSATION, turn), config)  # a new request
+            # A new request, or a follow-up (correction, «ادامه», «لغو») of a task at its review or paused.
+            result = graph.invoke(next_input(graph.get_state(config).values, CONVERSATION, turn), config)
         else:
             result = graph.invoke(Command(resume=answer_for(turn, pending)), config)  # answers the question
         pending = said(result)

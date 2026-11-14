@@ -8,7 +8,7 @@ between queueing and delivery, which the contract says did not run the command.
 import time
 
 from assistant.command_queue import DEBUGGING, CommandQueue, DeviceBusy, DeviceNotSeen
-from assistant.task_runner import TaskStopped
+from assistant.task_runner import TaskStopped, Uncertain, Unreachable
 
 RESULT_TIMEOUT_SECONDS = 3600 if DEBUGGING else 40
 POLL_SECONDS = 0.1
@@ -36,7 +36,7 @@ class BridgeLink:
         try:
             return self.queue.queue_command(self.device_id, operation, arguments)
         except DeviceNotSeen as error:
-            raise TaskStopped("برنامه هنوز به سرور وصل نشده است") from error
+            raise Unreachable("برنامه هنوز به سرور وصل نشده است") from error
         except DeviceBusy as error:
             raise TaskStopped("فرمان دیگری در حال اجراست") from error
 
@@ -49,4 +49,4 @@ class BridgeLink:
             if result is not None and result["command_id"] == command_id:
                 return result
             time.sleep(POLL_SECONDS)
-        raise TaskStopped("پاسخی از برنامه نرسید")
+        raise Uncertain("پاسخی از برنامه نرسید")

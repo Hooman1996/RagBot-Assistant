@@ -19,6 +19,10 @@ changes.
 ```mermaid
 flowchart LR
     start([user's words]) --> understand
+    start -->|"a task at its review, or paused"| follow_up
+    follow_up -->|correction, or resume| extract
+    follow_up -->|new request| understand
+    follow_up -->|cancel| stop
     understand -->|a feature| plan
     understand -->|knowledge question or not sure| reply
     understand -->|model failed| stop([end])
@@ -32,10 +36,13 @@ flowchart LR
     check -->|something missing| clarify
     check -->|all there| resolve
     clarify -->|"interrupt(): the user's answer"| extract
+    clarify -->|cancel| stop
     resolve -->|not found, or two matches| clarify
     resolve -->|one record each| prepare
     prepare --> verify
-    verify -->|wrong screen or stopped| stop
+    verify -->|wrong screen or stopped; cancelled; app out of reach: paused| stop
+    verify -->|uncertain command| reconcile
+    reconcile -->|plan again from where the app is| extract
     verify --> ready[ready_for_user]
     ready --> stop
 ```
@@ -51,7 +58,13 @@ flowchart LR
 | `prepare` | Runs the task runner with the resolved values, the same way the graph page's Run does. | `TaskRunner.run` over the bridge it is given | `preparing` |
 | `verify` | Code only. The last observation's screen must be the feature's `review` (or its `destination`, for a feature without a form). Anything else fails with the app's own reason. | the profile | `verifying_review`, or `failed` |
 | `ready_for_user` | Says the review is open and the user must check and confirm it, listing every prepared value masked. A feature without a form says the page is open. | `replies.ready` | `ready_for_user`; then `completed` for a feature without a form |
-| `reply` | A knowledge question gets «پاسخ به پرسش‌های عمومی در این مرحله فعال نیست». `not_sure` asks with the 8 closest features as options, by their Persian `title`. | `replies` | unchanged |
+| `reply` | A knowledge question gets «پاسخ به پرسش‌های عمومی در این مرحله فعال نیست». `not_sure` asks with the 8 closest features as options, by their Persian `title`, and «لغو». | `replies` | unchanged, or `cancelled` |
+| `follow_up` | A message to a task at its review or paused. A cancel phrase cancels; a paused task resumes; otherwise the model says (an enum) whether the message corrects the prepared task or is a new request. A correction plans again from the app's current screen and reads every value again; a new request starts a new task. | `lifecycle.corrects`, `Lifecycle.again` | `cancelled`; `paused` → `reconciling` → `resolving`; `ready_for_user` → `resolving`; or a new task (`created`) |
+| `reconcile` | After an uncertain command: plans again from wherever the app is and prepares once more; a second time fails. | `Lifecycle.again` | `resolving`, or `failed` |
+
+Every question also offers «لغو», and `clarify` and `reply` end the task as `cancelled` when it is
+picked or the answer is only a cancel phrase. `verify` reads the runner's stop: `cancelled` →
+`cancelling` → `cancelled`; `unreachable` → `paused`; `uncertain` → `reconciling`.
 
 Every change of task state goes through `agent_state.moved`, which follows
 `contracts/transitions/task.json` and raises `BadTransition` on anything else. A knowledge
@@ -132,6 +145,23 @@ The model has no tools. It returns JSON, and code acts. The agent reaches the ap
 `TaskRunner`, so the only commands are `navigate`, `fill_form` and `show_review`. No node, prompt
 or option can confirm, submit or pay.
 
+## The task's life around the review
+
+Plan §13 and `contracts/transitions/task.json`, done in #142, all on the assistant's side (D-026):
+
+- **Cancel.** The «لغو» option of any question, the chat box's «لغو» button, or a message that is
+  only a cancel phrase (لغو، کنسل، بیخیال، منصرف شدم…) cancels the task at a question, at its
+  review or while paused. While the task runs, the button stops it before its next command: the
+  app stays where it is, and a command already sent is never undone (`lifecycle.StoppableBridge`).
+- **A correction after the review.** While the task is `ready_for_user`, a new message in the same
+  conversation is a follow-up (`lifecycle.next_input`). The model says whether it corrects the
+  prepared task or is a new request; a correction is prepared again from the app's current screen,
+  so the old review is replaced by a fresh one.
+- **Paused.** If the app cannot be reached (the backend has never seen it), the task pauses with its
+  values instead of failing. The next message resumes it from wherever the app is, or cancels it.
+- **Reconciling.** If a command's effect is uncertain (no result in time, or an `uncertain`
+  outcome), the task plans again from the app's current screen and prepares once more.
+
 ## Where it runs
 
 | Where | Bridge | How |
@@ -158,7 +188,6 @@ The frozen evaluation set is the measure now: see [the P6-03 report](../reports/
 
 ## What is not here
 
-No cancel flow (a new message after the review is a new request), no saved-data questions, no
-persistence, no reranker, no RAG and no in-app panel (P6-05). The record-based choice lists
+No saved-data questions, no persistence (a paused task lives only while the backend runs), no reranker, no RAG and no in-app panel (P6-05). The record-based choice lists
 (plates, Sayad cheques, addresses, branches) are written from the mock fixtures; in production they
 must come from the bank's lookup APIs.

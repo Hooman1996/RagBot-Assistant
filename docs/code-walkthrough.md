@@ -11,8 +11,10 @@ Line numbers match `main` at commit `95533cd` (8 Nov 2026), except `command_queu
 `graph_tasks.py`, `graph_page.py`, the agent's files (5.17 to 5.24), `tools/project_checks.py`,
 `tools/stand_in_app.py` and `main_debug.py`, which match #136 (9 Nov 2026), and the evaluation
 runner (9.7 and 9.8), which matches #138 (14 Nov 2026), and `lookups.py`, `models.py`, `intent.py`,
-`slots.py`, `replies.py`, `agent_nodes.py`, `amounts.py` and `words.py`, which match #140 (14 Nov
-2026). If a file changes, the numbers move, but the
+`slots.py`, `amounts.py` and `words.py`, which match #140 (14 Nov 2026), and `app.py`,
+`task_runner.py`, `bridge_link.py`, `graph_page.py`, `replies.py`, `agent_nodes.py`,
+`agent_graph.py`, `agent_chat.py`, `lifecycle.py`, `agent_lifecycle.py` and `main_debug.py`, which
+match #142 (14 Nov 2026). If a file changes, the numbers move, but the
 order of the blocks usually stays the same.
 
 ## Contents
@@ -208,24 +210,25 @@ ready FastAPI app with all routes.
 | Lines | What it does |
 |---|---|
 | 1-7 | Docstring: what the app is; the chat box's agent reads the models only when a turn runs; no RAG and no bank. |
-| 9 | `subprocess` lets Python run a command, here `git`. |
-| 11-24 | Imports: the web framework, the agent's pieces (chat box, graph, tools, feature index, model clients), the bridge link, the queue, the graph data readers, the graph tasks and the route groups. |
-| 26 | `DEVICE_ID = "replica-dev"`: the one development device. The app uses the same name (`BridgeConfig.DEVICE_ID`). |
-| 29-32 | `source_revision()`: runs `git rev-parse --short HEAD` and returns, for example, `95533cd`. The graph page shows it, so you can check the running server is the code you expect (the AGENTS.md "Running services" rule). |
-| 35-36 | `create_app(queue=None)`: the builder. |
-| 37 | Use the queue passed in, or make a new one. |
-| 38 | Make an empty FastAPI app with a title. |
-| 39 | Add the app's two routes (`/assistant/v1/...`), sharing the queue. |
-| 40 | Add the development route (`/test-harness/v1/commands`), with the list of built screens so an unbuilt one is refused. |
-| 41 | Read the replica profile once. |
-| 42 | Make the `GraphTasks` helper: the queue, the device ID and the profile. |
-| 43 | The feature index over the profile's features, with a TEI client. Nothing is embedded until the first chat turn. |
-| 44 | A `BridgeLink` to the replica: the agent's bridge, the same kind a Run uses. |
-| 45 | The agent's `Tools`: the chat model, the index, the graph tasks' navigator and lookups, the bridge, and `current_screen`. |
-| 46 | The chat box, with the compiled agent graph and the graph tasks. |
-| 47 | `tasks.chat_busy = chat.busy`: a Run is refused while a chat turn runs, and the chat refuses a turn while a Run goes. |
-| 48-50 | Add the graph page routes (`/graph/...`), with the chat, the drawn graph data and the git revision. |
-| 51 | Give the finished app back. |
+| 9-10 | `subprocess` lets Python run a command, here `git`; `Event` is the chat box's cancel flag. |
+| 12-25 | Imports: the web framework, the agent's pieces (chat box, graph, tools, feature index, model clients), the bridge link, the queue, the graph data readers, the graph tasks and the route groups. |
+| 27 | `DEVICE_ID = "replica-dev"`: the one development device. The app uses the same name (`BridgeConfig.DEVICE_ID`). |
+| 30-33 | `source_revision()`: runs `git rev-parse --short HEAD` and returns, for example, `95533cd`. The graph page shows it, so you can check the running server is the code you expect (the AGENTS.md "Running services" rule). |
+| 36-37 | `create_app(queue=None)`: the builder. |
+| 38 | Use the queue passed in, or make a new one. |
+| 39 | Make an empty FastAPI app with a title. |
+| 40 | Add the app's two routes (`/assistant/v1/...`), sharing the queue. |
+| 41 | Add the development route (`/test-harness/v1/commands`), with the list of built screens so an unbuilt one is refused. |
+| 42 | Read the replica profile once. |
+| 43 | Make the `GraphTasks` helper: the queue, the device ID and the profile. |
+| 44 | The feature index over the profile's features, with a TEI client. Nothing is embedded until the first chat turn. |
+| 45 | A `BridgeLink` to the replica: the agent's bridge, the same kind a Run uses. |
+| 46 | `stop`: set by the chat box's «لغو», read by the agent before each command. |
+| 47 | The agent's `Tools`: the chat model, the index, the graph tasks' navigator and lookups, the bridge, `current_screen`, and the cancel flag. |
+| 48 | The chat box, with the compiled agent graph, the graph tasks and the cancel flag. |
+| 49 | `tasks.chat_busy = chat.busy`: a Run is refused while a chat turn runs, and the chat refuses a turn while a Run goes. |
+| 50-52 | Add the graph page routes (`/graph/...`), with the chat, the drawn graph data and the git revision. |
+| 53 | Give the finished app back. |
 
 ### 5.4 `contract_check.py` — is this JSON allowed?
 
@@ -431,31 +434,23 @@ text (ref → text), and whether to finish on the review. **Output:** a `TaskRep
 | 16 | `PERSIAN_DIGITS`: a table that turns `۲۵۰۰۰۰` into `250000`. |
 | 17 | `NO_REVIEW`: the `needs` code the app sends when a screen has no review page. |
 | 20-25 | `Bridge`: anything with `send(operation, arguments) -> result`. The real one is `BridgeLink`; tests pass a fake. |
-| 28-29 | `TaskStopped`: the run cannot go on; the message says why. |
-| 32-42 | `TaskReport`: `state` (`running`, `review`, `arrived`, `stopped`; `idle` before any run), `reason`, and `steps` (each command and what came back). `as_json` for the page. |
-| 45-47 | `plain_digits(text)`: only the digits, in Latin form. `"۲۵۰,۰۰۰"` → `"250000"`. |
-| 50-55 | `money_value(text)`: a whole number of rials as `{"value": 250000, "unit": "IRR"}`. Anything else (a decimal point, letters) stops the task. This is rule 6 (exact integers) in code. |
-| 58-68 | `shows(requirement, sent, shown)`: does the screen agree with what was sent? No value shown is fine only for a picker or choice. Money: compare digits. A masked number (`****0091`): compare the last four digits. Text: must be equal. Anything else: must not be empty. |
-| 71-77 | `TaskRunner`: keeps the bridge, the navigator and the lookups. |
-| 79-81 | `missing(plan, values)`: the requirements with no answer yet, so all can be asked at once. |
-| 83-84 | `prepared(plan, values)`: turns every answer into what the app takes. **Runs before the app moves**, so a bad value moves nothing. |
-| 85-88 | A value the plan did not ask for is refused (stops anyone smuggling in, say, a PIN field). |
-| 89-91 | A missing value stops the run. |
-| 92 | Prepares each one. |
-| 94-105 | `prepared_value(item, text)`: money → `money_value`; no lookup → the trimmed text; a lookup → `lookups.resolve`; a miss or a tie stops the run with the field's description. After a lookup resolves, line 104 prints the step "resolve value": the field, the lookup, what the user said and what will be sent (a card number masked). |
-| 107-108 | `run(plan, values, review, report)`: the main loop. The caller can read `report` while this runs. |
-| 109-110 | Prints the step "plan": the target, the route as `from → to (action)` lines, and the refs it needs. |
-| 112 | Prepare everything first. |
-| 113-116 | For each leg: move there; if it has fields, fill them. |
-| 117 | At the end: open the review if this is a feature with a form; otherwise the state is `arrived`. |
-| 118-120 | Any `TaskStopped`: the state becomes `stopped` with the reason. |
-| 121-122 | Prints the step "run ended" with the state and the reason, if any, and returns the report. |
-| 124-144 | `command(operation, arguments, report)`: prints "send …" with the arguments, sends one command through the bridge, prints "answer to …" (outcome, screen, fields, and `needs` and `error_code` when present), and appends a step to the report (operation, arguments, outcome, screen, fields, needs, error, trace). |
-| 146-155 | `move(leg, sent, report)`: builds `navigate {"destination": ..., "arguments": {selection: key}}`, checks the keys first, sends it, and stops unless the outcome is `succeeded` **and** the screen is the leg's screen. |
-| 157-162 | `check_keys(leg, sent)`: refuses a chosen key that would spell a user-only tag, before the app ever sees it. |
-| 164-175 | `fill(leg, sent, report)`: sends `fill_form {"form": screen, "values": {...}}`; stops unless it succeeded on the same screen; then reads back each field from the observation and stops if any does not show what was sent. When all agree, prints "fields checked" with the fields as shown on screen. |
-| 177-184 | `show_review(report)`: sends `show_review`. Succeeded → `review`. The app says there is no review here → `arrived`. Anything else stops. **It never sends a confirm: there is no such operation.** |
-| 187-189 | `why(result)`: the app's own reason, from `needs`, `error_code` or the outcome. |
+| 28-31 | `TaskStopped`: the run cannot go on; the message says why, and `state` is how the report names the stop (`stopped`). |
+| 34-49 | Three stops the agent does not treat as failures (#142): `Uncertain` (a command was sent but whether it ran is unknown), `Unreachable` (the app cannot be reached, so nothing was sent) and `Cancelled` (the user cancelled before the next command). |
+| 52-62 | `TaskReport`: `state` (`running`, `review`, `arrived`, `stopped`, `uncertain`, `unreachable`, `cancelled`; `idle` before any run), `reason`, and `steps` (each command and what came back). `as_json` for the page. |
+| 65-67 | `plain_digits(text)`: only the digits, in Latin form. `"۲۵۰,۰۰۰"` → `"250000"`. |
+| 70-75 | `money_value(text)`: a whole number of rials as `{"value": 250000, "unit": "IRR"}`. Anything else (a decimal point, letters) stops the task. This is rule 6 (exact integers) in code. |
+| 78-88 | `shows(requirement, sent, shown)`: does the screen agree with what was sent? No value shown is fine only for a picker or choice. Money: compare digits. A masked number (`****0091`): compare the last four digits. Text: must be equal. Anything else: must not be empty. |
+| 91-97 | `TaskRunner`: keeps the bridge, the navigator and the lookups. |
+| 99-101 | `missing(plan, values)`: the requirements with no answer yet, so all can be asked at once. |
+| 103-112 | `prepared(plan, values)`: turns every answer into what the app takes. **Runs before the app moves**, so a bad value moves nothing. A value the plan did not ask for is refused (stops anyone smuggling in, say, a PIN field); a missing one stops the run. |
+| 114-125 | `prepared_value(item, text)`: money → `money_value`; no lookup → the trimmed text; a lookup → `lookups.resolve`; a miss or a tie stops the run with the field's description. After a lookup resolves, it prints the step "resolve value" (a card number masked). |
+| 127-142 | `run(plan, values, review, report)`: the main loop. Prints the step "plan"; prepares everything first; for each leg, moves there and fills its fields; at the end opens the review for a feature with a form, otherwise `arrived`. Any `TaskStopped` sets the state to the stop's own `state` with the reason. Prints "run ended". |
+| 144-166 | `command(operation, arguments, report)`: prints "send …", sends one command through the bridge, prints "answer to …" (outcome, screen, fields, and `needs` and `error_code` when present), and appends a step to the report. An `uncertain` outcome raises `Uncertain`. |
+| 168-177 | `move(leg, sent, report)`: builds `navigate {"destination": ..., "arguments": {selection: key}}`, checks the keys first, sends it, and stops unless the outcome is `succeeded` **and** the screen is the leg's screen. |
+| 179-184 | `check_keys(leg, sent)`: refuses a chosen key that would spell a user-only tag, before the app ever sees it. |
+| 186-197 | `fill(leg, sent, report)`: sends `fill_form {"form": screen, "values": {...}}`; stops unless it succeeded on the same screen; then reads back each field from the observation and stops if any does not show what was sent. |
+| 199-206 | `show_review(report)`: sends `show_review`. Succeeded → `review`. The app says there is no review here → `arrived`. Anything else stops. **It never sends a confirm: there is no such operation.** |
+| 209-211 | `why(result)`: the app's own reason, from `needs`, `error_code` or the outcome. |
 
 ### 5.11 `bridge_link.py` — send one command and wait for its answer
 
@@ -466,14 +461,14 @@ pushes.
 | Lines | What it does |
 |---|---|
 | 1-6 | Docstring: it only waits; its one decision is to resend when the screen moved before delivery. |
-| 8-11 | Imports. `DEBUGGING` comes from the queue; `TaskStopped` comes from the runner, so a failure here stops the run cleanly. |
+| 8-11 | Imports. `DEBUGGING` comes from the queue; the stops come from the runner, so a failure here stops the run cleanly. |
 | 13 | `RESULT_TIMEOUT_SECONDS`: give up after 40 s with no result, or after one hour when the backend was started with `ASSISTANT_DEBUG=1`, so a paused breakpoint does not end the wait. |
 | 14 | `POLL_SECONDS = 0.1`: look for the result every tenth of a second. |
 | 15 | `STALE_TRIES = 3`: try at most three times when the screen keeps moving. |
 | 18-24 | `BridgeLink`: one device's end of the loop: the queue, the device, the timeout. |
 | 26-32 | `send(operation, arguments)`: queue, wait; if the result is `stale_observation` (the screen moved before the app picked it up, so it never ran), queue again with the new version. Up to three times, then return the last result. |
-| 34-41 | `queued(...)`: queues; turns `DeviceNotSeen` into "the app has not connected yet" and `DeviceBusy` into "another command is running", both as `TaskStopped` in Persian. |
-| 43-52 | `wait_for(command_id)`: checks the device's `last_result` every 0.1 s until it is for this command; after the timeout stops with "no answer came from the app". |
+| 34-41 | `queued(...)`: queues; turns `DeviceNotSeen` into `Unreachable` ("the app has not connected yet": the agent pauses the task) and `DeviceBusy` into `TaskStopped` ("another command is running"), both in Persian. |
+| 43-52 | `wait_for(command_id)`: checks the device's `last_result` every 0.1 s until it is for this command; after the timeout raises `Uncertain` ("no answer came from the app"): the command may have run, so the agent reconciles. |
 
 ### 5.12 `graph_tasks.py` — what the graph page asks of the backend
 
@@ -551,7 +546,8 @@ and a `built` flag, and edges with a `walked` flag.
 | 102-111 | `POST /graph/run`: starts a run. 409 when a run or a chat turn is going; 404 when there is no route. Replies 202 with the first report. |
 | 113-116 | `GET /graph/chat`: the conversation, the pending question and options, the task state and the runner's report. |
 | 118-125 | `POST /graph/chat`: starts or resumes the agent. 409 with the reason (`turn_in_progress`, `run_in_progress`, `unknown_option`). Replies 202. |
-| 127 | Returns the route group. |
+| 127-134 | `POST /graph/chat/cancel`: the chat box's «لغو». Stops a running turn before its next command, or answers the question or the task with «لغو»; 409 `nothing_to_cancel` when there is nothing. Replies 202. |
+| 136 | Returns the route group. |
 
 ### 5.16 `steps.py` — numbered prints of every step
 
@@ -657,12 +653,13 @@ messages and the offered requirements. **Output:** the model's values, then only
 | 1-6 | Docstring. |
 | 8-9 | Imports: the lookups' types and `masked`. |
 | 11-21 | The fixed sentences: the knowledge message, "which one?", the failure messages, the review and page messages, and the notes for a name not found or found twice. |
-| 22 | `FEW, MANY = 2, 8`: a lookup with this many records offers them as options (owner, 9 Nov 2026). |
-| 25-28 | `option(ref, item)`: one record as a choice. Its ref is `field=key`, so the answer says which field and which record; its label is the record's label, plus its value when that differs (`رضا ****0091`), masked. |
-| 31-45 | `lookup_options(lookups, wanted)`: each missing choice's allowed keys by their labels, and each missing ref field's records when its lookup has 2 to 8. |
-| 48-50 | `question(note, asks)`: one message: the note, if any, then every question. |
-| 53-64 | `shown(value, item, lookups)`: an amount as `2,500,000 ریال`; a choice by its label; a record by its option label; anything else masked. |
-| 67-77 | `ready(report, requirements, lookups)`: every value the runner sent (form values and navigate arguments), one line each by its Persian description, after "the review is open" or, when the app had no review, "the form is filled". |
+| 22-29 | `CANCELLED`; `STOPPED`, what to say when a run stops on its own terms (cancelled: the app stays where it is; out of reach: the task is kept until «ادامه»; uncertain: nothing, the agent reconciles); `UNCERTAIN`, the reason when a second uncertain command fails the task. |
+| 30 | `FEW, MANY = 2, 8`: a lookup with this many records offers them as options (owner, 9 Nov 2026). |
+| 33-36 | `option(ref, item)`: one record as a choice. Its ref is `field=key`, so the answer says which field and which record; its label is the record's label, plus its value when that differs (`رضا ****0091`), masked. |
+| 39-53 | `lookup_options(lookups, wanted)`: each missing choice's allowed keys by their labels, and each missing ref field's records when its lookup has 2 to 8. |
+| 56-58 | `question(note, asks)`: one message: the note, if any, then every question. |
+| 61-72 | `shown(value, item, lookups)`: an amount as `2,500,000 ریال`; a choice by its label; a record by its option label; anything else masked. |
+| 75-85 | `ready(report, requirements, lookups)`: every value the runner sent (form values and navigate arguments), one line each by its Persian description, after "the review is open" or, when the app had no review, "the form is filled". |
 
 ### 5.22 `agent_nodes.py` — the agent's nodes
 
@@ -672,22 +669,23 @@ only the keys it changes.
 | Lines | What it does |
 |---|---|
 | 1-6 | Docstring: the model only returns JSON; code acts; the only commands are the task runner's. |
-| 8-22 | Imports, including `words` for the allowed keys, fixed values and field hints. |
-| 24 | `MODEL_SEES`: the four keys of a requirement the model may see. |
-| 27-36 | `Tools`: everything the nodes use: the chat model, the feature index, the navigator, the lookups, the bridge, and a function that says where the app is. Only the bridge and that function differ between the server and `main_debug.py`. |
-| 39-43 | `plan_for(navigator, start, feature)`: through the feature's form when it has one, as `graph_tasks.plan_for` does. |
-| 46-51 | `Nodes`: the tools, and the features by intent. |
-| 53-56 | `failed(state, reply)`: ends the task as `failed` with a masked Persian reason. |
-| 58-69 | `understand`: hides long numbers, narrows to 8, lets the model choose. A model failure fails the task. A feature moves the task to `resolving`; a knowledge question or "not sure" leaves it `created` (no task, plan §13). |
-| 71-94 | `plan`: plans from the app's current screen; no allowed route fails the task. Gives each choice its allowed keys; sets the values the feature decides and the choices with one key (`preset`), which are never asked; keeps the plan as JSON, with its start screen, intent and preset, and lists the rest as missing. |
-| 96-114 | `extract`: offers the model only the missing requirements, with only `MODEL_SEES`, the field's own words as its description when it has them, and a choice's labels. Nothing missing: no model call. A new value replaces one held before. |
-| 116-122 | `check`: code only: `slots.checked`, then what is still missing. |
-| 124-141 | `clarify`: one message with every missing question; the options are `resolve`'s, or the choices' keys and the lookups' records. `interrupt()` pauses here; on resume this node runs again from its first line and gets the answer. An option's ref sets that field's key; typed words are added to the messages and every value that is not preset is read again, so a correction counts. |
-| 143-165 | `resolve`: code only: each value with a lookup must match one record (a typed number, or a typed IBAN that matches no saved one, needs none), and is replaced by that record's key. A tie or a miss removes the value and goes back to `clarify` with a note and, for a tie, the matches as options. |
-| 167-175 | `prepare`: plans again from the same start, turns each amount into the text the runner reads, and runs `TaskRunner.run` over the bridge, ending at the review when the feature has a form. |
-| 177-188 | `verify`: code only: a stopped run fails with the runner's reason; the last observed screen must be the feature's `review` (or destination), else it fails. |
-| 190-197 | `ready_for_user`: a feature without a form: "page open", and `completed`. Otherwise: the review message with every value. |
-| 199-208 | `reply`: the knowledge message; or "which one?" with the 8 offered features by title, paused with `interrupt()`. An offered intent goes on to `plan`; text goes back to `understand`. |
+| 8-23 | Imports, including `words` for the allowed keys, fixed values and field hints, and `lifecycle` for cancel. |
+| 25 | `MODEL_SEES`: the four keys of a requirement the model may see. |
+| 28-38 | `Tools`: everything the nodes use: the chat model, the feature index, the navigator, the lookups, the bridge, a function that says where the app is, and `stopped`, true once the user cancelled a running task. Only the bridge, the screen and `stopped` differ between the server and `main_debug.py`. |
+| 41-45 | `plan_for(navigator, start, feature)`: through the feature's form when it has one, as `graph_tasks.plan_for` does. |
+| 48-53 | `Nodes`: the tools, and the features by intent. |
+| 55-58 | `failed(state, reply)`: ends the task as `failed` with a masked Persian reason. |
+| 60-71 | `understand`: hides long numbers, narrows to 8, lets the model choose. A model failure fails the task. A feature moves the task to `resolving`; a knowledge question or "not sure" leaves it `created` (no task, plan §13). |
+| 73-78 | `plan`: plans the chosen feature; no allowed route fails the task. |
+| 80-101 | `planned(feature, held)`: the plan from the app's current screen, keeping the held values the route still asks for. Gives each choice its allowed keys; sets the values the feature decides and the choices with one key (`preset`), which are never asked; lists the rest as missing. Also used after a correction, a pause and an uncertain command. |
+| 103-121 | `extract`: offers the model only the missing requirements, with only `MODEL_SEES`, the field's own words as its description when it has them, and a choice's labels. Nothing missing: no model call. A new value replaces one held before. |
+| 123-129 | `check`: code only: `slots.checked`, then what is still missing. |
+| 131-150 | `clarify`: one message with every missing question; the options are `resolve`'s, or the choices' keys and the lookups' records, and always «لغو». `interrupt()` pauses here; on resume this node runs again from its first line and gets the answer. «لغو», or an answer that is only a cancel phrase, ends the task as `cancelled`. An option's ref sets that field's key; typed words are added to the messages and every value that is not preset is read again, so a correction counts. |
+| 152-174 | `resolve`: code only: each value with a lookup must match one record (a typed number, or a typed IBAN that matches no saved one, needs none), and is replaced by that record's key. A tie or a miss removes the value and goes back to `clarify` with a note and, for a tie, the matches as options. |
+| 176-185 | `prepare`: plans again from the same start, turns each amount into the text the runner reads, and runs `TaskRunner.run` over the bridge wrapped in `StoppableBridge`, so a cancel stops it before its next command. |
+| 187-201 | `verify`: code only: a cancelled run ends `cancelling` → `cancelled`, an app out of reach `paused`, an uncertain command `reconciling` (`lifecycle.AFTER_STOP`); any other stopped run fails with the runner's reason; the last observed screen must be the feature's `review` (or destination), else it fails. |
+| 203-210 | `ready_for_user`: a feature without a form: "page open", and `completed`. Otherwise: the review message with every value. |
+| 212-227 | `reply`: the knowledge message; or "which one?" with the 8 offered features by title and «لغو», paused with `interrupt()`. A cancel ends the task; an offered intent goes on to `plan`; text goes back to `understand`. |
 
 ### 5.23 `agent_graph.py` — the one graph
 
@@ -695,15 +693,20 @@ only the keys it changes.
 
 | Lines | What it does |
 |---|---|
-| 1-6 | Docstring: no edge leads past the review. |
-| 8-14 | Imports. |
-| 17-21 | `after_understand`: end on a failure; `reply` for a knowledge question or "not sure"; else `plan`. |
-| 24-28 | `after_reply`: new words go back to `understand`; a knowledge reply ends; a picked feature goes to `plan`. |
-| 31-43 | `after_plan`, `after_extract`, `after_verify`: on to the next node, unless the task failed. |
-| 46-48 | `until_complete`: back to `clarify` while something is missing. Used after `check` and after `resolve`. |
-| 51-64 | `build_graph(tools)`: one `StateGraph` over `AgentState`, one node per method. |
-| 66-76 | The edges, as in [the agent](bridge/agent.md#the-graph). |
-| 77 | Compiles with LangGraph's `InMemorySaver`: each conversation is kept by its `thread_id` while a question waits. |
+| 1-7 | Docstring: no edge leads past the review. |
+| 9-17 | Imports. |
+| 20-22 | `start`: a message to a task at its review or paused goes to `follow_up`; anything else to `understand`. |
+| 25-29 | `after_follow_up`: a new request is understood; a corrected or resumed task (`resolving`) is read again from `extract`; a cancel or a model failure ends. |
+| 32-34 | `after_clarify`: on to `extract`, unless the user cancelled. |
+| 37-41 | `after_understand`: end on a failure; `reply` for a knowledge question or "not sure"; else `plan`. |
+| 44-50 | `after_reply`: a cancel ends; new words go back to `understand`; a knowledge reply ends; a picked feature goes to `plan`. |
+| 53-60 | `after_plan`, `after_extract`: on to the next node, unless the task failed. |
+| 63-67 | `after_verify`: an uncertain command goes to `reconcile`; a checked review to `ready_for_user`; a failure, cancel or pause ends. |
+| 70-72 | `after_reconcile`: read again from `extract`, unless it failed. |
+| 75-77 | `until_complete`: back to `clarify` while something is missing. Used after `check` and after `resolve`. |
+| 80-96 | `build_graph(tools)`: one `StateGraph` over `AgentState`, one node per method of `Nodes` and of `Lifecycle` (`follow_up`, `reconcile`). |
+| 98-110 | The edges, as in [the agent](bridge/agent.md#the-graph). |
+| 111 | Compiles with LangGraph's `InMemorySaver`: each conversation is kept by its `thread_id` while a question waits, and while its task is at the review or paused. |
 
 ### 5.24 `agent_chat.py` — the graph page's chat box
 
@@ -712,16 +715,17 @@ on a background thread.
 
 | Lines | What it does |
 |---|---|
-| 1-7 | Docstring: it and a graph-page Run refuse each other. |
-| 9-17 | Imports. |
-| 19 | The Persian line shown if a turn crashes. |
-| 22-23 | `TurnRefused`: its message is the reason code the route returns with 409. |
-| 26-33 | `AgentChat`: the compiled graph, the page's `GraphTasks`, no turn yet, a new conversation. |
-| 35-43 | `new_conversation()`: a fresh conversation ID and an empty transcript, unless a turn is running. `GET /graph` calls it. |
-| 45-47 | `busy()`: true while a turn's thread lives. `graph_tasks` asks it before a Run. |
-| 49-62 | `start(text, option)`: refuses during a turn or a Run; an option must be one the agent offered, and is shown by its label; starts the turn thread. |
-| 64-82 | `turn(answer)`: resumes the paused question with `Command(resume=...)`, or starts a new request. Reads the pending question from `__interrupt__`, the task state and the report, and adds the agent's line. A crash is printed and shown as one Persian line. |
-| 84-93 | `progress()`: what `GET /graph/chat` returns. |
+| 1-9 | Docstring: it and a graph-page Run refuse each other; a message to a task at its review or paused continues it; cancel stops a running turn between commands. |
+| 11-19 | Imports. |
+| 21 | The Persian line shown if a turn crashes. |
+| 24-25 | `TurnRefused`: its message is the reason code the route returns with 409. |
+| 28-36 | `AgentChat`: the compiled graph, the page's `GraphTasks`, the cancel flag the agent's tools read, no turn yet, a new conversation. |
+| 38-46 | `new_conversation()`: a fresh conversation ID and an empty transcript, unless a turn is running. `GET /graph` calls it. |
+| 48-50 | `busy()`: true while a turn's thread lives. `graph_tasks` asks it before a Run. |
+| 52-66 | `start(text, option)`: refuses during a turn or a Run; an option must be one the agent offered, and is shown by its label; clears the cancel flag; starts the turn thread. |
+| 68-78 | `cancel()`: during a turn, sets the flag, so the agent stops before its next command; at a question, answers with the «لغو» option; at the review or while paused, sends «لغو»; otherwise refuses with `nothing_to_cancel`. |
+| 80-100 | `turn(answer)`: resumes the paused question with `Command(resume=...)`, or sends the message with `lifecycle.next_input`: a follow-up of a task at its review or paused, else a new request. Reads the pending question from `__interrupt__`, the task state and the report, and adds the agent's line. A crash is printed and shown as one Persian line. |
+| 102-111 | `progress()`: what `GET /graph/chat` returns. |
 
 ### 5.25 `amounts.py` — the amounts the user wrote, read in code
 
@@ -751,6 +755,38 @@ the assistant's.
 | 26-33 | `options(screen, ref, lookups)`: a choice's allowed keys with their labels: the screen's own list first (`"S-164 svc-kind"`), then the field's; a list given as a lookup takes that lookup's records. |
 | 36-38 | `field_words(ref)`: a hint that tells the model more about a field than its description. |
 | 41-43 | `fixed(intent)`: values the feature decides itself. |
+
+### 5.27 `lifecycle.py` — cancel, a message after the review, a run the user stops
+
+**Called by:** the agent's nodes, `agent_chat.py` and `main_debug.py` (#142). Code only, except
+`corrects`, which asks the model one constrained question.
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring: a cancel needs no model; a command already sent is never undone. |
+| 9-15 | Imports. |
+| 17 | `CANCEL`: the «لغو» option offered with every question. |
+| 18-21 | `CANCEL_WORDS`: messages that are only a cancel (لغو، کنسل، بیخیال، منصرف شدم…). |
+| 22 | `FOLLOW_UP`: the task states a new message continues instead of replacing (`ready_for_user`, `paused`). |
+| 24-28 | `AFTER_STOP`: what a runner stop means for the task: cancelled → `cancelling`, `cancelled`; unreachable → `paused`; uncertain → `reconciling`. |
+| 31-34 | `wants_cancel(answer)`: the «لغو» option, or a message that is nothing but a cancel phrase (compared `plain`). |
+| 37-41 | `next_input(previous, conversation_id, text)`: a follow-up (the messages with the new one) of a task at its review or paused, else `new_request`. |
+| 44-53 | `follow_up_prompt(title, messages)`: the prepared task's Persian title, the earlier messages and the new one (long numbers as `****1234`), and when to answer `correction` or `new_request`. |
+| 56-64 | `corrects(chat, title, messages)`: the model's answer, held to the enum `correction` / `new_request`. |
+| 67-78 | `StoppableBridge`: the bridge, refusing to send the next command once `stopped()` is true; raises `Cancelled`. |
+
+### 5.28 `agent_lifecycle.py` — the follow-up and reconcile nodes
+
+**Used by:** `agent_graph.build_graph`, beside the `Nodes` of `agent_nodes.py`.
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring. |
+| 9-14 | Imports. |
+| 17-21 | `Lifecycle`: over the same `Nodes` (and so the same tools). |
+| 23-34 | `again(state, path, reread)`: moves along `path`, then plans again from the app's current screen with `Nodes.planned`, keeping the values the route still asks for; with `reread`, every value that is not preset is read again from the messages, else only what is missing. No allowed route fails the task. |
+| 36-50 | `follow_up`: a cancel phrase cancels; a paused task resumes (`paused` → `reconciling` → `resolving`, nothing read again); otherwise the model says whether the message corrects the prepared task: a correction goes `ready_for_user` → `resolving` and reads every value again; a new request becomes a new task; a model failure leaves the review as it is. |
+| 52-59 | `reconcile`: after an uncertain command, plans again from wherever the app is and prepares once more (`reconciling` → `resolving`); the second time it fails visibly. |
 
 ## 6. The graph page in the browser
 
@@ -976,7 +1012,7 @@ At the top of the repository. How to use it, and its VS Code entry, are in
 | 8-9 | `os` and `sys`. |
 | 11 | `ASSISTANT_TRACE=1`: print every step. |
 | 12-13 | `ASSISTANT_DEBUG=1`, before the imports below, because `command_queue` reads it when imported: a paused breakpoint cannot expire a command. |
-| 15-31 | Imports: a thread and uvicorn for `--replica`, LangGraph's `Command`, and the same pieces `app.py` uses, plus the stand-in. |
+| 15-31 | Imports: a thread and uvicorn for `--replica`, LangGraph's `Command`, and the same pieces `app.py` uses, plus `next_input` and the stand-in. |
 | 33 | `EXAMPLE`: the card-transfer sentence, then `1` (the first card in the options). |
 | 34 | One conversation ID. |
 | 37-40 | `answer_for(turn, pending)`: an option's number becomes its ref; anything else is the user's words. |
@@ -985,9 +1021,9 @@ At the top of the repository. How to use it, and its VS Code entry, are in
 | 58-67 | `--replica`: the backend's own app (`create_app` with the same queue) under uvicorn on `127.0.0.1:8100`, on a daemon thread; `BridgeLink`, as the server uses; and where the replica is. |
 | 68-70 | Otherwise the stand-in, with its own `current_screen`. |
 | 71-74 | The feature index, the tools, the compiled graph and the conversation's config: the same objects as `app.py`. |
-| 76-83 | One `graph.invoke` per turn: a new request, or `Command(resume=...)` while a question waits. Prints each reply. |
-| 84-87 | If the agent still asks when the turns run out, reads the answer from the keyboard; returns the last result. |
-| 90-93 | Run directly: `--replica` or not, the turns from the command line or the example, the real clients. |
+| 76-84 | One `graph.invoke` per turn: `Command(resume=...)` while a question waits, else `next_input`: a follow-up of a task at its review or paused (a correction, «ادامه», «لغو»), or a new request. Prints each reply. |
+| 85-88 | If the agent still asks when the turns run out, reads the answer from the keyboard; returns the last result. |
+| 91-94 | Run directly: `--replica` or not, the turns from the command line or the example, the real clients. |
 
 ### 9.7 `tools/evaluate_agent.py` — scores the agent on a case file
 
@@ -1037,14 +1073,14 @@ backend tests in `tests/backend/` are the ones that prove our runtime code.
 |---|---|---|
 | `tests/backend/samples.py` | (helpers) | A valid observation and result, shared by the tests below. |
 | `tests/backend/test_command_queue.py` | 13 | A device must report first; a queued command matches the contract; it is delivered once; one outstanding command per device; the same request returns the same command; a result frees the device; a repeated result changes nothing; unknown results are refused; an expired command is never delivered; a delivered one with no result ends `uncertain`; a stale one is closed, not delivered; each of the four builds a valid command and no other can be built. |
-| `tests/backend/test_bridge_link.py` | 6 | A result comes back; a stale observation is resent; it gives up on a screen that keeps moving; a stale draft is not resent; a device that cannot take it stops the task; no result stops the task. |
+| `tests/backend/test_bridge_link.py` | 6 | A result comes back; a stale observation is resent; it gives up on a screen that keeps moving; a stale draft is not resent; a device never seen is out of reach (`Unreachable`) and a busy one stops the task; no result makes the command `Uncertain`. |
 | `tests/backend/test_navigator.py` | 10 | Direct and multi-step routes; selections and fields in order; screens without fields pass inside one navigate; no route; a user-only crossing is refused; secret and optional fields are never asked; going back by way of Home; a row key that spells a user-only tag is refused; a feature routes through its form. |
 | `tests/backend/test_lookups.py` | 20 | رضا becomes her card; a typed number needs no contact; an unknown name is not guessed; two matches are ambiguous; every source finds records; the attribute picks what is sent; unknown lookups are unknown; it never writes.; «کارت 0018», «حساب رضا», «پس انداز», Arabic ي/ك, Persian digits and spoken endings are matched, «حساب» stays ambiguous and «علی» not found; a typed IBAN is kept unless it is a saved one; a typed number must fit its field. |
 | `tests/backend/test_task_runner.py` | 13 | Card to رضا navigates, fills and stops at the review; a missing value stops before the app moves; all missing values are found at once; an unknown contact stops first; money must be a whole number, Persian digits too; an unexpected screen or a blocked navigate stops the run; a page with the wrong amount stops before the review; a selection travels as a navigate argument; a value the plan does not ask for is refused; a crafted row key never reaches the app; **no feature ever sends an operation outside the four**. |
 | `tests/backend/test_api.py` | 17 | The HTTP routes: idle status; a click reaches the app and the result reaches the page; bodies outside the contract, unknown commands, unbuilt screens, extra fields, unseen devices are refused; a second destination waits; **no route can confirm, submit or pay**; the page loads nothing from the internet; plans, demo values and runs behave. |
 | `tests/backend/test_steps.py` | 4 | The step prints are silent unless `ASSISTANT_TRACE=1`; a card number is masked and Persian stays readable; a traced card-to-رضا run never prints the full card; `ASSISTANT_DEBUG=1` gives a one-hour command and result wait. |
 | `tests/backend/test_graph_run.py` | 2 | A whole run over the real routes, with a fake app that speaks the contract: card to رضا reaches the review and stops; a second run is refused. |
-| `tests/backend/agent_fakes.py` | (helpers) | `FakeChat` (scripted answers; keeps every prompt and schema), `FakeEmbeddings` (fixed vectors), an unreachable embedding service, and `RecordingApp`, the stand-in app keeping every operation. No network. |
+| `tests/backend/agent_fakes.py` | (helpers) | `FakeChat` (scripted answers; keeps every prompt and schema), `FakeEmbeddings` (fixed vectors), an unreachable embedding service, `RecordingApp`, the stand-in app keeping every operation, and `every_change_is_allowed`, the autouse fixture that checks every task-state change of a test against `task.json`. No network. |
 | `tests/backend/test_agent.py` | 21 | The agent end to end. Card to رضا in one sentence reaches `ready_for_user` with exactly `navigate`, `fill_form`, `show_review` and `{"value": 2500000, "unit": "IRR"}` for «۲۵۰ هزار تومان»; a missing source card is one question with 7 card options, and an option reaches the review; an ambiguous name gets the matches as options; a name not found asks again and sends nothing; a choice or a slot that was not offered is refused; money that is not a whole number in a known unit is refused; a model amount the user never wrote is not used (the factor of 1,000), and the newest answer's amount wins; a knowledge question gets the fixed message and sends nothing; a feature without a form ends `completed`; `verify` fails on another screen; a model that cannot be reached fails and sends nothing; **no prompt holds a screen ID, an edge action, a user-only tag or a full card number**; every task-state change in every test is allowed by `task.json`. |
 | `tests/backend/test_stand_in_app.py` | 6 | The stand-in's commands and results match the schemas, with rising versions, masked fields and a draft; no walk takes a user-only step; a row key replaces `*`, and a missing one is `blocked`; a secret or unknown field is refused; `show_review` away from a form has no review. |
 | `tests/backend/test_agent_chat.py` | 9 | A chat turn and a graph-page Run refuse each other; an option must be one the agent offered; a turn takes exactly one of `text` or `option`; a fresh page shows an empty conversation; the chat script loads nothing from the internet. |
@@ -1052,6 +1088,7 @@ backend tests in `tests/backend/` are the ones that prove our runtime code.
 | `tests/backend/test_amounts.py` | 14 | Amounts in digits or words, with هزار/میلیون, separators, spoken forms and toman or rial, are read in whole rials; a number with no unit or scale word (a phone, a date, a count) is not an amount. |
 | `tests/backend/test_words.py` | 3 | Every feature has Persian words; every choice the agent can ask, in every feature's plan from Home, has plain allowed keys with unique labels that hold no full number; every fixed value is an allowed key of its feature. |
 | `tests/backend/test_agent_answers.py` | 8 | A correction in an answer replaces the held source and amount; a number hidden as `****0091` inside words is put back; a typed IBAN not saved reaches the review; a choice is one of its labels and reaches the app as its key, and its label is shown on the review; text that is no allowed key is asked again with the options and sends nothing; a selection the feature decides is set by code and never asked; an account number given for an IBAN is asked again. |
+| `tests/backend/test_agent_lifecycle.py` | 9 | The «لغو» option ends a question and sends nothing; a cancel phrase ends a "not sure" question; a correction after the review prepares a new review with the new amount; a new request after the review starts a new task; a cancel after the review needs no model; an app out of reach pauses the task with its values and «ادامه» resumes it; an uncertain command is reconciled once; a second one fails visibly; a cancel during a run stops before the next command. Every change is checked against `task.json`. |
 | `tests/evaluation/conftest.py` | (helpers) | Lets the evaluation tests import `tests/backend/agent_fakes.py` (a site package named `tests` hides this repository's `tests` folder). |
 | `tests/evaluation/test_cases.py` | 6 | Both case files: the format, unique ids, the closed tag list, one turn per unambiguous case; every intent, ref, lookup key, money value and option turn is valid for the feature's plan from Home; an `e2e` case gives every value and ends right; the held-out counts and the tuning minimums; no held-out first turn in the tuning file; **the held-out file's SHA-256 equals the one in D-025**. |
 | `tests/evaluation/test_evaluate.py` | 7 | The runner on the fakes: a right card transfer passes every measure and exits 0; a wrong amount and another feature with a form are critical wrong actions (exit 1); a missing source that ends asking is a safe stop; an option not offered fails the case and the run goes on; a crash is recorded and the next case runs; unreachable embeddings exit 2. |

@@ -243,12 +243,15 @@ conda activate assistant
 set -a; source .env; set +a
 python main_debug.py                                   # the built-in example
 python main_debug.py "قبض برقمو پرداخت کن" "1"          # your own turns
+python main_debug.py "۲۵۰ هزار تومان از کارت 0018 به رضا کارت به کارت کن" "نه، مبلغ رو ۳۰۰ هزار تومن کن"
+                                                       # a correction after the review
 python main_debug.py --replica                         # the real replica (below)
 ```
 
 The built-in example is «۲۵۰ هزار تومان به رضا کارت به کارت کن», then `1`: the first card in the
 options. A number answers with that option; anything else is your own words. If the agent still
-asks when the turns run out, it reads your answer from the keyboard. It sets `ASSISTANT_TRACE=1`,
+asks when the turns run out, it reads your answer from the keyboard. A turn after a review, or
+after a pause, continues that task: a correction, «ادامه» or «لغو». It sets `ASSISTANT_TRACE=1`,
 so every step is printed, and `ASSISTANT_DEBUG=1` before its imports, so a long pause on a
 breakpoint cannot expire a command.
 

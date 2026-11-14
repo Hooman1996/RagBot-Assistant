@@ -124,4 +124,13 @@ def build_graph_router(
             raise HTTPException(status_code=409, detail=str(error)) from error
         return chat.progress()
 
+    @router.post("/chat/cancel", status_code=202)
+    def chat_cancel() -> dict:
+        """Cancels the chat's task: stops a running turn between commands, or answers with «لغو»."""
+        try:
+            chat.cancel()
+        except TurnRefused as error:
+            raise HTTPException(status_code=409, detail=str(error)) from error
+        return chat.progress()
+
     return router

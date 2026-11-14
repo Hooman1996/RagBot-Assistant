@@ -85,6 +85,7 @@ def test_text_that_is_no_allowed_key_is_asked_again_with_the_options() -> None:
         "schedule-frequency=DAILY",
         "schedule-frequency=WEEKLY",
         "schedule-frequency=MONTHLY",
+        "cancel",
     ]
     assert app.sent == []
     result = graph.invoke(Command(resume="schedule-frequency=MONTHLY"), CONFIG)
