@@ -2,19 +2,21 @@
 
 Called by graph_page. Like graph_tasks, it runs each turn on a background thread, because the
 prepare node waits for the app through BridgeLink. It refuses a turn while a graph-page Run is
-going, and graph_tasks refuses a Run while a turn is going. It only starts or resumes the agent
-graph, so it adds no way to confirm, submit or pay.
+going, and graph_tasks refuses a Run while a turn is going. A message to a task at its review or
+paused continues that task. Cancel stops a running turn between commands, or answers the question
+or the task with «لغو». It only starts or resumes the agent graph, so it adds no way to confirm,
+submit or pay.
 """
 
 import traceback
 import uuid
-from threading import Thread
+from threading import Event, Thread
 
 from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Command
 
-from assistant.agent_state import new_request
 from assistant.graph_tasks import GraphTasks
+from assistant.lifecycle import CANCEL, FOLLOW_UP, next_input
 
 INTERNAL_ERROR = "خطای داخلی پیش آمد؛ کاری انجام نشد."
 
@@ -26,9 +28,10 @@ class TurnRefused(Exception):
 class AgentChat:
     """The conversation shown on the graph page."""
 
-    def __init__(self, graph: CompiledStateGraph, tasks: GraphTasks) -> None:
+    def __init__(self, graph: CompiledStateGraph, tasks: GraphTasks, stop: Event | None = None) -> None:
         self.graph = graph
         self.tasks = tasks
+        self.stop = stop or Event()  # the agent's tools read it: set, a running task stops
         self.thread: Thread | None = None
         self.new_conversation()
 
@@ -58,17 +61,32 @@ class AgentChat:
                 raise TurnRefused("unknown_option")
             text = labels[option]
         self.lines.append({"from": "user", "text": text})
+        self.stop.clear()
         self.thread = Thread(target=self.turn, args=(option or text,), daemon=True)
         self.thread.start()
 
+    def cancel(self) -> None:
+        """Stops a running turn between commands, or cancels the question or the task with «لغو»."""
+        if self.busy():
+            self.stop.set()
+            self.lines.append({"from": "user", "text": CANCEL["label"]})
+        elif self.pending is not None:
+            self.start(None, CANCEL["ref"])
+        elif self.task_state in FOLLOW_UP:
+            self.start(CANCEL["label"], None)
+        else:
+            raise TurnRefused("nothing_to_cancel")
+
     def turn(self, answer: str) -> None:
-        """Resumes the paused question with the answer, or starts a new request with it."""
+        """Resumes the paused question with the answer, or sends the message: a follow-up of a task
+        at its review or paused, else a new request."""
         config = {"configurable": {"thread_id": self.conversation_id}}
         try:
             if self.pending is not None:
                 result = self.graph.invoke(Command(resume=answer), config)
             else:
-                result = self.graph.invoke(new_request(self.conversation_id, answer), config)
+                previous = self.graph.get_state(config).values
+                result = self.graph.invoke(next_input(previous, self.conversation_id, answer), config)
         except Exception:
             traceback.print_exc()
             self.pending = None

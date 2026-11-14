@@ -4,7 +4,7 @@ import pytest
 
 from assistant.bridge_link import STALE_TRIES, BridgeLink
 from assistant.command_queue import Device, DeviceBusy, DeviceNotSeen
-from assistant.task_runner import TaskStopped
+from assistant.task_runner import TaskStopped, Uncertain, Unreachable
 
 
 class AnsweringQueue:
@@ -52,15 +52,18 @@ def test_a_stale_draft_is_not_sent_again() -> None:
     assert queue.sent == 1
 
 
-@pytest.mark.parametrize("refusal", [DeviceNotSeen("d"), DeviceBusy("d")])
-def test_a_device_that_cannot_take_it_stops_the_task(refusal: Exception) -> None:
-    with pytest.raises(TaskStopped):
+@pytest.mark.parametrize(
+    ("refusal", "stop"), [(DeviceNotSeen("d"), Unreachable), (DeviceBusy("d"), TaskStopped)]
+)
+def test_a_device_that_cannot_take_it_stops_the_task(refusal: Exception, stop: type) -> None:
+    # A device never seen is out of reach, so the task pauses rather than fails.
+    with pytest.raises(stop):
         BridgeLink(AnsweringQueue(refuse=refusal), "d").send("observe", {})
 
 
-def test_no_result_stops_the_task() -> None:
+def test_no_result_makes_the_command_uncertain() -> None:
     queue = AnsweringQueue()
     queue.record.last_result = None
     queue.queue_command = lambda *_: {"command_id": "lost"}
-    with pytest.raises(TaskStopped):
+    with pytest.raises(Uncertain):
         BridgeLink(queue, "d", timeout=0.01).send("observe", {})

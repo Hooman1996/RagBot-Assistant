@@ -1,6 +1,7 @@
 """The graph page's chat box: it and a graph-page Run refuse each other, and its routes are strict."""
 
 from threading import Event
+from types import SimpleNamespace
 
 import pytest
 from fastapi.testclient import TestClient
@@ -22,6 +23,9 @@ class SlowGraph:
     def invoke(self, *_: object) -> dict:
         self.release.wait(timeout=5)
         return {"task_state": "created", "reply": "done", "report": None}
+
+    def get_state(self, *_: object) -> SimpleNamespace:
+        return SimpleNamespace(values={})  # no earlier task in this conversation
 
 
 def test_a_run_and_a_chat_turn_refuse_each_other() -> None:

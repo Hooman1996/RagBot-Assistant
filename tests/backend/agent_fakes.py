@@ -1,11 +1,16 @@
 """Fakes for the agent tests: a scripted chat model, fixed embeddings and a recording stand-in app.
 
 No test here touches the network. FakeChat answers in order and keeps every prompt it was shown.
+every_change_is_allowed, imported by a test module, checks each task-state change against task.json.
 """
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 
+import pytest
+
+from assistant import agent_lifecycle, agent_nodes
 from assistant.agent_graph import build_graph
 from assistant.agent_nodes import Tools
 from assistant.app import DEVICE_ID
@@ -19,6 +24,27 @@ from tools.stand_in_app import StandInApp
 PROFILE = json.loads(Path("app_profiles/replica.profile.json").read_text(encoding="utf-8"))
 TRANSITIONS = json.loads(Path("contracts/transitions/task.json").read_text(encoding="utf-8"))
 CARD_SENTENCE = "۲۵۰ هزار تومان به رضا کارت به کارت کن"
+CHANGES: list[tuple[str, str]] = []  # every task-state change of the running test
+
+
+@pytest.fixture(autouse=True)
+def every_change_is_allowed(monkeypatch: pytest.MonkeyPatch):
+    """Records each task-state change every node makes, and checks it against task.json."""
+    real = agent_nodes.moved
+
+    def recording(state: dict, *path: str) -> dict:
+        current = state["task_state"]
+        for step in path:
+            if step != current:
+                CHANGES.append((current, step))
+            current = step
+        return real(state, *path)
+
+    CHANGES.clear()
+    monkeypatch.setattr(agent_nodes, "moved", recording)
+    monkeypatch.setattr(agent_lifecycle, "moved", recording)
+    yield
+    assert all(step in TRANSITIONS[current] for current, step in CHANGES), CHANGES
 
 
 class FakeChat:
@@ -72,8 +98,10 @@ class RecordingApp(StandInApp):
         return super().send(operation, arguments)
 
 
-def build_agent(chat: FakeChat, app: RecordingApp, embeddings: object | None = None):
-    """The real agent graph over the fakes."""
+def build_agent(
+    chat: FakeChat, app: RecordingApp, embeddings: object | None = None, stopped: Callable[[], bool] = bool
+):
+    """The real agent graph over the fakes. stopped says when the user has cancelled."""
     index = FeatureIndex(PROFILE["features"], embeddings or FakeEmbeddings())
-    tools = Tools(chat, index, Navigator(PROFILE), FixtureLookups(), app, app.current_screen)
+    tools = Tools(chat, index, Navigator(PROFILE), FixtureLookups(), app, app.current_screen, stopped)
     return build_graph(tools)

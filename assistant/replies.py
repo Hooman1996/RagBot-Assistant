@@ -19,6 +19,14 @@ FAILED = "انجام نشد: {reason}"
 NOT_FOUND = "«{text}» پیدا نشد."
 WHICH = "چند مورد با «{text}» پیدا شد؛ کدام؟"
 NOT_THERE = "برنامه به {expected} نرسید و در {screen} ماند."
+CANCELLED = "کار لغو شد؛ چیزی ارسال یا تأیید نشد."
+# What the user is told when a run stops on its own terms: cancelled, out of reach, or uncertain.
+STOPPED = {
+    "cancelled": "کار لغو شد. برنامه همان‌جا که بود ماند؛ چیزی تأیید یا ارسال نشد.",
+    "unreachable": "برنامه در دسترس نیست؛ کار نگه داشته شد. وقتی برنامه باز بود بنویسید «ادامه»، یا «لغو».",
+    "uncertain": None,
+}
+UNCERTAIN = "معلوم نشد آخرین فرمان در برنامه انجام شد یا نه"
 FEW, MANY = 2, 8  # a lookup with this many records offers them as options
 
 

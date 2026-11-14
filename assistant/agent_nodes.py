@@ -13,6 +13,7 @@ from langgraph.types import interrupt
 from assistant import replies
 from assistant.agent_state import AgentState, moved
 from assistant.intent import KNOWLEDGE, NOT_SURE, FeatureIndex, choose
+from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, wants_cancel
 from assistant.lookups import FixtureLookups, typed
 from assistant.models import Chat, ModelError
 from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
@@ -34,6 +35,7 @@ class Tools:
     lookups: FixtureLookups
     bridge: Bridge
     screen: Callable[[], str]  # where the app is now
+    stopped: Callable[[], bool] = lambda: False  # true once the user cancelled a running task
 
 
 def plan_for(navigator: Navigator, start: str, feature: dict) -> Plan:
@@ -69,14 +71,18 @@ class Nodes:
         return update if chosen in (KNOWLEDGE, NOT_SURE) else update | moved(state, "resolving")
 
     def plan(self, state: AgentState) -> dict:
-        """Plans the chosen feature from the app's current screen. A choice gets its allowed keys; a
-        value the feature decides, or a choice with one key, is set by code and never asked."""
-        feature = self.features[state["chosen"]]
-        start = self.tools.screen()
+        """Plans the chosen feature from the app's current screen."""
         try:
-            plan = plan_for(self.tools.navigator, start, feature)
+            return moved(state, "resolving") | self.planned(self.features[state["chosen"]], {})
         except (NoRoute, CrossesUserOnly):
             return self.failed(state, replies.NOT_POSSIBLE)
+
+    def planned(self, feature: dict, held: dict) -> dict:
+        """The plan from the app's current screen, keeping held values the route still asks for. A
+        choice gets its allowed keys; a value the feature decides, or a choice with one key, is set
+        by code and never asked. Raises NoRoute or CrossesUserOnly."""
+        start = self.tools.screen()
+        plan = plan_for(self.tools.navigator, start, feature)
         found = plan.as_json()
         for item in found["requirements"]:
             if item["type"] == "choice":
@@ -87,10 +93,11 @@ class Nodes:
             if len(item.get("options", [])) == 1
         }
         show("plan", start=start, target=plan.target, requirements=[item.ref for item in plan.requirements])
-        return moved(state, "resolving") | {
+        refs = [item["ref"] for item in found["requirements"]]
+        return {
             "plan": found | {"start": start, "intent": feature["intent"], "preset": sorted(preset)},
-            "values": preset,
-            "missing": [item["ref"] for item in found["requirements"] if item["ref"] not in preset],
+            "values": {ref: value for ref, value in held.items() if ref in refs} | preset,
+            "missing": [ref for ref in refs if ref not in preset],
         }
 
     def extract(self, state: AgentState) -> dict:
@@ -125,9 +132,11 @@ class Nodes:
         """Asks once for everything missing, and waits for the user's text or an option's ref."""
         update = moved(state, "clarifying") | {"question": None, "options": []}
         wanted = [item for item in state["plan"]["requirements"] if item["ref"] in state["missing"]]
-        options = state["options"] or replies.lookup_options(self.tools.lookups, wanted)
+        options = (state["options"] or replies.lookup_options(self.tools.lookups, wanted)) + [CANCEL]
         text = replies.question(state["question"], [item["ask"] for item in wanted])
         answer = interrupt({"question": text, "options": options, "task_state": update["task_state"]})
+        if wants_cancel(answer):
+            return update | moved(update, "cancelled") | {"reply": replies.CANCELLED}
         if answer in [item["ref"] for item in options]:
             ref, key = answer.split("=", 1)
             missing = [item for item in state["missing"] if item != ref]
@@ -170,14 +179,18 @@ class Nodes:
         plan = plan_for(self.tools.navigator, state["plan"]["start"], feature)
         # The runner reads money as text and turns it back into the same whole number of rials.
         values = {ref: str(v["value"]) if isinstance(v, dict) else v for ref, v in state["values"].items()}
-        runner = TaskRunner(self.tools.bridge, self.tools.navigator, self.tools.lookups)
+        bridge = StoppableBridge(self.tools.bridge, self.tools.stopped)  # a cancel stops between commands
+        runner = TaskRunner(bridge, self.tools.navigator, self.tools.lookups)
         report = runner.run(plan, values, feature["form"] is not None, TaskReport())
         return moved(state, "preparing") | {"report": report.as_json()}
 
     def verify(self, state: AgentState) -> dict:
-        """Code only: the app must be on the feature's review, or its destination without a form."""
+        """Code only: the app must be on the feature's review, or its destination without a form. A
+        cancel ends the task, an app out of reach pauses it, an uncertain command is reconciled."""
         feature = self.features[state["plan"]["intent"]]
         report = state["report"]
+        if report["state"] in AFTER_STOP:
+            return moved(state, *AFTER_STOP[report["state"]]) | {"reply": replies.STOPPED[report["state"]]}
         if report["state"] == "stopped":
             return self.failed(state, replies.FAILED.format(reason=report["reason"]))
         expected = feature["review"] or feature["destination"]
@@ -201,8 +214,14 @@ class Nodes:
         if state["chosen"] == KNOWLEDGE:
             return {"reply": replies.KNOWLEDGE}
         options = [{"ref": intent, "label": self.features[intent]["title"]} for intent in state["offered"]]
-        pending = {"question": replies.NOT_SURE, "options": options, "task_state": state["task_state"]}
+        pending = {
+            "question": replies.NOT_SURE,
+            "options": options + [CANCEL],
+            "task_state": state["task_state"],
+        }
         answer = interrupt(pending)
+        if wants_cancel(answer):
+            return moved(state, "cancelled") | {"chosen": None, "reply": replies.CANCELLED}
         if answer in state["offered"]:
             return {"chosen": answer}
         return {"chosen": None, "messages": state["messages"] + [answer]}

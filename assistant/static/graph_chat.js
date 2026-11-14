@@ -1,6 +1,7 @@
 // The chat box: send a Persian request, answer the agent's question, watch the task state.
 // Loaded by graph.html after graph_task.js, whose stepBlock shows the runner's steps. Every decision
-// is the backend's. Its only buttons send the user's words or one of the options the agent offered.
+// is the backend's. Its only buttons send the user's words, one of the options the agent offered, or
+// a cancel, which stops the agent's work and never undoes or confirms anything.
 
 let chatTimer = null;
 
@@ -55,7 +56,17 @@ function sendText() {
   if (text !== "") sendTurn({ text });
 }
 
+async function cancelTask() {
+  const reply = await fetch("/graph/chat/cancel", { method: "POST" });
+  if (!reply.ok) {
+    document.getElementById("chat-state").textContent = `Refused: ${JSON.stringify((await reply.json()).detail)}`;
+    return;
+  }
+  if (chatTimer === null) followChat();
+}
+
 document.getElementById("chat-send").addEventListener("click", sendText);
+document.getElementById("chat-cancel").addEventListener("click", cancelTask);
 document.getElementById("chat-text").addEventListener("keydown", event => {
   if (event.key === "Enter") sendText();
 });

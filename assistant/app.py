@@ -7,6 +7,7 @@ only data is the read-only fixtures behind lookups.
 """
 
 import subprocess
+from threading import Event
 
 from fastapi import FastAPI
 
@@ -42,8 +43,9 @@ def create_app(queue: CommandQueue | None = None) -> FastAPI:
     tasks = GraphTasks(commands, DEVICE_ID, profile)
     index = FeatureIndex(profile["features"], Embeddings())
     bridge = BridgeLink(commands, DEVICE_ID)
-    tools = Tools(Chat(), index, tasks.navigator, tasks.lookups, bridge, tasks.current_screen)
-    chat = AgentChat(build_graph(tools), tasks)
+    stop = Event()  # the chat box's cancel, read by the agent between commands
+    tools = Tools(Chat(), index, tasks.navigator, tasks.lookups, bridge, tasks.current_screen, stop.is_set)
+    chat = AgentChat(build_graph(tools), tasks, stop)
     tasks.chat_busy = chat.busy
     app.include_router(
         build_graph_router(commands, tasks, chat, graph_payload(), DEVICE_ID, source_revision())

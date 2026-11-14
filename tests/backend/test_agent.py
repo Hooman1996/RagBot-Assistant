@@ -5,16 +5,17 @@ import re
 import pytest
 from agent_fakes import (
     CARD_SENTENCE,
+    CHANGES,
     PROFILE,
-    TRANSITIONS,
     DownEmbeddings,
     FakeChat,
     RecordingApp,
     build_agent,
+    every_change_is_allowed,  # noqa: F401 - an autouse fixture: every state change is checked
 )
 from langgraph.types import Command
 
-from assistant import agent_nodes, replies
+from assistant import replies
 from assistant.agent_state import new_request
 from assistant.slots import money
 
@@ -22,26 +23,6 @@ CONFIG = {"configurable": {"thread_id": "test"}}
 CARD = {"choice": "card_transfer"}
 AMOUNT = {"value": 250000, "unit": "IRT"}
 TYPED_SOURCE = "۲۵۰ هزار تومان از کارت 0000000000000018 به رضا کارت به کارت کن"
-CHANGES: list[tuple[str, str]] = []
-
-
-@pytest.fixture(autouse=True)
-def every_change_is_allowed(monkeypatch: pytest.MonkeyPatch):
-    """Records each task-state change every node makes, and checks it against task.json."""
-    real = agent_nodes.moved
-
-    def recording(state: dict, *path: str) -> dict:
-        current = state["task_state"]
-        for step in path:
-            if step != current:
-                CHANGES.append((current, step))
-            current = step
-        return real(state, *path)
-
-    CHANGES.clear()
-    monkeypatch.setattr(agent_nodes, "moved", recording)
-    yield
-    assert all(step in TRANSITIONS[current] for current, step in CHANGES), CHANGES
 
 
 def operations(app: RecordingApp) -> list[str]:
@@ -80,7 +61,7 @@ def test_a_missing_source_card_is_one_question_with_card_options() -> None:
     assert pending["question"] == "از کدام کارت انتقال انجام شود؟"
     assert pending["task_state"] == "clarifying"
     assert pending["options"][0] == {"ref": "card-transfer-source=card-1", "label": "****0018"}
-    assert len(pending["options"]) == 7
+    assert len(pending["options"]) == 8 and pending["options"][-1] == {"ref": "cancel", "label": "لغو"}
     assert app.sent == []
     result = graph.invoke(Command(resume=pending["options"][0]["ref"]), CONFIG)
     assert result["task_state"] == "ready_for_user"
@@ -103,7 +84,7 @@ def test_an_ambiguous_name_gets_the_matching_records_as_options() -> None:
     )
     pending = result["__interrupt__"][0].value
     assert pending["question"].startswith(replies.WHICH.format(text="نمایشی"))
-    assert [item["label"] for item in pending["options"]] == ["حساب نمایشی", "پس‌انداز نمایشی"]
+    assert [item["label"] for item in pending["options"]] == ["حساب نمایشی", "پس‌انداز نمایشی", "لغو"]
     assert app.sent == []
 
 
@@ -114,7 +95,7 @@ def test_a_name_that_is_not_found_asks_again_and_sends_nothing() -> None:
     result = graph.invoke(new_request("c", CARD_SENTENCE.replace("رضا", "علی")), CONFIG)
     first = result["__interrupt__"][0].value
     assert first["question"].startswith(replies.NOT_FOUND.format(text="علی"))
-    assert first["options"] == []
+    assert first["options"] == [{"ref": "cancel", "label": "لغو"}]
     result = graph.invoke(Command(resume="علی"), CONFIG)
     assert result["__interrupt__"][0].value["question"] == first["question"]
     assert app.sent == []
@@ -128,7 +109,8 @@ def test_a_choice_that_was_not_offered_becomes_not_sure() -> None:
     pending = result["__interrupt__"][0].value
     assert pending["question"] == replies.NOT_SURE
     assert [item["label"] for item in pending["options"]] == [
-        item["title"] for item in PROFILE["features"][:8]
+        *(item["title"] for item in PROFILE["features"][:8]),
+        "لغو",
     ]
     assert app.sent == []
 
