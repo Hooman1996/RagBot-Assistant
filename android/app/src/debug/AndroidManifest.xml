@@ -1,6 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Debug only: the bridge's pull loop talks to the local development backend. -->
+<!-- Debug only: the bridge's pull loop talks to the local development backend, and a full
+     Persian physical-keyboard layout lets the replica viewer type every Persian letter. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
-    <application android:networkSecurityConfig="@xml/bridge_network" />
+    <application android:networkSecurityConfig="@xml/bridge_network">
+        <receiver
+            android:name=".devtools.KeyboardLayouts"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.hardware.input.action.QUERY_KEYBOARD_LAYOUTS" />
+            </intent-filter>
+            <meta-data
+                android:name="android.hardware.input.metadata.KEYBOARD_LAYOUTS"
+                android:resource="@xml/keyboard_layouts" />
+        </receiver>
+    </application>
 </manifest>

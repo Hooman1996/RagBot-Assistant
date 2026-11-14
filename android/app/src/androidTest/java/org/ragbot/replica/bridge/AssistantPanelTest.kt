@@ -15,7 +15,7 @@ import org.ragbot.replica.assistant.PanelLine
 
 /**
  * The assistant panel never stands between the executor and the screen, opens from the support
- * menu beside the chatbot, and minimizes to a bubble that reopens it. Like the bridge journeys, the
+ * menu beside the chatbot or from its floating bubble, and minimizes back to the bubble. Like the bridge journeys, the
  * app runs on its own frame clock, and every tap goes through the executor's own controls.
  */
 @RunWith(AndroidJUnit4::class)
@@ -75,12 +75,22 @@ class AssistantPanelTest {
     }
 
     @Test
-    fun minimizeHidesThePanelAndTheBubbleReopensIt() {
+    fun theBubbleIsAlwaysThereAndOpensAndClosesTheBox() {
+        waitFor("assistant-bubble")
+        rig.controls.click("assistant-bubble")
+        waitFor("assistant-panel")
+        rig.controls.click("assistant-bubble")
+        waitFor("assistant-panel", present = false)
+    }
+
+    @Test
+    fun minimizeHidesTheBoxAndKeepsTheBubble() {
         onMain { AssistantPanelState.history = PanelHistory(lines = listOf(PanelLine(true, "کارت به کارت"))) }
         waitFor("assistant-bubble")
         rig.controls.click("assistant-bubble")
         waitFor("assistant-panel")
         rig.controls.click("assistant-minimize")
         waitFor("assistant-panel", present = false)
+        assertTrue("the bubble stays", shown("assistant-bubble"))
     }
 }

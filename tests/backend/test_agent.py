@@ -164,7 +164,15 @@ def test_toman_becomes_exact_rials() -> None:
     said = ["۲۵۰ هزار تومان به رضا"]
     assert money({"value": 250000, "unit": "IRT"}, said) == {"value": 2500000, "unit": "IRR"}
     assert money({"value": 2500000, "unit": "IRR"}, said) == {"value": 2500000, "unit": "IRR"}
-    assert type(money({"value": 3, "unit": "IRT"}, ["سه تومان"])["value"]) is int
+    assert type(money({"value": 3000, "unit": "IRT"}, ["سه هزار تومان"])["value"]) is int
+
+
+def test_an_amount_that_may_be_shorthand_is_asked() -> None:
+    # «شصت تمن» usually means sixty thousand toman, and a bare «30» in a request has no unit.
+    assert money({"value": 60, "unit": "IRT"}, ["شصت تمن بزن برا رضا"]) is None
+    assert money({"value": 30, "unit": "IRR"}, ["30 جابجا شه برا رضا"]) is None
+    answered = ["30 جابجا شه برا رضا", "300000"]  # a bare number answers «چند ریال…؟»
+    assert money({"value": 300000, "unit": "IRR"}, answered) == {"value": 300000, "unit": "IRR"}
 
 
 def test_a_model_amount_the_user_never_wrote_is_not_used() -> None:
