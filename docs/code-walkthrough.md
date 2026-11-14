@@ -9,8 +9,9 @@ must build is in [the app-team handover](app-team-handover.md).
 Line numbers match `main` at commit `95533cd` (8 Nov 2026), except `command_queue.py`,
 `task_runner.py`, `bridge_link.py` and `steps.py`, which match #134 (9 Nov 2026), and `app.py`,
 `graph_tasks.py`, `graph_page.py`, the agent's files (5.17 to 5.24), `tools/project_checks.py`,
-`tools/stand_in_app.py` and `main_debug.py`, which match #136 (9 Nov 2026). If a file changes, the
-numbers move, but the order of the blocks usually stays the same.
+`tools/stand_in_app.py` and `main_debug.py`, which match #136 (9 Nov 2026), and the evaluation
+runner (9.7 and 9.8), which matches #138 (14 Nov 2026). If a file changes, the numbers move, but the
+order of the blocks usually stays the same.
 
 ## Contents
 
@@ -952,6 +953,45 @@ At the top of the repository. How to use it, and its VS Code entry, are in
 | 84-87 | If the agent still asks when the turns run out, reads the answer from the keyboard; returns the last result. |
 | 90-93 | Run directly: `--replica` or not, the turns from the command line or the example, the real clients. |
 
+### 9.7 `tools/evaluate_agent.py` — scores the agent on a case file
+
+**Run by:** a person, `python tools/evaluate_agent.py tests/evaluation/heldout.json`; the tests call
+`main` with fake models. **Input:** a case file ([the evaluation set](bridge/evaluation.md)).
+**Output:** the report on screen, one record file under `local/scratch/p6-02/`, and exit 0, 1 or 2.
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring: it drives the same agent as `main_debug.py` on the stand-in, never the replica, and changes nothing. |
+| 9-17 | Imports; run as a script, Python only sees `tools/`, so the repository's root is put on the path first (the ruff line allows the later imports). |
+| 19-32 | The same pieces as `main_debug.py`, plus the scorer and the stand-in. |
+| 34-35 | `RECORDS`, where each run's record goes; the `option:` prefix. |
+| 38-48 | `RecordingApp`: the stand-in, keeping the name of every operation it is sent. |
+| 51-61 | `feature_facts(profile, navigator)`: each feature's requirement types, whether it has a form, and the screen its run must end on, planned from Home. |
+| 64-66 | `pending_of(result)`: the agent's pending question after a turn, or `None`. |
+| 69-90 | `talk(...)`: the first turn is a new request, and the offered 8 and the chosen intent are read from the state; each later turn resumes the question; an `option:` the question does not offer fails the case; it stops when the agent has answered. It counts the questions, notes whether the first one came before any `prepare`, and returns the question still waiting. |
+| 93-122 | `run_case(...)`: a fresh queue, stand-in, tools and graph, with the case ID as `thread_id`. Records the final task state (the pending question's while one waits), `missing`, the values, the prepared feature and its requirement types, whether `prepare` ran, the reply (or the pending question), the operations and the last screen. Any exception becomes a crash, with the chosen intent from the last finished step. |
+| 125-150 | `main(chat, embeddings, cases_path)`: reads the profile and the cases; one word is embedded first, and an unreachable service exits 2; one `FeatureIndex` for every case; runs and scores each case; writes the record file; prints the report; exits 0 when every gate passes, else 1. |
+| 153-154 | Run directly, with the real clients. |
+
+### 9.8 `tools/evaluation_score.py` — the measures and the report
+
+**Called by:** `evaluate_agent.py`. Plain counting over the records; every value it prints goes
+through `steps.masked`.
+
+| Lines | What it does |
+|---|---|
+| 1-5 | Docstring. |
+| 7-17 | Imports; `ALLOWED`, the three operations the task runner may send; `CRITICAL`, the types `ref` and `money`; the tags scored as safe stops. |
+| 20-24 | `same(kind, expected, got)`: text and choice compare with Persian digits as Latin and spaces trimmed; refs and money exactly. |
+| 27-29 | `critical(values, types)`: only the ref and money values. |
+| 32-50 | `wrong_action(record, facts)`: an operation outside the three; or, once `prepare` ran, another feature with a form, an expected end of `created` or `clarifying`, a wrong critical value or an unexpected one. Returns the reason. |
+| 53-58 | `asks_match(record)`: for a case ending `clarifying`, the agent still asks for exactly `asks`. |
+| 61-84 | `score(record, facts)`: each value's match, the critical wrong action, and the unambiguous, preparation and safe-stop passes for the measures the tags name (`None` for the others), and why it failed. |
+| 87-104 | `why(...)`: plain reasons: crash, option not offered, wrong action, another intent, each differing value, the end state, what is still asked, the screen, no question before the review. |
+| 107-126 | `ratio`, `gate`, `scored` and `group`: the `passed / total (percent)` text, one gate line, a measure's count, and knowledge, not sure or a feature. |
+| 129-168 | `report(records, seconds)`: the four gates with their targets, the right feature among the narrowed 8, the knowledge and not-sure confusion, per-field accuracy, the per-feature table, model errors, crashes and time; returns whether every gate passed. |
+| 171-189 | `failing(records)`: every case that failed a measure, with the expected and the got intent, values (masked) and end state, and why. |
+
 ## 10. The tests, and what each one proves
 
 Run all Python tests with `python -m pytest`. Each file's first line says what it covers. The
@@ -973,6 +1013,9 @@ backend tests in `tests/backend/` are the ones that prove our runtime code.
 | `tests/backend/test_stand_in_app.py` | 6 | The stand-in's commands and results match the schemas, with rising versions, masked fields and a draft; no walk takes a user-only step; a row key replaces `*`, and a missing one is `blocked`; a secret or unknown field is refused; `show_review` away from a form has no review. |
 | `tests/backend/test_agent_chat.py` | 9 | A chat turn and a graph-page Run refuse each other; an option must be one the agent offered; a turn takes exactly one of `text` or `option`; a fresh page shows an empty conversation; the chat script loads nothing from the internet. |
 | `tests/backend/test_main_debug.py` | 1 | `main_debug.main` runs the built-in example to the review with the fakes, and never prints the full card. |
+| `tests/evaluation/conftest.py` | (helpers) | Lets the evaluation tests import `tests/backend/agent_fakes.py` (a site package named `tests` hides this repository's `tests` folder). |
+| `tests/evaluation/test_cases.py` | 6 | Both case files: the format, unique ids, the closed tag list, one turn per unambiguous case; every intent, ref, lookup key, money value and option turn is valid for the feature's plan from Home; an `e2e` case gives every value and ends right; the held-out counts and the tuning minimums; no held-out first turn in the tuning file; **the held-out file's SHA-256 equals the one in D-025**. |
+| `tests/evaluation/test_evaluate.py` | 7 | The runner on the fakes: a right card transfer passes every measure and exits 0; a wrong amount and another feature with a form are critical wrong actions (exit 1); a missing source that ends asking is a safe stop; an option not offered fails the case and the run goes on; a crash is recorded and the next case runs; unreachable embeddings exit 2. |
 | `tests/contracts/test_contracts.py` | 8 | The contracts suite and the transition tables. |
 | `tests/foundation/test_project_checks.py` | 14 | The foundation and baseline checks, on throwaway copies of the repository. |
 | `tests/isolation/test_isolation.py` | 9 | The reset guard, the development-host list and the isolation suite. |

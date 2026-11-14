@@ -73,5 +73,9 @@ the owner's choice if the evaluation set shows misses.
 
 ## How it will be tested
 
-The frozen Persian evaluation set of P6-02 scores the choice and the values. A wrong `choice` that
-code cannot catch is a critical failure, so the gate there applies here.
+[The evaluation set](evaluation.md) (P6-02, #138) scores the choice and the values: 143 frozen
+held-out cases and 43 tuning cases, run with `python tools/evaluate_agent.py`. A wrong `choice`
+that code cannot catch is a critical wrong action when it prepares another feature with a form, so
+the gate there applies here. The first run is in [the P6-02 baseline](../reports/p6-02-baseline.md):
+the expected feature was among the narrowed 8 for 120 of 127 feature cases, and the model chose
+the expected intent for 132 of 143.
