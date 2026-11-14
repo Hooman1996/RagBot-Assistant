@@ -350,6 +350,15 @@ local/toolchain/replica-viewer/start.sh
 local/toolchain/replica-viewer/stop.sh
 ```
 
+**Typing and speed (14 Nov 2026, #144).** The viewer acts as a physical keyboard
+(`scrcpy --keyboard=uhid`, the X keymap `ir,us`), and the phone maps keys with its Persian
+physical layout, so typing Persian in the browser works in every field, the assistant panel's too;
+English letters type as Persian there. It captures at 1200 px (`--max-size=1200`). For a smoother
+screen, the emulator's display is overridden for the viewer: `adb -s emulator-5554 shell wm size 720x1600`
+and `wm density 280` (the same 411 dp layout, less than half the pixels to draw in software).
+Before any visual-fidelity screenshot, return to the pinned profile with `wm size reset` and
+`wm density reset`.
+
 Stopping the viewer leaves the emulator running. To stop only the replica, or
 then shut down this project's emulator when finished reviewing:
 
