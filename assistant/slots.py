@@ -18,6 +18,8 @@ LONG_NUMBER = re.compile(r"\d{12,}")
 SHOWN = re.compile(r"\*{4}(\d{4})")  # how a long number is shown to the model
 PLAIN_KEY = re.compile(r"[\w-]+")
 UNITS = {"IRR": 1, "IRT": 10}  # IRT is the toman: ten rials
+# Under 1,000 toman, a written amount is usually shorthand («شصت تمن» for sixty thousand), so it is asked.
+SMALLEST = 10_000
 MONEY = {
     "type": "object",
     "properties": {"value": {"type": "integer"}, "unit": {"enum": list(UNITS)}},
@@ -84,8 +86,8 @@ def extract(chat: Chat, messages: list[str], requirements: list[dict]) -> dict:
 def money(value: object, messages: list[str]) -> dict | None:
     """An amount in rials: the one in the user's newest answer, if it names one; else the model's,
     only if the user wrote it; else the one amount the user wrote."""
-    said = [found for text in messages for found in amounts(text)]
-    newest = amounts(messages[-1]) if len(messages) > 1 else []
+    said = [found for text in messages for found in amounts(text) if found >= SMALLEST]
+    newest = [found for found in amounts(messages[-1]) if found >= SMALLEST] if len(messages) > 1 else []
     model = None
     if isinstance(value, dict) and type(value.get("value")) is int and value.get("unit") in UNITS:
         model = value["value"] * UNITS[value["unit"]]
@@ -94,8 +96,9 @@ def money(value: object, messages: list[str]) -> dict | None:
     elif said and model not in said:
         model = said[0] if len(set(said)) == 1 else None  # a model amount the user never wrote is not used
     elif not said and model is not None:
-        # No unit or scale word: only a number the user typed as it is counts.
-        typed = re.findall(r"\d+", " ".join(messages).translate(PERSIAN_DIGITS))
+        # No unit or scale word. In a request «30» may mean rials, tomans or thousands, so the agent
+        # asks; a bare number counts only as the answer to its question («چند ریال…؟»).
+        typed = re.findall(r"\d+", messages[-1].translate(PERSIAN_DIGITS)) if len(messages) > 1 else []
         model = model if str(model) in typed else None
     try:
         return money_value(str(model)) if model is not None else None

@@ -13,8 +13,14 @@ import java.io.IOException
 internal class CommandPoller(private val executor: Executor, private val backend: Backend) {
     /** One round: runs commands until the backend has no next one. */
     fun pollOnce() {
-        var command = backend.resume(executor.observer.observe())
-        while (command != null) command = backend.postResult(executor.execute(command))
+        val seen = executor.observer.observe()
+        lastObservation = seen
+        var command = backend.resume(seen)
+        while (command != null) {
+            val result = executor.execute(command)
+            lastObservation = result.observation
+            command = backend.postResult(result)
+        }
     }
 
     /** Polls forever on the background thread. */
@@ -34,6 +40,9 @@ internal class CommandPoller(private val executor: Executor, private val backend
         private const val TAG = "CommandPoller"
         private const val POLL_MS = 500L
         private var started = false
+
+        /** The loop's latest observation, which the assistant panel sends with each message. */
+        @Volatile var lastObservation: Observation? = null
 
         /** Starts the loop once per process. A rotation must not start a second one. */
         fun start() {

@@ -11,7 +11,7 @@ from threading import Event
 
 from fastapi import FastAPI
 
-from assistant.agent_chat import AgentChat
+from assistant.agent_chat import Chats
 from assistant.agent_graph import build_graph
 from assistant.agent_nodes import Tools
 from assistant.bridge_link import BridgeLink
@@ -22,6 +22,7 @@ from assistant.graph_tasks import GraphTasks
 from assistant.intent import FeatureIndex
 from assistant.mobile_api import build_mobile_router
 from assistant.models import Chat, Embeddings
+from assistant.panel_api import build_panel_router
 from assistant.test_harness_api import build_harness_router
 
 DEVICE_ID = "replica-dev"
@@ -45,9 +46,10 @@ def create_app(queue: CommandQueue | None = None) -> FastAPI:
     bridge = BridgeLink(commands, DEVICE_ID)
     stop = Event()  # the chat box's cancel, read by the agent between commands
     tools = Tools(Chat(), index, tasks.navigator, tasks.lookups, bridge, tasks.current_screen, stop.is_set)
-    chat = AgentChat(build_graph(tools), tasks, stop)
-    tasks.chat_busy = chat.busy
+    chats = Chats(build_graph(tools), tasks, stop)  # the graph page's and the panel's conversations
+    tasks.chat_busy = chats.busy
+    app.include_router(build_panel_router(chats))
     app.include_router(
-        build_graph_router(commands, tasks, chat, graph_payload(), DEVICE_ID, source_revision())
+        build_graph_router(commands, tasks, chats.page, graph_payload(), DEVICE_ID, source_revision())
     )
     return app

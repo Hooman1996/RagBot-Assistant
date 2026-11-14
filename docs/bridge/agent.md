@@ -131,9 +131,11 @@ ask has allowed keys.
 ## What code checks, whatever the model says
 
 - **Money** is taken from the user's own words (`assistant/amounts.py` reads digits or number
-  words, هزار/میلیون/میلیارد and تومان/ریال): the amount in the newest answer wins; otherwise the
-  model's amount is used only if the user wrote it; otherwise the one amount the user wrote;
-  otherwise the agent asks.
+  words, هزار/میلیون/میلیارد and تومان/تومن/تمن/ریال): the amount in the newest answer wins;
+  otherwise the model's amount is used only if the user wrote it; otherwise the one amount the user
+  wrote; otherwise the agent asks. An amount under 1,000 toman is asked, not used («شصت تمن» usually
+  means sixty thousand), and so is a bare number in a request («30 جابجا شه»); a bare number counts
+  only as the answer to «چند ریال…؟».
 - **A choice** reaches the app only as one of its allowed keys, so no other text is ever sent as a
   key.
 - **A record** is matched after making digits Latin, ي/ك Persian, and dropping ZWNJ, «ٔ», generic
@@ -167,6 +169,7 @@ Plan §13 and `contracts/transitions/task.json`, done in #142, all on the assist
 | Where | Bridge | How |
 |---|---|---|
 | The graph page's chat box | `BridgeLink(queue, DEVICE_ID)` to the replica | `assistant/agent_chat.py`, one conversation per page load, each turn on a background thread. It and the graph page's Run refuse each other (409). Routes: `POST /graph/chat` (exactly one of `text` or `option`), `GET /graph/chat`. |
+| The replica's assistant panel | `BridgeLink(queue, DEVICE_ID)` to the replica | `assistant/panel_api.py`: one conversation per panel, by the app's conversation ID, each turn on a background thread; the panel reads progress from `GET /assistant/v1/history`. See [the panel](panel.md). |
 | `python main_debug.py` | `tools/stand_in_app.py`, on one thread | The same agent with a stand-in for the app. See [debugging](../runbook/debugging.md#6-the-agent-in-one-process-main_debugpy). |
 | `python main_debug.py --replica` | `BridgeLink` to the replica, with the backend's own app on a daemon thread | The same agent on the main thread, as the server runs it. |
 
@@ -188,6 +191,6 @@ The frozen evaluation set is the measure now: see [the P6-03 report](../reports/
 
 ## What is not here
 
-No saved-data questions, no persistence (a paused task lives only while the backend runs), no reranker, no RAG and no in-app panel (P6-05). The record-based choice lists
+No saved-data questions, no persistence (a paused task lives only while the backend runs), no reranker, no RAG (P6-06). The record-based choice lists
 (plates, Sayad cheques, addresses, branches) are written from the mock fixtures; in production they
 must come from the bank's lookup APIs.
