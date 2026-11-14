@@ -1,0 +1,444 @@
+{
+  "features": {
+    "card_transfer": "انتقال پول از یکی از کارت‌های بانکی من به کارت یک شخص یا یک شماره کارت",
+    "internal_transfer": "انتقال پول از حساب بانکی من به یک شماره حساب در همین بانک",
+    "interbank_transfer": "انتقال پول از حساب بانکی من به شماره شبای حسابی در بانک دیگر، پایا یا ساتنا",
+    "group_transfer": "انتقال گروهی پول از یک حساب به چند مقصد با جمع کل مشخص",
+    "recurring_transfer": "تنظیم انتقال خودکار و تکراری پول، روزانه یا هفتگی یا ماهانه، با تاریخ شروع و پایان",
+    "saved_recipients": "باز کردن فهرست مقصدهای آشنا و ذخیره‌شده برای انتقال",
+    "repeat_transaction": "باز کردن تراکنش‌های پرتکرار ذخیره‌شده برای تکرار دوباره",
+    "bill_payment": "پرداخت قبض آب، برق، گاز یا تلفن از حساب بانکی با شناسه قبض و شناسه پرداخت",
+    "insurance_installment": "پرداخت قسط بیمه‌نامه از حساب بانکی",
+    "credit_repayment": "دیدن بدهی کارت اعتباری و بازپرداخت آن",
+    "mobile_top_up": "خرید شارژ سیم‌کارت موبایل از حساب بانکی، نه از کیف پول",
+    "charity": "کمک مالی و پرداخت به یک خیریه از حساب بانکی",
+    "loan_repayment": "پرداخت قسط وام و تسهیلات در جریان از حساب بانکی",
+    "loan_groups": "دیدن گروه‌های وام و تسهیلات باشگاه مشتریان",
+    "identifier_conversion": "تبدیل شماره حساب، شماره کارت یا شبا به هم و دیدن شبای یک حساب",
+    "paid_identifier_inquiry": "تبدیل کارت به شبا با پرداخت کارمزد از یک کارت",
+    "accounts": "دیدن فهرست حساب‌های بانکی من و تغییر حساب",
+    "account_statement": "دیدن گردش حساب و صورتحساب حساب بانکی",
+    "statement_request": "درخواست فایل صورتحساب حساب برای یک بازه تاریخ با قالب اکسل، CSV یا PDF",
+    "transaction_history": "دیدن سوابق و تاریخچه تراکنش‌های اخیر",
+    "cards": "دیدن اطلاعات و مشخصات کارت‌های بانکی من",
+    "card_balance": "دیدن موجودی بن کارت",
+    "card_request": "درخواست صدور کارت بانکی جدید با طرح و روش تحویل",
+    "card_block_and_pin": "مسدود کردن کارت گم‌شده یا دزدیده‌شده و تغییر رمز کارت",
+    "wallet_card": "سفارش و درخواست اولین کیف کارت و ارسال آن به آدرس",
+    "profile": "باز کردن فرم اطلاعات تکمیلی پروفایل",
+    "saved_addresses": "افزودن و ذخیره یک آدرس جدید با عنوان و کد پستی",
+    "settings": "باز کردن تنظیمات برنامه",
+    "notifications": "دیدن اعلان‌ها و پیام‌های برنامه",
+    "support": "دیدن سوالات متداول و پشتیبانی",
+    "service_search": "جستجو بین خدمات برنامه",
+    "wallet_overview": "دیدن کیف پول‌ها و موجودی آن‌ها",
+    "wallet_statement": "دیدن صورتحساب و گردش کیف پول برای یک بازه تاریخ",
+    "wallet_to_wallet": "انتقال پول از کیف پول من به کیف پول یک شخص دیگر",
+    "wallet_purchase": "پرداخت خرید از فروشگاه با کیف پول",
+    "wallet_withdrawal": "برداشت پول از کیف پول و واریز آن به حساب بانکی",
+    "wallet_charge": "شارژ کیف پول با واریز پول از حساب بانکی به کیف پول",
+    "wallet_mobile_top_up": "خرید شارژ سیم‌کارت موبایل با پول کیف پول، با انتخاب اپراتور",
+    "wallet_bill": "پرداخت قبض با پول کیف پول",
+    "account_funding": "افزایش موجودی حساب بانکی از درگاه پرداخت اینترنتی",
+    "wallet_funding": "شارژ کیف پول از درگاه پرداخت اینترنتی",
+    "cheque_books": "دیدن دسته‌چک‌های من",
+    "cheque_tracking": "پیگیری وضعیت یک چک با شماره چک",
+    "chequebook_request": "درخواست دسته چک کاغذی جدید برای یک حساب",
+    "cheque_report": "گزارش چک‌های واگذار شده به بانک بر اساس وضعیت",
+    "card_board": "باز کردن کارتابل و کارهای در انتظار",
+    "digital_cheque_activation": "فعال‌سازی چک دیجیتال با هامون",
+    "digital_cheque_transfer": "واگذاری یک چک دیجیتال",
+    "vehicles": "باز کردن منوی خدمات خودرو",
+    "annual_toll": "استعلام عوارض سالانه خودرو با پلاک",
+    "traffic_toll": "استعلام عوارض شهرداری و طرح ترافیک خودرو با پلاک",
+    "freeway_toll": "استعلام عوارض آزادراه خودرو با پلاک",
+    "pollution_inquiry": "استعلام تردد خودرو در طرح آلودگی هوا با پلاک",
+    "service_inquiries": "دیدن منوی استعلام‌های پولی",
+    "finance_dashboard": "دیدن عملکرد مالی، هزینه‌ها و خرج ماهانه",
+    "budget_limit": "تعیین سقف بودجه ماهانه برای یک دسته هزینه",
+    "rewards": "باز کردن منوی باشگاه مشتریان",
+    "sayad_register": "صدور و ثبت چک صیادی جدید با شناسه صیاد، مبلغ، سررسید و گیرنده",
+    "sayad_answer": "تایید یا رد چک صیادی دریافتی",
+    "sayad_transfer": "انتقال چک صیادی دریافتی به شخص دیگر",
+    "sayad_inquiry": "استعلام وضعیت چک صیادی با شناسه صیاد",
+    "sayad_history": "دیدن سوابق چک‌های صیادی",
+    "violations": "استعلام خلافی خودرو با پلاک",
+    "transfer_tax": "استعلام مالیات نقل و انتقال خودرو با پلاک",
+    "documents": "استعلام وضعیت مدارک خودرو مثل کارت و سند با پلاک",
+    "active_plates": "استعلام پلاک‌های فعال به نام یک کد ملی",
+    "licence": "استعلام وضعیت گواهینامه رانندگی با کد ملی",
+    "negative_points": "استعلام نمره منفی گواهینامه رانندگی با شماره گواهینامه",
+    "credit_report": "گرفتن گزارش اعتباری با پرداخت کارمزد",
+    "bounced_cheques": "استعلام چک‌های برگشتی به نام من با پرداخت کارمزد",
+    "credit_rate": "استعلام رتبه اعتباری با پرداخت کارمزد",
+    "loan_request": "درخواست وام و تسهیلات جدید با مبلغ، تعداد اقساط، شغل و ضامن",
+    "account_opening": "افتتاح حساب بانکی جدید جاری یا پس‌انداز",
+    "wage_advance": "درخواست مساعده حقوق و واریز آن به حساب",
+    "credit_product": "فعال‌سازی اعتبار خرید",
+    "rewards_history": "دیدن سوابق و تاریخچه امتیازهای باشگاه مشتریان",
+    "rewards_transfer": "انتقال امتیاز باشگاه مشتریان به شماره موبایل دیگر"
+  },
+  "choices": {
+    "account-transfer-reason": [
+      {
+        "key": "0",
+        "label": "بابت نمونهٔ اول — ساختگی"
+      },
+      {
+        "key": "1",
+        "label": "بابت نمونهٔ دوم — ساختگی"
+      }
+    ],
+    "budget": [
+      {
+        "key": "food",
+        "label": "خرید و رستوران"
+      },
+      {
+        "key": "bills",
+        "label": "قبض‌ها"
+      },
+      {
+        "key": "vehicle",
+        "label": "خودرو و عوارض"
+      },
+      {
+        "key": "transfers",
+        "label": "انتقال‌ها"
+      },
+      {
+        "key": "other",
+        "label": "سایر خریدها"
+      }
+    ],
+    "cheque-kind": [
+      {
+        "key": "AUTHENTICATED_HOME_CHEQUE_FACILITIES_ISSUANCE_PAPER_CHECKBOOK",
+        "label": "درخواست دسته چک کاغذی"
+      },
+      {
+        "key": "AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRANSFERRED_CHEQUES_REPORT",
+        "label": "گزارش چک‌های واگذار شده"
+      }
+    ],
+    "cheque-page": [
+      {
+        "key": "10",
+        "label": "۱۰ برگ"
+      },
+      {
+        "key": "25",
+        "label": "۲۵ برگ"
+      },
+      {
+        "key": "50",
+        "label": "۵۰ برگ"
+      }
+    ],
+    "cheque-status": [
+      {
+        "key": "PASSED",
+        "label": "وصول‌شده"
+      },
+      {
+        "key": "RETURNED",
+        "label": "برگشتی"
+      },
+      {
+        "key": "RECEIVING",
+        "label": "در جریان وصول"
+      }
+    ],
+    "color": [
+      {
+        "key": "color-1",
+        "label": "سبز"
+      },
+      {
+        "key": "color-2",
+        "label": "سرمه‌ای"
+      },
+      {
+        "key": "color-3",
+        "label": "طلایی"
+      }
+    ],
+    "delivery": [
+      {
+        "key": "branch",
+        "label": "تحویل حضوری در شعبه"
+      },
+      {
+        "key": "post",
+        "label": "ارسال پستی"
+      }
+    ],
+    "export-format": [
+      {
+        "key": "EXCEL",
+        "label": "اکسل"
+      },
+      {
+        "key": "CSV",
+        "label": "CSV"
+      },
+      {
+        "key": "PDF",
+        "label": "PDF"
+      }
+    ],
+    "inquiry-kind": [
+      {
+        "key": "credit-report",
+        "label": "گزارش اعتباری"
+      },
+      {
+        "key": "bounced-cheques",
+        "label": "استعلام چک برگشتی"
+      },
+      {
+        "key": "credit-rate",
+        "label": "رتبه اعتباری"
+      }
+    ],
+    "installment": [
+      {
+        "key": "1",
+        "label": "قسط اول"
+      },
+      {
+        "key": "2",
+        "label": "قسط دوم"
+      },
+      {
+        "key": "3",
+        "label": "قسط سوم"
+      },
+      {
+        "key": "4",
+        "label": "قسط چهارم"
+      }
+    ],
+    "loan-installment": [
+      {
+        "key": "0",
+        "label": "قسط اول"
+      },
+      {
+        "key": "1",
+        "label": "قسط دوم"
+      },
+      {
+        "key": "2",
+        "label": "قسط سوم"
+      }
+    ],
+    "schedule-frequency": [
+      {
+        "key": "DAILY",
+        "label": "روزانه"
+      },
+      {
+        "key": "WEEKLY",
+        "label": "هفتگی"
+      },
+      {
+        "key": "MONTHLY",
+        "label": "ماهانه"
+      }
+    ],
+    "source": {
+      "lookup": "accounts"
+    },
+    "svc-answer": [
+      {
+        "key": "accept",
+        "label": "تایید چک"
+      },
+      {
+        "key": "reject",
+        "label": "رد چک"
+      }
+    ],
+    "svc-branch": [
+      {
+        "key": "central",
+        "label": "شعبه نمایشی مرکزی"
+      },
+      {
+        "key": "north",
+        "label": "شعبه نمایشی شمال"
+      }
+    ],
+    "svc-document": [
+      {
+        "key": "card",
+        "label": "کارت ملی نمایشی"
+      }
+    ],
+    "S-164 svc-kind": [
+      {
+        "key": "holder",
+        "label": "استعلام گیرنده چک"
+      },
+      {
+        "key": "issuer",
+        "label": "استعلام صادرکننده چک"
+      }
+    ],
+    "S-062 svc-kind": [
+      {
+        "key": "current",
+        "label": "حساب جاری"
+      },
+      {
+        "key": "saving",
+        "label": "حساب پس‌انداز"
+      }
+    ],
+    "svc-product": [
+      {
+        "key": "personal",
+        "label": "تسهیلات شخصی (وام شخصی)"
+      },
+      {
+        "key": "home",
+        "label": "تسهیلات مسکن (وام مسکن)"
+      }
+    ],
+    "S-244 svc-record": [
+      {
+        "key": "plate-1",
+        "label": "پلاک 12 ب 345 ایران 67 (خودرو)"
+      },
+      {
+        "key": "plate-2",
+        "label": "پلاک موتورسیکلت 123 45678"
+      }
+    ],
+    "S-278 svc-record": [
+      {
+        "key": "plate-1",
+        "label": "پلاک 12 ب 345 ایران 67 (خودرو)"
+      },
+      {
+        "key": "plate-2",
+        "label": "پلاک موتورسیکلت 123 45678"
+      }
+    ],
+    "S-280 svc-record": [
+      {
+        "key": "plate-1",
+        "label": "پلاک 12 ب 345 ایران 67 (خودرو)"
+      },
+      {
+        "key": "plate-2",
+        "label": "پلاک موتورسیکلت 123 45678"
+      }
+    ],
+    "S-238 svc-record": [
+      {
+        "key": "contact-1",
+        "label": "کد ملی 0000000019 (خودم)"
+      },
+      {
+        "key": "contact-2",
+        "label": "کد ملی 0000000035"
+      }
+    ],
+    "S-247 svc-record": [
+      {
+        "key": "contact-1",
+        "label": "کد ملی 0000000019 (خودم)"
+      },
+      {
+        "key": "contact-2",
+        "label": "کد ملی 0000000035"
+      }
+    ],
+    "S-255 svc-record": [
+      {
+        "key": "licence-1",
+        "label": "گواهینامه 9000000001"
+      }
+    ],
+    "S-167 svc-sayad": [
+      {
+        "key": "0000000000000311",
+        "label": "چک ****0311 از رضا، ۶٬۰۰۰٬۰۰۰ ریال"
+      },
+      {
+        "key": "0000000000000312",
+        "label": "چک ****0312 از عضو نمایشی، ۲٬۵۰۰٬۰۰۰ ریال"
+      }
+    ],
+    "S-172 svc-sayad": [
+      {
+        "key": "0000000000000313",
+        "label": "چک ****0313 از رضا، ۴٬۰۰۰٬۰۰۰ ریال"
+      }
+    ],
+    "toll-letter": [
+      {
+        "key": "الف",
+        "label": "الف"
+      },
+      {
+        "key": "ب",
+        "label": "ب"
+      },
+      {
+        "key": "ج",
+        "label": "ج"
+      },
+      {
+        "key": "د",
+        "label": "د"
+      }
+    ],
+    "wallet-address": [
+      {
+        "key": "address-1",
+        "label": "خانه"
+      },
+      {
+        "key": "address-2",
+        "label": "محل کار"
+      }
+    ],
+    "wallet-op-operator": [
+      {
+        "key": "HAMRAH_AVAL",
+        "label": "همراه اول"
+      },
+      {
+        "key": "IRANCELL",
+        "label": "ایرانسل"
+      },
+      {
+        "key": "RIGHTEL",
+        "label": "رایتل"
+      }
+    ]
+  },
+  "fixed": {
+    "chequebook_request": {
+      "cheque-kind": "AUTHENTICATED_HOME_CHEQUE_FACILITIES_ISSUANCE_PAPER_CHECKBOOK"
+    },
+    "cheque_report": {
+      "cheque-kind": "AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRANSFERRED_CHEQUES_REPORT"
+    },
+    "credit_report": {
+      "inquiry-kind": "credit-report"
+    },
+    "bounced_cheques": {
+      "inquiry-kind": "bounced-cheques"
+    },
+    "credit_rate": {
+      "inquiry-kind": "credit-rate"
+    }
+  },
+  "fields": {
+    "svc-source": "حساب مبدا؛ حسابی که مبلغ یا کارمزد از آن برداشت می‌شود"
+  }
+}

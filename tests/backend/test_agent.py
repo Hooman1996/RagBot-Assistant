@@ -57,7 +57,7 @@ def card_values(source: str | None = None, destination: str = "رضا", amount: 
 
 
 def test_card_to_reza_in_one_sentence_reaches_the_review_and_stops() -> None:
-    chat = FakeChat([CARD, card_values("[number 1]")])
+    chat = FakeChat([CARD, card_values("****0018")])
     app = RecordingApp()
     result = build_agent(chat, app).invoke(new_request("c", TYPED_SOURCE), CONFIG)
     assert result["task_state"] == "ready_for_user"
@@ -172,16 +172,27 @@ def test_a_slot_that_was_not_offered_is_dropped() -> None:
 def test_money_that_is_not_a_whole_number_in_a_known_unit_is_refused(amount: object) -> None:
     app = RecordingApp()
     result = build_agent(FakeChat([CARD, card_values("card-1", amount=amount)]), app).invoke(
-        new_request("c", CARD_SENTENCE), CONFIG
+        new_request("c", "از کارت 0018 به رضا کارت به کارت کن"), CONFIG
     )
     assert result["__interrupt__"][0].value["question"] == "چند ریال منتقل شود؟"
     assert app.sent == []
 
 
 def test_toman_becomes_exact_rials() -> None:
-    assert money({"value": 250000, "unit": "IRT"}) == {"value": 2500000, "unit": "IRR"}
-    assert money({"value": 2500000, "unit": "IRR"}) == {"value": 2500000, "unit": "IRR"}
-    assert type(money({"value": 3, "unit": "IRT"})["value"]) is int
+    said = ["۲۵۰ هزار تومان به رضا"]
+    assert money({"value": 250000, "unit": "IRT"}, said) == {"value": 2500000, "unit": "IRR"}
+    assert money({"value": 2500000, "unit": "IRR"}, said) == {"value": 2500000, "unit": "IRR"}
+    assert type(money({"value": 3, "unit": "IRT"}, ["سه تومان"])["value"]) is int
+
+
+def test_a_model_amount_the_user_never_wrote_is_not_used() -> None:
+    # The baseline's factor of 1,000: «۵۰۰ هزار تومان» came back as 500,000,000 toman.
+    said = ["۵۰۰ هزار تومان از کیف برداشت کن"]
+    assert money({"value": 500000000, "unit": "IRT"}, said) == {"value": 5000000, "unit": "IRR"}
+    # A correction: the newest answer's amount wins over the one the model kept.
+    corrected = ["۲۰۰ هزار تومن به رضا", "نه، ۳۰۰ هزار تومن"]
+    assert money({"value": 200000, "unit": "IRT"}, corrected) == {"value": 3000000, "unit": "IRR"}
+    assert money({"value": 5, "unit": "IRT"}, ["۲۰۰ هزار تومن یا ۳۰۰ هزار تومن"]) is None
 
 
 def test_a_knowledge_question_gets_the_fixed_message_and_sends_nothing() -> None:
@@ -233,7 +244,7 @@ def test_the_model_never_sees_a_screen_an_action_a_user_only_tag_or_a_full_numbe
     build_agent(chats[0], RecordingApp()).invoke(new_request("c", TYPED_SOURCE), CONFIG)
     build_agent(chats[1], RecordingApp()).invoke(new_request("c", "0000000000000091"), CONFIG)
     prompts = "\n".join(prompt for chat in chats for prompt in chat.prompts)
-    assert "[number 1]" in prompts
+    assert "****0018" in prompts and "****0091" in prompts
     assert not re.search(r"S-\d{3}", prompts)
     assert not re.search(r"\d{16}", prompts)
     assert not [

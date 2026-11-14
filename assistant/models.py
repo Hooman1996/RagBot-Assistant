@@ -57,7 +57,7 @@ class Embeddings:
         self.batch_size = 0
 
     def embed(self, texts: list[str], query: bool = False) -> list[list[float]]:
-        """One unit-length vector per text. A user's words are a query; a feature's are not."""
+        """One unit-length vector per text. A user's words are a query; a feature's text a document."""
         vectors: list[list[float]] = []
         try:
             if not self.batch_size:
@@ -66,9 +66,9 @@ class Embeddings:
                 self.batch_size = info.json()["max_client_batch_size"]
             for start in range(0, len(texts), self.batch_size):
                 body: dict = {"inputs": texts[start : start + self.batch_size], "normalize": True}
-                if query:
-                    # The served model embeds questions with its "query" prompt, as RagBot does.
-                    body["prompt_name"] = "query"
+                # The served model's own prompts: "query" for questions, as RagBot does, and "document"
+                # for what is searched (measured: more right features among the closest 8).
+                body["prompt_name"] = "query" if query else "document"
                 reply = httpx.post(f"{self.url}/embed", json=body, timeout=TIMEOUT_SECONDS)
                 reply.raise_for_status()
                 vectors += reply.json()

@@ -68,3 +68,7 @@ Each item carries one label with a one-line basis:
   `ReplicaProfileTest`, never edited by hand. Each required field carries `requires`, a Persian
   `ask`, a `description` and, for a `ref`, a `lookup`. Each row edge lists what it needs chosen in
   `requires`. To regenerate it, run that test with `UPDATE_REPLICA_PROFILE=1`.
+- `assistant_words.json` — the assistant's own words about the app, edited by hand and read by
+  `assistant/words.py` (D-026): Persian words per feature, the allowed keys and Persian labels of
+  every choice field and row selection, values a feature decides itself, and field hints. The
+  bank's app is never changed, so this knowledge lives on the assistant's side.

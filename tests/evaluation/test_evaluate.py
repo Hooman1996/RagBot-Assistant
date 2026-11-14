@@ -60,9 +60,9 @@ def test_a_card_transfer_with_the_right_values_passes_every_measure(tmp_path, mo
     assert code == 0
 
 
-def test_a_wrong_amount_is_a_critical_wrong_action(tmp_path, monkeypatch, capsys) -> None:
-    code, records = run(tmp_path, monkeypatch, [FULL], FakeChat([CARD, said("0018", toman=300000)]))
-    assert "card-transfer-amount" in records[0]["score"]["wrong_action"]
+def test_a_wrong_source_card_is_a_critical_wrong_action(tmp_path, monkeypatch, capsys) -> None:
+    code, records = run(tmp_path, monkeypatch, [FULL], FakeChat([CARD, said("0026")]))
+    assert "card-transfer-source" in records[0]["score"]["wrong_action"]
     assert code == 1
     assert "critical wrong actions       1 / 1" in capsys.readouterr().out
 

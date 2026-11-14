@@ -6,10 +6,16 @@ mock_services/fixtures/ and never writes. It uses the standard library only.
 """
 
 import json
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
 FIXTURES = Path(__file__).resolve().parent.parent / "mock_services" / "fixtures"
+IBAN = re.compile(r"IR\d{24}")
+DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789")
+# Words a user puts before a name or number («کارت 0018», «حساب رضا»); they name no record.
+GENERIC = {"کارت", "کارتم", "حساب", "حسابم", "کیف", "کیفم", "پول", "پولم", "شبا", "شبای", "شماره", "به", "از"}
+ENDINGS = ("مو", "تو", "شو", "م", "ت", "ش")  # spoken endings such as «تجاریمو»
 
 
 @dataclass(frozen=True)
@@ -63,6 +69,20 @@ class Candidate:
     label: str
 
 
+def plain(text: str) -> str:
+    """The text as matching compares it: Latin digits, Persian ی and ک, no ZWNJ, «ٔ» or extra spaces."""
+    text = text.translate(DIGITS).replace("ي", "ی").replace("ك", "ک").replace("\u0654", "")
+    return " ".join(text.replace("\u200c", " ").split())
+
+
+def typed(lookup: str, text: str) -> bool:
+    """A contact the user typed instead of naming, in the field's own format: an IBAN for an IBAN
+    field, else a card, account or wallet number. Anything else must match a saved record."""
+    if source_of(lookup) != "contacts":
+        return False
+    return IBAN.fullmatch(text) is not None if lookup.endswith(".iban") else text.isdigit()
+
+
 def source_of(lookup: str) -> str:
     """The lookup's name: `contacts` for `contacts.card`."""
     return lookup.split(".")[0]
@@ -94,10 +114,10 @@ class FixtureLookups:
 
     def resolve(self, lookup: str, text: str) -> str:
         """Turns what the user said into the value to send. Refuses a miss or a tie."""
-        # A typed number needs no record: the user may send to someone not saved.
-        if source_of(lookup) == "contacts" and text.isdigit():
-            return text
         found = self.matching(lookup, text)
+        # A typed number needs no record: the user may send to someone not saved.
+        if typed(lookup, text) and (text.isdigit() or not found):
+            return text
         if not found:
             raise NotFound(f"{lookup}: {text}")
         if len(found) > 1:
@@ -105,7 +125,29 @@ class FixtureLookups:
         return found[0].value
 
     def matching(self, lookup: str, text: str) -> list[Candidate]:
-        """The records whose key, value or label is the text, else whose label contains it."""
+        """The records whose key, value or label is the text; else those holding each word that is
+        not generic (a label containing the whole text when every word is generic)."""
         candidates = self.candidates(lookup)
-        exact = [item for item in candidates if text in (item.key, item.value, item.label)]
-        return exact or [item for item in candidates if text in item.label]
+        said = plain(text)
+        if lookup.endswith(".iban") and said.isdigit():
+            return []  # a bare number is no IBAN: never matched inside one, so the user is asked
+        exact = [
+            item for item in candidates if said in (plain(item.key), plain(item.value), plain(item.label))
+        ]
+        if exact:
+            return exact
+        # Generic words name no record, and a word no record holds is the user's own («بگیر»).
+        words = [word for word in said.split() if word not in GENERIC]
+        words = [word for word in words if any(holds(item, word) for item in candidates)]
+        if not words:
+            return [item for item in candidates if said in plain(item.label)]
+        return [item for item in candidates if all(holds(item, word) for word in words)]
+
+
+def holds(item: Candidate, word: str) -> bool:
+    """True when the record's key, value or label contains the word, or the word without an ending."""
+    text = " ".join(plain(part) for part in (item.key, item.value, item.label))
+    stems = [word] + [
+        word[: -len(end)] for end in ENDINGS if word.endswith(end) and len(word) - len(end) >= 2
+    ]
+    return any(stem in text for stem in stems)

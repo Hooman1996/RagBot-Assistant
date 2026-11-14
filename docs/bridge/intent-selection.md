@@ -22,21 +22,23 @@ flowchart LR
     K --> Q[One question for what is missing]
 ```
 
-1. **Narrow** (`intent.FeatureIndex.closest`). Each feature's `title — description` is embedded
-   once per process with the TEI embeddings. The sentence is embedded with the model's `query`
-   prompt and compared by cosine, and the closest 8 are kept.
+1. **Narrow** (`intent.FeatureIndex.closest`). Each feature's `title — ` Persian words (from
+   `app_profiles/assistant_words.json`) is embedded once per process with the TEI embeddings and
+   the model's `document` prompt. The sentence is embedded with the `query` prompt and compared by
+   cosine, and the closest 8 are kept.
 2. **Choose** (`intent.choose`). The model sees the sentence and only those 8 features, each with
-   its intent, Persian title, description and slot names, and answers `{"choice": ...}`, where
+   its intent, Persian title, Persian words and slot names, and answers `{"choice": ...}`, where
    `choice` is held by the schema to the 8 intents, `"knowledge_question"` or `"not_sure"`. Code
    turns anything else into `"not_sure"`.
 3. **Route** (`agent_nodes.plan_for`). The navigator plans the chosen feature from the replica's
    current screen and lists every requirement on the route.
 4. **Fill** (`slots.extract`). The model sees only the missing requirements (ref, type, Persian
-   `ask` and `description`) and the user's words, and answers one value or `null` per ref. Money
-   is `{"value": whole number, "unit": "IRR" | "IRT"}`.
-5. **Check** (`slots.checked`). Code drops a ref the plan does not ask for and money that is not a
-   whole number in a known unit, and turns toman into rials ×10. What is still missing is asked in
-   one question, using each `ask`.
+   `ask` and `description`, and a choice's Persian labels) and the user's words, and answers one
+   value or `null` per ref. Money is `{"value": whole number, "unit": "IRR" | "IRT"}`; a choice is
+   one of its labels.
+5. **Check** (`slots.checked`). Code drops a ref the plan does not ask for, uses an amount only if
+   the user wrote it (`assistant/amounts.py`), and keeps a choice only as one of its allowed keys.
+   What is still missing is asked in one question, using each `ask`.
 
 The choice and the values are two calls, not one: the values the model is asked for are the
 navigator's requirements for the chosen feature, which are only known after step 3.
@@ -48,7 +50,7 @@ the 8 closest features as choices by their Persian title.
 
 The graph, the screens, the forms beyond the offered requirements, the field tags beyond the
 offered slots, the user-only list, the lookups' records and any full card number (long numbers
-become `[number N]`). Those are used by code only. The model cannot name a route or a tap, so it
+are shown as `****` and their last 4 digits). Those are used by code only. The model cannot name a route or a tap, so it
 has no way to reach a confirm.
 
 ## Measured
@@ -78,4 +80,6 @@ held-out cases and 43 tuning cases, run with `python tools/evaluate_agent.py`. A
 that code cannot catch is a critical wrong action when it prepares another feature with a form, so
 the gate there applies here. The first run is in [the P6-02 baseline](../reports/p6-02-baseline.md):
 the expected feature was among the narrowed 8 for 120 of 127 feature cases, and the model chose
-the expected intent for 132 of 143.
+the expected intent for 132 of 143. After the fixes of #140 (Persian words per feature, the
+`document` prompt), it was among the 8 for 127 of 127 and every knowledge and not-sure case was
+answered as such ([the P6-03 report](../reports/p6-03-fixes.md)).
