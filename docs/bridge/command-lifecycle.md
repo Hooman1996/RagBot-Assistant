@@ -266,4 +266,11 @@ sent, or the review does not open. A `stale_observation` is the one thing it rep
 times, because the contract says the command did not run. A `stale_draft` means the user changed
 something, so it stops.
 
+**What the agent does with a stop (#142):** three stops are not failures. An `uncertain` outcome, or
+no result in time, means the step may have run: the task goes `reconciling`, plans again from the
+app's current screen and prepares once more; a second uncertain step fails it. A device the backend
+has never seen means the app is out of reach: the task goes `paused` and keeps its values until the
+user writes again («ادامه»). A user's cancel stops the run before its next command; a command
+already sent is never undone. See [the agent](agent.md#the-tasks-life-around-the-review).
+
 Commands follow `contracts/transitions/command.json`.

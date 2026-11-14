@@ -95,6 +95,17 @@ a screen.
 The words in the steps are explained in
 [every way it can stop](command-lifecycle.md#every-way-it-can-stop).
 
+## 8. Talk to the agent
+
+Type a request in **Chat with the agent**, for example «۲۵۰ هزار تومان از کارت 0018 به رضا کارت به
+کارت کن». It stops on the review. Then try the task's life
+([the agent](agent.md#the-tasks-life-around-the-review)):
+
+- **A correction:** «نه، مبلغ رو ۳۰۰ هزار تومن کن». A fresh review opens with the new amount.
+- **Cancel:** press **لغو**, at a question, at the review, or while the replica is still moving.
+- **A pause:** close the replica app, restart the backend, then send a request: the task pauses.
+  Open the app and write «ادامه».
+
 ## Check it from the command line
 
 With the backend running and the loop on, this runs card to card to رضا through the same API and
