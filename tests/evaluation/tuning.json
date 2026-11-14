@@ -1,0 +1,890 @@
+[
+  {
+    "id": "T-001",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "۷۰ هزار تومان از کارت 0059 به رضا کارت به کارت کن"
+    ],
+    "expect": {
+      "intent": "card_transfer",
+      "values": {
+        "card-transfer-source": "card-5",
+        "card-transfer-destination": "reza",
+        "card-transfer-amount": {
+          "value": 700000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-002",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "از کارت ۰۰۶۷ یه سیصد هزار تومنی بفرس برا رضا"
+    ],
+    "expect": {
+      "intent": "card_transfer",
+      "values": {
+        "card-transfer-source": "card-6",
+        "card-transfer-destination": "reza",
+        "card-transfer-amount": {
+          "value": 3000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-003",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "typed_number"
+    ],
+    "turns": [
+      "۹۰ هزار تومن از کارت 0026 به شماره کارت 0000000000000042 انتقال بده"
+    ],
+    "expect": {
+      "intent": "card_transfer",
+      "values": {
+        "card-transfer-source": "card-2",
+        "card-transfer-destination": "0000000000000042",
+        "card-transfer-amount": {
+          "value": 900000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-004",
+    "tags": [
+      "missing",
+      "option",
+      "e2e"
+    ],
+    "turns": [
+      "۴۰ هزار تومن کارت به کارت کن به رضا",
+      "option:card-transfer-source=card-4"
+    ],
+    "expect": {
+      "intent": "card_transfer",
+      "values": {
+        "card-transfer-source": "card-4",
+        "card-transfer-destination": "reza",
+        "card-transfer-amount": {
+          "value": 400000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-005",
+    "tags": [
+      "not_found"
+    ],
+    "turns": [
+      "از کارت 0026 پنجاه هزار تومن به سارا کارت به کارت کن"
+    ],
+    "expect": {
+      "intent": "card_transfer",
+      "values": {
+        "card-transfer-source": "card-2",
+        "card-transfer-amount": {
+          "value": 500000,
+          "unit": "IRR"
+        }
+      },
+      "end": "clarifying",
+      "asks": [
+        "card-transfer-destination"
+      ]
+    }
+  },
+  {
+    "id": "T-006",
+    "tags": [
+      "correction",
+      "missing"
+    ],
+    "turns": [
+      "به رضا ۶۰ هزار تومن کارت به کارت کن",
+      "از کارت 0026، مبلغ هم ۹۰ هزار تومن باشه"
+    ],
+    "expect": {
+      "intent": "card_transfer",
+      "values": {
+        "card-transfer-source": "card-2",
+        "card-transfer-destination": "reza",
+        "card-transfer-amount": {
+          "value": 900000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-007",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "۵۰۰ هزار تومن از پس‌انداز به حساب رضا انتقال داخلی بزن، بابت نمونه دوم"
+    ],
+    "expect": {
+      "intent": "internal_transfer",
+      "values": {
+        "account-transfer-source": "account-2",
+        "account-transfer-destination": "reza",
+        "account-transfer-amount": {
+          "value": 5000000,
+          "unit": "IRR"
+        },
+        "account-transfer-reason": "1"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-008",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "typed_number"
+    ],
+    "turns": [
+      "یک میلیون تومن از حساب نمایشی به شبای IR070000000000000000000077 بفرست، بابت نمونه اول"
+    ],
+    "expect": {
+      "intent": "interbank_transfer",
+      "values": {
+        "account-transfer-source": "account-1",
+        "account-transfer-destination": "reza",
+        "account-transfer-amount": {
+          "value": 10000000,
+          "unit": "IRR"
+        },
+        "account-transfer-reason": "0"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-009",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "انتقال گروهی از پس‌انداز با جمع ۸۰۰ هزار تومن انجام بده"
+    ],
+    "expect": {
+      "intent": "group_transfer",
+      "values": {
+        "group-source": "account-2",
+        "group-total": {
+          "value": 8000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-010",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "wallet_vs_bank"
+    ],
+    "turns": [
+      "از حساب نمایشی برای 09000000000 شارژ ۳۰ هزار تومنی بخر"
+    ],
+    "expect": {
+      "intent": "mobile_top_up",
+      "values": {
+        "topup-source": "account-1",
+        "topup-phone": "09000000000",
+        "topup-amount": {
+          "value": 300000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-011",
+    "tags": [
+      "ambiguous",
+      "option",
+      "e2e"
+    ],
+    "turns": [
+      "از حساب برای 09000000000 شارژ ۱۵ هزار تومنی بگیر",
+      "option:topup-source=account-1"
+    ],
+    "expect": {
+      "intent": "mobile_top_up",
+      "values": {
+        "topup-source": "account-1",
+        "topup-phone": "09000000000",
+        "topup-amount": {
+          "value": 150000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-012",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "۲۰۰ هزار تومن از پس‌انداز به خیریه سلامت بده"
+    ],
+    "expect": {
+      "intent": "charity",
+      "values": {
+        "charity": "2",
+        "charity-amount": {
+          "value": 2000000,
+          "unit": "IRR"
+        },
+        "charity-source": "account-2"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-013",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "وام مسکن ۳۰ میلیون تومنی با ۳۶ قسط می‌خوام؛ شغلم کارمند، ضامن رضا با کد ملی 0000000019"
+    ],
+    "expect": {
+      "intent": "loan_request",
+      "values": {
+        "svc-product": "home",
+        "svc-amount": {
+          "value": 300000000,
+          "unit": "IRR"
+        },
+        "svc-months": "36",
+        "svc-job": "کارمند",
+        "svc-guarantor": "رضا",
+        "svc-guarantorCode": "0000000019"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-014",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "مساعده ۸۰۰ هزار تومنی به حساب پس‌انداز بگیر"
+    ],
+    "expect": {
+      "intent": "wage_advance",
+      "values": {
+        "svc-amount": {
+          "value": 8000000,
+          "unit": "IRR"
+        },
+        "svc-target": "account-2"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-015",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "سقف بودجه ماهانه انتقال‌ها رو ۱۰ میلیون تومن کن"
+    ],
+    "expect": {
+      "intent": "budget_limit",
+      "values": {
+        "budget": "transfers",
+        "budget-limit": {
+          "value": 100000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-016",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "چک صیادی 0000000000000201 به مبلغ ۸۰۰ هزار تومن با سررسید 1405/09/10 برای رضا با کد ملی 0000000019 ثبت کن"
+    ],
+    "expect": {
+      "intent": "sayad_register",
+      "values": {
+        "svc-sayad": "0000000000000201",
+        "svc-amount": {
+          "value": 8000000,
+          "unit": "IRR"
+        },
+        "svc-due": "1405/09/10",
+        "svc-receiver": "رضا",
+        "svc-code": "0000000019"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-017",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "۱۵ هزار تومن از کیف نمایشی تجاری به کیف رضا انتقال بده"
+    ],
+    "expect": {
+      "intent": "wallet_to_wallet",
+      "values": {
+        "wallet-op-source": "0000000000102",
+        "wallet-op-amount": {
+          "value": 150000,
+          "unit": "IRR"
+        },
+        "wallet-op-destination": "reza"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-018",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "یه خرید ۴۰ هزار تومنی با کیف نمایشی شخصی انجام بده"
+    ],
+    "expect": {
+      "intent": "wallet_purchase",
+      "values": {
+        "wallet-op-source": "0000000000101",
+        "wallet-op-amount": {
+          "value": 400000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-019",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "از کیف نمایشی تجاری ۳۰۰ هزار تومن به پس‌انداز برداشت کن"
+    ],
+    "expect": {
+      "intent": "wallet_withdrawal",
+      "values": {
+        "wallet-op-source": "0000000000102",
+        "wallet-op-amount": {
+          "value": 3000000,
+          "unit": "IRR"
+        },
+        "wallet-op-destination": "account-2"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-020",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "۱۰۰ هزار تومن از پس‌انداز بریز تو کیف نمایشی تجاری"
+    ],
+    "expect": {
+      "intent": "wallet_charge",
+      "values": {
+        "wallet-op-source": "account-2",
+        "wallet-op-amount": {
+          "value": 1000000,
+          "unit": "IRR"
+        },
+        "wallet-op-destination": "0000000000102"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-021",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "wallet_vs_bank"
+    ],
+    "turns": [
+      "شارژ ۳۰ هزار تومنی ایرانسل برای 09000000000 با کیف نمایشی تجاری بخر"
+    ],
+    "expect": {
+      "intent": "wallet_mobile_top_up",
+      "values": {
+        "wallet-op-source": "0000000000102",
+        "wallet-op-mobile": "09000000000",
+        "wallet-op-operator": "IRANCELL",
+        "wallet-op-amount": {
+          "value": 300000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-022",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "۳ میلیون تومن به موجودی حسابم اضافه کن"
+    ],
+    "expect": {
+      "intent": "account_funding",
+      "values": {
+        "funding-amount": {
+          "value": 30000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-023",
+    "tags": [
+      "missing"
+    ],
+    "turns": [
+      "از درگاه پرداخت کیف پولمو شارژ کن"
+    ],
+    "expect": {
+      "intent": "wallet_funding",
+      "values": {},
+      "end": "clarifying",
+      "asks": [
+        "funding-amount"
+      ]
+    }
+  },
+  {
+    "id": "T-024",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "۵۰۰ هزار تومن از درگاه به کیف پولم واریز کن"
+    ],
+    "expect": {
+      "intent": "wallet_funding",
+      "values": {
+        "funding-amount": {
+          "value": 5000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-025",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "wallet_vs_bank"
+    ],
+    "turns": [
+      "قبض آب 9000000000001 با شناسه پرداخت 1250001 رو از پس‌انداز پرداخت کن"
+    ],
+    "expect": {
+      "intent": "bill_payment",
+      "values": {
+        "bill-source": "account-2",
+        "bill-id": "9000000000001",
+        "bill-pay-id": "1250001"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-026",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "wallet_vs_bank"
+    ],
+    "turns": [
+      "قبض 9000000000001 با شناسه پرداخت 1250001 رو با کیف نمایشی تجاری پرداخت کن"
+    ],
+    "expect": {
+      "intent": "wallet_bill",
+      "values": {
+        "wallet-op-source": "0000000000102",
+        "wallet-op-bill": "9000000000001",
+        "wallet-op-pay": "1250001"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-027",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "یه انتقال خودکار هفتگی به اسم اجاره نمونه از 1405/09/01 تا 1405/12/01 بساز"
+    ],
+    "expect": {
+      "intent": "recurring_transfer",
+      "values": {
+        "schedule-title": "اجاره نمونه",
+        "schedule-start": "1405/09/01",
+        "schedule-end": "1405/12/01",
+        "schedule-frequency": "WEEKLY"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-028",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "عوارض سالیانه پلاک 12 ب 345 ایران 67 رو ببین"
+    ],
+    "expect": {
+      "intent": "annual_toll",
+      "values": {
+        "toll-plate-0": "12",
+        "toll-letter": "ب",
+        "toll-plate-2": "345",
+        "toll-plate-3": "67"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-029",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "چک صیادی 0000000000000312 که برام اومده رو رد کن"
+    ],
+    "expect": {
+      "intent": "sayad_answer",
+      "values": {
+        "svc-sayad": "0000000000000312",
+        "svc-answer": "reject"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-030",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "شبای حساب 0000000000077 رو بهم بگو"
+    ],
+    "expect": {
+      "intent": "identifier_conversion",
+      "values": {
+        "conversion-identifier": "0000000000077"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-031",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "یه دسته چک کاغذی ۵۰ برگی برای پس‌انداز سفارش بده"
+    ],
+    "expect": {
+      "intent": "chequebook_request",
+      "values": {
+        "cheque-kind": "AUTHENTICATED_HOME_CHEQUE_FACILITIES_ISSUANCE_PAPER_CHECKBOOK",
+        "cheque-account": "account-2",
+        "cheque-page": "50"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-032",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "رتبه اعتباری منو با کارمزد از پس‌انداز بگیر"
+    ],
+    "expect": {
+      "intent": "credit_rate",
+      "values": {
+        "inquiry-kind": "credit-rate",
+        "svc-source": "account-2"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-033",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "اعلان‌های برنامه رو باز کن"
+    ],
+    "expect": {
+      "intent": "notifications",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-034",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "کیف‌های پولمو ببینم"
+    ],
+    "expect": {
+      "intent": "wallet_overview",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-035",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "سوابق تراکنش‌های حسابمو بیار"
+    ],
+    "expect": {
+      "intent": "transaction_history",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-036",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "کارتمو ميخوام مسدود كنم"
+    ],
+    "expect": {
+      "intent": "card_block_and_pin",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-037",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "صفحه بن کارتمو باز کن موجودیشو ببینم"
+    ],
+    "expect": {
+      "intent": "card_balance",
+      "values": {},
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-038",
+    "tags": [
+      "knowledge"
+    ],
+    "turns": [
+      "انتقال پایا کی به حساب مقصد می‌رسه؟"
+    ],
+    "expect": {
+      "intent": "knowledge_question",
+      "values": {},
+      "end": "created",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-039",
+    "tags": [
+      "knowledge"
+    ],
+    "turns": [
+      "حداقل مبلغ افتتاح حساب چقدره؟"
+    ],
+    "expect": {
+      "intent": "knowledge_question",
+      "values": {},
+      "end": "created",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-040",
+    "tags": [
+      "knowledge",
+      "colloquial"
+    ],
+    "turns": [
+      "رمز دوم کارتو از کجا بگیرم؟"
+    ],
+    "expect": {
+      "intent": "knowledge_question",
+      "values": {},
+      "end": "created",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-041",
+    "tags": [
+      "not_sure"
+    ],
+    "turns": [
+      "یه سوال داشتم"
+    ],
+    "expect": {
+      "intent": "not_sure",
+      "values": {},
+      "end": "created",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-042",
+    "tags": [
+      "not_sure"
+    ],
+    "turns": [
+      "برام پیتزا سفارش بده"
+    ],
+    "expect": {
+      "intent": "not_sure",
+      "values": {},
+      "end": "created",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-043",
+    "tags": [
+      "not_sure"
+    ],
+    "turns": [
+      "درباره پول"
+    ],
+    "expect": {
+      "intent": "not_sure",
+      "values": {},
+      "end": "created",
+      "asks": []
+    }
+  }
+]
