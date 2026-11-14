@@ -22,6 +22,7 @@ their answers to the open questions) or as the formal request after the demo.
 | Turning "رضا" into a card number | `assistant/lookups.py` over mock JSON | A real adapter with the same methods | **Us** (the adapter) + **them** (the API behind it) |
 | The four bridge operations inside the app | `android/.../bridge/` in the replica | Inside their real app | **Them** |
 | Stable tags on screen controls | The replica's tags | On their real screens | **Them** |
+| The assistant panel (open, minimize, reopen, cancel, options, progress) | `android/.../assistant/` in the replica ([the panel](bridge/panel.md)) | Inside their real app | **Them**, calling our three panel calls |
 | The map of screens, edges, forms and features | `app_profiles/replica.profile.json` | Their real profile | **Them**, checked by our tool |
 | Read-only lookup APIs (contacts, cards, accounts...) | `mock_services/fixtures/*.json` | Their APIs | **Them** |
 | Confirm, OTP, PIN, signing and every money-moving service | The user's own tap in the replica | Unchanged: the user's own tap | **Them**, never given to us |
@@ -230,6 +231,25 @@ GET /<their-prefix>/lookups/contacts
 
 Rules: **read only**; no money-moving call; amounts as integers with a unit; nothing secret; the
 user's own records only. Only the sources of the features the owner picks are needed at first.
+
+### Deliverable 5: the assistant panel
+
+An **Assistant** entry beside their chatbot's, opening a panel where the user talks to our backend.
+The replica's panel (`android/app/src/main/java/org/ragbot/replica/assistant/`, #144) is the working
+reference; [the panel](bridge/panel.md) has every rule. In short:
+
+- It calls three routes of `contracts/openapi/assistant_mobile.json`: `POST /assistant/v1/messages`
+  (the user's words, or an option with its question's ID, plus their current observation),
+  `GET /assistant/v1/history` (to show progress and to reopen) and
+  `POST /assistant/v1/sessions/{session_id}/cancel`.
+- **Minimize** keeps the conversation and shows a small entry to reopen it; **cancel task** is a
+  separate, visibly different control.
+- It sits in the app's own window (not a dialog), catches no Back press, and shows no spinner, so
+  the bridge can still see and tap the screen behind it.
+- It never confirms, submits or pays: the user confirms on their own review screen, as today.
+
+Acceptance: on their test build, a request typed in the panel reaches the review with the panel
+minimized, and cancel stops it.
 
 ### Also needed from them
 

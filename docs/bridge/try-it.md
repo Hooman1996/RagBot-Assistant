@@ -106,6 +106,13 @@ Type a request in **Chat with the agent**, for example «۲۵۰ هزار توم�
 - **A pause:** close the replica app, restart the backend, then send a request: the task pauses.
   Open the app and write «ادامه».
 
+## 9. Talk to the agent from inside the app
+
+On the replica, open the support menu and tap **دستیار**, beside **چت بات**. The same agent answers
+in the panel ([the panel](panel.md)): pick an option, tap **کوچک کردن** while the replica moves and
+reopen it from the **دستیار** bubble, write a correction, or tap **لغو کار**. The panel needs the
+bridge loop (step 3); without it the entry is not shown.
+
 ## Check it from the command line
 
 With the backend running and the loop on, this runs card to card to رضا through the same API and

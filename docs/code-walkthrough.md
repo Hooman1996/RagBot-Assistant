@@ -14,7 +14,8 @@ runner (9.7 and 9.8), which matches #138 (14 Nov 2026), and `lookups.py`, `model
 `slots.py`, `amounts.py` and `words.py`, which match #140 (14 Nov 2026), and `app.py`,
 `task_runner.py`, `bridge_link.py`, `graph_page.py`, `replies.py`, `agent_nodes.py`,
 `agent_graph.py`, `agent_chat.py`, `lifecycle.py`, `agent_lifecycle.py` and `main_debug.py`, which
-match #142 (14 Nov 2026). If a file changes, the numbers move, but the
+match #142 (14 Nov 2026), except `app.py` and `agent_chat.py`, which match #144 with
+`panel_api.py` (14 Nov 2026). If a file changes, the numbers move, but the
 order of the blocks usually stays the same.
 
 ## Contents
@@ -209,26 +210,22 @@ ready FastAPI app with all routes.
 
 | Lines | What it does |
 |---|---|
-| 1-7 | Docstring: what the app is; the chat box's agent reads the models only when a turn runs; no RAG and no bank. |
-| 9-10 | `subprocess` lets Python run a command, here `git`; `Event` is the chat box's cancel flag. |
-| 12-25 | Imports: the web framework, the agent's pieces (chat box, graph, tools, feature index, model clients), the bridge link, the queue, the graph data readers, the graph tasks and the route groups. |
-| 27 | `DEVICE_ID = "replica-dev"`: the one development device. The app uses the same name (`BridgeConfig.DEVICE_ID`). |
-| 30-33 | `source_revision()`: runs `git rev-parse --short HEAD` and returns, for example, `95533cd`. The graph page shows it, so you can check the running server is the code you expect (the AGENTS.md "Running services" rule). |
-| 36-37 | `create_app(queue=None)`: the builder. |
-| 38 | Use the queue passed in, or make a new one. |
-| 39 | Make an empty FastAPI app with a title. |
-| 40 | Add the app's two routes (`/assistant/v1/...`), sharing the queue. |
-| 41 | Add the development route (`/test-harness/v1/commands`), with the list of built screens so an unbuilt one is refused. |
-| 42 | Read the replica profile once. |
-| 43 | Make the `GraphTasks` helper: the queue, the device ID and the profile. |
-| 44 | The feature index over the profile's features, with a TEI client. Nothing is embedded until the first chat turn. |
-| 45 | A `BridgeLink` to the replica: the agent's bridge, the same kind a Run uses. |
-| 46 | `stop`: set by the chat box's «لغو», read by the agent before each command. |
-| 47 | The agent's `Tools`: the chat model, the index, the graph tasks' navigator and lookups, the bridge, `current_screen`, and the cancel flag. |
-| 48 | The chat box, with the compiled agent graph, the graph tasks and the cancel flag. |
-| 49 | `tasks.chat_busy = chat.busy`: a Run is refused while a chat turn runs, and the chat refuses a turn while a Run goes. |
-| 50-52 | Add the graph page routes (`/graph/...`), with the chat, the drawn graph data and the git revision. |
-| 53 | Give the finished app back. |
+| 1-7 | Docstring: what the app is; the agent reads the models only when a turn runs; no RAG and no bank. |
+| 9-10 | `subprocess` lets Python run a command, here `git`; `Event` is the cancel flag. |
+| 12-26 | Imports: the web framework, the agent's pieces (conversations, graph, tools, feature index, model clients), the bridge link, the queue, the graph data readers, the graph tasks and the route groups, the panel's among them. |
+| 28 | `DEVICE_ID = "replica-dev"`: the one development device. The app uses the same name (`BridgeConfig.DEVICE_ID`). |
+| 31-34 | `source_revision()`: runs `git rev-parse --short HEAD` and returns, for example, `95533cd`. The graph page shows it, so you can check the running server is the code you expect (the AGENTS.md "Running services" rule). |
+| 37-43 | `create_app(queue=None)`: the queue passed in or a new one; an empty FastAPI app; the app's two bridge routes (`/assistant/v1/...`); the development route, with the built screens; the replica profile. |
+| 44 | The `GraphTasks` helper: the queue, the device ID and the profile. |
+| 45 | The feature index over the profile's features, with a TEI client. Nothing is embedded until the first turn. |
+| 46 | A `BridgeLink` to the replica: the agent's bridge, the same kind a Run uses. |
+| 47 | `stop`: set by a cancel, read by the agent before each command. |
+| 48 | The agent's `Tools`: the chat model, the index, the graph tasks' navigator and lookups, the bridge, `current_screen`, and the cancel flag. |
+| 49 | `Chats`: the graph page's conversation and the panel's, over one compiled agent graph. |
+| 50 | `tasks.chat_busy = chats.busy`: a Run is refused while any conversation runs a turn, and a turn while a Run goes. |
+| 51 | The panel's routes (`/assistant/v1/messages`, `/history`, `/sessions/{id}/cancel`). |
+| 52-54 | The graph page routes (`/graph/...`), with the page's conversation, the drawn graph data and the git revision. |
+| 55 | Gives the finished app back. |
 
 ### 5.4 `contract_check.py` — is this JSON allowed?
 
@@ -715,17 +712,20 @@ on a background thread.
 
 | Lines | What it does |
 |---|---|
-| 1-9 | Docstring: it and a graph-page Run refuse each other; a message to a task at its review or paused continues it; cancel stops a running turn between commands. |
-| 11-19 | Imports. |
-| 21 | The Persian line shown if a turn crashes. |
-| 24-25 | `TurnRefused`: its message is the reason code the route returns with 409. |
-| 28-36 | `AgentChat`: the compiled graph, the page's `GraphTasks`, the cancel flag the agent's tools read, no turn yet, a new conversation. |
-| 38-46 | `new_conversation()`: a fresh conversation ID and an empty transcript, unless a turn is running. `GET /graph` calls it. |
-| 48-50 | `busy()`: true while a turn's thread lives. `graph_tasks` asks it before a Run. |
-| 52-66 | `start(text, option)`: refuses during a turn or a Run; an option must be one the agent offered, and is shown by its label; clears the cancel flag; starts the turn thread. |
-| 68-78 | `cancel()`: during a turn, sets the flag, so the agent stops before its next command; at a question, answers with the «لغو» option; at the review or while paused, sends «لغو»; otherwise refuses with `nothing_to_cancel`. |
-| 80-100 | `turn(answer)`: resumes the paused question with `Command(resume=...)`, or sends the message with `lifecycle.next_input`: a follow-up of a task at its review or paused, else a new request. Reads the pending question from `__interrupt__`, the task state and the report, and adds the agent's line. A crash is printed and shown as one Persian line. |
-| 102-111 | `progress()`: what `GET /graph/chat` returns. |
+| 1-9 | Docstring: the graph page's chat box and the panel's conversations; a turn and a graph-page Run refuse each other; a message to a task at its review or paused continues it. |
+| 11-20 | Imports. |
+| 22 | The Persian line shown if a turn crashes. |
+| 25-26 | `TurnRefused`: its message is the reason code the route returns with 409. |
+| 29-45 | `AgentChat`: the compiled graph, the page's `GraphTasks`, the cancel flag the agent's tools read, `desk_busy` (true while any conversation of this backend runs a turn), no turn yet, and a conversation with the given ID or a new one. |
+| 47-56 | `new_conversation(conversation_id=None)`: a fresh conversation and an empty transcript, unless a turn is running; `questions` counts the questions, for their IDs. `GET /graph` calls it. |
+| 58-60 | `busy()`: true while this conversation's turn thread lives. |
+| 62-76 | `start(text, option)`: refuses while any turn runs or a Run goes; an option must be one the agent offered, and is shown by its label; clears the cancel flag; starts the turn thread. |
+| 78-88 | `cancel()`: during a turn, sets the flag, so the agent stops before its next command; at a question, answers with the «لغو» option; at the review or while paused, sends «لغو»; otherwise refuses with `nothing_to_cancel`. |
+| 90-111 | `turn(answer)`: resumes the paused question with `Command(resume=...)`, or sends the message with `lifecycle.next_input`. Reads the pending question from `__interrupt__` (and counts it), the task state and the report, and adds the agent's line. A crash is printed and shown as one Persian line. |
+| 113-122 | `progress()`: what `GET /graph/chat` returns. |
+| 124-126 | `question_id()`: the pending question's ID (`q1`, `q2`...), which an answer by option must name. |
+| 128-131 | `live_state()`: the task state of the last step the agent finished, readable while a turn runs (from the checkpointer). |
+| 134-155 | `Chats`: every conversation of the backend: `page` (the graph page's) and `panels` by conversation ID, created the first time an ID is named; `latest`, the one the panel's user wrote in last; `busy()`, true while any of them runs a turn. |
 
 ### 5.25 `amounts.py` — the amounts the user wrote, read in code
 
@@ -788,6 +788,24 @@ the assistant's.
 | 36-50 | `follow_up`: a cancel phrase cancels; a paused task resumes (`paused` → `reconciling` → `resolving`, nothing read again); otherwise the model says whether the message corrects the prepared task: a correction goes `ready_for_user` → `resolving` and reads every value again; a new request becomes a new task; a model failure leaves the review as it is. |
 | 52-59 | `reconcile`: after an uncertain command, plans again from wherever the app is and prepares once more (`reconciling` → `resolving`); the second time it fails visibly. |
 
+### 5.29 `panel_api.py` — the replica panel's calls
+
+**Called by:** the replica's assistant panel (`AssistantClient.kt`). The calls are in
+`contracts/openapi/assistant_mobile.json`; see [the panel](bridge/panel.md).
+
+| Lines | What it does |
+|---|---|
+| 1-7 | Docstring: each message starts or resumes the agent on a background thread; the observation is checked, not stored. |
+| 9-14 | Imports, including `require_valid` from `mobile_api.py`. |
+| 17-19 | `status(chat, state=None)`: the contract's `status` response for the conversation's task. |
+| 22-31 | `current(chat)`: while a turn runs, the live task state; with a question waiting, a `clarification` response (its ID, text and options); else the task's status; nothing before the first message. |
+| 34-37 | `steps(chat)`: each command of the last run, its screen and outcome, for the panel's progress. |
+| 40-43 | `build_panel_router(chats)`: the route group, around the backend's conversations. |
+| 45-59 | `POST /assistant/v1/messages`: checks the body against `conversation_request.schema.json` (422 otherwise); takes the conversation by its ID; an option must name the pending question's ID (409 `stale_question`); starts the turn (409 `turn_in_progress`, `run_in_progress`, `unknown_option`); remembers it as the latest; answers with a `status`. |
+| 62-79 | `GET /assistant/v1/history?conversation_id=`: the conversation's messages, whether a turn runs, `current` and `steps`; an unknown ID gives an empty conversation. |
+| 82-91 | `POST /assistant/v1/sessions/{session_id}/cancel`: cancels the latest panel conversation's task (409 `nothing_to_cancel`); answers with the task's status. |
+| 93 | Returns the route group. |
+
 ## 6. The graph page in the browser
 
 Not Python, but it is how you drive everything today. Files in `assistant/static/`. How to use it:
@@ -820,7 +838,7 @@ files they replace are marked.
 | `Contract.kt` | data classes | The command, observation and result of `contracts/schemas/` as Kotlin data. `SUPPORTED_OPERATIONS` is the four. `FieldValue` is text or money (whole rials). `Ending` is how an operation ended before the observation is added; `succeeded`, `blocked`, `failed` build one. No logic. |
 | `ContractJson.kt` | `commandIn(reply)` | Backend reply text → a `Command`, or null for the idle status. Uses the app's JSON reader, which accepts only whole numbers, so a fractional amount cannot get in. |
 | | `fieldValue` | `{"value": 250000, "unit": "IRR"}` → `Money`; anything else → `Text`. Refuses any unit but IRR. |
-| | `write(observation)`, `write(result)` | Kotlin data → JSON text, with optional fields only when set. `quote` escapes strings. |
+| | `write(observation)`, `write(result)` | Kotlin data → JSON text, with optional fields only when set. `quote` escapes strings; the assistant panel's client uses it too. |
 | `BridgeConfig.kt` | `enabled(context)` | True only in a debug build **and** when the file `bridge.enabled` exists in the app's files folder (`adb shell touch ...`). `DEVICE_ID = "replica-dev"`. |
 | `BridgeState.kt` | object | Three values the app writes after each screen draw: current `screen`, Home `homeTab`, and the `activity`. Read by `ComposeControls`. |
 | `BackendClient.kt` | `resume(observation)` | POSTs to `/assistant/v1/sessions/replica-dev/resume` → the next command or null. |
@@ -829,7 +847,7 @@ files they replace are marked.
 | | `post(path, body)` | One HTTP POST to `BuildConfig.BRIDGE_BACKEND` (a local development address set at build time). It waits 5 s to connect and up to an hour for the answer, so a backend paused at a breakpoint still answers it on Continue ([debugging](runbook/debugging.md)); any non-200 is an error. No credentials. |
 | `CommandPoller.kt` | `start()` | Once per process (Android 10+): makes `Executor(ComposeControls())` and `BackendClient`, starts a background thread. |
 | | `loop()` | Forever: `pollOnce`, ignore "backend not running", sleep 0.5 s. |
-| | `pollOnce()` | Observe → resume; while a command comes back: execute it, post the result. One thread, so commands never overlap. |
+| | `pollOnce()` | Observe → resume; while a command comes back: execute it, post the result. One thread, so commands never overlap. Keeps `lastObservation`, which the assistant panel sends with each message. |
 | `Executor.kt` | `execute(command)` | Command → result. If this command ID ran before, returns the first result (journal of 50). Otherwise checks `rejection`, runs, adds the fresh observation. |
 | | `rejection` | Before touching the screen: `policyProblem`, expiry (`rejected_expired`), screen version (`rejected_stale` / `stale_observation`), draft version (`stale_draft`). |
 | | `policyProblem` | Wrong device, protocol or profile version; `navigate` to an unknown screen or with an unknown or unsafe argument; `fill_form` with a field that is not fillable; any other operation → `rejected_policy`. |
@@ -863,14 +881,16 @@ What was built: [replica-complete.md](reports/replica-complete.md).
 
 | File | What it does |
 |---|---|
-| `MainActivity.kt` | The app. Lines ~56-57 hand the activity to `BridgeState` and start `CommandPoller` when enabled. Around line 382 it publishes the current page to `BridgeState` after each draw. |
+| `MainActivity.kt` | The app. Lines ~56-58 hand the activity to `BridgeState`, start `CommandPoller` when enabled and make the assistant panel available; `setContent` puts `AssistantOverlay` over `ReplicaApp` in the same window. Around line 382 it publishes the current page to `BridgeState` after each draw. |
 | `HomeNavigation.kt` | `HomeDestinations`: `HOME = "S-026"`, `FRONT = "D-000"`, and `implemented`, the set of every built screen. `Executor` refuses a `navigate` to anything else. |
 | `ReplicaGraph.kt` | Every screen move. Each `Edge` has `from`, `to`, `action` (tags joined by ` > `) and a kind: `REAL` and `DEMO` are exported; `USER_ONLY` needs the user; `STEP` is covered by others. |
 | `ReplicaProfile.kt` | The shape of the profile (`FormField`, `ProfileForm`, `ProfileFeature`) and the object the app reads it through. |
 | `ProfileForms.kt`, `ProfileWords.kt`, `ProfileSelections.kt`, `ProfileFeatures.kt`, `ProfileUserOnly.kt` | The forms and their fields, their Persian questions, row choices, the 77 features, and the user-only list. Exported to `replica.profile.json`. |
 | `MockBank.kt` | The in-app mock bank: every service screen calls it; it checks against the fixtures and returns a receipt or a Persian failure. In memory; resets on restart. Only the user's own confirm reaches it. |
 | `MockData.kt`, `MockJson.kt` | Read the fixtures packed into the app from `mock_services/fixtures/` at build time. |
-| `*Screens.kt`, `*Fixture.kt` | The screens of each feature area, and their sample data. |
+| `*Screens.kt`, `*Fixture.kt` | The screens of each feature area, and their sample data. `SupportScreens.kt` adds the **دستیار** entry beside **چت بات** when the bridge loop is on. |
+| `assistant/AssistantPanel.kt` | The assistant panel (#144, [the panel](bridge/panel.md)): `AssistantPanelState` (open, conversation ID, history, draft; memory only), `AssistantOverlay` (the panel when open, the bubble when minimized, polling `/history` every 0.7 s while the agent works), the panel itself (state, **کوچک کردن**, a separate **لغو کار**, messages, progress, options, text box). It sits in the app's own window, never a dialog, catches no Back and shows no spinner, so the executor still sees and taps the screen. **The part the bank's team builds in their own app.** |
+| `assistant/AssistantClient.kt` | The panel's three calls (`send`, `history`, `cancel`) to `BuildConfig.BRIDGE_BACKEND`, off the main thread; `requestBody` writes the contract's conversation request with the loop's last observation; `parseHistory` reads the history; `PanelHistory.shownState` is `clarifying` while a question waits. |
 
 ## 9. Tools: the check runner and the helper scripts
 
@@ -1089,6 +1109,7 @@ backend tests in `tests/backend/` are the ones that prove our runtime code.
 | `tests/backend/test_words.py` | 3 | Every feature has Persian words; every choice the agent can ask, in every feature's plan from Home, has plain allowed keys with unique labels that hold no full number; every fixed value is an allowed key of its feature. |
 | `tests/backend/test_agent_answers.py` | 8 | A correction in an answer replaces the held source and amount; a number hidden as `****0091` inside words is put back; a typed IBAN not saved reaches the review; a choice is one of its labels and reaches the app as its key, and its label is shown on the review; text that is no allowed key is asked again with the options and sends nothing; a selection the feature decides is set by code and never asked; an account number given for an IBAN is asked again. |
 | `tests/backend/test_agent_lifecycle.py` | 9 | The «لغو» option ends a question and sends nothing; a cancel phrase ends a "not sure" question; a correction after the review prepares a new review with the new amount; a new request after the review starts a new task; a cancel after the review needs no model; an app out of reach pauses the task with its values and «ادامه» resumes it; an uncertain command is reconciled once; a second one fails visibly; a cancel during a run stops before the next command. Every change is checked against `task.json`. |
+| `tests/backend/test_panel_api.py` | 6 | The panel's calls over the real agent graph: a message reaches the review and the history shows it (contract-valid responses); a question is answered by its option and a stale question ID is refused; cancel ends the pending question (409 with nothing to cancel); a body without the observation is refused; an unknown conversation reopens empty; the panel, the graph page and a Run take one turn at a time. |
 | `tests/evaluation/conftest.py` | (helpers) | Lets the evaluation tests import `tests/backend/agent_fakes.py` (a site package named `tests` hides this repository's `tests` folder). |
 | `tests/evaluation/test_cases.py` | 6 | Both case files: the format, unique ids, the closed tag list, one turn per unambiguous case; every intent, ref, lookup key, money value and option turn is valid for the feature's plan from Home; an `e2e` case gives every value and ends right; the held-out counts and the tuning minimums; no held-out first turn in the tuning file; **the held-out file's SHA-256 equals the one in D-025**. |
 | `tests/evaluation/test_evaluate.py` | 7 | The runner on the fakes: a right card transfer passes every measure and exits 0; a wrong amount and another feature with a form are critical wrong actions (exit 1); a missing source that ends asking is a safe stop; an option not offered fails the case and the run goes on; a crash is recorded and the next case runs; unreachable embeddings exit 2. |

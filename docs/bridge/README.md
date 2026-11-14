@@ -103,6 +103,8 @@ The tests show each rule at work:
 | `BridgeJourneysTest` | `android/app/src/androidTest/.../bridge/` | The demo walk's journeys, on the device |
 | `BridgeServicesTest` | same | One journey per service group, on the device |
 | `BridgeReachTest` | same | Every screen is reached, or stops for a stated reason |
+| `AssistantPanelTest` | same | With the assistant panel open, the executor still reaches the review behind it; the panel opens from the support menu and minimizes to a bubble ([the panel](panel.md)) |
+| `AssistantClientTest` | `android/app/src/test/.../assistant/` | The panel's request body and how it reads the history |
 | `test_navigator.py` | `tests/backend/` | Routes, requirements, and refusing a user-only route |
 | `test_task_runner.py` | `tests/backend/` | The run, every way it stops, and the four operations only |
 | `test_lookups.py` | `tests/backend/` | Name to record, misses and ties, and that it never writes |
