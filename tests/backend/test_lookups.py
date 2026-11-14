@@ -48,3 +48,37 @@ def test_lookups_read_and_never_write() -> None:
     source = Path("assistant/lookups.py").read_text(encoding="utf-8")
     assert "write_" not in source
     assert '"w"' not in source
+
+
+@pytest.mark.parametrize(
+    ("lookup", "said", "keys"),
+    [
+        ("cards", "کارت 0018", ["card-1"]),
+        ("cards", "كارت ۰۰۴۲", ["card-4"]),
+        ("accounts", "پس انداز نمایشی", ["account-2"]),
+        ("accounts", "حساب پس‌انداز بگیر", ["account-2"]),
+        ("wallets", "کیف نمایشی تجاریمو", ["0000000000102"]),
+        ("contacts.account", "حساب رضا", ["reza"]),
+        ("charities", "خیریه آموزش", ["1"]),
+        ("accounts", "حساب", ["account-1", "account-3"]),
+        ("accounts", "حساب جاری", []),
+        ("contacts.card", "به علی", []),
+    ],
+)
+def test_matching_ignores_digits_letters_zwnj_and_generic_words(
+    lookup: str, said: str, keys: list[str]
+) -> None:
+    assert [item.key for item in FixtureLookups().matching(lookup, said)] == keys
+
+
+def test_a_typed_iban_is_kept_unless_it_is_a_saved_one() -> None:
+    lookups = FixtureLookups()
+    assert lookups.resolve("contacts.iban", "IR380000000000000000000004") == "IR380000000000000000000004"
+    assert [item.key for item in lookups.matching("contacts.iban", "IR070000000000000000000077")] == ["reza"]
+
+
+def test_a_typed_number_must_fit_its_field() -> None:
+    lookups = FixtureLookups()
+    with pytest.raises(NotFound):  # an account number is no IBAN, even one inside a saved IBAN
+        lookups.resolve("contacts.iban", "0000000000077")
+    assert lookups.resolve("contacts.account", "0000000000099") == "0000000000099"

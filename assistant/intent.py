@@ -7,6 +7,7 @@ refuses anything else.
 """
 
 from assistant.models import Chat, Embeddings
+from assistant.words import feature_words
 
 CLOSEST = 8
 KNOWLEDGE = "knowledge_question"
@@ -14,8 +15,8 @@ NOT_SURE = "not_sure"
 
 
 def feature_text(feature: dict) -> str:
-    """What is embedded for a feature: its Persian title and its description."""
-    return f"{feature['title']} — {feature['description']}"
+    """What is embedded for a feature: its Persian title and the assistant's Persian words for it."""
+    return f"{feature['title']} — {feature_words(feature['intent']) or feature['description']}"
 
 
 class FeatureIndex:
@@ -45,10 +46,12 @@ def choice_prompt(text: str, offered: list[dict]) -> str:
     ]
     for item in offered:
         slots = ", ".join(item["required_slots"]) or "none"
-        lines.append(f"- {item['intent']}: «{item['title']}» — {item['description']} Values: {slots}")
+        words = feature_words(item["intent"]) or item["description"]
+        lines.append(f"- {item['intent']}: «{item['title']}» — {words}. Values: {slots}")
     lines += [
-        f"Answer {KNOWLEDGE} when the message asks for information or advice, not for something to do.",
-        f"Answer {NOT_SURE} when no feature clearly fits.",
+        f"Answer {KNOWLEDGE} when the message asks a question for information or advice (how, why, what,",
+        "where, how much), not for something to do, even when a feature uses the same words.",
+        f"Answer {NOT_SURE} when no feature clearly fits, or the message is too vague to pick one.",
         f"User message: «{text}»",
     ]
     return "\n".join(lines)

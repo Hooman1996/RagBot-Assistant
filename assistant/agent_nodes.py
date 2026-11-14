@@ -13,12 +13,13 @@ from langgraph.types import interrupt
 from assistant import replies
 from assistant.agent_state import AgentState, moved
 from assistant.intent import KNOWLEDGE, NOT_SURE, FeatureIndex, choose
-from assistant.lookups import FixtureLookups, source_of
+from assistant.lookups import FixtureLookups, typed
 from assistant.models import Chat, ModelError
 from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
 from assistant.slots import checked, extract, hidden
 from assistant.steps import masked, show
 from assistant.task_runner import Bridge, TaskReport, TaskRunner
+from assistant.words import field_words, fixed, options
 
 MODEL_SEES = ("ref", "type", "ask", "description")
 
@@ -68,7 +69,8 @@ class Nodes:
         return update if chosen in (KNOWLEDGE, NOT_SURE) else update | moved(state, "resolving")
 
     def plan(self, state: AgentState) -> dict:
-        """Plans the chosen feature from the app's current screen."""
+        """Plans the chosen feature from the app's current screen. A choice gets its allowed keys; a
+        value the feature decides, or a choice with one key, is set by code and never asked."""
         feature = self.features[state["chosen"]]
         start = self.tools.screen()
         try:
@@ -76,16 +78,28 @@ class Nodes:
         except (NoRoute, CrossesUserOnly):
             return self.failed(state, replies.NOT_POSSIBLE)
         found = plan.as_json()
+        for item in found["requirements"]:
+            if item["type"] == "choice":
+                item["options"] = options(item["screen"], item["ref"], self.tools.lookups)
+        preset = fixed(feature["intent"]) | {
+            item["ref"]: item["options"][0]["key"]
+            for item in found["requirements"]
+            if len(item.get("options", [])) == 1
+        }
         show("plan", start=start, target=plan.target, requirements=[item.ref for item in plan.requirements])
         return moved(state, "resolving") | {
-            "plan": found | {"start": start, "intent": feature["intent"]},
-            "missing": [item["ref"] for item in found["requirements"]],
+            "plan": found | {"start": start, "intent": feature["intent"], "preset": sorted(preset)},
+            "values": preset,
+            "missing": [item["ref"] for item in found["requirements"] if item["ref"] not in preset],
         }
 
     def extract(self, state: AgentState) -> dict:
-        """Asks the model for the missing values only, showing it nothing but what it may see."""
+        """Asks the model for the missing values only, showing it nothing but what it may see: a
+        choice's labels, never its keys."""
         offered = [
             {key: item[key] for key in MODEL_SEES}
+            | {"description": field_words(item["ref"]) or item["description"]}
+            | {"options": [o["label"] for o in item.get("options", [])]}
             for item in state["plan"]["requirements"]
             if item["ref"] in state["missing"]
         ]
@@ -96,8 +110,8 @@ class Nodes:
         except ModelError:
             return self.failed(state, replies.MODEL_FAILED)
         show("extract", offered=[item["ref"] for item in offered], found=found)
-        # A value already held wins: the model was not asked for it.
-        return moved(state, "resolving") | {"values": found | state["values"]}
+        # A new value wins: after a typed answer the model re-reads every value, so a correction counts.
+        return moved(state, "resolving") | {"values": state["values"] | found}
 
     def check(self, state: AgentState) -> dict:
         """Code only: keeps the values the plan asks for, in the app's form, and lists what is missing."""
@@ -118,7 +132,13 @@ class Nodes:
             ref, key = answer.split("=", 1)
             missing = [item for item in state["missing"] if item != ref]
             return update | {"values": state["values"] | {ref: key}, "missing": missing}
-        return update | {"messages": state["messages"] + [answer]}
+        # Typed words may answer the question or change any value given before: all are read again.
+        again = [
+            item["ref"]
+            for item in state["plan"]["requirements"]
+            if item["ref"] not in state["plan"]["preset"]
+        ]
+        return update | {"messages": state["messages"] + [answer], "missing": again}
 
     def resolve(self, state: AgentState) -> dict:
         """Code only: each named record must match exactly one record of its lookup."""
@@ -127,9 +147,9 @@ class Nodes:
             said = values.get(item["ref"])
             if item["lookup"] is None or not isinstance(said, str):
                 continue
-            if source_of(item["lookup"]) == "contacts" and said.isdigit():
-                continue  # a typed number needs no saved record
             found = self.tools.lookups.matching(item["lookup"], said)
+            if typed(item["lookup"], said) and (said.isdigit() or not found):
+                continue  # a typed number or IBAN needs no saved record
             if len(found) == 1:
                 values[item["ref"]] = found[0].key
                 continue

@@ -29,9 +29,15 @@ def option(ref: str, item: Candidate) -> dict:
 
 
 def lookup_options(lookups: FixtureLookups, wanted: list[dict]) -> list[dict]:
-    """Each missing ref's records as options, when its lookup has between FEW and MANY of them."""
+    """Each missing choice's allowed keys, and each missing ref's records when its lookup has
+    between FEW and MANY of them, as options."""
     options = []
     for item in wanted:
+        if item["type"] == "choice":
+            options += [
+                {"ref": f"{item['ref']}={o['key']}", "label": masked(o["label"])}
+                for o in item.get("options", [])
+            ]
         if item["type"] == "ref" and item["lookup"]:
             records = lookups.candidates(item["lookup"])
             if FEW <= len(records) <= MANY:
@@ -48,6 +54,9 @@ def shown(value: str | dict, item: dict, lookups: FixtureLookups) -> str:
     """A value the way the user reads it: money in rials, a record by its label, all masked."""
     if isinstance(value, dict):
         return f"{value['value']:,} ریال"
+    for choice in item.get("options", []):
+        if choice["key"] == value:
+            return masked(choice["label"])
     if item.get("lookup"):
         for record in lookups.candidates(item["lookup"]):
             if record.value == value:
