@@ -15,13 +15,13 @@ from assistant import replies
 from assistant.agent_state import AgentState, moved
 from assistant.intent import KNOWLEDGE, NOT_SURE, FeatureIndex, choose
 from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, wants_cancel
-from assistant.lookups import FixtureLookups, typed
+from assistant.lookups import Candidate, FixtureLookups, typed
 from assistant.models import Chat, ModelError
 from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
 from assistant.slots import checked, extract, hidden
 from assistant.steps import masked, show
 from assistant.task_runner import Bridge, TaskReport, TaskRunner
-from assistant.words import charges_of, field_words, fixed, installment_of, options, when
+from assistant.words import field_words, fixed, installment_of, limits, options, when
 
 MODEL_SEES = ("ref", "type", "ask", "description")
 
@@ -142,7 +142,7 @@ class Nodes:
             replanned = self.planned(self.features[plan["intent"]], values)
             plan, values = replanned["plan"], replanned["values"]
         plan, values, note = self.payable(plan, values)
-        note = self.charge(plan, values) or note
+        note = self.amounts(plan, values) or note
         missing = [item["ref"] for item in plan["requirements"] if item["ref"] not in values]
         show("check", values=values, missing=missing)
         update = moved(state, "resolving") | {"plan": plan, "values": values, "missing": missing}
@@ -158,12 +158,10 @@ class Nodes:
             said = values.get(parent["ref"]) if parent else None
             if not isinstance(said, str):
                 continue
-            listed = {record.key for record in replies.offered(self.tools.lookups, parent)}
-            matches = self.tools.lookups.matching(parent["lookup"], said)
-            found = [record for record in matches if record.key in listed]
-            if len(found) != 1:
+            found = self.record(parent, said)
+            if found is None:
                 continue  # resolve asks which record
-            keys = self.tools.lookups.installments(parent["lookup"], found[0].key)
+            keys = self.tools.lookups.installments(parent["lookup"], found.key)
             chosen = values.get(item["ref"])
             if chosen is not None and chosen not in keys:
                 label = next(option["label"] for option in item["options"] if option["key"] == chosen)
@@ -174,17 +172,48 @@ class Nodes:
                 values[item["ref"]] = item["options"][0]["key"]
         return plan, values, note
 
-    def charge(self, plan: dict, values: dict) -> str | None:
-        """Code only: a wallet top-up amount must be one of the chosen operator's charges, the only
-        amounts the app lists. Another one is dropped, and the charges are named."""
-        for item in plan["requirements"]:
-            operator, amount = values.get(charges_of(item["ref"]) or ""), values.get(item["ref"])
-            if operator is None or amount is None:
-                continue
-            allowed = self.tools.lookups.charges(operator)
-            if amount["value"] not in allowed:
-                del values[item["ref"]]
-                return replies.NOT_A_CHARGE.format(amounts="، ".join(f"{value:,}" for value in allowed))
+    def record(self, item: dict, said: object) -> Candidate | None:
+        """The one record the app lists for this field that the user's words name, or None."""
+        if not isinstance(said, str):
+            return None
+        listed = {record.key for record in replies.offered(self.tools.lookups, item)}
+        found = [
+            record for record in self.tools.lookups.matching(item["lookup"], said) if record.key in listed
+        ]
+        return found[0] if len(found) == 1 else None
+
+    def amounts(self, plan: dict, values: dict) -> str | None:
+        """Code only: an amount the app would refuse is dropped, and the reason is said."""
+        items = {item["ref"]: item for item in plan["requirements"]}
+        for ref, rule in limits().items():
+            amount = values.get(ref)
+            problem = self.refused(rule, amount["value"], values, items) if isinstance(amount, dict) else None
+            if problem:
+                del values[ref]
+                return problem
+        return None
+
+    def refused(self, rule: dict, amount: int, values: dict, items: dict) -> str | None:
+        """Why the app would refuse this amount, or None: a range, a wallet top-up's charge list, a
+        top-up's operator limits, or the source's balance."""
+        lookups = self.tools.lookups
+        if "range" in rule and not rule["range"][0] <= amount <= rule["range"][1]:
+            return replies.OUT_OF_RANGE.format(low=f"{rule['range'][0]:,}", high=f"{rule['range'][1]:,}")
+        charges = lookups.operator(name=str(values.get(rule.get("charges_of"), "")))
+        if charges and amount not in charges["defaults"]:
+            return replies.NOT_A_CHARGE.format(
+                amounts="، ".join(f"{value:,}" for value in charges["defaults"])
+            )
+        limit = lookups.operator(phone=str(values.get(rule.get("operator_by"), "")))
+        if limit and not (limit["min"] <= amount <= limit["max"] and amount % limit["multiplier"] == 0):
+            return replies.TOP_UP_LIMITS.format(
+                low=f"{limit['min']:,}", high=f"{limit['max']:,}", step=f"{limit['multiplier']:,}"
+            )
+        source = items.get(rule.get("balance_of"))
+        found = self.record(source, values.get(source["ref"])) if source else None
+        balance = lookups.balance(source["lookup"], found.key) if found else None
+        if balance is not None and amount > balance:
+            return replies.OVER_BALANCE.format(balance=f"{balance:,}")
         return None
 
     def clarify(self, state: AgentState) -> dict:

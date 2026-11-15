@@ -64,6 +64,21 @@ class BridgeJourneysTest {
     }
 
     @Test
+    fun aCorporateLoanFromAJointAccountOpensTheirTabs() {
+        rig.reach("S-306", "loan" to "loan-corporate")
+        rig.fill("S-306", "loan-installment" to text("0"))
+        rig.reach("S-331", "loan-source" to "account-3")
+    }
+
+    @Test
+    fun aBlockedFillClosesThePickerItOpened() {
+        rig.reach("S-174")
+        val result = rig.run("fill_form", form = "S-174", values = mapOf("card-transfer-source" to text("card-4")))
+        assertEquals(result.toString(), "blocked", result.outcome)
+        assertEquals(null, rig.executor.observer.observe().modal)
+    }
+
+    @Test
     fun billPayment() {
         rig.reach("S-209")
         rig.fill(

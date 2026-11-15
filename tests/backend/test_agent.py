@@ -153,6 +153,48 @@ def test_a_wallet_top_up_amount_the_operator_does_not_list_is_asked_again() -> N
     assert app.sent == []
 
 
+@pytest.mark.parametrize(
+    ("intent", "words", "said", "refused"),
+    [
+        (
+            "charity",
+            "۲۰۰ میلیون تومن",
+            {
+                "charity": "خیریه نمایشی",
+                "charity-amount": {"value": 200_000_000, "unit": "IRT"},
+                "charity-source": "حساب نمایشی",
+            },
+            replies.OUT_OF_RANGE.format(low="10,000", high="100,000,000"),
+        ),
+        (
+            "mobile_top_up",
+            "۵۵۵۵۵ ریال",
+            {
+                "topup-source": "حساب نمایشی",
+                "topup-phone": "09000000001",
+                "topup-amount": {"value": 55555, "unit": "IRR"},
+            },
+            replies.TOP_UP_LIMITS.format(low="50,000", high="5,000,000", step="50,000"),
+        ),
+        (
+            "wallet_purchase",
+            "۵۰۰ هزار تومن",
+            {"wallet-op-source": "کیف نمایشی شخصی", "wallet-op-amount": {"value": 500_000, "unit": "IRT"}},
+            replies.OVER_BALANCE.format(balance="3,250,000"),
+        ),
+    ],
+)
+def test_an_amount_the_app_would_refuse_is_asked_again_with_the_reason(
+    intent: str, words: str, said: dict, refused: str
+) -> None:
+    app = RecordingApp()
+    title = next(item["title"] for item in PROFILE["features"] if item["intent"] == intent)
+    request = new_request("c", f"{title} {words}")
+    result = build_agent(FakeChat([{"choice": intent}, said]), app).invoke(request, CONFIG)
+    assert result["__interrupt__"][0].value["question"].startswith(refused)
+    assert app.sent == []
+
+
 def test_a_policy_with_nothing_to_pay_is_not_offered() -> None:
     chat = FakeChat([{"choice": "insurance_installment"}, {"insurance-policy": None, "installment": None}])
     app = RecordingApp()

@@ -17,17 +17,21 @@ is working according to a real app".
      day, so the assistant asks for it. The case gains a second turn, `option:schedule-day=1`, and
      still ends on the filled form with the day. It is now `e2e`, `option`: a case with two turns
      can't be `unambiguous`.
+   - H-104 (#150): a withdrawal of 5,000,000 rials from a wallet that holds 3,250,000, which the
+     app refuses. The amount becomes «۳۰۰ هزار تومن» (3,000,000 rials), so the case still prepares a
+     withdrawal; the refusal over the balance is covered by the backend tests.
    No other case changes. The case checks now plan each case with its expected values, so a
    field the app asks only for some values (the day) counts, and an option turn may pick a choice.
-3. **The held-out set is frozen** on 15 Nov 2026 at
-   SHA-256 `3961ad11f7fbfe0d8c3d5f30fb78f1c295539023dbac5bb95723d922bd7a4a26`. This replaces
+3. **The held-out set is frozen** on 15 Nov 2026 (after #150) at
+   SHA-256 `a3fb82c092b0265ef8150f24eb8e14261459bb50a0080ab66ea86ee2e3849d17`. This replaces
    the hash in [D-025](0025-frozen-evaluation-set.md). `tests/evaluation/test_cases.py` now reads the
    hash from this file. Everything else in D-025 (the tuning set, the gates, the definitions) holds.
 
 ## Why
 
 The stand-in app accepts any record and fills any form, so H-068 expected a transfer from a card
-the real app never offers as a source, and H-027 a monthly transfer without the day the app needs.
+the real app never offers as a source, H-027 a monthly transfer without the day the app needs, and H-104 a withdrawal over the wallet's
+balance.
 A case must expect what the app does, not what the stand-in allows.
 
 ## Counts after the change

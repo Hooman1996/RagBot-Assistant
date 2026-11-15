@@ -55,13 +55,15 @@ def test_installments_are_the_ones_the_app_lets_the_user_pick() -> None:
 
 
 def test_a_wallet_top_up_amount_comes_from_the_operators_charge_list() -> None:
-    assert FixtureLookups().charges("RIGHTEL") == [200000, 500000, 1000000]
+    assert FixtureLookups().operator(name="RIGHTEL")["defaults"] == [200000, 500000, 1000000]
+    assert FixtureLookups().operator(phone="۰۹۰۲۱۲۳۴۵۶۷")["operator"] == "RIGHTEL"  # by its prefix
+    assert FixtureLookups().balance("wallets", "0000000000101") == 3250000
 
 
-def test_records_the_app_hides_or_keeps_behind_a_tab_are_not_offered() -> None:
-    assert offered("wallets", "wallet-op-source") == {"status": "ACTIVE"}  # the inactive wallet
-    assert offered("loans", "loan") == {"corporateTitle": None}  # corporate loans sit on another tab
-    assert offered("accounts", "loan-source") == {"ownership": "انفرادی"}  # so do joint accounts
+def test_the_inactive_wallet_is_not_offered_and_records_behind_a_tab_are() -> None:
+    assert offered("wallets", "wallet-op-source") == {"status": "ACTIVE"}
+    assert offered("loans", "loan") == {}  # corporate loans: the executor opens their tab
+    assert offered("accounts", "loan-source") == {}  # joint accounts too
 
 
 def test_the_offer_rule_filters_only_its_own_lookup() -> None:

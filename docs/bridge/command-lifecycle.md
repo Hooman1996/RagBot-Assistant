@@ -163,6 +163,11 @@ One generic command fills every form, driven by field tags. Money is a whole num
 - A choice may open a dialog that asks the next field, as a weekly or monthly transfer's
   frequency opens its day. When the next value's option is in that dialog, the dialog is left
   open for it and the next field picks it; any other dialog left open stops with `close_dialog`.
+- When the option isn't there or is disabled, the picker it opened is closed (Back, as a user
+  would) before the result is reported, so the next command finds no dialog.
+- An option on a second tab of the list (a corporate loan, a joint account) is found by opening the
+  tab: `Actions` keeps the app's tabs by option prefix (`TABS`), and `Policy` lets the executor tap
+  them, since a tab only filters a list.
 
 This is the same state a user types into, so the form's own rules apply. The result reports a new
 draft, and card numbers come back masked. The runner compares each field with what it sent, and

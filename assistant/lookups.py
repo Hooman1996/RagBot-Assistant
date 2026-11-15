@@ -130,11 +130,20 @@ class FixtureLookups:
         unpaid = [n for n, item in enumerate(items) if item["status"] != "PAID"]
         return [str(n) for n in (overdue or unpaid)[:1]]
 
-    def charges(self, operator: str) -> list[int]:
-        """The amounts in rials the app lists for a wallet top-up with this operator (Recovered: a
-        server-supplied charge list)."""
-        data = json.loads((self.folder / "operators.json").read_text(encoding="utf-8"))
-        return next(item["defaults"] for item in data["operators"] if item["operator"] == operator)
+    def operator(self, name: str = "", phone: str = "") -> dict | None:
+        """An operator's charge list (`defaults`) and limits (`min`, `max`, `multiplier`), by its key
+        or by a phone number's prefix as the app detects it; None when neither names one."""
+        digits = plain(phone)
+        operators = json.loads((self.folder / "operators.json").read_text(encoding="utf-8"))["operators"]
+        for item in operators:
+            if item["operator"] == name or (len(digits) > 3 and digits.startswith(tuple(item["prefixes"]))):
+                return item
+        return None
+
+    def balance(self, lookup: str, key: str) -> int | None:
+        """A record's balance in rials, or None when the app doesn't know it."""
+        source = SOURCES[source_of(lookup)]
+        return next(row for row in self.records(lookup) if str(row[source.key]) == key).get("balance")
 
     def resolve(self, lookup: str, text: str) -> str:
         """Turns what the user said into the value to send. Refuses a miss or a tie."""

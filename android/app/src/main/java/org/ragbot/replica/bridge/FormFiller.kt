@@ -48,6 +48,9 @@ internal class FormFiller(private val actions: Actions, private val navigator: N
             }
         }
         actions.tap(option)?.let {
+            // The option isn't there or is disabled: close the picker it opened, as a user would,
+            // so the next command doesn't find a dialog in the way.
+            if (actions.state().modal != null) actions.back()
             return it
         }
         // The screen updates on a later frame: a chip turns selected, or a picker's window closes.

@@ -8,6 +8,13 @@ import org.ragbot.replica.latinDigits
  * first, then checks that the control is shown and enabled, so a disabled control is never fired.
  * It must never call Controls for a tag Policy refuses.
  */
+/**
+ * The app's tabs that keep some options on another tab, by the options' tag prefix: corporate
+ * loans («تسهیلات شرکتی») and joint accounts («مشترک») in the loan-source picker. A tab only
+ * filters a list, so opening one changes nothing the user has chosen.
+ */
+internal val TABS = mapOf("loan-loan-" to "loan-category-", "loan-source-account-" to "loan-source-shared-")
+
 internal class Actions(
     private val controls: Controls,
     private val patienceMs: Long = 3_000,
@@ -33,7 +40,9 @@ internal class Actions(
     fun tap(tag: String): Ending? {
         val screen = controls.state().screen
         if (!Policy.mayTap(tag, screen)) return failed("policy_refused")
-        if (!waitUntil { controls.find(tag) != null }) return blocked("control_not_shown:$tag")
+        if (!waitUntil { controls.find(tag) != null } && !onOtherTab(tag)) {
+            return blocked("control_not_shown:$tag")
+        }
         val control = checkNotNull(controls.find(tag))
         if (!control.enabled) return blocked("control_disabled:$tag")
         if (!control.clickable) return failed("control_not_clickable")
@@ -53,6 +62,15 @@ internal class Actions(
         val wanted = comparable(text)
         val set = waitUntil { controls.find(ref)?.let { comparable(it.text) } == wanted }
         return if (set) null else failed("field_not_set")
+    }
+
+    /** Opens each other tab that may hold [tag] until it shows. True when it does. */
+    private fun onOtherTab(tag: String): Boolean {
+        val tabs = TABS.entries.firstOrNull { tag.startsWith(it.key) }?.value ?: return false
+        for (tab in controls.withPrefix(tabs).filterNot { it.selected }) {
+            if (tap(tab.tag) == null && waitUntil { controls.find(tag) != null }) return true
+        }
+        return false
     }
 
     /** Presses Back, which only ever leaves a page. */
