@@ -105,11 +105,16 @@ class FixtureLookups:
         data = json.loads((self.folder / f"{source.file}.json").read_text(encoding="utf-8"))
         return data[source.rows]
 
-    def candidates(self, lookup: str) -> list[Candidate]:
-        """The lookup's records. `contacts.card` sends the card, plain `contacts` the ID."""
+    def candidates(self, lookup: str, where: dict | None = None) -> list[Candidate]:
+        """The lookup's records, only those with every field in `where` when it is given.
+        `contacts.card` sends the card, plain `contacts` the ID."""
         source = SOURCES[source_of(lookup)]
         attribute = lookup.split(".")[1] if "." in lookup else source.key
-        rows = [row for row in self.records(lookup) if row.get(attribute) is not None]
+        rows = [
+            row
+            for row in self.records(lookup)
+            if row.get(attribute) is not None and all(row.get(k) == v for k, v in (where or {}).items())
+        ]
         return [Candidate(str(row[source.key]), str(row[attribute]), str(row[source.label])) for row in rows]
 
     def resolve(self, lookup: str, text: str) -> str:

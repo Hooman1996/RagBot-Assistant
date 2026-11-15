@@ -124,6 +124,9 @@ a file the assistant owns, `app_profiles/assistant_words.json`, read by `assista
   listed as `"S-164 svc-kind"`.
 - `fixed`: values a feature decides itself, such as which paid inquiry the menu opens.
 - `fields`: words that tell the model more about a field than its short description.
+- `offer`: per lookup and field, the fields a record must have to be offered as an option, as the
+  app's own picker lists them: a card-transfer source is an active debit card, and a bill, top-up or
+  conversion source is a debit card.
 
 `tests/backend/test_words.py` checks that every feature has words and every choice the agent can
 ask has allowed keys.
