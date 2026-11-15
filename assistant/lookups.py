@@ -145,6 +145,19 @@ class FixtureLookups:
         source = SOURCES[source_of(lookup)]
         return next(row for row in self.records(lookup) if str(row[source.key]) == key).get("balance")
 
+    def named(self, text: str, records: list[Candidate]) -> list[Candidate]:
+        """The records the text names by their whole label, or by the words of it no other record
+        has («پس‌انداز» names «پس‌انداز نمایشی» among «حساب نمایشی» and the rest)."""
+        said = " " + " ".join(re.sub(r"[^\w\s]", " ", plain(text)).split()) + " "
+        labels = {item.key: plain(item.label).split() for item in records}
+        found = []
+        for item in records:
+            shared = {word for key, words in labels.items() if key != item.key for word in words} | GENERIC
+            own = " ".join(word for word in labels[item.key] if word not in shared)
+            if any(f" {phrase} " in said for phrase in (" ".join(labels[item.key]), own) if phrase):
+                found.append(item)
+        return found
+
     def resolve(self, lookup: str, text: str) -> str:
         """Turns what the user said into the value to send. Refuses a miss or a tie."""
         found = self.matching(lookup, text)

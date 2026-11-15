@@ -160,6 +160,11 @@ ask has allowed keys.
   words (کارت، حساب، کیف، شبا…), words no record holds, and spoken endings («تجاریمو»).
 - **A typed number** must fit its field: an IBAN field takes only an IBAN, and a bare number is
   never matched inside a saved IBAN.
+- **A text value** loses its field's own label word in front: «عنوان محل کار» is the title «محل کار».
+- **A record the model left out** is taken from the user's words when they name exactly one record
+  the app lists for the field, by its whole label or by the words no other record has («پس‌انداز»;
+  never «نمایشی», which every label has, and never «پس» alone), and no other field of the plan takes
+  records of the same lookup (a source and a destination are the model's to tell apart).
 
 The model has no tools. It returns JSON, and code acts. The agent reaches the app only through
 `TaskRunner`, so the only commands are `navigate`, `fill_form` and `show_review`. No node, prompt

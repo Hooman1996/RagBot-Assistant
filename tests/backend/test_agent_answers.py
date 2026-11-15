@@ -1,6 +1,6 @@
 """How the agent reads the user's answers: corrections, hidden numbers, choices and fixed selections."""
 
-from agent_fakes import CARD_SENTENCE, FakeChat, RecordingApp, build_agent
+from agent_fakes import CARD_SENTENCE, PROFILE, FakeChat, RecordingApp, build_agent
 from langgraph.types import Command
 
 from assistant.agent_state import new_request
@@ -120,6 +120,28 @@ def test_a_card_sent_by_post_asks_the_address_and_goes_by_the_address_page() -> 
     graph.invoke(Command(resume="address=address-1"), CONFIG)
     forms = [arguments["form"] for operation, arguments in app.sent if operation == "fill_form"]
     assert "S-129" in forms
+
+
+def test_a_label_word_before_a_text_value_is_dropped() -> None:
+    said = {"field-title": "عنوان محل کار", "field-postal": "0000000002", "field-address": "میدان نمونه"}
+    chat = FakeChat([{"choice": "saved_addresses"}, said])
+    app = RecordingApp()
+    title = next(item["title"] for item in PROFILE["features"] if item["intent"] == "saved_addresses")
+    build_agent(chat, app).invoke(new_request("c", f"{title}: عنوان محل کار، کد پستی 0000000002"), CONFIG)
+    assert sent_values(app)["field-title"] == "محل کار"
+
+
+def test_an_account_the_model_left_out_is_taken_when_the_user_named_only_that_one() -> None:
+    chat = FakeChat(
+        [{"choice": "wage_advance"}, {"svc-amount": {"value": 1000000, "unit": "IRT"}, "svc-target": None}]
+    )
+    app = RecordingApp()
+    title = next(item["title"] for item in PROFILE["features"] if item["intent"] == "wage_advance")
+    result = build_agent(chat, app).invoke(
+        new_request("c", f"{title} یک میلیون تومن بریز به پس‌انداز"), CONFIG
+    )
+    assert result["task_state"] == "ready_for_user"
+    assert sent_values(app)["svc-target"] == "account-2"
 
 
 def test_a_selection_the_feature_decides_is_set_by_code_and_never_asked() -> None:

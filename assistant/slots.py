@@ -125,6 +125,12 @@ def text(value: object, messages: list[str]) -> str | None:
     return None if SHOWN.search(value) else value
 
 
+def unlabelled(value: str | None, item: dict) -> str | None:
+    """The value without its field's own label word in front: «عنوان محل کار» is «محل کار»."""
+    words, label = (value or "").split(), (item.get("description") or "").split()[:1]
+    return " ".join(words[1:]) if label and len(words) > 1 and words[0] == label[0] else value
+
+
 def choice(value: object, options: list[dict]) -> str | None:
     """The app's key for a choice: an allowed key or its label; with no list, a plain key only."""
     if not isinstance(value, str):
@@ -149,6 +155,7 @@ def checked(values: dict, requirements: list[dict], messages: list[str]) -> dict
             good = choice(value, item.get("options", []))
         else:
             good = text(value, messages)
+            good = unlabelled(good, item) if item["type"] == "text" else good
         if good is not None:
             kept[ref] = good
     return kept
