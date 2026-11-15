@@ -52,7 +52,7 @@ def test_card_to_reza_in_one_sentence_reaches_the_review_and_stops() -> None:
     assert ("verifying_review", "ready_for_user") in CHANGES
 
 
-def test_a_missing_source_card_is_one_question_with_card_options() -> None:
+def test_a_missing_source_card_is_one_question_with_the_pickers_cards() -> None:
     chat = FakeChat([CARD, card_values()])
     app = RecordingApp()
     graph = build_agent(chat, app)
@@ -61,7 +61,8 @@ def test_a_missing_source_card_is_one_question_with_card_options() -> None:
     assert pending["question"] == "از کدام کارت انتقال انجام شود؟"
     assert pending["task_state"] == "clarifying"
     assert pending["options"][0] == {"ref": "card-transfer-source=card-1", "label": "****0018"}
-    assert len(pending["options"]) == 8 and pending["options"][-1] == {"ref": "cancel", "label": "لغو"}
+    # Only the active debit cards the app's picker lists, then «لغو».
+    assert [o["label"] for o in pending["options"]] == ["****0018", "****0026", "لغو"]
     assert app.sent == []
     result = graph.invoke(Command(resume=pending["options"][0]["ref"]), CONFIG)
     assert result["task_state"] == "ready_for_user"

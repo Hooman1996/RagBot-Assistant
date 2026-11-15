@@ -440,5 +440,13 @@
   },
   "fields": {
     "svc-source": "حساب مبدا؛ حسابی که مبلغ یا کارمزد از آن برداشت می‌شود"
+  },
+  "offer": {
+    "cards": {
+      "card-transfer-source": {"kind": "DEBIT", "status": "فعال"},
+      "bill-source": {"kind": "DEBIT"},
+      "topup-source": {"kind": "DEBIT"},
+      "conversion-source": {"kind": "DEBIT"}
+    }
   }
 }

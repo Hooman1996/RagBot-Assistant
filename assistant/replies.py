@@ -5,6 +5,7 @@ label goes through steps.masked, so a full card, account or IBAN number is never
 here asks the user to let the assistant confirm: only the user confirms, on the phone.
 """
 
+from assistant import words
 from assistant.lookups import Candidate, FixtureLookups
 from assistant.steps import masked
 
@@ -37,8 +38,8 @@ def option(ref: str, item: Candidate) -> dict:
 
 
 def lookup_options(lookups: FixtureLookups, wanted: list[dict]) -> list[dict]:
-    """Each missing choice's allowed keys, and each missing ref's records when its lookup has
-    between FEW and MANY of them, as options."""
+    """Each missing choice's allowed keys, and each missing ref's records the field may offer
+    when there are between FEW and MANY of them, as options."""
     options = []
     for item in wanted:
         if item["type"] == "choice":
@@ -47,7 +48,7 @@ def lookup_options(lookups: FixtureLookups, wanted: list[dict]) -> list[dict]:
                 for o in item.get("options", [])
             ]
         if item["type"] == "ref" and item["lookup"]:
-            records = lookups.candidates(item["lookup"])
+            records = lookups.candidates(item["lookup"], words.offered(item["lookup"], item["ref"]))
             if FEW <= len(records) <= MANY:
                 options += [option(item["ref"], record) for record in records]
     return options
