@@ -1,6 +1,6 @@
-"""The graph page's chat box: one conversation with the agent per page load.
+"""Conversations with the agent: the graph page's chat box, and the replica's assistant panel.
 
-Called by graph_page. Like graph_tasks, it runs each turn on a background thread, because the
+Called by graph_page and panel_api. Like graph_tasks, it runs each turn on a background thread, because the
 prepare node waits for the app through BridgeLink. It refuses a turn while a graph-page Run is
 going, and graph_tasks refuses a Run while a turn is going. A message to a task at its review or
 paused continues that task. Cancel stops a running turn between commands, or answers the question
@@ -10,6 +10,7 @@ submit or pay.
 
 import traceback
 import uuid
+from collections.abc import Callable
 from threading import Event, Thread
 
 from langgraph.graph.state import CompiledStateGraph
@@ -26,22 +27,31 @@ class TurnRefused(Exception):
 
 
 class AgentChat:
-    """The conversation shown on the graph page."""
+    """One conversation: the graph page's, or one the replica's panel started."""
 
-    def __init__(self, graph: CompiledStateGraph, tasks: GraphTasks, stop: Event | None = None) -> None:
+    def __init__(
+        self,
+        graph: CompiledStateGraph,
+        tasks: GraphTasks,
+        stop: Event | None = None,
+        conversation_id: str | None = None,
+        desk_busy: Callable[[], bool] | None = None,
+    ) -> None:
         self.graph = graph
         self.tasks = tasks
         self.stop = stop or Event()  # the agent's tools read it: set, a running task stops
+        self.desk_busy = desk_busy or self.busy  # true while any conversation of this backend runs a turn
         self.thread: Thread | None = None
-        self.new_conversation()
+        self.new_conversation(conversation_id)
 
-    def new_conversation(self) -> None:
+    def new_conversation(self, conversation_id: str | None = None) -> None:
         """Forgets the shown conversation and starts another, unless a turn is still running."""
         if self.busy():
             return
-        self.conversation_id = uuid.uuid4().hex
+        self.conversation_id = conversation_id or uuid.uuid4().hex
         self.lines: list[dict] = []
         self.pending: dict | None = None
+        self.questions = 0  # each new question gets the next ID, so a stale answer can be refused
         self.task_state: str | None = None
         self.report: dict | None = None
 
@@ -51,7 +61,7 @@ class AgentChat:
 
     def start(self, text: str | None, option: str | None) -> None:
         """Starts a turn with the user's text, or with an option of the pending question."""
-        if self.busy():
+        if self.busy() or self.desk_busy():
             raise TurnRefused("turn_in_progress")
         if self.tasks.report.state == "running":
             raise TurnRefused("run_in_progress")
@@ -93,6 +103,7 @@ class AgentChat:
             self.lines.append({"from": "assistant", "text": INTERNAL_ERROR})
             return
         self.pending = result["__interrupt__"][0].value if "__interrupt__" in result else None
+        self.questions += self.pending is not None
         self.task_state = self.pending["task_state"] if self.pending else result["task_state"]
         self.report = result["report"]
         self.lines.append(
@@ -109,3 +120,36 @@ class AgentChat:
             "report": self.report,
             "busy": self.busy(),
         }
+
+    def question_id(self) -> str | None:
+        """The pending question's ID, which an answer by option must name."""
+        return f"q{self.questions}" if self.pending is not None else None
+
+    def live_state(self) -> str | None:
+        """The task state of the last step the agent finished, readable while a turn runs."""
+        state = self.graph.get_state({"configurable": {"thread_id": self.conversation_id}}).values
+        return state.get("task_state", self.task_state)
+
+
+class Chats:
+    """Every conversation of this backend: the graph page's and the panel's. One turn at a time."""
+
+    def __init__(self, graph: CompiledStateGraph, tasks: GraphTasks, stop: Event) -> None:
+        self.graph = graph
+        self.tasks = tasks
+        self.stop = stop
+        self.panels: dict[str, AgentChat] = {}
+        self.latest: AgentChat | None = None  # the panel conversation the user wrote in last
+        self.page = AgentChat(graph, tasks, stop, desk_busy=self.busy)
+
+    def busy(self) -> bool:
+        """True while any conversation runs a turn."""
+        return self.page.busy() or any(chat.busy() for chat in self.panels.values())
+
+    def panel(self, conversation_id: str) -> AgentChat:
+        """The panel's conversation with this ID, started the first time it is named."""
+        if conversation_id not in self.panels:
+            self.panels[conversation_id] = AgentChat(
+                self.graph, self.tasks, self.stop, conversation_id, desk_busy=self.busy
+            )
+        return self.panels[conversation_id]

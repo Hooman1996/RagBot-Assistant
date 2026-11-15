@@ -82,6 +82,9 @@ def test_no_route_can_confirm_submit_or_pay(client: TestClient) -> None:
     assert paths == {
         RESUME.replace(DEVICE_ID, "{session_id}"),
         "/assistant/v1/results",
+        "/assistant/v1/messages",
+        "/assistant/v1/history",
+        "/assistant/v1/sessions/{session_id}/cancel",
         QUEUE,
         "/graph",
         "/graph/data",

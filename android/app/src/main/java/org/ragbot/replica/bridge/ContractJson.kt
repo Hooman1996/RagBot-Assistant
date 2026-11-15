@@ -93,7 +93,7 @@ internal object ContractJson {
     private fun array(items: List<String>) = items.joinToString(",", "[", "]")
 
     /** [text] as a JSON string. */
-    private fun quote(text: String): String {
+    fun quote(text: String): String {
         val body = StringBuilder()
         for (ch in text) {
             when {

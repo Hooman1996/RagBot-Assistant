@@ -1,7 +1,7 @@
 """The two calls of contracts/openapi/assistant_mobile.json that the replica's loop uses.
 
 Called by the app's CommandPoller. Every body is checked against the contract before it is used.
-The rest of that API belongs to later stages, so it is not here. There is no route that submits,
+The panel's calls of the same API are in panel_api.py. There is no route that submits,
 confirms or pays, and there must never be one.
 """
 

@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.view.WindowCompat
 import java.lang.ref.WeakReference
+import org.ragbot.replica.assistant.AssistantOverlay
+import org.ragbot.replica.assistant.AssistantPanelState
 import org.ragbot.replica.bridge.BridgeConfig
 import org.ragbot.replica.bridge.BridgeState
 import org.ragbot.replica.bridge.CommandPoller
@@ -55,13 +57,21 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) MockBank.reset()
         BridgeState.activity = WeakReference(this)
         if (BridgeConfig.enabled(this)) CommandPoller.start()
+        AssistantPanelState.available = BridgeConfig.enabled(this)
         // No incoming Intent data, extras, nested intents or deep links are interpreted.
         setContent {
             if (error != null)
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                     MockDataErrorPage(error)
                 }
-            else ReplicaApp()
+            else
+                Box(Modifier.fillMaxSize()) {
+                    ReplicaApp()
+                    // The assistant panel sits in this window, over the app, never in a dialog.
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                        AssistantOverlay()
+                    }
+                }
         }
     }
 }

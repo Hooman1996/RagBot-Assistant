@@ -23,6 +23,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import org.ragbot.replica.assistant.AssistantPanelState
 
 @Composable
 internal fun SupportPage(
@@ -78,6 +79,14 @@ internal fun SupportPage(
                             ) {
                                 Text(title)
                             }
+                            // The assistant's entry, beside the chatbot's: it opens the panel.
+                            if (key == "chatbot" && AssistantPanelState.available)
+                                Button(
+                                    { AssistantPanelState.open = true },
+                                    Modifier.fillMaxWidth().testTag("support-menu-assistant"),
+                                ) {
+                                    Text("دستیار")
+                                }
                         }
                     }
                 page == SupportDestinations.FAQ || page == SupportDestinations.FAQ_NO_LOGIN ->
