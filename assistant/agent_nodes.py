@@ -6,6 +6,7 @@ the only commands are navigate, fill_form and show_review. Nothing here can conf
 """
 
 from collections.abc import Callable
+from copy import deepcopy
 from dataclasses import dataclass
 
 from langgraph.types import interrupt
@@ -20,7 +21,7 @@ from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
 from assistant.slots import checked, extract, hidden
 from assistant.steps import masked, show
 from assistant.task_runner import Bridge, TaskReport, TaskRunner
-from assistant.words import field_words, fixed, options
+from assistant.words import charges_of, field_words, fixed, installment_of, options, when
 
 MODEL_SEES = ("ref", "type", "ask", "description")
 
@@ -38,11 +39,13 @@ class Tools:
     stopped: Callable[[], bool] = lambda: False  # true once the user cancelled a running task
 
 
-def plan_for(navigator: Navigator, start: str, feature: dict) -> Plan:
-    """The feature's plan: through its form when it has one, as the graph page plans it."""
+def plan_for(navigator: Navigator, start: str, feature: dict, values: dict | None = None) -> Plan:
+    """The feature's plan: through its form when it has one, as the graph page plans it, and the
+    way and fields the app takes for the values chosen so far."""
     if feature["form"] is None:
         return navigator.plan(start, feature["destination"])
-    return navigator.plan_feature(start, feature)
+    through, fields = when(values or {})
+    return navigator.plan_feature(start, feature, through, frozenset(fields))
 
 
 class Nodes:
@@ -82,11 +85,14 @@ class Nodes:
         choice gets its allowed keys; a value the feature decides, or a choice with one key, is set
         by code and never asked. Raises NoRoute or CrossesUserOnly."""
         start = self.tools.screen()
-        plan = plan_for(self.tools.navigator, start, feature)
+        plan = plan_for(self.tools.navigator, start, feature, held)
         found = plan.as_json()
+        through, fields = when(held)
         for item in found["requirements"]:
             if item["type"] == "choice":
-                item["options"] = options(item["screen"], item["ref"], self.tools.lookups)
+                item["options"] = fields.get(item["ref"]) or options(
+                    item["screen"], item["ref"], self.tools.lookups
+                )
         preset = fixed(feature["intent"]) | {
             item["ref"]: item["options"][0]["key"]
             for item in found["requirements"]
@@ -95,7 +101,13 @@ class Nodes:
         show("plan", start=start, target=plan.target, requirements=[item.ref for item in plan.requirements])
         refs = [item["ref"] for item in found["requirements"]]
         return {
-            "plan": found | {"start": start, "intent": feature["intent"], "preset": sorted(preset)},
+            "plan": found
+            | {
+                "start": start,
+                "intent": feature["intent"],
+                "preset": sorted(preset),
+                "when": [through, sorted(fields)],
+            },
             "values": {ref: value for ref, value in held.items() if ref in refs} | preset,
             "missing": [ref for ref in refs if ref not in preset],
         }
@@ -122,11 +134,58 @@ class Nodes:
 
     def check(self, state: AgentState) -> dict:
         """Code only: keeps the values the plan asks for, in the app's form, and lists what is missing."""
-        requirements = state["plan"]["requirements"]
-        values = checked(state["values"], requirements, state["messages"])
-        missing = [item["ref"] for item in requirements if item["ref"] not in values]
+        plan = state["plan"]
+        values = checked(state["values"], plan["requirements"], state["messages"])
+        through, fields = when(values)
+        if [through, sorted(fields)] != plan["when"]:
+            # A chosen value sends the app another way or makes it ask more (a weekly day): plan again.
+            replanned = self.planned(self.features[plan["intent"]], values)
+            plan, values = replanned["plan"], replanned["values"]
+        plan, values, note = self.payable(plan, values)
+        note = self.charge(plan, values) or note
+        missing = [item["ref"] for item in plan["requirements"] if item["ref"] not in values]
         show("check", values=values, missing=missing)
-        return moved(state, "resolving") | {"values": values, "missing": missing}
+        update = moved(state, "resolving") | {"plan": plan, "values": values, "missing": missing}
+        return update | ({"question": note, "options": []} if note else {})
+
+    def payable(self, plan: dict, values: dict) -> tuple[dict, dict, str | None]:
+        """Code only: an installment choice keeps the installments the app lets the user pick for
+        the named policy or loan. The only one is set; one the app greys out is dropped and named."""
+        plan, values, note = deepcopy(plan), dict(values), None
+        items = {item["ref"]: item for item in plan["requirements"]}
+        for item in plan["requirements"]:
+            parent = items.get(installment_of(item["ref"]) or "")
+            said = values.get(parent["ref"]) if parent else None
+            if not isinstance(said, str):
+                continue
+            listed = {record.key for record in replies.offered(self.tools.lookups, parent)}
+            matches = self.tools.lookups.matching(parent["lookup"], said)
+            found = [record for record in matches if record.key in listed]
+            if len(found) != 1:
+                continue  # resolve asks which record
+            keys = self.tools.lookups.installments(parent["lookup"], found[0].key)
+            chosen = values.get(item["ref"])
+            if chosen is not None and chosen not in keys:
+                label = next(option["label"] for option in item["options"] if option["key"] == chosen)
+                note = replies.NOT_OFFERED.format(text=label)
+                del values[item["ref"]]
+            item["options"] = [option for option in item["options"] if option["key"] in keys]
+            if chosen is None and len(item["options"]) == 1:
+                values[item["ref"]] = item["options"][0]["key"]
+        return plan, values, note
+
+    def charge(self, plan: dict, values: dict) -> str | None:
+        """Code only: a wallet top-up amount must be one of the chosen operator's charges, the only
+        amounts the app lists. Another one is dropped, and the charges are named."""
+        for item in plan["requirements"]:
+            operator, amount = values.get(charges_of(item["ref"]) or ""), values.get(item["ref"])
+            if operator is None or amount is None:
+                continue
+            allowed = self.tools.lookups.charges(operator)
+            if amount["value"] not in allowed:
+                del values[item["ref"]]
+                return replies.NOT_A_CHARGE.format(amounts="، ".join(f"{value:,}" for value in allowed))
+        return None
 
     def clarify(self, state: AgentState) -> dict:
         """Asks once for everything missing, and waits for the user's text or an option's ref."""
@@ -150,7 +209,7 @@ class Nodes:
         return update | {"messages": state["messages"] + [answer], "missing": again}
 
     def resolve(self, state: AgentState) -> dict:
-        """Code only: each named record must match exactly one record of its lookup."""
+        """Code only: each named record must match exactly one record the app lists for the field."""
         values = dict(state["values"])
         for item in state["plan"]["requirements"]:
             said = values.get(item["ref"])
@@ -159,24 +218,28 @@ class Nodes:
             found = self.tools.lookups.matching(item["lookup"], said)
             if typed(item["lookup"], said) and (said.isdigit() or not found):
                 continue  # a typed number or IBAN needs no saved record
-            if len(found) == 1:
-                values[item["ref"]] = found[0].key
+            listed = {record.key for record in replies.offered(self.tools.lookups, item)}
+            usable = [record for record in found if record.key in listed]
+            if len(usable) == 1:
+                values[item["ref"]] = usable[0].key
                 continue
             del values[item["ref"]]
-            note = replies.WHICH if found else replies.NOT_FOUND
-            show("resolve", ref=item["ref"], said=said, matches=len(found))
+            # A record the app does not list here (a credit card as a transfer source) is not used:
+            # the user picks from the records the app lists.
+            note = replies.WHICH if usable else replies.NOT_OFFERED if found else replies.NOT_FOUND
+            show("resolve", ref=item["ref"], said=said, matches=len(found), usable=len(usable))
             return moved(state, "resolving") | {
                 "values": values,
                 "missing": [item["ref"]],
                 "question": note.format(text=masked(said)),
-                "options": [replies.option(item["ref"], record) for record in found],
+                "options": [replies.option(item["ref"], record) for record in usable],
             }
         return moved(state, "resolving") | {"values": values}
 
     def prepare(self, state: AgentState) -> dict:
         """Runs the task runner with the resolved values, as the graph page's Run does."""
         feature = self.features[state["plan"]["intent"]]
-        plan = plan_for(self.tools.navigator, state["plan"]["start"], feature)
+        plan = plan_for(self.tools.navigator, state["plan"]["start"], feature, state["values"])
         # The runner reads money as text and turns it back into the same whole number of rials.
         values = {ref: str(v["value"]) if isinstance(v, dict) else v for ref, v in state["values"].items()}
         bridge = StoppableBridge(self.tools.bridge, self.tools.stopped)  # a cancel stops between commands

@@ -124,9 +124,22 @@ a file the assistant owns, `app_profiles/assistant_words.json`, read by `assista
   listed as `"S-164 svc-kind"`.
 - `fixed`: values a feature decides itself, such as which paid inquiry the menu opens.
 - `fields`: words that tell the model more about a field than its short description.
-- `offer`: per lookup and field, the fields a record must have to be offered as an option, as the
-  app's own picker lists them: a card-transfer source is an active debit card, and a bill, top-up or
-  conversion source is a debit card.
+- `offer`: per lookup and field, the fields a record must have to be offered or accepted, as the
+  app's own picker lists them: a card-transfer source is an active debit card; a bill, top-up or
+  conversion source is a debit card; a wallet is an active one. A record the user names that the
+  app doesn't list («کارت 0042», a credit card) is refused and the listed ones are offered. Corporate
+  loans and joint accounts sit behind a tab in the app that the executor doesn't open, so they
+  aren't offered either; the user picks those in the app.
+- `installments`: which policy or loan field an installment choice belongs to. Only the installments
+  the app lets the user pick are offered (`FixtureLookups.installments`, from the recovered rules):
+  an insurance installment neither paid nor waiting for verification; for a loan only the next one,
+  because the app ticks a loan's installments in order, so that one is set by code. A policy or loan
+  with nothing to pay isn't offered.
+- `charges`: an amount that must come from the chosen operator's charge list (a wallet top-up). Any
+  other amount is asked again, naming the charges.
+- `when`: what a chosen value changes in the app. A weekly or monthly transfer also asks its day,
+  with that frequency's days; a card sent by post goes by the address page and asks the address.
+  The agent plans again once such a value is known, and the run uses the same plan.
 
 `tests/backend/test_words.py` checks that every feature has words and every choice the agent can
 ask has allowed keys.

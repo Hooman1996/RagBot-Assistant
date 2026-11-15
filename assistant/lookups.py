@@ -117,6 +117,25 @@ class FixtureLookups:
         ]
         return [Candidate(str(row[source.key]), str(row[attribute]), str(row[source.label])) for row in rows]
 
+    def installments(self, lookup: str, key: str) -> list[str]:
+        """The choice keys of a policy's or loan's installments that the app lets the user pick
+        (Recovered): an insurance installment neither paid nor waiting for verification; for a loan
+        only the next one, the first overdue else the first unpaid, as the app ticks them in order."""
+        source = SOURCES[source_of(lookup)]
+        items = next(row for row in self.records(lookup) if str(row[source.key]) == key)["installments"]
+        if source_of(lookup) == "insurance":
+            closed = ("PAID", "VERIFICATION_WAITING")
+            return [str(item["number"]) for item in items if item["status"] not in closed]
+        overdue = [n for n, item in enumerate(items) if item["status"] == "TRACKABLE_OVERDUE"]
+        unpaid = [n for n, item in enumerate(items) if item["status"] != "PAID"]
+        return [str(n) for n in (overdue or unpaid)[:1]]
+
+    def charges(self, operator: str) -> list[int]:
+        """The amounts in rials the app lists for a wallet top-up with this operator (Recovered: a
+        server-supplied charge list)."""
+        data = json.loads((self.folder / "operators.json").read_text(encoding="utf-8"))
+        return next(item["defaults"] for item in data["operators"] if item["operator"] == operator)
+
     def resolve(self, lookup: str, text: str) -> str:
         """Turns what the user said into the value to send. Refuses a miss or a tie."""
         found = self.matching(lookup, text)

@@ -150,7 +150,8 @@ the total time, and every failing case with what was expected, what happened and
 
 ## Changing the held-out set
 
-The held-out file is frozen ([D-025](../decisions/0025-frozen-evaluation-set.md)): the case test
-compares its SHA-256 with the one in the decision. To change a held-out case, a gate or a
+The held-out file is frozen ([D-025](../decisions/0025-frozen-evaluation-set.md); the current hash
+is in [D-027](../decisions/0027-heldout-follows-the-app.md)): the case test compares its SHA-256
+with the one in the decision. To change a held-out case, a gate or a
 definition: record a new decision, edit the file, write the new hash, and run the held-out set
 again, reporting both the old and the new numbers. The tuning file needs none of this.

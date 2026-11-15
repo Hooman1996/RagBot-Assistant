@@ -19,6 +19,8 @@ PAGE_OPEN = "صفحه «{title}» باز شد."
 FAILED = "انجام نشد: {reason}"
 NOT_FOUND = "«{text}» پیدا نشد."
 WHICH = "چند مورد با «{text}» پیدا شد؛ کدام؟"
+NOT_OFFERED = "«{text}» برای این کار در برنامه قابل انتخاب نیست."
+NOT_A_CHARGE = "این مبلغ برای این اپراتور در برنامه نیست؛ مبلغ‌های شارژ: {amounts} ریال."
 NOT_THERE = "برنامه به {expected} نرسید و در {screen} ماند."
 CANCELLED = "کار لغو شد؛ چیزی ارسال یا تأیید نشد."
 # What the user is told when a run stops on its own terms: cancelled, out of reach, or uncertain.
@@ -37,6 +39,15 @@ def option(ref: str, item: Candidate) -> dict:
     return {"ref": f"{ref}={item.key}", "label": masked(label)}
 
 
+def offered(lookups: FixtureLookups, item: dict) -> list[Candidate]:
+    """The records the app lists for this field, the only ones the assistant offers or accepts. A
+    policy or loan whose installments are all paid has nothing the app lets the user pay."""
+    records = lookups.candidates(item["lookup"], words.offered(item["lookup"], item["ref"]))
+    if words.has_installments(item["ref"]):
+        return [record for record in records if lookups.installments(item["lookup"], record.key)]
+    return records
+
+
 def lookup_options(lookups: FixtureLookups, wanted: list[dict]) -> list[dict]:
     """Each missing choice's allowed keys, and each missing ref's records the field may offer
     when there are between FEW and MANY of them, as options."""
@@ -48,7 +59,7 @@ def lookup_options(lookups: FixtureLookups, wanted: list[dict]) -> list[dict]:
                 for o in item.get("options", [])
             ]
         if item["type"] == "ref" and item["lookup"]:
-            records = lookups.candidates(item["lookup"], words.offered(item["lookup"], item["ref"]))
+            records = offered(lookups, item)
             if FEW <= len(records) <= MANY:
                 options += [option(item["ref"], record) for record in records]
     return options

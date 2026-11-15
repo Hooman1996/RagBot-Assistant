@@ -419,6 +419,16 @@
         "key": "RIGHTEL",
         "label": "رایتل"
       }
+    ],
+    "address": [
+      {
+        "key": "address-1",
+        "label": "خانه"
+      },
+      {
+        "key": "address-2",
+        "label": "محل کار"
+      }
     ]
   },
   "fixed": {
@@ -441,12 +451,217 @@
   "fields": {
     "svc-source": "حساب مبدا؛ حسابی که مبلغ یا کارمزد از آن برداشت می‌شود"
   },
+  "installments": {
+    "installment": "insurance-policy",
+    "loan-installment": "loan"
+  },
   "offer": {
     "cards": {
-      "card-transfer-source": {"kind": "DEBIT", "status": "فعال"},
-      "bill-source": {"kind": "DEBIT"},
-      "topup-source": {"kind": "DEBIT"},
-      "conversion-source": {"kind": "DEBIT"}
+      "card-transfer-source": {
+        "kind": "DEBIT",
+        "status": "فعال"
+      },
+      "bill-source": {
+        "kind": "DEBIT"
+      },
+      "topup-source": {
+        "kind": "DEBIT"
+      },
+      "conversion-source": {
+        "kind": "DEBIT"
+      }
+    },
+    "wallets": {
+      "wallet-op-source": {
+        "status": "ACTIVE"
+      },
+      "wallet-op-destination": {
+        "status": "ACTIVE"
+      }
+    },
+    "loans": {
+      "loan": {
+        "corporateTitle": null
+      }
+    },
+    "accounts": {
+      "loan-source": {
+        "ownership": "انفرادی"
+      }
+    }
+  },
+  "charges": {
+    "wallet-op-amount": "wallet-op-operator"
+  },
+  "when": {
+    "schedule-frequency": {
+      "WEEKLY": {
+        "field": "schedule-day",
+        "options": [
+          {
+            "key": "6",
+            "label": "شنبه"
+          },
+          {
+            "key": "7",
+            "label": "یکشنبه"
+          },
+          {
+            "key": "1",
+            "label": "دوشنبه"
+          },
+          {
+            "key": "2",
+            "label": "سه‌شنبه"
+          },
+          {
+            "key": "3",
+            "label": "چهارشنبه"
+          },
+          {
+            "key": "4",
+            "label": "پنجشنبه"
+          },
+          {
+            "key": "5",
+            "label": "جمعه"
+          }
+        ]
+      },
+      "MONTHLY": {
+        "field": "schedule-day",
+        "options": [
+          {
+            "key": "1",
+            "label": "روز ۱ ماه"
+          },
+          {
+            "key": "2",
+            "label": "روز ۲ ماه"
+          },
+          {
+            "key": "3",
+            "label": "روز ۳ ماه"
+          },
+          {
+            "key": "4",
+            "label": "روز ۴ ماه"
+          },
+          {
+            "key": "5",
+            "label": "روز ۵ ماه"
+          },
+          {
+            "key": "6",
+            "label": "روز ۶ ماه"
+          },
+          {
+            "key": "7",
+            "label": "روز ۷ ماه"
+          },
+          {
+            "key": "8",
+            "label": "روز ۸ ماه"
+          },
+          {
+            "key": "9",
+            "label": "روز ۹ ماه"
+          },
+          {
+            "key": "10",
+            "label": "روز ۱۰ ماه"
+          },
+          {
+            "key": "11",
+            "label": "روز ۱۱ ماه"
+          },
+          {
+            "key": "12",
+            "label": "روز ۱۲ ماه"
+          },
+          {
+            "key": "13",
+            "label": "روز ۱۳ ماه"
+          },
+          {
+            "key": "14",
+            "label": "روز ۱۴ ماه"
+          },
+          {
+            "key": "15",
+            "label": "روز ۱۵ ماه"
+          },
+          {
+            "key": "16",
+            "label": "روز ۱۶ ماه"
+          },
+          {
+            "key": "17",
+            "label": "روز ۱۷ ماه"
+          },
+          {
+            "key": "18",
+            "label": "روز ۱۸ ماه"
+          },
+          {
+            "key": "19",
+            "label": "روز ۱۹ ماه"
+          },
+          {
+            "key": "20",
+            "label": "روز ۲۰ ماه"
+          },
+          {
+            "key": "21",
+            "label": "روز ۲۱ ماه"
+          },
+          {
+            "key": "22",
+            "label": "روز ۲۲ ماه"
+          },
+          {
+            "key": "23",
+            "label": "روز ۲۳ ماه"
+          },
+          {
+            "key": "24",
+            "label": "روز ۲۴ ماه"
+          },
+          {
+            "key": "25",
+            "label": "روز ۲۵ ماه"
+          },
+          {
+            "key": "26",
+            "label": "روز ۲۶ ماه"
+          },
+          {
+            "key": "27",
+            "label": "روز ۲۷ ماه"
+          },
+          {
+            "key": "28",
+            "label": "روز ۲۸ ماه"
+          },
+          {
+            "key": "29",
+            "label": "روز ۲۹ ماه"
+          },
+          {
+            "key": "30",
+            "label": "روز ۳۰ ماه"
+          },
+          {
+            "key": "31",
+            "label": "روز ۳۱ ماه"
+          }
+        ]
+      }
+    },
+    "delivery": {
+      "post": {
+        "via": "S-129"
+      }
     }
   }
 }

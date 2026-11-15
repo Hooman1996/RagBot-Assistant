@@ -140,10 +140,12 @@ class Navigator:
             raise NoRoute(target)
         return [{"from": start, "to": HOME, "action": BACK}, *self.route(HOME, target)]
 
-    def fields_of(self, screen: str) -> tuple[Requirement, ...]:
-        """The fields this screen needs. A secret field is never one of them."""
+    def fields_of(self, screen: str, extra: frozenset[str] = frozenset()) -> tuple[Requirement, ...]:
+        """The fields this screen needs, and the optional ones named in extra. Never a secret one."""
         fields = [
-            item for item in self.forms.get(screen, []) if item.get("requires") and not item.get("secret")
+            item
+            for item in self.forms.get(screen, [])
+            if (item.get("requires") or item["ref"] in extra) and not item.get("secret")
         ]
         return tuple(self.requirement(screen, "field", item) for item in fields)
 
@@ -159,15 +161,25 @@ class Navigator:
         route += self.route(via or current, target)
         return Plan(target, route, self.legs(current, target, route))
 
-    def plan_feature(self, current: str, feature: dict) -> Plan:
-        """Plans a feature: through its form, so a shared page is reached the right way."""
-        form = feature["form"]
-        return self.plan(current, feature["destination"], form if form != feature["destination"] else None)
+    def plan_feature(
+        self, current: str, feature: dict, through: str | None = None, extra: frozenset[str] = frozenset()
+    ) -> Plan:
+        """Plans a feature: through its form, so a shared page is reached the right way, then through
+        `through` when a chosen value sends the app there. The optional fields in extra are needed too."""
+        target, route, at = feature["destination"], [], current
+        for stop in (feature["form"], through):
+            if stop and stop not in (target, at):
+                route += self.route(at, stop)
+                at = stop
+        route += self.route(at, target)
+        return Plan(target, route, self.legs(current, target, route, extra))
 
-    def legs(self, current: str, target: str, route: list[dict]) -> list[Leg]:
+    def legs(
+        self, current: str, target: str, route: list[dict], extra: frozenset[str] = frozenset()
+    ) -> list[Leg]:
         """Cuts the route at every screen with fields. Other screens pass inside navigate."""
         legs: list[Leg] = []
-        first_fields = () if route and route[0]["action"] == BACK else self.fields_of(current)
+        first_fields = () if route and route[0]["action"] == BACK else self.fields_of(current, extra)
         if first_fields:
             legs.append(Leg(current, (), first_fields))
         selections: list[Requirement] = []
@@ -175,7 +187,7 @@ class Navigator:
             selections += [
                 self.requirement(edge["from"], "selection", item) for item in edge.get("requires", [])
             ]
-            fields = self.fields_of(edge["to"])
+            fields = self.fields_of(edge["to"], extra)
             if fields:
                 legs.append(Leg(edge["to"], tuple(selections), fields))
                 selections = []

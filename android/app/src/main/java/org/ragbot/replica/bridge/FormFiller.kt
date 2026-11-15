@@ -16,19 +16,28 @@ internal class FormFiller(private val actions: Actions, private val navigator: N
     /** Sets [values] on [form], which must be the screen in front of the user. */
     fun fill(form: String, values: Map<String, FieldValue>): Ending {
         if (actions.state().screen != form) return blocked("navigate")
-        for ((ref, value) in values) {
-            val stop =
-                when (value) {
-                    is FieldValue.Money -> setField(ref, value.value.toString())
-                    is FieldValue.Text -> setField(ref, value.text)
-                }
-            if (stop != null) return stop
+        val texts = values.mapValues { (_, value) -> text(value) }.entries.toList()
+        for ((index, entry) in texts.withIndex()) {
+            val next = texts.getOrNull(index + 1)?.let { "${it.key}-${it.value}" }
+            setField(entry.key, entry.value, next)?.let {
+                return it
+            }
         }
         return succeeded("form_filled_$form")
     }
 
-    /** A typed field takes the text. Any other field is a choice, and the text is its key. */
-    private fun setField(ref: String, value: String): Ending? {
+    private fun text(value: FieldValue) =
+        when (value) {
+            is FieldValue.Money -> value.value.toString()
+            is FieldValue.Text -> value.text
+        }
+
+    /**
+     * A typed field takes the text. Any other field is a choice, and the text is its key. A choice
+     * may open a dialog that asks the next field ([next], its option's tag), such as a weekly
+     * transfer's day: then the dialog is left for that field.
+     */
+    private fun setField(ref: String, value: String, next: String?): Ending? {
         if (actions.find(ref)?.editable == true) return actions.type(ref, value)
         if (!Policy.isSafeKey(value)) return failed("invalid_value")
         val option = "$ref-$value"
@@ -43,8 +52,10 @@ internal class FormFiller(private val actions: Actions, private val navigator: N
         }
         // The screen updates on a later frame: a chip turns selected, or a picker's window closes.
         actions.waitUntil { actions.find(option)?.selected != false }
-        return if (actions.waitUntil { actions.state().modal == null }) null
-        else blocked("close_dialog")
+        val settled = actions.waitUntil {
+            actions.state().modal == null || (next != null && actions.find(next) != null)
+        }
+        return if (settled) null else blocked("close_dialog")
     }
 
     /** Opens the review page that follows this screen. On a review page, it does nothing. */
