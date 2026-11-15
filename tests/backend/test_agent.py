@@ -102,6 +102,65 @@ def test_a_name_that_is_not_found_asks_again_and_sends_nothing() -> None:
     assert app.sent == []
 
 
+def test_a_card_the_app_does_not_list_is_refused_and_the_listed_cards_are_offered() -> None:
+    sentence = "يك ميليون ريال از كارت 0042 به رضا كارت به كارت كن"  # 0042 is a credit card
+    chat = FakeChat([CARD, card_values("کارت 0042", amount={"value": 1000000, "unit": "IRR"})])
+    app = RecordingApp()
+    result = build_agent(chat, app).invoke(new_request("c", sentence), CONFIG)
+    pending = result["__interrupt__"][0].value
+    refused = replies.NOT_OFFERED.format(text="کارت 0042")
+    assert pending["question"] == refused + "\nاز کدام کارت انتقال انجام شود؟"
+    assert [item["label"] for item in pending["options"]] == ["****0018", "****0026", "لغو"]
+    assert app.sent == []
+
+
+def test_an_installment_the_app_greys_out_is_asked_again_with_the_payable_ones() -> None:
+    said = {"insurance-policy": "DEMO-POLICY-0001", "installment": "قسط اول", "insurance-source": "پس‌انداز"}
+    chat = FakeChat([{"choice": "insurance_installment"}, said])
+    app = RecordingApp()
+    request = new_request("c", "اقساط بیمه نامه: قسط اول DEMO-POLICY-0001")
+    result = build_agent(chat, app).invoke(request, CONFIG)
+    pending = result["__interrupt__"][0].value
+    assert pending["question"] == replies.NOT_OFFERED.format(text="قسط اول") + "\nکدام قسط؟"
+    assert [item["label"] for item in pending["options"]] == ["قسط سوم", "قسط چهارم", "لغو"]
+    assert app.sent == []
+
+
+def test_a_loans_next_installment_is_set_by_code() -> None:
+    said = {"loan": "تسهیلات شخصی", "loan-installment": None, "loan-source": "حساب نمایشی"}
+    chat = FakeChat([{"choice": "loan_repayment"}, said])
+    app = RecordingApp()
+    request = new_request("c", "تسهیلات در جریان و پرداخت: قسط تسهیلات شخصی")
+    result = build_agent(chat, app).invoke(request, CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    fills = [arguments["values"] for operation, arguments in app.sent if operation == "fill_form"]
+    assert fills[-1]["loan-installment"] == "1"
+
+
+def test_a_wallet_top_up_amount_the_operator_does_not_list_is_asked_again() -> None:
+    said = {
+        "wallet-op-source": "کیف نمایشی شخصی",
+        "wallet-op-mobile": "09000000003",
+        "wallet-op-operator": "رایتل",
+        "wallet-op-amount": {"value": 10000, "unit": "IRT"},
+    }
+    chat = FakeChat([{"choice": "wallet_mobile_top_up"}, said])
+    app = RecordingApp()
+    title = next(item["title"] for item in PROFILE["features"] if item["intent"] == "wallet_mobile_top_up")
+    result = build_agent(chat, app).invoke(new_request("c", f"{title} رایتل ۱۰ هزار تومن"), CONFIG)
+    pending = result["__interrupt__"][0].value
+    assert pending["question"].startswith(replies.NOT_A_CHARGE.format(amounts="200,000، 500,000، 1,000,000"))
+    assert app.sent == []
+
+
+def test_a_policy_with_nothing_to_pay_is_not_offered() -> None:
+    chat = FakeChat([{"choice": "insurance_installment"}, {"insurance-policy": None, "installment": None}])
+    app = RecordingApp()
+    result = build_agent(chat, app).invoke(new_request("c", "اقساط بیمه نامه"), CONFIG)
+    labels = [item["label"] for item in result["__interrupt__"][0].value["options"]]
+    assert "DEMO-POLICY-0002" not in " ".join(labels)
+
+
 def test_a_choice_that_was_not_offered_becomes_not_sure() -> None:
     app = RecordingApp()
     result = build_agent(FakeChat([{"choice": "pay_everything"}]), app).invoke(

@@ -421,11 +421,12 @@
   {
     "id": "H-027",
     "tags": [
-      "unambiguous",
-      "e2e"
+      "e2e",
+      "option"
     ],
     "turns": [
-      "یه انتقال خودکار ماهانه به اسم اجاره نمونه از 1405/09/01 تا 1405/12/01 تنظیم کن"
+      "یه انتقال خودکار ماهانه به اسم اجاره نمونه از 1405/09/01 تا 1405/12/01 تنظیم کن",
+      "option:schedule-day=1"
     ],
     "expect": {
       "intent": "recurring_transfer",
@@ -433,7 +434,8 @@
         "schedule-title": "اجاره نمونه",
         "schedule-start": "1405/09/01",
         "schedule-end": "1405/12/01",
-        "schedule-frequency": "MONTHLY"
+        "schedule-frequency": "MONTHLY",
+        "schedule-day": "1"
       },
       "end": "ready_for_user",
       "asks": []
@@ -1248,8 +1250,7 @@
   {
     "id": "H-068",
     "tags": [
-      "unambiguous",
-      "e2e",
+      "not_found",
       "colloquial"
     ],
     "turns": [
@@ -1258,15 +1259,16 @@
     "expect": {
       "intent": "card_transfer",
       "values": {
-        "card-transfer-source": "card-4",
         "card-transfer-destination": "reza",
         "card-transfer-amount": {
           "value": 1000000,
           "unit": "IRR"
         }
       },
-      "end": "ready_for_user",
-      "asks": []
+      "end": "clarifying",
+      "asks": [
+        "card-transfer-source"
+      ]
     }
   },
   {

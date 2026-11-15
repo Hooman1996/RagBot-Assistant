@@ -8,7 +8,8 @@ thresholds before P6 tuning".
 1. **The held-out set is frozen.** `tests/evaluation/heldout.json` (143 cases) is frozen at
    SHA-256 `fdf15cd250eebcc390737faea806023a442541434e850bcb5d3a3b64280a3d6f` on 14 Nov 2026.
    `tests/evaluation/test_cases.py` reads the hash from this file and fails if the file's bytes
-   change.
+   change. **Superseded:** since 15 Nov 2026 the hash is in
+   [D-027](0027-heldout-follows-the-app.md), after H-068 changed.
 2. **The tuning set may change freely.** `tests/evaluation/tuning.json` (43 cases) is for prompt
    and profile work. It never shares a sentence with the held-out set; the case test checks this.
 3. **The gates, scored by `tools/evaluate_agent.py`** (every definition is in

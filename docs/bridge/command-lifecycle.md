@@ -160,6 +160,9 @@ One generic command fills every form, driven by field tags. Money is a whole num
 - `card-transfer-source` is a picker. It taps the picker, then the option `card-transfer-source-card-1`.
 - The other two are text fields. It sets each through the field's own change handler, then reads
   the value back.
+- A choice may open a dialog that asks the next field, as a weekly or monthly transfer's
+  frequency opens its day. When the next value's option is in that dialog, the dialog is left
+  open for it and the next field picks it; any other dialog left open stops with `close_dialog`.
 
 This is the same state a user types into, so the form's own rules apply. The result reports a new
 draft, and card numbers come back masked. The runner compares each field with what it sent, and

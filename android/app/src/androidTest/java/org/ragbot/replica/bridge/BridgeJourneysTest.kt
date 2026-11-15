@@ -50,6 +50,20 @@ class BridgeJourneysTest {
     }
 
     @Test
+    fun weeklyTransferPicksItsDayInTheDialogTheFrequencyOpens() {
+        rig.reach("S-181")
+        rig.fill(
+            "S-181",
+            "schedule-title" to text("اجاره نمونه"),
+            "schedule-start" to text("1405/09/01"),
+            "schedule-end" to text("1405/12/01"),
+            "schedule-frequency" to text("WEEKLY"),
+            "schedule-day" to text("6"),
+        )
+        assertTrue(rig.controls.find("schedule-frequency-WEEKLY")?.text.orEmpty().contains("شنبه"))
+    }
+
+    @Test
     fun billPayment() {
         rig.reach("S-209")
         rig.fill(

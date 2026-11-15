@@ -66,14 +66,29 @@ SCHEDULE = {"schedule-title": "اجاره نمونه", "schedule-start": "1405/0
 
 
 def test_a_choice_is_one_of_its_labels_and_reaches_the_app_as_its_key() -> None:
-    chat = FakeChat([{"choice": "recurring_transfer"}, SCHEDULE | {"schedule-frequency": "ماهانه"}])
+    chat = FakeChat([{"choice": "recurring_transfer"}, SCHEDULE | {"schedule-frequency": "روزانه"}])
     app = RecordingApp()
-    result = build_agent(chat, app).invoke(new_request("c", "انتقال خودکار ماهانه اجاره نمونه"), CONFIG)
+    result = build_agent(chat, app).invoke(new_request("c", "انتقال خودکار روزانه اجاره نمونه"), CONFIG)
     frequency = chat.schemas[1]["properties"]["schedule-frequency"]["anyOf"][0]
     assert frequency == {"enum": ["روزانه", "هفتگی", "ماهانه"]}
-    assert "MONTHLY" not in chat.prompts[1]
-    assert sent_values(app)["schedule-frequency"] == "MONTHLY"
-    assert "دوره تکرار: ماهانه" in result["reply"]
+    assert "DAILY" not in chat.prompts[1]
+    assert sent_values(app)["schedule-frequency"] == "DAILY"
+    assert "schedule-day" not in sent_values(app)  # a daily transfer has no day
+    assert "دوره تکرار: روزانه" in result["reply"]
+
+
+def test_a_weekly_transfer_asks_its_day_and_sends_it_after_the_frequency() -> None:
+    chat = FakeChat([{"choice": "recurring_transfer"}, SCHEDULE | {"schedule-frequency": "هفتگی"}])
+    app = RecordingApp()
+    graph = build_agent(chat, app)
+    result = graph.invoke(new_request("c", "انتقال خودکار هفتگی اجاره نمونه"), CONFIG)
+    pending = result["__interrupt__"][0].value
+    assert pending["question"] == "در چه روزی انجام شود؟"
+    assert [item["label"] for item in pending["options"]][:2] == ["شنبه", "یکشنبه"]
+    result = graph.invoke(Command(resume="schedule-day=6"), CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    assert list(sent_values(app))[-2:] == ["schedule-frequency", "schedule-day"]
+    assert sent_values(app)["schedule-day"] == "6"
 
 
 def test_text_that_is_no_allowed_key_is_asked_again_with_the_options() -> None:
@@ -88,8 +103,23 @@ def test_text_that_is_no_allowed_key_is_asked_again_with_the_options() -> None:
         "cancel",
     ]
     assert app.sent == []
-    result = graph.invoke(Command(resume="schedule-frequency=MONTHLY"), CONFIG)
+    pending = graph.invoke(Command(resume="schedule-frequency=MONTHLY"), CONFIG)["__interrupt__"][0].value
+    assert pending["question"] == "در چه روزی انجام شود؟" and len(pending["options"]) == 32  # 31 days, «لغو»
+    result = graph.invoke(Command(resume="schedule-day=5"), CONFIG)
     assert result["task_state"] == "ready_for_user"
+
+
+def test_a_card_sent_by_post_asks_the_address_and_goes_by_the_address_page() -> None:
+    said = {"source": "حساب نمایشی", "delivery": "ارسال پستی", "color": "سبز"}
+    chat = FakeChat([{"choice": "card_request"}, said])
+    app = RecordingApp()
+    graph = build_agent(chat, app)
+    pending = graph.invoke(new_request("c", "درخواست کارت با ارسال پستی"), CONFIG)["__interrupt__"][0].value
+    assert "به کدام آدرس ارسال شود؟" in pending["question"]
+    assert "address=address-1" in [item["ref"] for item in pending["options"]]
+    graph.invoke(Command(resume="address=address-1"), CONFIG)
+    forms = [arguments["form"] for operation, arguments in app.sent if operation == "fill_form"]
+    assert "S-129" in forms
 
 
 def test_a_selection_the_feature_decides_is_set_by_code_and_never_asked() -> None:

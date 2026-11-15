@@ -44,6 +44,33 @@ def offered(lookup: str, ref: str) -> dict:
     return WORDS["offer"].get(source_of(lookup), {}).get(ref, {})
 
 
+def installment_of(ref: str) -> str | None:
+    """The record field (a policy or a loan) whose installments this choice picks, if it is one."""
+    return WORDS["installments"].get(ref)
+
+
+def has_installments(ref: str) -> bool:
+    """True for a policy or loan field, whose record must have an installment the app lets the user pick."""
+    return ref in WORDS["installments"].values()
+
+
+def charges_of(ref: str) -> str | None:
+    """The operator field whose charge list this amount must come from, if it is such an amount."""
+    return WORDS["charges"].get(ref)
+
+
+def when(values: dict) -> tuple[str | None, dict[str, list[dict]]]:
+    """What chosen values change in the app: a screen the route must pass (a card sent by post goes
+    by the address page), and the fields the app then asks, each with its options (a weekly day)."""
+    through, fields = None, {}
+    for ref, cases in WORDS["when"].items():
+        case = cases.get(values.get(ref)) if isinstance(values.get(ref), str) else None
+        if case:
+            through = case.get("via", through)
+            fields |= {case["field"]: case["options"]} if "field" in case else {}
+    return through, fields
+
+
 def fixed(intent: str) -> dict:
     """Values the feature itself decides, such as which paid inquiry the menu opens."""
     return WORDS["fixed"].get(intent, {})

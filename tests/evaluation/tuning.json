@@ -6,12 +6,12 @@
       "e2e"
     ],
     "turns": [
-      "۷۰ هزار تومان از کارت 0059 به رضا کارت به کارت کن"
+      "۷۰ هزار تومان از کارت 0026 به رضا کارت به کارت کن"
     ],
     "expect": {
       "intent": "card_transfer",
       "values": {
-        "card-transfer-source": "card-5",
+        "card-transfer-source": "card-2",
         "card-transfer-destination": "reza",
         "card-transfer-amount": {
           "value": 700000,
@@ -30,12 +30,12 @@
       "colloquial"
     ],
     "turns": [
-      "از کارت ۰۰۶۷ یه سیصد هزار تومنی بفرس برا رضا"
+      "از کارت ۰۰۱۸ یه سیصد هزار تومنی بفرس برا رضا"
     ],
     "expect": {
       "intent": "card_transfer",
       "values": {
-        "card-transfer-source": "card-6",
+        "card-transfer-source": "card-1",
         "card-transfer-destination": "reza",
         "card-transfer-amount": {
           "value": 3000000,
@@ -479,7 +479,7 @@
       "wallet_vs_bank"
     ],
     "turns": [
-      "شارژ ۳۰ هزار تومنی ایرانسل برای 09000000000 با کیف نمایشی تجاری بخر"
+      "شارژ ۵۰ هزار تومنی ایرانسل برای 09000000000 با کیف نمایشی تجاری بخر"
     ],
     "expect": {
       "intent": "wallet_mobile_top_up",
@@ -488,7 +488,7 @@
         "wallet-op-mobile": "09000000000",
         "wallet-op-operator": "IRANCELL",
         "wallet-op-amount": {
-          "value": 300000,
+          "value": 500000,
           "unit": "IRR"
         }
       },
@@ -600,11 +600,12 @@
   {
     "id": "T-027",
     "tags": [
-      "unambiguous",
-      "e2e"
+      "e2e",
+      "option"
     ],
     "turns": [
-      "یه انتقال خودکار هفتگی به اسم اجاره نمونه از 1405/09/01 تا 1405/12/01 بساز"
+      "یه انتقال خودکار هفتگی به اسم اجاره نمونه از 1405/09/01 تا 1405/12/01 بساز",
+      "option:schedule-day=6"
     ],
     "expect": {
       "intent": "recurring_transfer",
@@ -612,7 +613,8 @@
         "schedule-title": "اجاره نمونه",
         "schedule-start": "1405/09/01",
         "schedule-end": "1405/12/01",
-        "schedule-frequency": "WEEKLY"
+        "schedule-frequency": "WEEKLY",
+        "schedule-day": "6"
       },
       "end": "ready_for_user",
       "asks": []

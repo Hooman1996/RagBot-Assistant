@@ -1,7 +1,8 @@
 """Checks both evaluation case files: their format, their labels, their counts and the freeze.
 
 Runs in CI with no network. The held-out file is frozen: its SHA-256 must equal the one recorded
-in decision D-025, so changing a held-out case needs a visible decision and a fresh run.
+in decision D-027 (which replaced D-025's), so changing a held-out case needs a visible decision
+and a fresh run.
 """
 
 import hashlib
@@ -15,10 +16,11 @@ import pytest
 from assistant.agent_nodes import plan_for
 from assistant.intent import KNOWLEDGE, NOT_SURE
 from assistant.lookups import FixtureLookups, source_of
-from assistant.navigator import HOME, Navigator
+from assistant.navigator import HOME, Navigator, Requirement
+from assistant.words import options, when
 
 FOLDER = Path("tests/evaluation")
-DECISION = Path("docs/decisions/0025-frozen-evaluation-set.md")
+DECISION = Path("docs/decisions/0027-heldout-follows-the-app.md")  # the hash since D-027
 PROFILE = json.loads(Path("app_profiles/replica.profile.json").read_text(encoding="utf-8"))
 FEATURES = {item["intent"]: item for item in PROFILE["features"]}
 NAVIGATOR = Navigator(PROFILE)
@@ -63,15 +65,22 @@ def read(name: str) -> list[dict]:
     return json.loads((FOLDER / name).read_text(encoding="utf-8"))
 
 
-def requirements(intent: str) -> dict:
-    """The feature's requirements from Home, by ref: what the agent will ask for."""
-    plan = plan_for(NAVIGATOR, HOME, FEATURES[intent])
+def requirements(intent: str, values: dict | None = None) -> dict:
+    """The feature's requirements from Home, by ref: what the agent will ask for, given the values
+    chosen (a weekly transfer also needs its day)."""
+    plan = plan_for(NAVIGATOR, HOME, FEATURES[intent], values)
     return {item.ref: item for item in plan.requirements}
 
 
 def keys(lookup: str) -> list[str]:
     """Every record key the lookup offers."""
     return [item.key for item in LOOKUPS.candidates(lookup)]
+
+
+def choice_keys(item: Requirement, expect: dict) -> list[str]:
+    """The keys a choice offers, given the case's values (a weekly day follows the frequency)."""
+    found = when(expect["values"])[1].get(item.ref) or options(item.screen, item.ref, LOOKUPS)
+    return [option["key"] for option in found]
 
 
 def typed(lookup: str, value: object) -> bool:
@@ -114,7 +123,7 @@ def check_case(case: dict, prefix: str) -> None:
         assert expect["values"] == {} and expect["asks"] == [] and expect["end"] == "created", case["id"]
         return
     assert expect["intent"] in FEATURES, case["id"]
-    wanted = requirements(expect["intent"])
+    wanted = requirements(expect["intent"], expect["values"])
     assert set(expect["values"]) <= set(wanted) and set(expect["asks"]) <= set(wanted), case["id"]
     for ref, value in expect["values"].items():
         item = wanted[ref]
@@ -133,7 +142,9 @@ def check_case(case: dict, prefix: str) -> None:
         if turn.startswith(OPTION):
             ref = turn[len(OPTION) :]
             field, _, key = ref.partition("=")
-            fits = field in wanted and wanted[field].lookup is not None and key in keys(wanted[field].lookup)
+            item = wanted.get(field)
+            allowed = [] if item is None else keys(item.lookup) if item.lookup else choice_keys(item, expect)
+            fits = key in allowed
             assert ref in FEATURES or fits, (case["id"], turn)
 
 
@@ -191,6 +202,6 @@ def test_no_heldout_first_turn_appears_in_the_tuning_set() -> None:
     assert shared == []
 
 
-def test_the_heldout_set_is_frozen_at_the_hash_in_d025() -> None:
+def test_the_heldout_set_is_frozen_at_the_hash_in_d027() -> None:
     recorded = re.search(r"SHA-256 `([0-9a-f]{64})`", DECISION.read_text(encoding="utf-8")).group(1)
     assert hashlib.sha256((FOLDER / "heldout.json").read_bytes()).hexdigest() == recorded

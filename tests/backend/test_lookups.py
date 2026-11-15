@@ -45,6 +45,25 @@ def test_where_keeps_only_the_records_with_those_fields() -> None:
     assert [card.key for card in active_debit] == ["card-1", "card-2"]
 
 
+def test_installments_are_the_ones_the_app_lets_the_user_pick() -> None:
+    lookups = FixtureLookups()
+    assert lookups.installments("insurance", "policy-1") == ["3", "4"]  # 1 paid, 2 being verified
+    assert lookups.installments("insurance", "policy-2") == []
+    assert lookups.installments("loans", "loan-personal") == ["1"]  # the next unpaid one
+    assert lookups.installments("loans", "loan-overdue") == ["0"]  # an overdue one comes first
+    assert lookups.installments("loans", "loan-paid") == []
+
+
+def test_a_wallet_top_up_amount_comes_from_the_operators_charge_list() -> None:
+    assert FixtureLookups().charges("RIGHTEL") == [200000, 500000, 1000000]
+
+
+def test_records_the_app_hides_or_keeps_behind_a_tab_are_not_offered() -> None:
+    assert offered("wallets", "wallet-op-source") == {"status": "ACTIVE"}  # the inactive wallet
+    assert offered("loans", "loan") == {"corporateTitle": None}  # corporate loans sit on another tab
+    assert offered("accounts", "loan-source") == {"ownership": "انفرادی"}  # so do joint accounts
+
+
 def test_the_offer_rule_filters_only_its_own_lookup() -> None:
     assert offered("cards.number", "topup-source") == {"kind": "DEBIT"}
     assert offered("accounts", "topup-source") == {}  # the account page still offers every account
