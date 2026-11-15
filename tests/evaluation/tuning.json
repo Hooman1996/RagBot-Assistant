@@ -954,5 +954,75 @@
       "end": "ready_for_user",
       "asks": []
     }
+  },
+  {
+    "id": "T-047",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "یه آدرس جدید ذخیره کن: عنوان خانه، کد پستی 0000000001، نشانی خیابان نمونه، پلاک یک"
+    ],
+    "expect": {
+      "intent": "saved_addresses",
+      "values": {
+        "field-title": "خانه",
+        "field-postal": "0000000001",
+        "field-address": "خیابان نمونه، پلاک یک"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-048",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "یه مساعده دو میلیون تومنی برام بگیر بریز تو حساب نمایشی"
+    ],
+    "expect": {
+      "intent": "wage_advance",
+      "values": {
+        "svc-amount": {
+          "value": 20000000,
+          "unit": "IRR"
+        },
+        "svc-target": "account-1"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-049",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "وام شخصی ۲۰ میلیون تومنی می‌خوام، ۲۴ قسطه، شغلم معلمه، ضامنم رضا با کد ملی 0000000019"
+    ],
+    "expect": {
+      "intent": "loan_request",
+      "values": {
+        "svc-product": "personal",
+        "svc-amount": {
+          "value": 200000000,
+          "unit": "IRR"
+        },
+        "svc-months": "24",
+        "svc-job": "معلم",
+        "svc-guarantor": "رضا",
+        "svc-guarantorCode": "0000000019"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
   }
 ]

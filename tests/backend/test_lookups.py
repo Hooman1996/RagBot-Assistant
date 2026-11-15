@@ -66,6 +66,15 @@ def test_the_inactive_wallet_is_not_offered_and_records_behind_a_tab_are() -> No
     assert offered("accounts", "loan-source") == {}  # joint accounts too
 
 
+def test_a_record_is_named_by_its_label_or_the_words_no_other_record_has() -> None:
+    accounts = FixtureLookups().candidates("accounts")
+    named = FixtureLookups().named
+    assert [item.key for item in named("با کارمزد از پس‌انداز استعلام کن", accounts)] == ["account-2"]
+    assert [item.key for item in named("بریز به حساب نمایشی", accounts)] == ["account-1"]
+    assert named("پس از واریز خبرم کن", accounts) == []  # «پس» alone is not «پس‌انداز»
+    assert named("از کیف نمایشی شخصی", accounts) == []  # «نمایشی» is in every label
+
+
 def test_the_offer_rule_filters_only_its_own_lookup() -> None:
     assert offered("cards.number", "topup-source") == {"kind": "DEBIT"}
     assert offered("accounts", "topup-source") == {}  # the account page still offers every account

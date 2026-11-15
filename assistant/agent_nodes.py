@@ -15,7 +15,7 @@ from assistant import replies
 from assistant.agent_state import AgentState, moved
 from assistant.intent import KNOWLEDGE, NOT_SURE, FeatureIndex, choose
 from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, wants_cancel
-from assistant.lookups import Candidate, FixtureLookups, typed
+from assistant.lookups import Candidate, FixtureLookups, source_of, typed
 from assistant.models import Chat, ModelError
 from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
 from assistant.slots import checked, extract, hidden
@@ -136,6 +136,7 @@ class Nodes:
         """Code only: keeps the values the plan asks for, in the app's form, and lists what is missing."""
         plan = state["plan"]
         values = checked(state["values"], plan["requirements"], state["messages"])
+        values |= self.named(plan, values, state["messages"])
         through, fields = when(values)
         if [through, sorted(fields)] != plan["when"]:
             # A chosen value sends the app another way or makes it ask more (a weekly day): plan again.
@@ -147,6 +148,24 @@ class Nodes:
         show("check", values=values, missing=missing)
         update = moved(state, "resolving") | {"plan": plan, "values": values, "missing": missing}
         return update | ({"question": note, "options": []} if note else {})
+
+    def named(self, plan: dict, values: dict, messages: list[str]) -> dict:
+        """Code only: a record field the model left empty, when the user's words name exactly one
+        record the app lists for it by its label, and no other field takes records of that lookup."""
+        refs = [item for item in plan["requirements"] if item["type"] == "ref" and item["lookup"]]
+        found = {}
+        for item in refs:
+            lookup = source_of(item["lookup"])
+            if item["ref"] in values or lookup == "contacts":
+                continue
+            if sum(source_of(other["lookup"]) == lookup for other in refs) > 1:
+                continue  # a source and a destination of the same kind: only the model may tell them apart
+            records = self.tools.lookups.named(" ".join(messages), replies.offered(self.tools.lookups, item))
+            if len(records) == 1:
+                found[item["ref"]] = records[0].key
+        if found:
+            show("named", found=found)
+        return found
 
     def payable(self, plan: dict, values: dict) -> tuple[dict, dict, str | None]:
         """Code only: an installment choice keeps the installments the app lets the user pick for

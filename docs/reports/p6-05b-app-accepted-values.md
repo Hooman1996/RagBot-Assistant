@@ -129,3 +129,31 @@ No feature is chosen wrongly any more. The four held-out failures left all read 
 title with an extra word (H-036), the fee account (H-050), a job word with a spoken ending (H-085),
 and the wage advance's target account (H-089). The words were tuned while watching held-out cases,
 so these held-out numbers are optimistic (as noted in the P6-03 report).
+
+## Follow-up: #154, the last four held-out failures
+
+Each of the four read a value wrongly:
+
+| Case | Said | Was read | Fix |
+|---|---|---|---|
+| H-036 | «عنوان محل کار، …» | title «عنوان محل کار» | a text value loses its field's own label word in front (`slots.unlabelled`) |
+| H-050 | «… با کارمزد از پس‌انداز استعلام کن» | fee account left out, so asked | a record field the model left out is taken when the user's words name exactly one listed record by a word no other record has, and no other field uses that lookup (`lookups.named`, `agent_nodes.named`) |
+| H-085 | «شغلم کارمنده» | job «کارمنده» | a field hint: the spoken «ـه» means «است» (`fields` `svc-job`) |
+| H-089 | «… بریز به پس‌انداز» | target account left out on some runs | the same as H-050 |
+
+The fallback never guesses. It needs the record's own words in the user's message: «پس‌انداز», not
+«پس» alone or «نمایشی», which every label has. It stays out of the way when two fields take the same
+kind of record, so a source and a destination are never swapped.
+
+Three tuning cases (T-047 to T-049) cover the same patterns. Results with the final code:
+
+| Gate | Held-out, #152 | Held-out, final (2 runs, identical) | Tuning (49 cases) |
+|---|---|---|---|
+| Critical wrong actions | 0 / 143 | **0 / 143 — PASS** | 0 / 49 — PASS |
+| Unambiguous | 97 / 99 | **99 / 99 (100%) — PASS** | 37 / 37 — PASS |
+| Task preparation | 102 / 106 | **106 / 106 (100%) — PASS** | 40 / 40 — PASS |
+| Safe stops | 27 / 27 | **27 / 27 — PASS** | 5 / 5 — PASS |
+
+The four cases and the three new tuning cases passed on each of 3 runs, and the 65 wallet and
+transfer cases still all pass. As with #152, these fixes were made while watching held-out cases,
+so the held-out numbers are optimistic. A fresh held-out set would need a new decision under D-025.
