@@ -14,10 +14,10 @@ message (P6-06).
 
 | Control | What it does |
 |---|---|
-| The floating **دستیار** bubble | Always on screen while the bridge loop is on (a debug build with the flag file). Drag it anywhere; tap it to open or close the small chat box. It shows the task state («منتظر پاسخ شما», «آماده بازبینی شما»…). |
+| The floating **دستیار** bubble | Always on screen while the bridge loop is on (a debug build with the flag file). Drag it anywhere; tap it to open or close the small chat box. While the box is open the bubble stays above it. It shows the task state («منتظر پاسخ شما», «آماده بازبینی شما»…). |
 | **دستیار** in the support menu, beside **چت بات** | Also opens the chat box. The chatbot entry stays the chatbot. |
 | The text box and **ارسال** | Sends a request, an answer or a correction. |
-| An option button | Answers the pending question with that option: a card, an account, a choice's label, or «لغو». |
+| An option button | Answers the pending question with that option: a card, an account, a choice's label, or «لغو». The options scroll with the messages, right under the question, so a long list never hides the question or the text box. A masked number such as ****0018 reads left to right. |
 | The state line | The task state in Persian («منتظر پاسخ شما», «در حال آماده‌سازی در برنامه», «آماده بازبینی شما»…). While the agent works it says «در حال انجام…» and, after a run, lists each command, its screen and how it ended. |
 | **کوچک کردن** (minimize) | Closes the chat box. The conversation and any pending question stay; the agent keeps working while the app is open. Opening the box again reloads the conversation from the backend. |
 | Stepping aside | Once the agent moves the app to another screen, the chat box closes by itself so the app can be seen, and opens again when the agent is done (a question, the review, or a failure). |

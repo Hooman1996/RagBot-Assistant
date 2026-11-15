@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -71,9 +73,14 @@ internal fun AssistantOverlay() {
 private fun Panel(state: AssistantPanelState, scope: CoroutineScope) {
     val history = state.history
     val focus = LocalFocusManager.current
+    val list = rememberLazyListState()
+    // The newest message at the top of the list, and a question's options right under it.
+    LaunchedEffect(history.lines.size, history.options.size) {
+        if (history.lines.isNotEmpty()) list.animateScrollToItem(history.lines.lastIndex)
+    }
     Box(Modifier.fillMaxSize()) {
         Surface(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(.45f).testTag("assistant-panel"),
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(PANEL_SHARE).testTag("assistant-panel"),
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
             tonalElevation = 6.dp,
             shadowElevation = 12.dp,
@@ -101,19 +108,20 @@ private fun Panel(state: AssistantPanelState, scope: CoroutineScope) {
                             Text("لغو کار")
                         }
                 }
-                LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("assistant-messages")) {
+                // One scrolling list, so many options never push the question or the text box away.
+                LazyColumn(Modifier.weight(1f).fillMaxWidth().testTag("assistant-messages"), list) {
                     items(history.lines) { Line(it) }
+                    itemsIndexed(history.options) { index, option ->
+                        OutlinedButton(
+                            { act(state, scope) { send(state, null, option) } },
+                            Modifier.fillMaxWidth().padding(vertical = 2.dp).testTag("assistant-option-$index"),
+                            enabled = !history.busy && !state.sending,
+                        ) {
+                            Text(leftToRight(option.label))
+                        }
+                    }
                     if (history.busy || state.sending) item { Text("در حال انجام…", color = Color.Gray) }
                     items(history.steps) { Text(it, color = Color.Gray, style = MaterialTheme.typography.bodySmall) }
-                }
-                history.options.forEachIndexed { index, option ->
-                    OutlinedButton(
-                        { act(state, scope) { send(state, null, option) } },
-                        Modifier.fillMaxWidth().testTag("assistant-option-$index"),
-                        enabled = !history.busy && !state.sending,
-                    ) {
-                        Text(option.label)
-                    }
                 }
                 state.error?.let { Text(it, Modifier.testTag("assistant-error"), color = Color(0xFFB3261E)) }
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -149,7 +157,7 @@ private fun Panel(state: AssistantPanelState, scope: CoroutineScope) {
 private fun Line(line: PanelLine) {
     Box(Modifier.fillMaxWidth().padding(vertical = 4.dp)) {
         Text(
-            line.text,
+            leftToRight(line.text),
             Modifier.align(if (line.fromUser) Alignment.CenterStart else Alignment.CenterEnd)
                 .background(
                     if (line.fromUser) Color(0xFFE7F0FB) else Color(0xFFEEF6F0),
@@ -159,6 +167,11 @@ private fun Line(line: PanelLine) {
         )
     }
 }
+
+/** The text with each masked number, such as 000000******0034, kept left to right in Persian. */
+private fun leftToRight(text: String) = MASKED_NUMBER.replace(text) { "\u2066${it.value}\u2069" }
+
+private val MASKED_NUMBER = Regex("[0-9۰-۹]*\\*+[0-9۰-۹*]*")
 
 /** Sends the user's words, or an option of the pending question, noting where the app was. */
 private fun send(state: AssistantPanelState, text: String?, option: PanelOption?) {
@@ -194,3 +207,6 @@ private suspend fun refresh(state: AssistantPanelState) {
 }
 
 private const val POLL_MS = 700L
+
+/** The share of the screen the open box takes, from the bottom. */
+internal const val PANEL_SHARE = .45f

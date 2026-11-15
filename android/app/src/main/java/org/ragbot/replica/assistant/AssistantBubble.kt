@@ -35,20 +35,21 @@ internal fun Bubble(state: AssistantPanelState) {
         val height = constraints.maxHeight.toFloat()
         val margin = with(density) { 16.dp.toPx() }
         val reach = with(density) { 120.dp.toPx() } // keeps the whole bubble on screen
+        // While the box is open the bubble stays above it, so it never covers the question or options.
+        val lowest = if (state.open) height * (1 - PANEL_SHARE) - reach / 2 - margin else height - reach / 2
+        val y = { (if (state.bubbleY < 0) height * .72f else state.bubbleY).coerceIn(0f, lowest.coerceAtLeast(0f)) }
         val x = if (state.bubbleX < 0) margin else state.bubbleX
-        val y = if (state.bubbleY < 0) height * .72f else state.bubbleY
         Surface(
             { toggle(state) },
             // Measured from the screen's left edge whatever the layout direction, as a finger drags it.
             Modifier.align(AbsoluteAlignment.TopLeft)
-                .absoluteOffset { IntOffset(x.roundToInt(), y.roundToInt()) }
-                .pointerInput(width, height) {
+                .absoluteOffset { IntOffset(x.roundToInt(), y().roundToInt()) }
+                .pointerInput(width, height, state.open) {
                     detectDragGestures { change, amount ->
                         change.consume()
                         state.bubbleX = ((if (state.bubbleX < 0) margin else state.bubbleX) + amount.x)
                             .coerceIn(0f, (width - reach).coerceAtLeast(0f))
-                        state.bubbleY = ((if (state.bubbleY < 0) height * .72f else state.bubbleY) + amount.y)
-                            .coerceIn(0f, (height - reach / 2).coerceAtLeast(0f))
+                        state.bubbleY = (y() + amount.y).coerceIn(0f, lowest.coerceAtLeast(0f))
                     }
                 }
                 .testTag("assistant-bubble"),
