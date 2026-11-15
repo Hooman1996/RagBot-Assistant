@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from assistant.lookups import SOURCES, Ambiguous, FixtureLookups, NotFound, is_known
+from assistant.words import offered
 
 
 def test_a_contact_name_becomes_their_card() -> None:
@@ -37,6 +38,16 @@ def test_every_source_finds_its_records() -> None:
 def test_an_attribute_picks_what_is_sent() -> None:
     assert FixtureLookups().resolve("cards.number", "card-1") == "0000000000000018"
     assert FixtureLookups().resolve("cards", "card-1") == "card-1"
+
+
+def test_where_keeps_only_the_records_with_those_fields() -> None:
+    active_debit = FixtureLookups().candidates("cards", {"kind": "DEBIT", "status": "فعال"})
+    assert [card.key for card in active_debit] == ["card-1", "card-2"]
+
+
+def test_the_offer_rule_filters_only_its_own_lookup() -> None:
+    assert offered("cards.number", "topup-source") == {"kind": "DEBIT"}
+    assert offered("accounts", "topup-source") == {}  # the account page still offers every account
 
 
 def test_a_lookup_outside_the_adapter_is_unknown() -> None:

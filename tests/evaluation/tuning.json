@@ -79,12 +79,12 @@
     ],
     "turns": [
       "۴۰ هزار تومن کارت به کارت کن به رضا",
-      "option:card-transfer-source=card-4"
+      "option:card-transfer-source=card-2"
     ],
     "expect": {
       "intent": "card_transfer",
       "values": {
-        "card-transfer-source": "card-4",
+        "card-transfer-source": "card-2",
         "card-transfer-destination": "reza",
         "card-transfer-amount": {
           "value": 400000,

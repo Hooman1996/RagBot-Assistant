@@ -9,7 +9,7 @@ It never shows the model a key, only labels, and never a full card or account nu
 import json
 from pathlib import Path
 
-from assistant.lookups import FixtureLookups
+from assistant.lookups import FixtureLookups, source_of
 
 WORDS = json.loads(
     (Path(__file__).resolve().parent.parent / "app_profiles" / "assistant_words.json").read_text(
@@ -36,6 +36,12 @@ def options(screen: str, ref: str, lookups: FixtureLookups) -> list[dict]:
 def field_words(ref: str) -> str:
     """Words that tell the model more about a field than its short description, if any."""
     return WORDS["fields"].get(ref, "")
+
+
+def offered(lookup: str, ref: str) -> dict:
+    """The fields a lookup's record must have to be offered for this field, as the app's own picker
+    lists them: a card-transfer source is an active debit card. Empty when every record may be."""
+    return WORDS["offer"].get(source_of(lookup), {}).get(ref, {})
 
 
 def fixed(intent: str) -> dict:
