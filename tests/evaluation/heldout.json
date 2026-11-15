@@ -2090,14 +2090,14 @@
       "e2e"
     ],
     "turns": [
-      "۵۰۰ هزار تومن از کیف نمایشی شخصی برداشت کن بریز به حساب نمایشی"
+      "۳۰۰ هزار تومن از کیف نمایشی شخصی برداشت کن بریز به حساب نمایشی"
     ],
     "expect": {
       "intent": "wallet_withdrawal",
       "values": {
         "wallet-op-source": "0000000000101",
         "wallet-op-amount": {
-          "value": 5000000,
+          "value": 3000000,
           "unit": "IRR"
         },
         "wallet-op-destination": "account-1"

@@ -61,9 +61,39 @@ and a job word with a spoken ending (H-085).
 
 ## Known limits
 
-- Amount limits other than the wallet charge list (minimums, maximums, multiples) were not swept.
 - The graph page's Run doesn't follow `when` (it is a development tool); the agent and its run do.
-- After a blocked fill the executor leaves the app's picker open, and the next command stops on
-  `close_dialog`. The bank builds the executor; recorded in #148.
 - The eligible records come from the mock fixtures. In production the adapter's lookups return
   what the bank's server lists for each picker.
+- Closed in #150 (below): amount limits, corporate loans and joint accounts behind a tab, and the
+  picker left open after a blocked fill.
+
+## Follow-up: #150
+
+**Amounts.** Four amounts (10,000; 55,555; 3,000,000; 2,000,000,000 rials) were tried in each of
+the 17 money fields on the replica. The app refused only:
+
+| Field | The app's rule | Assistant |
+|---|---|---|
+| Mobile top-up | the operator's minimum, maximum and multiple; the operator from the phone's prefix (recovered) | asked again with the operator's limits |
+| Charity | 10,000 to 100,000,000 rials (designed for mock) | asked again with the range |
+| Wallet operations | no more than the source's balance, when known (designed for mock) | asked again with the balance |
+
+The assistant's rules (`assistant_words.json` `limits`, `agent_nodes.amounts`) agree with all 64
+results. Card, account and interbank transfers, group transfers, funding, budgets, cheques, loan
+requests and wage advances took every amount; their real limits come from the bank's server.
+
+**Records behind a tab.** The executor opens the second tab of a list when the option it needs is
+there (`Actions.TABS`, owner-approved): a corporate loan and a joint account now reach review S-331,
+on the device tests and through the backend. The `offer` rules that hid them are gone.
+
+**A picker left open.** When an option isn't there or is disabled, the executor closes the picker
+before it reports, so the next command isn't stopped by a dialog (device test, and through the
+backend: a blocked card fill leaves no dialog).
+
+**Held-out.** The first run after these changes failed the preparation gate (100 / 106): H-104
+withdrew 5,000,000 rials from a wallet that holds 3,250,000, which the app refuses, so the
+assistant rightly asked again. Under D-027 its amount became 3,000,000 rials (new hash). The run
+on the final cases: 0 / 143 critical wrong actions, 96 / 99 unambiguous (97.0%), 101 / 106
+prepared (95.3%), 27 / 27 safe stops, all PASS. The preparation gate passes by one case: H-117
+(the model chose wallet charge for wallet funding) failed in this run and passed in #148's, so a
+run can land either side of 95% on the model's own variance.

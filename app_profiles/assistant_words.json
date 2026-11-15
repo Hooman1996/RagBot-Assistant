@@ -478,20 +478,7 @@
       "wallet-op-destination": {
         "status": "ACTIVE"
       }
-    },
-    "loans": {
-      "loan": {
-        "corporateTitle": null
-      }
-    },
-    "accounts": {
-      "loan-source": {
-        "ownership": "انفرادی"
-      }
     }
-  },
-  "charges": {
-    "wallet-op-amount": "wallet-op-operator"
   },
   "when": {
     "schedule-frequency": {
@@ -662,6 +649,21 @@
       "post": {
         "via": "S-129"
       }
+    }
+  },
+  "limits": {
+    "wallet-op-amount": {
+      "charges_of": "wallet-op-operator",
+      "balance_of": "wallet-op-source"
+    },
+    "topup-amount": {
+      "operator_by": "topup-phone"
+    },
+    "charity-amount": {
+      "range": [
+        10000,
+        100000000
+      ]
     }
   }
 }

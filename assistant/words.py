@@ -54,9 +54,10 @@ def has_installments(ref: str) -> bool:
     return ref in WORDS["installments"].values()
 
 
-def charges_of(ref: str) -> str | None:
-    """The operator field whose charge list this amount must come from, if it is such an amount."""
-    return WORDS["charges"].get(ref)
+def limits() -> dict:
+    """The amounts the app checks, by field: a wallet top-up's charge list and its source's balance,
+    a top-up's operator limits (the operator from the phone's prefix), a charity's range."""
+    return WORDS["limits"]
 
 
 def when(values: dict) -> tuple[str | None, dict[str, list[dict]]]:

@@ -128,15 +128,17 @@ a file the assistant owns, `app_profiles/assistant_words.json`, read by `assista
   app's own picker lists them: a card-transfer source is an active debit card; a bill, top-up or
   conversion source is a debit card; a wallet is an active one. A record the user names that the
   app doesn't list («کارت 0042», a credit card) is refused and the listed ones are offered. Corporate
-  loans and joint accounts sit behind a tab in the app that the executor doesn't open, so they
-  aren't offered either; the user picks those in the app.
+  loans and joint accounts are offered: they sit on a second tab, which the executor opens.
 - `installments`: which policy or loan field an installment choice belongs to. Only the installments
   the app lets the user pick are offered (`FixtureLookups.installments`, from the recovered rules):
   an insurance installment neither paid nor waiting for verification; for a loan only the next one,
   because the app ticks a loan's installments in order, so that one is set by code. A policy or loan
   with nothing to pay isn't offered.
-- `charges`: an amount that must come from the chosen operator's charge list (a wallet top-up). Any
-  other amount is asked again, naming the charges.
+- `limits`: the amounts the app checks, each asked again with the reason when it would refuse it: a
+  wallet top-up from the operator's charge list and no more than its source's balance (every wallet
+  operation); a mobile top-up within the operator's minimum, maximum and multiple, the operator taken
+  from the phone's prefix as the app does; a charity gift between 10,000 and 100,000,000 rials. A
+  sweep of four amounts in each of the 17 money fields found no other limit.
 - `when`: what a chosen value changes in the app. A weekly or monthly transfer also asks its day,
   with that frequency's days; a card sent by post goes by the address page and asks the address.
   The agent plans again once such a value is known, and the run uses the same plan.

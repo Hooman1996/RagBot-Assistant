@@ -77,7 +77,7 @@ The backend never calls into the phone. If they prefer push, that is an open que
 |---|---|---|---|
 | `observe` | `{}` | Nothing; just report | `succeeded` |
 | `navigate` | `{"destination": "S-174", "arguments": {"charity": "1"}}` | Reach that screen in the right state, using the chosen row keys. How is their choice: taps, a direct open, a deep link | `succeeded` on arrival, or `blocked` with why (dialog open, a field in error, unexpected screen) |
-| `fill_form` | `{"form": "S-174", "values": {ref: text or money}}` | Set each field by its tag **through the form's own handlers**, so the form validates exactly as for a user. A choice field's value is the option's key. Values come in form order: when a choice opens a dialog holding the next value's option (a weekly transfer's day), pick it there | `succeeded`, or `blocked` with the refs that show an error |
+| `fill_form` | `{"form": "S-174", "values": {ref: text or money}}` | Set each field by its tag **through the form's own handlers**, so the form validates exactly as for a user. A choice field's value is the option's key. Values come in form order: when a choice opens a dialog holding the next value's option (a weekly transfer's day), pick it there. An option on another tab of a list is reached by opening that tab. When an option can't be picked, close the picker it opened before reporting | `succeeded`, or `blocked` with the refs that show an error |
 | `show_review` | `{}` | Open this form's review page, and **stop** | `succeeded`, or `blocked` `["no_review_here"]` |
 
 **Rules their module must keep before running anything** (the replica's `Executor.kt` does all of

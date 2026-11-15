@@ -43,8 +43,11 @@ internal object Policy {
     /** May the executor tap [tag] on [screen]? Only named controls, and never a user-only one. */
     fun mayTap(tag: String, screen: String): Boolean {
         if (isUserOnly(tag)) return false
-        return exportedTags.any { matches(it, tag) } || opensField(tag, screen)
+        return exportedTags.any { matches(it, tag) } || opensField(tag, screen) || isTab(tag)
     }
+
+    /** True for one of the app's tabs that keep options on another tab ([TABS]). */
+    private fun isTab(tag: String) = TABS.values.any { tag.startsWith(it) }
 
     /** True for a field's own control: its picker, or one of its options. */
     private fun opensField(tag: String, screen: String): Boolean {
