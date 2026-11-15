@@ -888,5 +888,71 @@
       "end": "created",
       "asks": []
     }
+  },
+  {
+    "id": "T-044",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "دو میلیون تومن از درگاه بانکی بریز تو کیف پولم"
+    ],
+    "expect": {
+      "intent": "wallet_funding",
+      "values": {
+        "funding-amount": {
+          "value": 20000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-045",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "با درگاه اینترنتی ۴۰۰ هزار تومن به کیف پول واریز کن"
+    ],
+    "expect": {
+      "intent": "wallet_funding",
+      "values": {
+        "funding-amount": {
+          "value": 4000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-046",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "۳۰۰ هزار تومن از حساب بانکیم پس‌انداز به کیف نمایشی تجاری واریز کن"
+    ],
+    "expect": {
+      "intent": "wallet_charge",
+      "values": {
+        "wallet-op-source": "account-2",
+        "wallet-op-amount": {
+          "value": 3000000,
+          "unit": "IRR"
+        },
+        "wallet-op-destination": "0000000000102"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
   }
 ]

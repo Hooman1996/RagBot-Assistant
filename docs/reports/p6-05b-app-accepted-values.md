@@ -97,3 +97,35 @@ on the final cases: 0 / 143 critical wrong actions, 96 / 99 unambiguous (97.0%),
 prepared (95.3%), 27 / 27 safe stops, all PASS. The preparation gate passes by one case: H-117
 (the model chose wallet charge for wallet funding) failed in this run and passed in #148's, so a
 run can land either side of 95% on the model's own variance.
+
+## Follow-up: #152, H-117
+
+H-117, «یک میلیون تومن از درگاه بانکی به کیف پولم واریز کن», is wallet funding (the payment
+gateway). With the old words the model took it for wallet charge (from a bank account) on every run:
+«واریز» and «بانکی» match wallet charge's words, and only «درگاه» points to the gateway. The choice
+turned out to be the same on every run for the same words, not random. But changing one feature's
+words can flip a neighbour: the first fix moved the failure to H-074 (an IBAN, «شبا», taken as an
+internal transfer), and the next one to H-105 (a wallet withdrawal answered "not sure").
+
+The final words, in `assistant_words.json` `features`:
+- wallet funding: the gateway decides it, even with «واریز» or «بانکی»;
+- wallet charge: from one of the user's bank accounts, never the gateway;
+- internal transfer: to an account number, not an IBAN;
+- interbank transfer: to an IBAN («شبا», IR and 24 digits);
+- wallet withdrawal: the spoken «بکش بیرون», «بریز تو حساب».
+
+Three tuning cases (T-044 to T-046) mix the same words. Checked after each change on all 65 wallet
+and transfer cases of both sets: with the final words, every one passes on each of 2 runs. With the
+old words, H-117 and T-020 failed on every run.
+
+| Gate | Held-out, #150 | Held-out, final words (2 runs, identical) | Tuning, final words |
+|---|---|---|---|
+| Critical wrong actions | 0 / 143 | **0 / 143 — PASS** | 0 / 46 — PASS |
+| Unambiguous | 96 / 99 | **97 / 99 (98.0%) — PASS** | 34 / 34 — PASS |
+| Task preparation | 101 / 106 (95.3%) | **102 / 106 (96.2%) — PASS** | 37 / 37 — PASS |
+| Safe stops | 27 / 27 | **27 / 27 — PASS** | 5 / 5 — PASS |
+
+No feature is chosen wrongly any more. The four held-out failures left all read a value wrongly: a
+title with an extra word (H-036), the fee account (H-050), a job word with a spoken ending (H-085),
+and the wage advance's target account (H-089). The words were tuned while watching held-out cases,
+so these held-out numbers are optimistic (as noted in the P6-03 report).
