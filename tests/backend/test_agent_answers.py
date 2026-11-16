@@ -1,6 +1,6 @@
 """How the agent reads the user's answers: corrections, hidden numbers, choices and fixed selections."""
 
-from agent_fakes import CARD_SENTENCE, PROFILE, FakeChat, RecordingApp, build_agent
+from agent_fakes import CARD_SENTENCE, PROFILE, FakeChat, RecordingApp, build_agent, reviewed
 from langgraph.types import Command
 
 from assistant.agent_state import new_request
@@ -20,7 +20,8 @@ def card(source: str | None, destination: str = "رضا", toman: int = 250000) -
 
 
 def sent_values(app: RecordingApp) -> dict:
-    return next(arguments["values"] for operation, arguments in app.sent if operation == "fill_form")
+    """The last form fill: the one before the review."""
+    return [arguments["values"] for operation, arguments in app.sent if operation == "fill_form"][-1]
 
 
 def test_a_correction_in_an_answer_replaces_the_value_held_before() -> None:
@@ -103,7 +104,7 @@ def test_text_that_is_no_allowed_key_is_asked_again_with_the_options() -> None:
         "schedule-frequency=MONTHLY",
         "cancel",
     ]
-    assert app.sent == []
+    assert not reviewed(app)
     pending = graph.invoke(Command(resume="schedule-frequency=MONTHLY"), CONFIG)["__interrupt__"][0].value
     assert pending["question"] == "در چه روزی انجام شود؟" and len(pending["options"]) == 32  # 31 days, «لغو»
     result = graph.invoke(Command(resume="schedule-day=5"), CONFIG)
@@ -175,7 +176,7 @@ def test_an_account_number_given_for_an_iban_is_asked_again() -> None:
         new_request("c", sentence), CONFIG
     )
     assert result["__interrupt__"][0].value["question"].endswith("شماره حساب یا شبای مقصد چیست؟")
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 PLATE = {"toll-plate-0": "12", "toll-letter": "ب", "toll-plate-2": "345", "toll-plate-3": "67"}
@@ -197,7 +198,7 @@ def test_with_no_plate_named_the_saved_plates_are_offered_first() -> None:
         "cancel",
     ]
     assert "toll-vehicle" not in chat.schemas[1]["properties"]  # only the user picks a saved plate
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_a_saved_plate_is_tapped_in_the_plate_list_and_fills_the_plate() -> None:
@@ -206,8 +207,12 @@ def test_a_saved_plate_is_tapped_in_the_plate_list_and_fills_the_plate() -> None
     graph.invoke(new_request("c", "تردد طرح آلودگی هوا"), CONFIG)
     result = graph.invoke(Command(resume="toll-vehicle=plate-1"), CONFIG)
     assert result["task_state"] == "ready_for_user"
-    navigate = next(arguments for operation, arguments in app.sent if operation == "navigate")
-    assert navigate == {"destination": "S-257", "arguments": {"toll-vehicle": "plate-1"}}
+    navigate = [arguments for operation, arguments in app.sent if operation == "navigate"]
+    # Waited on the vehicle menu, where the plate's move starts, then went on with the plate.
+    assert navigate == [
+        {"destination": "S-253"},
+        {"destination": "S-257", "arguments": {"toll-vehicle": "plate-1"}},
+    ]
     assert sent_values(app) == PLATE
 
 
@@ -237,3 +242,53 @@ def test_a_plate_corrected_after_a_saved_one_replaces_it_on_the_form() -> None:
     # Planned again from the form the app is on: the typed plate replaces the saved one there.
     assert "toll-vehicle" not in result["values"]
     assert [arguments["values"] for operation, arguments in app.sent if operation == "fill_form"][-1] == other
+
+
+def test_a_new_plate_is_asked_on_the_plate_form() -> None:
+    app = RecordingApp()
+    graph = build_agent(FakeChat([{"choice": "pollution_inquiry"}, NO_PLATE]), app)
+    graph.invoke(new_request("c", "تردد طرح آلودگی هوا"), CONFIG)
+    assert app.screen == "S-253"  # «کدام پلاک؟» waits on the vehicle menu
+    graph.invoke(Command(resume="toll-vehicle=new"), CONFIG)
+    assert app.screen == "S-257" and not reviewed(app)  # the plate's parts are asked on its form
+
+
+LOAN = {"choice": "loan_request"}
+LOAN_SAID = {
+    "svc-product": "personal",
+    "svc-amount": {"value": 100000000, "unit": "IRT"},
+    "svc-months": "12",
+}
+
+
+def loan_request(answers: list) -> tuple:
+    title = next(item["title"] for item in PROFILE["features"] if item["intent"] == "loan_request")
+    app = RecordingApp()
+    graph = build_agent(FakeChat([LOAN, LOAN_SAID, *answers]), app)
+    pending = graph.invoke(new_request("c", f"{title} شخصی ۱۰۰ میلیون تومن در 12 قسط"), CONFIG)
+    return app, graph, pending["__interrupt__"][0].value
+
+
+def filled_forms(app: RecordingApp) -> list[str]:
+    return [arguments["form"] for operation, arguments in app.sent if operation == "fill_form"]
+
+
+def test_each_screen_is_asked_on_that_screen_after_the_ones_before_are_filled() -> None:
+    app, graph, pending = loan_request([{"svc-job": "کارمند"}])
+    assert pending["question"] == "شغل چیست؟"  # not the guarantor, who is asked on a later page
+    assert app.screen == "S-286" and filled_forms(app) == ["S-287", "S-308"]
+    pending = graph.invoke(Command(resume="کارمند"), CONFIG)["__interrupt__"][0].value
+    assert pending["question"] == "نام ضامن چیست؟\nکد ملی ضامن چیست؟"
+    assert app.screen == "S-335" and filled_forms(app)[-1] == "S-286" and not reviewed(app)
+
+
+def test_a_value_changed_for_a_page_already_passed_is_filled_there_again() -> None:
+    guarantor = {"svc-guarantor": "علی نمونه", "svc-guarantorCode": "0000000019"}
+    raised = guarantor | {"svc-amount": {"value": 200000000, "unit": "IRT"}}
+    app, graph, _ = loan_request([{"svc-job": "کارمند"}, raised])
+    graph.invoke(Command(resume="کارمند"), CONFIG)
+    result = graph.invoke(Command(resume="ضامن علی نمونه 0000000019، مبلغ رو ۲۰۰ میلیون تومن کن"), CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    loan = [arguments["values"] for operation, arguments in app.sent if operation == "fill_form"]
+    assert loan[-3]["svc-amount"] == {"value": 2000000000, "unit": "IRR"}  # S-308 filled again
+    assert filled_forms(app)[-4:] == ["S-287", "S-308", "S-286", "S-335"]

@@ -1,4 +1,5 @@
-"""Runs a plan on the app: navigate, check, fill, check, and at the end show the review.
+"""Runs a plan on the app: navigate, check, fill, check, and at the end show the review. Before every
+value is known, it can also go only as far as the values allow (advance).
 
 Called by graph_tasks, and by tests with a fake bridge. Scripted, with no LLM. It resolves every
 value before the app moves, checks each page from the observation, and stops with a plain reason
@@ -56,6 +57,7 @@ class TaskReport:
     state: str = "running"
     reason: str | None = None
     steps: list[dict] = field(default_factory=list)
+    waiting_for: list[str] = field(default_factory=list)  # the refs the app waits on, after advance
 
     def as_json(self) -> dict:
         """The report as plain JSON, for the graph page."""
@@ -141,6 +143,44 @@ class TaskRunner:
             report.reason = str(stop)
         show("run ended", state=report.state, **({"reason": report.reason} if report.reason else {}))
         return report
+
+    def advance(self, plan: Plan, values: dict[str, str], report: TaskReport) -> TaskReport:
+        """Runs the plan as far as the values allow and stops where the user's answer is needed: on
+        the screen where a missing choice is made, or on a form with a missing field once what is
+        known there is filled. It opens no review."""
+        sent = self.known(plan, values)
+        try:
+            for leg in plan.legs:
+                lacking = [item for item in leg.selections if item.ref not in sent]
+                if lacking:
+                    chosen = tuple(item for item in leg.selections if item.ref in sent)
+                    self.move(Leg(lacking[0].screen, chosen), sent, report)
+                    report.waiting_for = [lacking[0].ref]
+                    break
+                self.move(leg, sent, report)
+                known = tuple(item for item in leg.fields if item.ref in sent)
+                if known:
+                    self.fill(Leg(leg.screen, leg.selections, known), sent, report)
+                if len(known) < len(leg.fields):
+                    report.waiting_for = [item.ref for item in leg.fields if item.ref not in sent]
+                    break
+            report.state = "waiting"
+        except TaskStopped as stop:
+            report.state = stop.state
+            report.reason = str(stop)
+        show("advance ended", state=report.state, **({"reason": report.reason} if report.reason else {}))
+        return report
+
+    def known(self, plan: Plan, values: dict[str, str]) -> dict[str, str | dict]:
+        """The values given so far, as the app takes them. One the runner can't use yet is left out."""
+        found = {}
+        for item in plan.requirements:
+            if values.get(item.ref, "").strip():
+                try:
+                    found[item.ref] = self.prepared_value(item, values[item.ref])
+                except TaskStopped:
+                    continue
+        return found
 
     def command(self, operation: str, arguments: dict, report: TaskReport) -> dict:
         """Sends one command and records it and its result for the side panel."""

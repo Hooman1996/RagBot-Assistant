@@ -61,6 +61,12 @@ def feature_facts(profile: dict, navigator: Navigator) -> dict:
     return facts
 
 
+def prepared(report: dict | None) -> bool:
+    """True once a run went for the review. Before a question the app only moves to the question's
+    screen (its report waits), which prepares nothing."""
+    return report is not None and report["state"] != "waiting"
+
+
 def pending_of(result: dict) -> dict | None:
     """The agent's pending question after a turn, or None when it answered."""
     return result["__interrupt__"][0].value if "__interrupt__" in result else None
@@ -85,7 +91,7 @@ def talk(graph, config: dict, case: dict, record: dict) -> dict | None:
         pending = pending_of(result)
         if pending is not None:
             if record["questions"] == 0:
-                record["asked_before_prepare"] = graph.get_state(config).values["report"] is None
+                record["asked_before_prepare"] = not prepared(graph.get_state(config).values["report"])
             record["questions"] += 1
     return pending
 
@@ -109,7 +115,7 @@ def run_case(case: dict, profile: dict, navigator: Navigator, chat: Chat, index:
             "values": final["values"],
             "planned": plan["intent"] if plan else None,
             "planned_types": {item["ref"]: item["type"] for item in plan["requirements"]} if plan else {},
-            "prepared": final["report"] is not None,
+            "prepared": prepared(final["report"]),
             "reply": pending["question"] if pending else final["reply"],
         }
     except Exception as error:  # any crash is a result to report, not a stop

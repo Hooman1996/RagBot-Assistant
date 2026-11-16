@@ -1,8 +1,9 @@
 """The agent's nodes: each one plain method that takes the state and returns only what it changes.
 
 Wired into one graph by agent_graph.py. The model only returns JSON, through intent.py and
-slots.py; code plans, resolves, runs and checks. The app is reached only through TaskRunner, so
-the only commands are navigate, fill_form and show_review. Nothing here can confirm, submit or pay.
+slots.py; code plans, resolves, runs and checks. Before a question, the app is moved to the screen
+the question is about. The app is reached only through TaskRunner, so the only commands are
+navigate, fill_form and show_review. Nothing here can confirm, submit or pay.
 """
 
 from collections.abc import Callable
@@ -80,11 +81,11 @@ class Nodes:
         except (NoRoute, CrossesUserOnly):
             return self.failed(state, replies.NOT_POSSIBLE)
 
-    def planned(self, feature: dict, held: dict) -> dict:
-        """The plan from the app's current screen, keeping held values the route still asks for. A
-        choice gets its allowed keys; a value the feature decides, or a choice with one key, is set
-        by code and never asked. Raises NoRoute or CrossesUserOnly."""
-        start = self.tools.screen()
+    def planned(self, feature: dict, held: dict, start: str | None = None) -> dict:
+        """The plan from start, by default the app's current screen, keeping held values the route
+        still asks for. A choice gets its allowed keys; a value the feature decides, or a choice with
+        one key, is set by code and never asked. Raises NoRoute or CrossesUserOnly."""
+        start = start or self.tools.screen()
         plan = plan_for(self.tools.navigator, start, feature, held)
         found = plan.as_json()
         through, fields = when(held)
@@ -140,7 +141,7 @@ class Nodes:
         through, fields = when(values)
         if [through, sorted(fields)] != plan["when"]:
             # A chosen value sends the app another way or makes it ask more (a weekly day): plan again.
-            replanned = self.planned(self.features[plan["intent"]], values)
+            replanned = self.planned(self.features[plan["intent"]], values, plan["start"])
             plan, values = replanned["plan"], replanned["values"]
         plan, values, note = self.payable(plan, values)
         note = self.amounts(plan, values) or note
@@ -266,7 +267,8 @@ class Nodes:
         text = replies.question(state["question"], [item["ask"] for item in wanted])
         answer = interrupt({"question": text, "options": options, "task_state": update["task_state"]})
         if wants_cancel(answer):
-            return update | moved(update, "cancelled") | {"reply": replies.CANCELLED}
+            reply = replies.CANCELLED_OPEN if state["report"] else replies.CANCELLED  # the app moved
+            return update | moved(update, "cancelled") | {"reply": reply}
         if answer in [item["ref"] for item in options]:
             ref, key = answer.split("=", 1)
             missing = [item for item in state["missing"] if item != ref]
@@ -307,16 +309,69 @@ class Nodes:
             }
         return moved(state, "resolving") | {"values": values}
 
+    def advance(self, state: AgentState) -> dict:
+        """Before a question: moves the app as far as the values allow, to the screen where the answer
+        is needed, so the user sees what the question is about, and asks only that screen's values.
+        It fills what is known there and opens no review. A cancel, a pause or an uncertain command
+        ends it as it ends a run."""
+        values = self.usable(state)
+        update = moved(state, "preparing") | self.run(state, values, final=False)
+        if update["report"]["state"] != "waiting":
+            return update | self.verify(state | update)
+        # Only what this screen needs is asked; a later screen's fields are asked there.
+        here = [ref for ref in state["missing"] if ref in update["report"]["waiting_for"]]
+        return update | {"missing": here or state["missing"]}
+
+    def usable(self, state: AgentState) -> dict:
+        """The values the app may take before every answer is in: a record once it is one the app
+        lists for the field, or the user's words name exactly one, or a typed number. A record not
+        settled yet is left out, so the app stops at its field and it is asked."""
+        found = {}
+        for item in state["plan"]["requirements"]:
+            said = state["values"].get(item["ref"])
+            if item["lookup"] and isinstance(said, str):
+                listed = {record.key for record in replies.offered(self.tools.lookups, item)}
+                record = self.record(item, said)
+                said = (
+                    said
+                    if said in listed
+                    else record.key
+                    if record
+                    else said
+                    if typed(item["lookup"], said)
+                    else None
+                )
+            if said is not None:
+                found[item["ref"]] = said
+        return found
+
     def prepare(self, state: AgentState) -> dict:
         """Runs the task runner with the resolved values, as the graph page's Run does."""
+        return moved(state, "preparing") | self.run(state, state["values"], final=True)
+
+    def run(self, state: AgentState, values: dict, final: bool) -> dict:
+        """Runs from the app's current screen: to the review when final, else only as far as the values
+        allow. From the task's start instead when a value the app was given on a screen it has passed
+        has changed, so that screen is filled again. Steps taken before a question are kept."""
         feature = self.features[state["plan"]["intent"]]
-        plan = plan_for(self.tools.navigator, state["plan"]["start"], feature, state["values"])
+        plan = plan_for(self.tools.navigator, self.tools.screen(), feature, values)
+        refs = {item.ref for item in plan.requirements}
+        if any(values.get(ref) != value for ref, value in state["given"].items() if ref not in refs):
+            plan = plan_for(self.tools.navigator, state["plan"]["start"], feature, values)
+            refs = {item.ref for item in plan.requirements}
         # The runner reads money as text and turns it back into the same whole number of rials.
-        values = {ref: str(v["value"]) if isinstance(v, dict) else v for ref, v in state["values"].items()}
+        sent = {
+            ref: str(v["value"]) if isinstance(v, dict) else v for ref, v in values.items() if ref in refs
+        }
         bridge = StoppableBridge(self.tools.bridge, self.tools.stopped)  # a cancel stops between commands
         runner = TaskRunner(bridge, self.tools.navigator, self.tools.lookups)
-        report = runner.run(plan, values, feature["form"] is not None, TaskReport())
-        return moved(state, "preparing") | {"report": report.as_json()}
+        waiting = state["report"] is not None and state["report"]["state"] == "waiting"
+        report = TaskReport(steps=list(state["report"]["steps"]) if waiting else [])
+        if final:
+            runner.run(plan, sent, feature["form"] is not None, report)
+        else:
+            runner.advance(plan, sent, report)
+        return {"report": report.as_json(), "given": state["given"] | {ref: values[ref] for ref in sent}}
 
     def verify(self, state: AgentState) -> dict:
         """Code only: the app must be on the feature's review, or its destination without a form. A
