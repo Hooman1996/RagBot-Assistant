@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
@@ -66,7 +67,12 @@ class MainActivity : ComponentActivity() {
                 }
             else
                 Box(Modifier.fillMaxSize()) {
-                    ReplicaApp()
+                    // While the assistant's box is open, the app keeps above it, so a field the
+                    // assistant asks about can scroll into view.
+                    val covered = if (AssistantPanelState.open) AssistantPanelState.covered else 0
+                    Box(Modifier.fillMaxSize().padding(bottom = with(LocalDensity.current) { covered.toDp() })) {
+                        ReplicaApp()
+                    }
                     // The assistant panel sits in this window, over the app, never in a dialog.
                     CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
                         AssistantOverlay()

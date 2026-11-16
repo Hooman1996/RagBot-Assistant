@@ -2,6 +2,7 @@ package org.ragbot.replica.assistant
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import java.util.UUID
@@ -22,6 +23,7 @@ internal object AssistantPanelState {
     var bubbleY by mutableFloatStateOf(-1f)
     var startScreen by mutableStateOf<String?>(null) // the app's screen when the last message went out
     var autoClosed by mutableStateOf(false) // the box closed itself while the agent drove the app
+    var covered by mutableIntStateOf(0) // how much of the window the open box covers, in pixels from the bottom
 }
 
 /** The task states in Persian, as the panel and its bubble show them. */

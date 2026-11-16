@@ -1,5 +1,10 @@
 package org.ragbot.replica.bridge
 
+import android.view.View
+import android.view.ViewGroup
+import androidx.compose.ui.node.RootForTest
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -64,6 +69,45 @@ class AssistantPanelTest {
         )
         rig.expect(rig.review(), "S-176")
         assertTrue("the panel stayed open", shown("assistant-panel"))
+    }
+
+    /** A control's shown top and bottom, in pixels (clipped by the page), and its whole height. */
+    private fun place(tag: String): Triple<Float, Float, Int> {
+        var found = Triple(Float.NaN, Float.NaN, 0)
+        app.onActivity { activity ->
+            val root = composeRoot(activity.window.decorView) ?: return@onActivity
+            generateSequence(listOf(root.semanticsOwner.rootSemanticsNode)) { level ->
+                    level.flatMap { it.children }.ifEmpty { null }
+                }
+                .flatten()
+                .firstOrNull { it.config.getOrNull(SemanticsProperties.TestTag) == tag }
+                ?.let { found = Triple(it.boundsInRoot.top, it.boundsInRoot.bottom, it.size.height) }
+        }
+        return found
+    }
+
+    /** True when the whole control shows, above the open box. */
+    private fun shownAboveTheBox(tag: String): Boolean {
+        val (top, bottom, height) = place(tag)
+        return height > 0 && bottom - top >= height - 1 && bottom <= place("assistant-panel").first
+    }
+
+    private fun composeRoot(view: View): RootForTest? =
+        view as? RootForTest
+            ?: (view as? ViewGroup)?.let { group ->
+                (0 until group.childCount).firstNotNullOfOrNull { composeRoot(group.getChildAt(it)) }
+            }
+
+    @Test
+    fun aQuestionBringsTheFieldItAsksAboveTheBox() {
+        rig.reach("S-174")
+        onMain { AssistantPanelState.open = true }
+        waitFor("assistant-panel")
+        Thread.sleep(1_000) // opening reloads the conversation; the question comes after that
+        assertFalse("the amount starts hidden by the box", shownAboveTheBox("card-transfer-amount"))
+        onMain { AssistantPanelState.history = PanelHistory(questionId = "q1", fields = listOf("card-transfer-amount")) }
+        val shown = Actions(rig.controls).waitUntil { shownAboveTheBox("card-transfer-amount") }
+        assertTrue("the whole amount field shows above the box", shown)
     }
 
     @Test

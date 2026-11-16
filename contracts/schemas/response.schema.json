@@ -39,6 +39,11 @@
                 "label": { "description": "Masked display label.", "type": "string", "minLength": 1 }
               }
             }
+          },
+          "fields": {
+            "description": "The refs of the values the question asks, on the screen the app waits on, so the app can bring the first one into view.",
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
           }
         }
       }

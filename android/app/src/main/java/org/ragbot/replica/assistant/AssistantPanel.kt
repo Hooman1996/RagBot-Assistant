@@ -1,5 +1,6 @@
 package org.ragbot.replica.assistant
 
+import android.view.View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,8 +30,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.findRootCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.node.RootForTest
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.unit.dp
 import java.io.IOException
 import kotlinx.coroutines.CoroutineScope
@@ -63,6 +72,14 @@ internal fun AssistantOverlay() {
         }
         stepAside(state) // the turn ended: a box that stepped aside comes back
     }
+    val view = LocalView.current
+    LaunchedEffect(state.history.questionId, state.open) {
+        val fields = state.history.fields
+        if (state.open && fields.isNotEmpty()) {
+            delay(SETTLE_MS) // the page first moves above the box
+            bringIntoView(view, fields)
+        }
+    }
     Box(Modifier.fillMaxSize().safeDrawingPadding()) {
         if (state.open) Panel(state, scope)
         Bubble(state)
@@ -80,7 +97,13 @@ private fun Panel(state: AssistantPanelState, scope: CoroutineScope) {
     }
     Box(Modifier.fillMaxSize()) {
         Surface(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().fillMaxHeight(PANEL_SHARE).testTag("assistant-panel"),
+            Modifier.align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .fillMaxHeight(PANEL_SHARE)
+                .onGloballyPositioned {
+                    state.covered = it.findRootCoordinates().size.height - it.boundsInRoot().top.toInt()
+                }
+                .testTag("assistant-panel"),
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
             tonalElevation = 6.dp,
             shadowElevation = 12.dp,
@@ -206,7 +229,26 @@ private suspend fun refresh(state: AssistantPanelState) {
     }
 }
 
+/**
+ * Scrolls the page behind the box so the first asked field it shows sits at the top of the part
+ * above the box. The fields come with the question; a page without one of them is left as it is.
+ */
+private fun bringIntoView(view: View, fields: List<String>) {
+    val root = (view as? RootForTest)?.semanticsOwner?.rootSemanticsNode ?: return
+    val nodes = generateSequence(listOf(root)) { level -> level.flatMap { it.children }.ifEmpty { null } }.flatten()
+    val field =
+        fields.firstNotNullOfOrNull { ref ->
+            nodes.firstOrNull { it.config.getOrNull(SemanticsProperties.TestTag) == ref }
+        } ?: return
+    val page = generateSequence(field.parent) { it.parent }.firstOrNull { SemanticsActions.ScrollBy in it.config }
+    // The field's own place, not its shown part: a field out of view shows nothing.
+    val by = field.positionInRoot.y - (page ?: return).boundsInRoot.top - MARGIN_DP * view.resources.displayMetrics.density
+    page.config[SemanticsActions.ScrollBy].action?.invoke(0f, by)
+}
+
 private const val POLL_MS = 700L
+private const val SETTLE_MS = 300L
+private const val MARGIN_DP = 16
 
 /** The share of the screen the open box takes, from the bottom. */
 internal const val PANEL_SHARE = .45f
