@@ -246,6 +246,9 @@ reference; [the panel](bridge/panel.md) has every rule. In short:
   separate, visibly different control.
 - It sits in the app's own window (not a dialog), catches no Back press, and shows no spinner, so
   the bridge can still see and tap the screen behind it.
+- While it is open, the page keeps to the part of the screen above it, and when a question names
+  its `fields` (the clarification's form-field refs), the page scrolls the first one into view
+  (#159).
 - It never confirms, submits or pays: the user confirms on their own review screen, as today.
 
 Acceptance: on their test build, a request typed in the panel reaches the review with the panel

@@ -21,6 +21,7 @@ message (P6-06).
 | The state line | The task state in Persian («منتظر پاسخ شما», «در حال آماده‌سازی در برنامه», «آماده بازبینی شما»…). While the agent works it says «در حال انجام…» and, after a run, lists each command, its screen and how it ended. |
 | **کوچک کردن** (minimize) | Closes the chat box. The conversation and any pending question stay; the agent keeps working while the app is open. Opening the box again reloads the conversation from the backend. |
 | Stepping aside | Once the agent moves the app to another screen, the chat box closes by itself so the app can be seen, and opens again when the agent is done (a question, the review, or a failure). |
+| The asked field in view | While the box is open, the app keeps to the part of the screen above it, so nothing on a page is out of reach. When a question arrives, the page scrolls so the first field it asks sits at the top of that part (#159). The question names its fields (`fields` in the clarification); a page without them, or a choice made on a menu, is left as it is. |
 | **لغو کار** (cancel task) | A separate, red control, shown only while the task can be cancelled. It closes the chat box at once, and stops a running task before its next command, or cancels a question, a review or a pause. A command already sent is never undone; the app stays where it is. |
 
 The panel never confirms, submits or pays. The agent stops on the app's review; only the user's
@@ -45,12 +46,13 @@ no dialog and no loading, and the executor reaches the card-transfer review behi
 
 ## The calls
 
-All three are in `contracts/openapi/assistant_mobile.json`; the contract did not change.
+All three are in `contracts/openapi/assistant_mobile.json`. #159 added one optional field to the
+clarification in `response.schema.json`: `fields`, the refs of the form fields the question asks.
 
 | Call | Body or query | Answer |
 |---|---|---|
 | `POST /assistant/v1/messages` | `conversation_request.schema.json`: the app's conversation ID, the session and device, the synthetic user, **exactly one of** `message` or `selection` (`question_id` and the option's `ref`), and the app's current observation | A `status` response at once. The turn runs on a background thread. 409 `turn_in_progress`, `run_in_progress`, `unknown_option` or `stale_question`; 422 for a body outside the contract |
-| `GET /assistant/v1/history?conversation_id=` | — | `{conversation_id, busy, messages: [{from, text}], current, steps: [{operation, screen, outcome}]}`. `current` is a contract response: `status` (the live task state while a turn runs), `clarification` (question ID, text, options) or `null` |
+| `GET /assistant/v1/history?conversation_id=` | — | `{conversation_id, busy, messages: [{from, text}], current, steps: [{operation, screen, outcome}]}`. `current` is a contract response: `status` (the live task state while a turn runs), `clarification` (question ID, text, options, fields) or `null` |
 | `POST /assistant/v1/sessions/{session_id}/cancel` | — | The task's `status`. 409 `nothing_to_cancel` |
 
 The contract leaves the history's body open, so its shape is written here. The observation in a

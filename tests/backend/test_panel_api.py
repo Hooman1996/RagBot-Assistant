@@ -78,6 +78,7 @@ def test_a_question_is_answered_by_its_option_and_a_stale_answer_is_refused() ->
     question = settled(client)["current"]
     assert question["kind"] == "clarification" and problems("response.schema.json", question) == []
     assert question["options"][-1] == {"ref": "cancel", "label": "لغو"}
+    assert question["fields"] == ["card-transfer-source"]  # so the app can bring it into view
     stale = {"question_id": "q0", "ref": "card-transfer-source=card-1"}
     assert (
         client.post("/assistant/v1/messages", json=message(selection=stale)).json()["detail"]

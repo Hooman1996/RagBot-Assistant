@@ -11,5 +11,6 @@
       "ref": "candidate-2",
       "label": "R*** (card ending 2222)"
     }
-  ]
+  ],
+  "fields": ["card-transfer-destination"]
 }

@@ -260,12 +260,16 @@ class Nodes:
         return None
 
     def clarify(self, state: AgentState) -> dict:
-        """Asks once for everything missing, and waits for the user's text or an option's ref."""
+        """Asks once for everything missing, and waits for the user's text or an option's ref. The
+        question names its form fields, so the app can bring the first one into view."""
         update = moved(state, "clarifying") | {"question": None, "options": []}
         wanted = [item for item in state["plan"]["requirements"] if item["ref"] in state["missing"]]
         options = (state["options"] or replies.lookup_options(self.tools.lookups, wanted)) + [CANCEL]
         text = replies.question(state["question"], [item["ask"] for item in wanted])
-        answer = interrupt({"question": text, "options": options, "task_state": update["task_state"]})
+        fields = [item["ref"] for item in wanted if item["kind"] == "field"]
+        answer = interrupt(
+            {"question": text, "options": options, "fields": fields, "task_state": update["task_state"]}
+        )
         if wants_cancel(answer):
             reply = replies.CANCELLED_OPEN if state["report"] else replies.CANCELLED  # the app moved
             return update | moved(update, "cancelled") | {"reply": reply}

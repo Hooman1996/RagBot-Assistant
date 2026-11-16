@@ -26,6 +26,7 @@ internal data class PanelHistory(
     val lines: List<PanelLine> = emptyList(),
     val questionId: String? = null,
     val options: List<PanelOption> = emptyList(),
+    val fields: List<String> = emptyList(), // the form fields the question asks, on the screen behind
     val taskState: String? = null,
     val steps: List<String> = emptyList(),
 ) {
@@ -89,6 +90,7 @@ internal object AssistantClient {
             options =
                 if (question) current.list("options") { PanelOption(it.str("ref"), it.str("label")) }
                 else emptyList(),
+            fields = if (question && current.has("fields")) current.strings("fields") else emptyList(),
             taskState = if (!current.isNull && current.has("task_state")) current.str("task_state") else null,
             steps = root.list("steps") { "${it.str("operation")} → ${it.str("screen")}: ${it.str("outcome")}" },
         )

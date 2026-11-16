@@ -26,7 +26,8 @@ def current(chat: AgentChat) -> dict | None:
     if chat.pending is not None:
         pending = chat.pending
         return {"kind": "clarification", "question_id": chat.question_id(), "text": pending["question"]} | {
-            "options": pending["options"]
+            "options": pending["options"],
+            "fields": pending.get("fields", []),
         }
     return status(chat) if chat.task_state else None
 
