@@ -527,12 +527,13 @@ internal object ReplicaGraph {
                 )
             } +
             TollService.entries.flatMap { service ->
-                // The plate list's onward move depends on the menu item that opened it.
+                // The plate list's onward move depends on the menu item that opened it. Its row
+                // is a saved plate (vehicle-plate-1), which fills the inquiry, or vehicle-new.
                 listOfNotNull(
                     Edge(
                         VehicleDestinations.MENU,
                         service.inquiry,
-                        "vehicle-menu-${service.key} > vehicle-new",
+                        "vehicle-menu-${service.key} > vehicle-*",
                     ),
                     Edge(VehicleDestinations.PLATES, service.inquiry, "vehicle-*", EdgeKind.STEP),
                     Edge(

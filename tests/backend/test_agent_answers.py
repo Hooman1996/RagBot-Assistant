@@ -4,6 +4,7 @@ from agent_fakes import CARD_SENTENCE, PROFILE, FakeChat, RecordingApp, build_ag
 from langgraph.types import Command
 
 from assistant.agent_state import new_request
+from assistant.lifecycle import next_input
 
 CONFIG = {"configurable": {"thread_id": "answers"}}
 CARD = {"choice": "card_transfer"}
@@ -175,3 +176,64 @@ def test_an_account_number_given_for_an_iban_is_asked_again() -> None:
     )
     assert result["__interrupt__"][0].value["question"].endswith("شماره حساب یا شبای مقصد چیست؟")
     assert app.sent == []
+
+
+PLATE = {"toll-plate-0": "12", "toll-letter": "ب", "toll-plate-2": "345", "toll-plate-3": "67"}
+NO_PLATE = dict.fromkeys(PLATE)
+
+
+def test_with_no_plate_named_the_saved_plates_are_offered_first() -> None:
+    chat = FakeChat([{"choice": "pollution_inquiry"}, NO_PLATE])
+    app = RecordingApp()
+    pending = (
+        build_agent(chat, app)
+        .invoke(new_request("c", "تردد طرح آلودگی هوا"), CONFIG)["__interrupt__"][0]
+        .value
+    )
+    assert pending["question"] == "کدام پلاک؟"
+    assert [item["ref"] for item in pending["options"]] == [
+        "toll-vehicle=plate-1",
+        "toll-vehicle=new",
+        "cancel",
+    ]
+    assert "toll-vehicle" not in chat.schemas[1]["properties"]  # only the user picks a saved plate
+    assert app.sent == []
+
+
+def test_a_saved_plate_is_tapped_in_the_plate_list_and_fills_the_plate() -> None:
+    app = RecordingApp()
+    graph = build_agent(FakeChat([{"choice": "pollution_inquiry"}, NO_PLATE]), app)
+    graph.invoke(new_request("c", "تردد طرح آلودگی هوا"), CONFIG)
+    result = graph.invoke(Command(resume="toll-vehicle=plate-1"), CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    navigate = next(arguments for operation, arguments in app.sent if operation == "navigate")
+    assert navigate == {"destination": "S-257", "arguments": {"toll-vehicle": "plate-1"}}
+    assert sent_values(app) == PLATE
+
+
+def test_a_new_plate_asks_its_parts_and_a_typed_plate_is_a_new_one() -> None:
+    chat = FakeChat([{"choice": "pollution_inquiry"}, NO_PLATE, PLATE])
+    app = RecordingApp()
+    graph = build_agent(chat, app)
+    graph.invoke(new_request("c", "تردد طرح آلودگی هوا"), CONFIG)
+    pending = graph.invoke(Command(resume="toll-vehicle=new"), CONFIG)["__interrupt__"][0].value
+    assert pending["question"].split("\n")[0] == "دو رقم اول پلاک چیست؟"
+    result = graph.invoke(Command(resume="12 ب 345 ایران 67"), CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    assert result["values"]["toll-vehicle"] == "new"
+    assert sent_values(app) == PLATE
+
+
+def test_a_plate_corrected_after_a_saved_one_replaces_it_on_the_form() -> None:
+    other = {"toll-plate-0": "22", "toll-letter": "ج", "toll-plate-2": "111", "toll-plate-3": "11"}
+    chat = FakeChat([{"choice": "pollution_inquiry"}, NO_PLATE, {"answer": "correction"}, other])
+    app = RecordingApp()
+    graph = build_agent(chat, app)
+    graph.invoke(new_request("c", "تردد طرح آلودگی هوا"), CONFIG)
+    graph.invoke(Command(resume="toll-vehicle=plate-1"), CONFIG)
+    correction = next_input(graph.get_state(CONFIG).values, "c", "نه، پلاک 22 ج 111 ایران 11")
+    result = graph.invoke(correction, CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    # Planned again from the form the app is on: the typed plate replaces the saved one there.
+    assert "toll-vehicle" not in result["values"]
+    assert [arguments["values"] for operation, arguments in app.sent if operation == "fill_form"][-1] == other

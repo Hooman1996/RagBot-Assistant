@@ -726,6 +726,7 @@
     "expect": {
       "intent": "annual_toll",
       "values": {
+        "toll-vehicle": "new",
         "toll-plate-0": "12",
         "toll-letter": "ب",
         "toll-plate-2": "345",
@@ -747,6 +748,7 @@
     "expect": {
       "intent": "traffic_toll",
       "values": {
+        "toll-vehicle": "new",
         "toll-plate-0": "12",
         "toll-letter": "ب",
         "toll-plate-2": "345",
@@ -768,6 +770,7 @@
     "expect": {
       "intent": "freeway_toll",
       "values": {
+        "toll-vehicle": "new",
         "toll-plate-0": "12",
         "toll-letter": "ب",
         "toll-plate-2": "345",
@@ -790,6 +793,7 @@
     "expect": {
       "intent": "pollution_inquiry",
       "values": {
+        "toll-vehicle": "new",
         "toll-plate-0": "12",
         "toll-letter": "ب",
         "toll-plate-2": "345",
