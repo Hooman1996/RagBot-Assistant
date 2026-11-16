@@ -121,12 +121,21 @@ def test_advance_fills_what_is_known_and_waits_on_the_form_for_the_rest() -> Non
     assert set(app.sent[1][1]["values"]) == {"card-transfer-destination", "card-transfer-amount"}
 
 
-def test_advance_waits_where_a_missing_choice_is_made() -> None:
+def test_advance_waits_at_the_rows_a_missing_choice_is_made_from() -> None:
     app = FakeApp()
+    app.needs = ["missing_argument"]  # the app went as far as the plate's rows and needs the plate
     runner = TaskRunner(app, Navigator(PROFILE), FixtureLookups())
     report = runner.advance(Navigator(PROFILE).plan(HOME, "S-257"), {}, TaskReport())
-    assert report.waiting_for == ["toll-vehicle"]
-    assert app.sent == [("navigate", {"destination": "S-253"})]
+    assert report.state == "waiting" and report.waiting_for == ["toll-vehicle"]
+    assert app.sent == [("navigate", {"destination": "S-257"})]
+
+
+def test_advance_stops_when_the_app_cannot_reach_the_rows() -> None:
+    app = FakeApp()
+    app.needs = ["no_executor_route"]
+    runner = TaskRunner(app, Navigator(PROFILE), FixtureLookups())
+    report = runner.advance(Navigator(PROFILE).plan(HOME, "S-257"), {}, TaskReport())
+    assert report.state == "stopped" and "no_executor_route" in report.reason
 
 
 def test_an_unexpected_screen_stops_the_run() -> None:

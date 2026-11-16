@@ -36,7 +36,7 @@ internal class Navigator(private val actions: Actions) {
             if (edge == null || needsHomeTab(edge, now)) {
                 stepBack(steps, now.screen)
             } else {
-                val step = Routes.applied(edge, arguments) ?: return blocked("missing_argument")
+                val step = Routes.applied(edge, arguments) ?: return toTheRows(edge, steps)
                 walk(step, steps, rowTagOf(edge, step))?.let {
                     return it
                 }
@@ -77,6 +77,26 @@ internal class Navigator(private val actions: Actions) {
             ReplicaProfile.forms.firstOrNull { it.id == edge.from }?.fields.orEmpty().map { it.ref }
         val wrong = actions.errorsAmong(refs)
         return if (wrong.isEmpty()) blocked("valid_form") else blocked(*wrong.toTypedArray())
+    }
+
+    /**
+     * A move whose row key was not given goes as far as the rows it chooses from, so the user sees
+     * them while the choice is asked, and stops there. Rows in a dialog are closed again: an open
+     * dialog would block the next move.
+     */
+    private fun toTheRows(edge: Edge, steps: MutableList<TraceStep>): Ending {
+        val before = edge.action.split(" > ").takeWhile { "*" !in it }
+        if (before.isNotEmpty()) {
+            for (tag in before) actions.tap(tag)?.let { return it }
+            actions.waitUntil { actions.state().let { it.screen != edge.from || it.modal != null } }
+            if (actions.state().modal != null) {
+                actions.back()
+                actions.waitUntil { actions.state().modal == null }
+            }
+            val now = actions.state().screen
+            if (now != edge.from) steps += TraceStep(edge.from, now, before.joinToString(" > "))
+        }
+        return blocked("missing_argument")
     }
 
     /** Home's edges start from its home tab, unless they choose a tab themselves. */
