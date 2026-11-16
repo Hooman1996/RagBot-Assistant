@@ -1926,8 +1926,7 @@
       "asks": [
         "svc-sayad",
         "svc-amount",
-        "svc-due",
-        "svc-code"
+        "svc-due"
       ]
     }
   },

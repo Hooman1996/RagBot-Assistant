@@ -1,4 +1,5 @@
-"""The agent: one LangGraph StateGraph from a Persian sentence to the review, and no further.
+"""The agent: one LangGraph StateGraph from a Persian sentence to the review, and no further. Before
+each question the app is moved to the screen the question is about.
 
 Built by app.py for the graph page's chat box, and by main_debug.py with a stand-in app. The nodes
 are in agent_nodes.py and agent_lifecycle.py; this file only wires them. A paused question, and a
@@ -73,8 +74,16 @@ def after_reconcile(state: AgentState) -> str:
 
 
 def until_complete(state: AgentState) -> str:
-    """Back to clarify while something is missing, else on to the next step."""
-    return "clarify" if state["missing"] else "next"
+    """Back to a question while something is missing, else on to the next step."""
+    return "ask" if state["missing"] else "next"
+
+
+def after_advance(state: AgentState) -> str:
+    """To the question once the app waits on its screen; an uncertain command is reconciled; a
+    failure, cancel or pause ends."""
+    if state["task_state"] == "reconciling":
+        return "reconcile"
+    return "clarify" if state["task_state"] == "preparing" else END
 
 
 def build_graph(tools: Tools) -> CompiledStateGraph:
@@ -88,6 +97,7 @@ def build_graph(tools: Tools) -> CompiledStateGraph:
     graph.add_node("plan", nodes.plan)
     graph.add_node("extract", nodes.extract)
     graph.add_node("check", nodes.check)
+    graph.add_node("advance", nodes.advance)
     graph.add_node("clarify", nodes.clarify)
     graph.add_node("resolve", nodes.resolve)
     graph.add_node("prepare", nodes.prepare)
@@ -101,9 +111,10 @@ def build_graph(tools: Tools) -> CompiledStateGraph:
     graph.add_conditional_edges("reply", after_reply, ["understand", "plan", END])
     graph.add_conditional_edges("plan", after_plan, ["extract", END])
     graph.add_conditional_edges("extract", after_extract, ["check", END])
-    graph.add_conditional_edges("check", until_complete, {"clarify": "clarify", "next": "resolve"})
+    graph.add_conditional_edges("check", until_complete, {"ask": "advance", "next": "resolve"})
+    graph.add_conditional_edges("advance", after_advance, ["clarify", "reconcile", END])
     graph.add_conditional_edges("clarify", after_clarify, ["extract", END])
-    graph.add_conditional_edges("resolve", until_complete, {"clarify": "clarify", "next": "prepare"})
+    graph.add_conditional_edges("resolve", until_complete, {"ask": "advance", "next": "prepare"})
     graph.add_edge("prepare", "verify")
     graph.add_conditional_edges("verify", after_verify, ["ready_for_user", "reconcile", END])
     graph.add_conditional_edges("reconcile", after_reconcile, ["extract", END])

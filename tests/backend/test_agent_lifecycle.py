@@ -7,6 +7,7 @@ from agent_fakes import (
     RecordingApp,
     build_agent,
     every_change_is_allowed,  # noqa: F401 - an autouse fixture: every state change is checked
+    reviewed,
 )
 from langgraph.types import Command
 
@@ -60,9 +61,10 @@ def test_the_cancel_option_ends_a_question_and_sends_nothing() -> None:
     pending = graph.invoke(new_request("c", CARD_SENTENCE), CONFIG)["__interrupt__"][0].value
     assert pending["options"][-1] == {"ref": "cancel", "label": "لغو"}
     result = graph.invoke(Command(resume="cancel"), CONFIG)
-    assert result["task_state"] == "cancelled" and result["reply"] == replies.CANCELLED
+    # The app moved to the form before the question: it stays there, and nothing is sent.
+    assert result["task_state"] == "cancelled" and result["reply"] == replies.CANCELLED_OPEN
     assert ("clarifying", "cancelled") in CHANGES
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_a_cancel_phrase_ends_a_not_sure_question() -> None:

@@ -26,6 +26,7 @@ TOP_UP_LIMITS = "مبلغ شارژ این اپراتور باید بین {low} �
 OVER_BALANCE = "مبلغ از موجودی مبدا ({balance} ریال) بیشتر است."
 NOT_THERE = "برنامه به {expected} نرسید و در {screen} ماند."
 CANCELLED = "کار لغو شد؛ چیزی ارسال یا تأیید نشد."
+CANCELLED_OPEN = "کار لغو شد؛ صفحه همان‌طور باز ماند و چیزی ارسال یا تأیید نشد."
 # What the user is told when a run stops on its own terms: cancelled, out of reach, or uncertain.
 STOPPED = {
     "cancelled": "کار لغو شد. برنامه همان‌جا که بود ماند؛ چیزی تأیید یا ارسال نشد.",

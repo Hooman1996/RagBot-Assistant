@@ -98,6 +98,19 @@ class RecordingApp(StandInApp):
         return super().send(operation, arguments)
 
 
+def reviewed(app: RecordingApp) -> bool:
+    """True once the app was asked to open a review; before a question it only moves and fills."""
+    return any(operation == "show_review" for operation, _ in app.sent)
+
+
+def given(app: RecordingApp) -> dict:
+    """Every value and selection the app was sent, by ref."""
+    found = {}
+    for _, arguments in app.sent:
+        found |= arguments.get("values", {}) | arguments.get("arguments", {})
+    return found
+
+
 def build_agent(
     chat: FakeChat, app: RecordingApp, embeddings: object | None = None, stopped: Callable[[], bool] = bool
 ):

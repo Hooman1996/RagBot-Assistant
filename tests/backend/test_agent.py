@@ -12,6 +12,7 @@ from agent_fakes import (
     RecordingApp,
     build_agent,
     every_change_is_allowed,  # noqa: F401 - an autouse fixture: every state change is checked
+    reviewed,
 )
 from langgraph.types import Command
 
@@ -63,11 +64,13 @@ def test_a_missing_source_card_is_one_question_with_the_pickers_cards() -> None:
     assert pending["options"][0] == {"ref": "card-transfer-source=card-1", "label": "****0018"}
     # Only the active debit cards the app's picker lists, then «لغو».
     assert [o["label"] for o in pending["options"]] == ["****0018", "****0026", "لغو"]
-    assert app.sent == []
+    # The app is already on the form, with what is known filled, while the source is asked.
+    assert app.screen == "S-174" and not reviewed(app)
+    assert set(app.sent[1][1]["values"]) == {"card-transfer-destination", "card-transfer-amount"}
     result = graph.invoke(Command(resume=pending["options"][0]["ref"]), CONFIG)
     assert result["task_state"] == "ready_for_user"
-    assert operations(app) == ["navigate", "fill_form", "show_review"]
-    assert app.sent[1][1]["values"]["card-transfer-amount"] == {"value": 2500000, "unit": "IRR"}
+    assert operations(app) == ["navigate", "fill_form", "navigate", "fill_form", "show_review"]
+    assert app.sent[3][1]["values"]["card-transfer-amount"] == {"value": 2500000, "unit": "IRR"}
     assert len(chat.prompts) == 2
 
 
@@ -86,7 +89,7 @@ def test_an_ambiguous_name_gets_the_matching_records_as_options() -> None:
     pending = result["__interrupt__"][0].value
     assert pending["question"].startswith(replies.WHICH.format(text="نمایشی"))
     assert [item["label"] for item in pending["options"]] == ["حساب نمایشی", "پس‌انداز نمایشی", "لغو"]
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_a_name_that_is_not_found_asks_again_and_sends_nothing() -> None:
@@ -99,7 +102,7 @@ def test_a_name_that_is_not_found_asks_again_and_sends_nothing() -> None:
     assert first["options"] == [{"ref": "cancel", "label": "لغو"}]
     result = graph.invoke(Command(resume="علی"), CONFIG)
     assert result["__interrupt__"][0].value["question"] == first["question"]
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_a_card_the_app_does_not_list_is_refused_and_the_listed_cards_are_offered() -> None:
@@ -111,7 +114,7 @@ def test_a_card_the_app_does_not_list_is_refused_and_the_listed_cards_are_offere
     refused = replies.NOT_OFFERED.format(text="کارت 0042")
     assert pending["question"] == refused + "\nاز کدام کارت انتقال انجام شود؟"
     assert [item["label"] for item in pending["options"]] == ["****0018", "****0026", "لغو"]
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_an_installment_the_app_greys_out_is_asked_again_with_the_payable_ones() -> None:
@@ -123,7 +126,7 @@ def test_an_installment_the_app_greys_out_is_asked_again_with_the_payable_ones()
     pending = result["__interrupt__"][0].value
     assert pending["question"] == replies.NOT_OFFERED.format(text="قسط اول") + "\nکدام قسط؟"
     assert [item["label"] for item in pending["options"]] == ["قسط سوم", "قسط چهارم", "لغو"]
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_a_loans_next_installment_is_set_by_code() -> None:
@@ -150,7 +153,7 @@ def test_a_wallet_top_up_amount_the_operator_does_not_list_is_asked_again() -> N
     result = build_agent(chat, app).invoke(new_request("c", f"{title} رایتل ۱۰ هزار تومن"), CONFIG)
     pending = result["__interrupt__"][0].value
     assert pending["question"].startswith(replies.NOT_A_CHARGE.format(amounts="200,000، 500,000، 1,000,000"))
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 @pytest.mark.parametrize(
@@ -192,7 +195,7 @@ def test_an_amount_the_app_would_refuse_is_asked_again_with_the_reason(
     request = new_request("c", f"{title} {words}")
     result = build_agent(FakeChat([{"choice": intent}, said]), app).invoke(request, CONFIG)
     assert result["__interrupt__"][0].value["question"].startswith(refused)
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_a_policy_with_nothing_to_pay_is_not_offered() -> None:
@@ -214,7 +217,7 @@ def test_a_choice_that_was_not_offered_becomes_not_sure() -> None:
         *(item["title"] for item in PROFILE["features"][:8]),
         "لغو",
     ]
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_a_not_sure_option_goes_on_to_that_feature() -> None:
@@ -238,7 +241,7 @@ def test_a_slot_that_was_not_offered_is_dropped() -> None:
         "card-transfer-destination",
         "card-transfer-amount",
     }
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 @pytest.mark.parametrize(
@@ -259,7 +262,7 @@ def test_money_that_is_not_a_whole_number_in_a_known_unit_is_refused(amount: obj
         new_request("c", "از کارت 0018 به رضا کارت به کارت کن"), CONFIG
     )
     assert result["__interrupt__"][0].value["question"] == "چند ریال منتقل شود؟"
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_toman_becomes_exact_rials() -> None:
@@ -294,7 +297,7 @@ def test_a_knowledge_question_gets_the_fixed_message_and_sends_nothing() -> None
     )
     assert result["reply"] == "پاسخ به پرسش‌های عمومی در این مرحله فعال نیست"
     assert result["task_state"] == "created"
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_a_feature_without_a_form_ends_completed_on_its_destination() -> None:
@@ -328,7 +331,7 @@ def test_a_model_that_cannot_be_reached_fails_the_task_and_sends_nothing() -> No
     result = build_agent(FakeChat([]), app, DownEmbeddings()).invoke(new_request("c", CARD_SENTENCE), CONFIG)
     assert result["task_state"] == "failed"
     assert result["reply"] == replies.MODEL_FAILED
-    assert app.sent == []
+    assert not reviewed(app)
 
 
 def test_the_model_never_sees_a_screen_an_action_a_user_only_tag_or_a_full_number() -> None:

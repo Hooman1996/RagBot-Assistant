@@ -111,6 +111,24 @@ def test_a_number_typed_in_persian_digits_reaches_the_app_in_latin_digits() -> N
     assert filled == {"toll-plate-0": "12", "toll-letter": "ب", "toll-plate-2": "345", "toll-plate-3": "67"}
 
 
+def test_advance_fills_what_is_known_and_waits_on_the_form_for_the_rest() -> None:
+    app = FakeApp()
+    runner = TaskRunner(app, Navigator(PROFILE), FixtureLookups())
+    values = CARD_VALUES | {"card-transfer-source": ""}
+    report = runner.advance(plan_card(), values, TaskReport())
+    assert report.state == "waiting" and report.waiting_for == ["card-transfer-source"]
+    assert [operation for operation, _ in app.sent] == ["navigate", "fill_form"]
+    assert set(app.sent[1][1]["values"]) == {"card-transfer-destination", "card-transfer-amount"}
+
+
+def test_advance_waits_where_a_missing_choice_is_made() -> None:
+    app = FakeApp()
+    runner = TaskRunner(app, Navigator(PROFILE), FixtureLookups())
+    report = runner.advance(Navigator(PROFILE).plan(HOME, "S-257"), {}, TaskReport())
+    assert report.waiting_for == ["toll-vehicle"]
+    assert app.sent == [("navigate", {"destination": "S-253"})]
+
+
 def test_an_unexpected_screen_stops_the_run() -> None:
     app = FakeApp()
     app.land_on = "S-192"

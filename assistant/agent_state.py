@@ -30,6 +30,7 @@ class AgentState(TypedDict):
     options: list[dict]  # choices for that question: {"ref", "label"}
     task_state: str  # a state of contracts/transitions/task.json
     report: dict | None  # the task runner's report
+    given: dict[str, str | dict]  # the values the app has been given in this task, as values holds them
     reply: str | None  # the last thing said to the user
 
 
@@ -51,6 +52,7 @@ def new_request(conversation_id: str, text: str) -> AgentState:
         options=[],
         task_state="created",
         report=None,
+        given={},
         reply=None,
     )
 

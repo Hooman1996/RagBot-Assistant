@@ -33,11 +33,14 @@ flowchart LR
     plan --> extract
     extract -->|model failed| stop
     extract --> check
-    check -->|something missing| clarify
+    check -->|something missing| advance
     check -->|all there| resolve
+    advance -->|the app waits on the question's screen| clarify
+    advance -->|cancelled, paused or stopped| stop
+    advance -->|uncertain command| reconcile
     clarify -->|"interrupt(): the user's answer"| extract
     clarify -->|cancel| stop
-    resolve -->|not found, or two matches| clarify
+    resolve -->|not found, or two matches| advance
     resolve -->|one record each| prepare
     prepare --> verify
     verify -->|wrong screen or stopped; cancelled; app out of reach: paused| stop
@@ -53,9 +56,10 @@ flowchart LR
 | `plan` | Plans the chosen feature from the app's current screen, as the graph page does. Each choice gets its allowed keys from [the assistant's words](#the-assistants-own-words-about-the-app). A value the feature decides, or a choice with one key, is set by code and never asked. | `agent_nodes.plan_for` → `Navigator.plan_feature` / `plan`, `words.options`, `words.fixed` | `resolving`, or `failed` with no allowed route |
 | `extract` | The model fills the missing requirements. It sees each one's ref, type, Persian `ask` and `description` (or the field's own words), a choice's Persian labels (never its keys), and the user's words. The schema allows exactly those refs, and a choice only one of its labels. A new value replaces one held before. | `slots.extract` | `resolving` |
 | `check` | Code only. Drops anything the plan does not ask for. Money: see [what code checks](#what-code-checks-whatever-the-model-says). A choice must be one of its allowed keys or labels. Lists what is still missing. | `slots.checked`, `slots.money`, `slots.choice` | `resolving` |
-| `clarify` | `interrupt()` with one Persian message holding every missing `ask`. A missing choice offers its allowed keys, and a missing ref field whose lookup has 2 to 8 records its records (owner, 9 Nov 2026: 8, so the 7 cards fit). Resumes with an option's ref, or with the user's words: then every value is read again, so a correction counts. | `replies.question`, `replies.lookup_options` | `clarifying` |
+| `advance` | Before every question ([D-029](../decisions/0029-asked-on-the-screen.md)): the app goes along the plan as far as the values allow, filling what is known on the way, and stops on the screen where the first missing choice is made or on the form with the first missing field. Only that screen's missing values are asked; a later screen's are asked there. A record is given only once it is one the app lists (or the user's words name exactly one), and no review opens. Each run starts from the app's current screen, or from the task's start when a value given on a screen already passed has changed, so that screen is filled again. | `TaskRunner.advance` over the bridge | `preparing`, then `clarifying`; or as `verify` reads a stop |
+| `clarify` | `interrupt()` with one Persian message holding every missing `ask` of the screen the app waits on. A missing choice offers its allowed keys, and a missing ref field whose lookup has 2 to 8 records its records (owner, 9 Nov 2026: 8, so the 7 cards fit). Resumes with an option's ref, or with the user's words: then every value is read again, so a correction counts. | `replies.question`, `replies.lookup_options` | `clarifying` |
 | `resolve` | Code only. Each named record must match exactly one record of its lookup. A typed card, account or wallet number, or an IBAN that matches no saved one, needs no record. A tie goes back to `clarify` with the matches as options; a miss goes back saying it was not found. | `FixtureLookups.matching`, `lookups.typed` | `resolving` |
-| `prepare` | Runs the task runner with the resolved values, the same way the graph page's Run does. | `TaskRunner.run` over the bridge it is given | `preparing` |
+| `prepare` | Runs the task runner with the resolved values, the same way the graph page's Run does, from the app's current screen (see `advance`). The steps taken before the questions are kept in the report. | `TaskRunner.run` over the bridge it is given | `preparing` |
 | `verify` | Code only. The last observation's screen must be the feature's `review` (or its `destination`, for a feature without a form). Anything else fails with the app's own reason. | the profile | `verifying_review`, or `failed` |
 | `ready_for_user` | Says the review is open and the user must check and confirm it, listing every prepared value masked. A feature without a form says the page is open. | `replies.ready` | `ready_for_user`; then `completed` for a feature without a form |
 | `reply` | A knowledge question gets «پاسخ به پرسش‌های عمومی در این مرحله فعال نیست». `not_sure` asks with the 8 closest features as options, by their Persian `title`, and «لغو». | `replies` | unchanged, or `cancelled` |
@@ -63,7 +67,8 @@ flowchart LR
 | `reconcile` | After an uncertain command: plans again from wherever the app is and prepares once more; a second time fails. | `Lifecycle.again` | `resolving`, or `failed` |
 
 Every question also offers «لغو», and `clarify` and `reply` end the task as `cancelled` when it is
-picked or the answer is only a cancel phrase. `verify` reads the runner's stop: `cancelled` →
+picked or the answer is only a cancel phrase. After the app has moved, the page stays as it is and
+the reply says so; nothing was submitted. `verify` reads the runner's stop: `cancelled` →
 `cancelling` → `cancelled`; `unreachable` → `paused`; `uncertain` → `reconciling`.
 
 Every change of task state goes through `agent_state.moved`, which follows
