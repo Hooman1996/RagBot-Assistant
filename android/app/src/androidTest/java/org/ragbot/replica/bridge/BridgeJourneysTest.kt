@@ -4,6 +4,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -112,6 +113,27 @@ class BridgeJourneysTest {
             "toll-plate-3" to text("67"),
         )
         rig.expect(rig.review(), "S-275")
+    }
+
+    /** A plate not given: the move goes as far as the pollution plate list and waits there. */
+    @Test
+    fun aMissingPlateWaitsOnThePollutionPlateList() {
+        val waiting = rig.navigate("S-257")
+        assertEquals(listOf("missing_argument"), waiting.needs)
+        assertEquals("S-256", waiting.observation.screen)
+        assertNull("the pollution list shows cars only", rig.controls.find("vehicle-plate-2"))
+        rig.reach("S-257", "toll-vehicle" to "plate-1")
+    }
+
+    /** A source not given: its picker is a dialog, so it is closed again and the next move works. */
+    @Test
+    fun aMissingSourceInADialogLeavesNoDialogOpen() {
+        rig.reach("S-401", "insurance-policy" to "policy-1")
+        rig.fill("S-401", "installment" to text("4"))
+        val waiting = rig.navigate("S-404", "insurance-policy" to "policy-1")
+        assertEquals(listOf("missing_argument"), waiting.needs)
+        assertNull("no dialog is left open", waiting.observation.modal)
+        rig.reach("S-404", "insurance-policy" to "policy-1", "insurance-source" to "account-1")
     }
 
     /** A saved plate, tapped in the plate list, fills the pollution inquiry as the app does. */

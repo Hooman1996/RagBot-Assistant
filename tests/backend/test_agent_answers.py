@@ -208,9 +208,9 @@ def test_a_saved_plate_is_tapped_in_the_plate_list_and_fills_the_plate() -> None
     result = graph.invoke(Command(resume="toll-vehicle=plate-1"), CONFIG)
     assert result["task_state"] == "ready_for_user"
     navigate = [arguments for operation, arguments in app.sent if operation == "navigate"]
-    # Waited on the vehicle menu, where the plate's move starts, then went on with the plate.
+    # Went as far as the plate's rows and waited there, then went on with the plate.
     assert navigate == [
-        {"destination": "S-253"},
+        {"destination": "S-257"},
         {"destination": "S-257", "arguments": {"toll-vehicle": "plate-1"}},
     ]
     assert sent_values(app) == PLATE

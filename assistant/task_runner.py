@@ -16,6 +16,7 @@ from assistant.steps import show
 
 PERSIAN_DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹", "0123456789")
 NO_REVIEW = "no_review_here"
+MISSING_CHOICE = "missing_argument"  # navigate went as far as a row choice it was not given
 
 
 class Bridge(Protocol):
@@ -145,16 +146,16 @@ class TaskRunner:
         return report
 
     def advance(self, plan: Plan, values: dict[str, str], report: TaskReport) -> TaskReport:
-        """Runs the plan as far as the values allow and stops where the user's answer is needed: on
-        the screen where a missing choice is made, or on a form with a missing field once what is
-        known there is filled. It opens no review."""
+        """Runs the plan as far as the values allow and stops where the user's answer is needed: at
+        the rows a missing choice is made from, or on a form with a missing field once what is known
+        there is filled. It opens no review."""
         sent = self.known(plan, values)
         try:
             for leg in plan.legs:
                 lacking = [item for item in leg.selections if item.ref not in sent]
                 if lacking:
                     chosen = tuple(item for item in leg.selections if item.ref in sent)
-                    self.move(Leg(lacking[0].screen, chosen), sent, report)
+                    self.to_the_choice(Leg(leg.screen, chosen), sent, report)
                     report.waiting_for = [lacking[0].ref]
                     break
                 self.move(leg, sent, report)
@@ -170,6 +171,18 @@ class TaskRunner:
             report.reason = str(stop)
         show("advance ended", state=report.state, **({"reason": report.reason} if report.reason else {}))
         return report
+
+    def to_the_choice(self, leg: Leg, sent: dict, report: TaskReport) -> None:
+        """Moves toward the leg's screen without its missing choice: the app goes as far as the rows
+        the choice is made from, and says it needs the choice (or arrives, if it needed none)."""
+        arguments: dict = {"destination": leg.screen}
+        if leg.selections:
+            arguments["arguments"] = {item.ref: sent[item.ref] for item in leg.selections}
+        self.check_keys(leg, sent)
+        result = self.command("navigate", arguments, report)
+        if result["outcome"] != "succeeded" and result.get("needs") != [MISSING_CHOICE]:
+            screen = result["observation"]["screen"]
+            raise TaskStopped(f"به جای انتخاب {leg.screen} نرسید و در {screen} ماند: {why(result)}")
 
     def known(self, plan: Plan, values: dict[str, str]) -> dict[str, str | dict]:
         """The values given so far, as the app takes them. One the runner can't use yet is left out."""

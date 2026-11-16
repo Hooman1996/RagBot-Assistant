@@ -248,7 +248,7 @@ A repeated `command_id` runs nothing. The journal returns the first result.
 | `needs` | Meaning |
 |---|---|
 | `no_executor_route` | Only a user step reaches this screen, such as a receipt. Nothing was tapped |
-| `missing_argument` | The next step opens a row, and `navigate` has no key for it. The navigator would have listed it |
+| `missing_argument` | The next step opens a row, and `navigate` has no key for it. The app goes as far as the rows (the taps before the row, such as the pollution menu item that opens the plate list) and stops there, so the user sees them while the choice is asked; rows in a dialog are closed again (#160). The agent's `advance` waits on this before a choice question |
 | Field refs, such as `bill-id` | The form's own validation refused. These fields show an error. The observation schema has no error field, so the result reports them beside the fresh observation |
 | `valid_form` | The page stayed where it was, but no field shows an error |
 | `control_disabled:<tag>` | The control is disabled, so it was not fired. Something on the page must be chosen first |
