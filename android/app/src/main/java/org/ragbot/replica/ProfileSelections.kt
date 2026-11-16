@@ -48,6 +48,7 @@ internal object ProfileSelections {
             "cheque-book-*" to record("cheque-book", "دسته چک", "کدام دسته چک؟", "cheque_books"),
             "digital-*" to record("digital-cheque", "چک دیجیتال", "کدام چک دیجیتال؟", "digital_cheques"),
             "vehicle-menu-*" to entry("vehicle-service", "خدمت خودرو", "کدام خدمت خودرو؟"),
+            "vehicle-*" to entry("toll-vehicle", "پلاک", "کدام پلاک؟"),
             "vehicle-history-*" to record("vehicle", "سابقه وسیله", "کدام وسیله؟", "vehicles"),
             "vehicle-paid-*" to entry("vehicle-paid", "سابقه پرداخت خودرو", "کدام پرداخت؟"),
             "ticket-*" to entry("ticket", "تیکت", "کدام تیکت؟"),

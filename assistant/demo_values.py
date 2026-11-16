@@ -61,6 +61,7 @@ TYPED = {
     "toll-plate-0": "12",
     "toll-plate-2": "345",
     "toll-plate-3": "67",
+    "toll-vehicle": "new",
     "topup-amount": "200000",
     "topup-phone": "09010000000",
     "wallet-address": "address-1",

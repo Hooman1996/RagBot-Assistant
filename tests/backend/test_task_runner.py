@@ -102,6 +102,15 @@ def test_persian_digits_are_money_too() -> None:
     assert money_value("۲۵۰۰۰۰") == {"value": 250000, "unit": "IRR"}
 
 
+def test_a_number_typed_in_persian_digits_reaches_the_app_in_latin_digits() -> None:
+    plate = {"toll-plate-0": "۱۲", "toll-letter": "ب", "toll-plate-2": "۳۴۵", "toll-plate-3": "۶۷"}
+    app = FakeApp()
+    report = run(app, plate | {"toll-vehicle": "new"}, Navigator(PROFILE).plan(HOME, "S-257"))
+    assert report.state == "review"
+    filled = next(arguments["values"] for operation, arguments in app.sent if operation == "fill_form")
+    assert filled == {"toll-plate-0": "12", "toll-letter": "ب", "toll-plate-2": "345", "toll-plate-3": "67"}
+
+
 def test_an_unexpected_screen_stops_the_run() -> None:
     app = FakeApp()
     app.land_on = "S-192"

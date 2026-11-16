@@ -21,7 +21,7 @@ from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
 from assistant.slots import checked, extract, hidden
 from assistant.steps import masked, show
 from assistant.task_runner import Bridge, TaskReport, TaskRunner
-from assistant.words import field_words, fixed, installment_of, limits, options, when
+from assistant.words import field_words, fixed, installment_of, limits, options, plates, when
 
 MODEL_SEES = ("ref", "type", "ask", "description")
 
@@ -114,13 +114,13 @@ class Nodes:
 
     def extract(self, state: AgentState) -> dict:
         """Asks the model for the missing values only, showing it nothing but what it may see: a
-        choice's labels, never its keys."""
+        choice's labels, never its keys. A saved plate is the user's pick alone, never the model's."""
         offered = [
             {key: item[key] for key in MODEL_SEES}
             | {"description": field_words(item["ref"]) or item["description"]}
             | {"options": [o["label"] for o in item.get("options", [])]}
             for item in state["plan"]["requirements"]
-            if item["ref"] in state["missing"]
+            if item["ref"] in state["missing"] and item["ref"] not in plates()
         ]
         if not offered:
             return moved(state, "resolving")
@@ -144,10 +144,33 @@ class Nodes:
             plan, values = replanned["plan"], replanned["values"]
         plan, values, note = self.payable(plan, values)
         note = self.amounts(plan, values) or note
+        values |= self.plate(plan, values)
         missing = [item["ref"] for item in plan["requirements"] if item["ref"] not in values]
+        for ref, parts in plates().items():
+            if ref in missing:  # the saved plates are offered first; a new plate's parts after
+                missing = [item for item in missing if item not in parts]
         show("check", values=values, missing=missing)
         update = moved(state, "resolving") | {"plan": plan, "values": values, "missing": missing}
         return update | ({"question": note, "options": []} if note else {})
+
+    def plate(self, plan: dict, values: dict) -> dict:
+        """Code only: a saved plate fills the plate's parts with its own, as the app does when it is
+        tapped; a plate the user typed, in whole or in part, is a new one, so a correction counts."""
+        refs = {item["ref"] for item in plan["requirements"]}
+        records = {row["id"]: row["plate"] for row in self.tools.lookups.records("vehicles")}
+        found = {}
+        for ref, parts in plates().items():
+            chosen = values.get(ref)
+            if ref not in refs or chosen == "new":
+                continue
+            saved = dict(zip(parts, records[chosen], strict=True)) if chosen else {}
+            if any(part in values and values[part] != saved.get(part) for part in parts):
+                found[ref] = "new"
+            else:
+                found |= saved
+        if found:
+            show("plate", found=found)
+        return found
 
     def named(self, plan: dict, values: dict, messages: list[str]) -> dict:
         """Code only: a record field the model left empty, when the user's words name exactly one

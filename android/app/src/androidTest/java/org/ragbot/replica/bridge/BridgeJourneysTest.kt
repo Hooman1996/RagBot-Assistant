@@ -103,7 +103,7 @@ class BridgeJourneysTest {
     /** The toll's fee and results sit behind the user's OTP, so its form is where it stops. */
     @Test
     fun trafficToll() {
-        rig.reach("S-275")
+        rig.reach("S-275", "toll-vehicle" to "new")
         rig.fill(
             "S-275",
             "toll-plate-0" to text("12"),
@@ -112,6 +112,15 @@ class BridgeJourneysTest {
             "toll-plate-3" to text("67"),
         )
         rig.expect(rig.review(), "S-275")
+    }
+
+    /** A saved plate, tapped in the plate list, fills the pollution inquiry as the app does. */
+    @Test
+    fun pollutionWithASavedPlate() {
+        rig.reach("S-257", "toll-vehicle" to "plate-1")
+        val seen = rig.executor.observer.observe()
+        val plate = listOf("toll-plate-0", "toll-letter", "toll-plate-2", "toll-plate-3")
+        assertEquals(listOf("12", "ب", "345", "67"), plate.map { ref -> seen.fields.first { it.ref == ref }.value })
     }
 
     /** The user gives the three consents. The executor stops at each, and at the review. */

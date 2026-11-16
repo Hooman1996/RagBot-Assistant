@@ -116,7 +116,8 @@ class TaskRunner:
         if item.type == "money":
             return money_value(text)
         if item.lookup is None:
-            return text.strip()
+            latin = text.strip().translate(PERSIAN_DIGITS)
+            return latin if latin.isdigit() else text.strip()  # the app keeps digits in Latin form
         try:
             value = self.lookups.resolve(item.lookup, text.strip())
         except (NotFound, Ambiguous) as problem:

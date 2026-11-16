@@ -142,6 +142,13 @@ a file the assistant owns, `app_profiles/assistant_words.json`, read by `assista
 - `when`: what a chosen value changes in the app. A weekly or monthly transfer also asks its day,
   with that frequency's days; a card sent by post goes by the address page and asks the address.
   The agent plans again once such a value is known, and the run uses the same plan.
+- `plates`: the saved-plate choice of the four road tolls (`toll-vehicle`) and the plate fields it
+  fills ([D-028](../decisions/0028-plate-choice-in-heldout.md)). The app's vehicle menu opens its
+  plate list: a saved plate fills the inquiry, «پلاک جدید» (`new`) opens it empty. With no plate
+  named, «کدام پلاک؟» is asked first, offering the saved car plates, and a new plate's parts only
+  after. Only the user picks a saved plate; the model never sees the choice. A typed plate, whole
+  or in part, is `new`. A saved motorcycle plate isn't offered: the toll forms' required parts are
+  a car plate's.
 
 `tests/backend/test_words.py` checks that every feature has words and every choice the agent can
 ask has allowed keys.
@@ -161,6 +168,8 @@ ask has allowed keys.
 - **A typed number** must fit its field: an IBAN field takes only an IBAN, and a bare number is
   never matched inside a saved IBAN.
 - **A text value** loses its field's own label word in front: «عنوان محل کار» is the title «محل کار».
+  A value made only of digits reaches the app in Latin digits, as the app keeps it: «۱۲» is sent as
+  «12».
 - **A record the model left out** is taken from the user's words when they name exactly one record
   the app lists for the field, by its whole label or by the words no other record has («پس‌انداز»;
   never «نمایشی», which every label has, and never «پس» alone), and no other field of the plan takes

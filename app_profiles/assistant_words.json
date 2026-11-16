@@ -429,6 +429,16 @@
         "key": "address-2",
         "label": "محل کار"
       }
+    ],
+    "toll-vehicle": [
+      {
+        "key": "plate-1",
+        "label": "پلاک 12 ب 345 ایران 67"
+      },
+      {
+        "key": "new",
+        "label": "پلاک جدید"
+      }
     ]
   },
   "fixed": {
@@ -666,5 +676,13 @@
         100000000
       ]
     }
+  },
+  "plates": {
+    "toll-vehicle": [
+      "toll-plate-0",
+      "toll-letter",
+      "toll-plate-2",
+      "toll-plate-3"
+    ]
   }
 }

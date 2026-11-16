@@ -72,6 +72,12 @@ def when(values: dict) -> tuple[str | None, dict[str, list[dict]]]:
     return through, fields
 
 
+def plates() -> dict[str, list[str]]:
+    """Each saved-plate choice and the plate fields it fills, in the order of a record's plate. Its
+    key "new" is the app's «پلاک جدید»; any other key is a saved plate, which fills the form."""
+    return WORDS["plates"]
+
+
 def fixed(intent: str) -> dict:
     """Values the feature itself decides, such as which paid inquiry the menu opens."""
     return WORDS["fixed"].get(intent, {})
