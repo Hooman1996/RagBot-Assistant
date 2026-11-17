@@ -7,8 +7,8 @@ first measurement is [the P6-02 baseline](../reports/p6-02-baseline.md).
 
 | File | What it is |
 |---|---|
-| `tests/evaluation/heldout.json` | 143 held-out cases, frozen by their SHA-256. The gates are reported on these. |
-| `tests/evaluation/tuning.json` | 43 tuning cases, for prompt and profile work. They may change freely. |
+| `tests/evaluation/heldout.json` | 145 held-out cases (143 until D-030), frozen by their SHA-256. The gates are reported on these. |
+| `tests/evaluation/tuning.json` | 55 tuning cases, for prompt and profile work. They may change freely. |
 | `tools/evaluate_agent.py` | Runs a case file through the agent and writes every case's record. |
 | `tools/evaluation_score.py` | Scores each record and prints the report. |
 | `tests/evaluation/test_cases.py` | Checks both files' format, labels and counts, and the freeze. Runs in CI. |
@@ -31,7 +31,7 @@ case is written to `local/scratch/p6-02/<file name>-<UTC time>.json`.
 ## How it runs a case
 
 The runner builds the same agent as `main_debug.py`: the profile, the navigator, the lookups, the
-real `Chat` and `Embeddings`, and one `FeatureIndex` shared by every case, so the 77 features are
+real `Chat` and `Embeddings`, and one `FeatureIndex` shared by every case, so the 79 features are
 embedded once. Each case then starts fresh: a new `CommandQueue`, a new stand-in app on Home, new
 `Tools`, a new graph, and the case ID as the conversation's `thread_id`.
 
@@ -110,12 +110,13 @@ Both files are a JSON list, UTF-8, one case per object:
 2. **Bill and top-up.** A sentence that does not mention the wallet (کیف, کیف پول) means
    `bill_payment` or `mobile_top_up`. A sentence that does mention it means `wallet_bill` or
    `wallet_mobile_top_up`.
-3. **Money.** «تومان», «تومن» and «ت» mean toman; «ریال» means rial; no unit means rial, as the
-   extract prompt says. Expected amounts are always whole rials.
+3. **Money.** «تومان», «تومن» and «ت» mean toman; «ریال» means rial; an amount with a scale word and
+   no unit («۵۰ هزار») means toman, as people say it and as the extract prompt says (owner,
+   17 Nov 2026, #164). Expected amounts are always whole rials.
 4. **Knowledge** is a banking question that asks for information, not an action («سقف کارت به کارت
    روزانه چقدره؟»). **Not sure** is a request no feature serves, or one too vague to pick a feature
    («یه کاری با کارتم دارم»).
-5. **Gate scope (owner, 14 Nov 2026).** The preparation gate counts the `e2e` cases of all 77
+5. **Gate scope (owner, 14 Nov 2026).** The preparation gate counts the `e2e` cases of all 79
    features, including features with choice fields, which fail until allowed keys exist (P6-03).
 6. **Nothing real.** Every value, name and number is synthetic and comes from
    `mock_services/fixtures/` (rule 2).

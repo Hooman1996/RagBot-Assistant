@@ -14,6 +14,7 @@ internal class FakeControls(var screen: String = HomeDestinations.HOME) : Contro
     var disabled = setOf<String>()
     var errors = setOf<String>()
     var rows = setOf<String>()
+    var selected = setOf<String>()
     var pressedBack = 0
 
     /** Set to land somewhere the tapped edge does not lead, as a page choosing for itself. */
@@ -40,7 +41,7 @@ internal class FakeControls(var screen: String = HomeDestinations.HOME) : Contro
                 tag !in disabled,
                 clickable = true,
                 editable = tag in extra,
-                selected = false,
+                selected = tag in selected,
                 password = false,
                 error = tag in errors,
             )

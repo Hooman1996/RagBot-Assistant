@@ -1025,5 +1025,124 @@
       "end": "ready_for_user",
       "asks": []
     }
+  },
+  {
+    "id": "T-050",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "برو به خانه"
+    ],
+    "expect": {
+      "intent": "home",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-051",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "تسهیلات در جریانمو نشون بده"
+    ],
+    "expect": {
+      "intent": "loans",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-052",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "دسته چک های من رو نشون بده"
+    ],
+    "expect": {
+      "intent": "cheque_books",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-053",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "صفحه تسهیلات باشکاه مشتریان رو بیار"
+    ],
+    "expect": {
+      "intent": "loan_groups",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-054",
+    "tags": [
+      "missing",
+      "option",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "برو ۵۰ هزار کارت به کارت کن برا رضا",
+      "option:card-transfer-source=card-2"
+    ],
+    "expect": {
+      "intent": "card_transfer",
+      "values": {
+        "card-transfer-source": "card-2",
+        "card-transfer-destination": "reza",
+        "card-transfer-amount": {
+          "value": 500000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-055",
+    "tags": [
+      "missing",
+      "colloquial"
+    ],
+    "turns": [
+      "۵۰ هزار تومن انتقال وجه داخلی به حساب آزمایشی ۳ بزن"
+    ],
+    "expect": {
+      "intent": "internal_transfer",
+      "values": {
+        "account-transfer-destination": "account-3",
+        "account-transfer-amount": {
+          "value": 500000,
+          "unit": "IRR"
+        }
+      },
+      "end": "clarifying",
+      "asks": [
+        "account-transfer-source",
+        "account-transfer-reason"
+      ]
+    }
   }
 ]

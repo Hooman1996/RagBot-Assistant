@@ -110,6 +110,22 @@ class ExecutorTest {
     }
 
     @Test
+    fun fillFormLeavesAChoiceAlreadyMade() {
+        controls.screen = "S-306"
+        controls.rows = setOf("loan-installment-0")
+        controls.selected = setOf("loan-installment-0")
+        val result =
+            run(
+                "fill_form",
+                form = "S-306",
+                values = mapOf("loan-installment" to FieldValue.Text("0")),
+                draft = 0,
+            )
+        assertEquals("succeeded", result.outcome)
+        assertTrue(controls.tapped.isEmpty())
+    }
+
+    @Test
     fun fillFormNeedsTheFormOnScreen() {
         val result =
             run(

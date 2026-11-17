@@ -41,6 +41,9 @@ internal class FormFiller(private val actions: Actions, private val navigator: N
         if (actions.find(ref)?.editable == true) return actions.type(ref, value)
         if (!Policy.isSafeKey(value)) return failed("invalid_value")
         val option = "$ref-$value"
+        // A choice already made is left as it is: a second tap would untick a checkbox, such as a
+        // loan's installment when the form is filled again before the review.
+        if (actions.find(option)?.selected == true) return null
         if (actions.find(option) == null) {
             val opener = if (actions.find("$ref-picker") != null) "$ref-picker" else ref
             actions.tap(opener)?.let {

@@ -13,6 +13,11 @@ def test_a_contact_name_becomes_their_card() -> None:
     assert FixtureLookups().resolve("contacts.card", "رضا") == "0000000000000091"
 
 
+def test_a_saved_destination_is_found_by_its_name() -> None:
+    assert FixtureLookups().resolve("contacts.account", "حساب آزمایشی ۳") == "0000000000003"
+    assert FixtureLookups().resolve("contacts.card", "کارت آزمایشی ۲") == "0000000000000026"
+
+
 def test_a_typed_card_number_needs_no_contact() -> None:
     assert FixtureLookups().resolve("contacts.card", "0000000000000026") == "0000000000000026"
 

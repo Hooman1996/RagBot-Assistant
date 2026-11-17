@@ -12,6 +12,7 @@ from assistant.agent_state import AgentState, moved, new_request
 from assistant.lifecycle import corrects, wants_cancel
 from assistant.models import ModelError
 from assistant.navigator import CrossesUserOnly, NoRoute
+from assistant.words import feature_words
 
 
 class Lifecycle:
@@ -40,9 +41,10 @@ class Lifecycle:
             return moved(state, "cancelled") | {"reply": replies.CANCELLED}
         if state["task_state"] == "paused":
             return self.again(state, ("reconciling", "resolving"), reread=False)
-        title = self.nodes.features[state["plan"]["intent"]]["title"]
+        intent = state["plan"]["intent"]
+        title = self.nodes.features[intent]["title"]
         try:
-            correction = corrects(self.nodes.tools.chat, title, state["messages"])
+            correction = corrects(self.nodes.tools.chat, title, feature_words(intent), state["messages"])
         except ModelError:
             return {"reply": replies.MODEL_FAILED}  # the review stays as it is
         if correction:

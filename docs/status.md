@@ -1,8 +1,17 @@
 # Project Status
 
-Last updated: 9 November 2026. This page is updated whenever a task changes state.
+Last updated: 17 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Stages 2 and 3 are done: the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the Python navigator and interactive graph (#94) are on `main`. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
+
+**P6 now (17 Nov 2026):** the conversational assistant drives the replica from a Persian sentence to
+the review, and never past it. On `main`: the LangGraph agent on Gemma 4 E4B and the TEI embeddings
+(#136), the frozen evaluation set and its runner (#138), the assistant-side fixes and task lifecycle
+(#140, #142), the in-app assistant panel (#144), only values the app accepts (#146–#154), saved
+plates (#156), moving to the question's screen before asking (#157, #159, #160), and the fixes from
+the owner's live test with toman as the default unit (#164). The owner deferred RAG answers
+(P6-06): the focus is the agent, tool calling and navigation. Next: the owner tests the demo flows
+on the replica and picks the next fixes; then P7 (fault cases, latency, clean demo runs).
 
 **D-022 (5 Nov 2026):** the replica was completed before the bridge. See the
 [decision](decisions/0022-complete-replica-with-mock-data.md). The owner approved it on 6 Nov 2026,
@@ -44,7 +53,7 @@ The owner checked it and it was merged with #94 on 8 Nov 2026.
 | P3: Chatbot parity | Planned | [P3](phases/P3-chatbot-parity.md) | After P2 |
 | P4: Mock domain and manual replica | Planned | [P4](phases/P4-mock-domain-and-replica.md) | Needs P1d and the contracts |
 | P5: Executor and deterministic demo | Planned | [P5](phases/P5-executor.md) | **First internal demo** |
-| P6: Conversational assistant | Approved | [P6](phases/P6-conversational-assistant.md) | D-024: the agent loop (#136) comes first; RAG, the evaluation set, the panel and the gates follow |
+| P6: Conversational assistant | Approved | [P6](phases/P6-conversational-assistant.md) | D-024: the agent loop (#136) first; done: evaluation set (#138, D-025), fixes and lifecycle (#140, #142), panel (#144), app-accepted values (#146–#154, D-027), saved plates (#156, D-028), asking on the question's screen (#157, #159, #160, D-029), live-test fixes and toman default (#164, D-030). RAG (P6-06) deferred by the owner on 17 Nov 2026 |
 | P7: Demo hardening and review | Planned | [P7](phases/P7-hardening-and-demo.md) | Presentation package |
 | P8: After-presentation integration | Planned | [P8](phases/P8-integration.md) | Only if the app team accepts |
 

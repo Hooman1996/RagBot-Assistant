@@ -2866,5 +2866,38 @@
       "end": "ready_for_user",
       "asks": []
     }
+  },
+  {
+    "id": "H-144",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "منو ببر صفحه اصلی"
+    ],
+    "expect": {
+      "intent": "home",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "H-145",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "وام‌هایی که دارم رو نشونم بده"
+    ],
+    "expect": {
+      "intent": "loans",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
   }
 ]

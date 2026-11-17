@@ -17,6 +17,8 @@ from assistant.amounts import amounts
         ("۵۰تومن", [500]),
         ("دویست هزار تومن به علی", [2000000]),
         ("۲۰۰ هزار تومن، نه، ۳۰۰ هزار تومن", [2000000, 3000000]),
+        ("۵۰ هزار کارت به کارت کن", [500000]),
+        ("یک میلیون و دویست هزار", [12000000]),
     ],
 )
 def test_an_amount_is_read_in_whole_rials(text: str, rials: list[int]) -> None:

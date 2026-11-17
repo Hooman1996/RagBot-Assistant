@@ -101,6 +101,7 @@ internal object ProfileFeatures {
             filled("mobile_top_up", "خرید شارژ", "Prepare a mobile top-up up to its review.", "S-211", accounts),
             filled("charity", "کمک به خیریه", "Prepare a charity donation up to its review.", "S-284", listOf("charities") + accounts),
             feature("loan_repayment", "تسهیلات در جریان و پرداخت", "Prepare a loan installment repayment up to its review.", "S-331", "S-306", listOf("loans") + accounts),
+            feature("loans", "تسهیلات جاری و پرداخت اقساط", "Show the current loans, read-only.", "S-338"),
             feature("loan_groups", "تسهیلات باشگاه مشتریان", "Show the loan groups, read-only.", "S-307"),
             filled("identifier_conversion", "تبدیل حساب، کارت و شبا", "Convert an account, card or IBAN identifier.", "S-202"),
             filled("paid_identifier_inquiry", "تبدیل کارت به شبا", "Open the paid identifier inquiry; card secrets stay with the user.", "S-203", cards),
@@ -159,9 +160,12 @@ internal object ProfileFeatures {
             feature("rewards", "باشگاه مشتریان", "Show the rewards menu.", "S-432"),
         )
 
+    private val home = listOf(feature("home", "خانه", "Open the home page.", HomeDestinations.HOME))
+
     /** One per built journey. Independent receipts are never a destination. */
     val all =
-        transfers +
+        home +
+            transfers +
             payments +
             accountsAndCards +
             wallet +

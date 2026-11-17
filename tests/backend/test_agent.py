@@ -12,6 +12,7 @@ from agent_fakes import (
     RecordingApp,
     build_agent,
     every_change_is_allowed,  # noqa: F401 - an autouse fixture: every state change is checked
+    given,
     reviewed,
 )
 from langgraph.types import Command
@@ -99,10 +100,23 @@ def test_a_name_that_is_not_found_asks_again_and_sends_nothing() -> None:
     result = graph.invoke(new_request("c", CARD_SENTENCE.replace("رضا", "علی")), CONFIG)
     first = result["__interrupt__"][0].value
     assert first["question"].startswith(replies.NOT_FOUND.format(text="علی"))
-    assert first["options"] == [{"ref": "cancel", "label": "لغو"}]
+    # The app's saved destinations («مقصدهای ذخیره‌شده») and رضا are offered, as its picker lists them.
+    assert [item["label"] for item in first["options"]][:2] == ["رضا ****0091", "کارت آزمایشی 1 ****0018"]
+    assert first["options"][-1] == {"ref": "cancel", "label": "لغو"}
     result = graph.invoke(Command(resume="علی"), CONFIG)
     assert result["__interrupt__"][0].value["question"] == first["question"]
     assert not reviewed(app)
+
+
+def test_a_typed_answer_naming_one_saved_record_replaces_a_name_not_found() -> None:
+    # The model keeps «علی» from the first message; the user's answer names one saved card.
+    chat = FakeChat([CARD, card_values("card-1", "علی"), {"card-transfer-destination": "علی"}])
+    app = RecordingApp()
+    graph = build_agent(chat, app)
+    graph.invoke(new_request("c", CARD_SENTENCE.replace("رضا", "علی")), CONFIG)
+    result = graph.invoke(Command(resume="کارت آزمایشی ۲"), CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    assert given(app)["card-transfer-destination"] == "0000000000000026"
 
 
 def test_a_card_the_app_does_not_list_is_refused_and_the_listed_cards_are_offered() -> None:
@@ -278,6 +292,14 @@ def test_an_amount_that_may_be_shorthand_is_asked() -> None:
     assert money({"value": 30, "unit": "IRR"}, ["30 جابجا شه برا رضا"]) is None
     answered = ["30 جابجا شه برا رضا", "300000"]  # a bare number answers «چند ریال…؟»
     assert money({"value": 300000, "unit": "IRR"}, answered) == {"value": 300000, "unit": "IRR"}
+    # The question asks in rials, so the bare answer stays rials even when the model reads tomans.
+    assert money({"value": 300000, "unit": "IRT"}, answered) == {"value": 300000, "unit": "IRR"}
+
+
+def test_an_amount_with_no_unit_is_in_tomans() -> None:
+    said = ["۵۰ هزار کارت به کارت کن برا رضا"]
+    assert money({"value": 50000, "unit": "IRT"}, said) == {"value": 500000, "unit": "IRR"}
+    assert money({"value": 50000, "unit": "IRR"}, said) == {"value": 500000, "unit": "IRR"}
 
 
 def test_a_model_amount_the_user_never_wrote_is_not_used() -> None:

@@ -15,7 +15,7 @@ from langgraph.types import interrupt
 from assistant import replies
 from assistant.agent_state import AgentState, moved
 from assistant.intent import KNOWLEDGE, NOT_SURE, FeatureIndex, choose
-from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, wants_cancel
+from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, only_looking, wants_cancel
 from assistant.lookups import Candidate, FixtureLookups, source_of, typed
 from assistant.models import Chat, ModelError
 from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
@@ -270,13 +270,20 @@ class Nodes:
         answer = interrupt(
             {"question": text, "options": options, "fields": fields, "task_state": update["task_state"]}
         )
-        if wants_cancel(answer):
+        if wants_cancel(answer) or only_looking(answer):
             reply = replies.CANCELLED_OPEN if state["report"] else replies.CANCELLED  # the app moved
             return update | moved(update, "cancelled") | {"reply": reply}
         if answer in [item["ref"] for item in options]:
             ref, key = answer.split("=", 1)
             missing = [item for item in state["missing"] if item != ref]
             return update | {"values": state["values"] | {ref: key}, "missing": missing}
+        record = self.record(wanted[0], answer) if len(wanted) == 1 and wanted[0]["lookup"] else None
+        if record:
+            # A typed answer to one record question that names exactly one listed record is that
+            # record, as an option would be, so a name the model kept from before can't win.
+            missing = [item for item in state["missing"] if item != wanted[0]["ref"]]
+            values = state["values"] | {wanted[0]["ref"]: record.key}
+            return update | {"messages": state["messages"] + [answer], "values": values, "missing": missing}
         # Typed words may answer the question or change any value given before: all are read again.
         again = [
             item["ref"]
