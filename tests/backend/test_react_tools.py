@@ -11,7 +11,7 @@ from assistant.intent import FeatureIndex
 from assistant.lookups import FixtureLookups
 from assistant.models import Chat, ModelError
 from assistant.navigator import Navigator
-from assistant.react_graph import STEP_BUDGET, TOO_MANY_STEPS, build_react_graph
+from assistant.react_graph import REPEATED, STEP_BUDGET, TOO_MANY_STEPS, build_react_graph
 
 CONFIG = {"configurable": {"thread_id": "react"}}
 REZA_CARD = "6037990836388880"
@@ -138,3 +138,16 @@ def test_the_budget_counts_again_after_the_users_answer() -> None:
     graph.invoke(new_request("c", "کجام؟"), CONFIG)
     result = graph.invoke(Command(resume="خانه"), CONFIG)
     assert result["reply"] == "باشه"
+
+
+def test_the_same_call_twice_is_not_run_again() -> None:
+    chat = StepChat([call("current_screen"), call("current_screen"), call("finish", message="باشه")])
+    result = react(chat).invoke(new_request("c", "کجام؟"), CONFIG)
+    assert result["steps"][1]["result"] == {"error": REPEATED}
+    assert result["reply"] == "باشه"
+
+
+def test_find_features_searches_the_users_own_words_first() -> None:
+    chat = StepChat([call("find_features", text="وام"), ModelError("chat: stop here")])
+    result = react(chat).invoke(new_request("c", "کارت به کارت کن"), CONFIG)
+    assert result["offered"][0] == "card_transfer"

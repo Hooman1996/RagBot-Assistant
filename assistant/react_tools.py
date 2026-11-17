@@ -4,8 +4,13 @@ code that runs it.
 Called by react_graph's act node, which runs the tool the model named. A tool returns a short result
 for the model, and the state keys it changes. The model sees Persian titles, questions and labels,
 never an app key, a screen ID or a full card, account or IBAN number: every result is masked. The
-read tools change nothing in the app. No tool can confirm, submit or pay.
+read tools change nothing in the app. The act tools run the workflow's own code: set_values its
+reader, check and resolve, move_app its advance, open_review its prepare and verify, and a task's
+question is the workflow's, with its options. The app is reached only through TaskRunner, so the
+only commands are navigate, fill_form and show_review. No tool can confirm, submit or pay.
 """
+
+import re
 
 from langgraph.types import interrupt
 
@@ -22,6 +27,8 @@ from assistant.steps import masked
 from assistant.words import feature_words, field_words, plates
 
 TEXT = {"type": "string"}
+SHOWN = re.compile(r"\*{4}(\d{4})")  # a long number as the model is shown it
+EXTRA_FEATURES = 2  # features the model's own search words may add to the user's closest 8
 NEXT_AFTER_PLAN = "set_values with every value the user gave"
 NEXT_MISSING = "move_app, then ask_user"
 NEXT_READY = "open_review"
@@ -42,9 +49,11 @@ TEXTS = {
     "current_screen": "current_screen(): the page the app is on, and the values filled there.",
     "set_values": (
         "set_values(values): sets the task's values, null for any you do not set. Copy the user's own"
-        ' words for a person, card, account or record. Money is {"value": the number as the user said'
-        ' it, "unit": "IRT" for تومان or "IRR" for ریال}; هزار is 1000, میلیون is 1000000, no unit is'
-        " IRT. Code checks every value and says what it kept, refused and still misses."
+        " words for a person, card, account or record, and a ****1234 number exactly as you see it."
+        " Give a text without its field's label words («عنوان», «نشانی»)."
+        ' Money is {"value": the number as the user said it, "unit": "IRT" for تومان or "IRR" for'
+        " ریال}; هزار is 1000, میلیون is 1000000, no unit is IRT. Code checks every value and says what"
+        " it kept, refused and still misses."
     ),
     "move_app": "move_app(): takes the app to the page of the next missing value, before ask_user.",
     "open_review": "open_review(): fills the task in the app and opens its review, for the user to check.",
@@ -54,11 +63,24 @@ TEXTS = {
 
 
 def named_by_user(value: str, messages: list[str]) -> bool:
-    """True when each word of a record's value is in the user's messages: a ****1234 number by its
-    last digits, and the generic words («کارت», «حساب») aside."""
+    """True when each word of a record's value is in the user's messages: a ****1234 number (or an
+    IR****1234 IBAN) by its last digits, and the generic words («کارت», «حساب») aside."""
     said = plain(" ".join(messages))
     words = [word for word in plain(value).split() if word not in GENERIC]
-    return all((word[4:] if word.startswith("****") else word) in said for word in words)
+    shown = [SHOWN.search(word) for word in words]
+    return all((found.group(1) if found else word) in said for word, found in zip(words, shown, strict=True))
+
+
+def shown_again(value: object, messages: list[str]) -> object:
+    """A bare last-4 of a long number the user wrote («3691» for a bill ID they typed in full), as
+    the ****3691 the model was shown, so the workflow's check puts the whole number back. Four digits
+    the user wrote on their own («از کارت 4544») stay as they are."""
+    if not isinstance(value, str) or not re.fullmatch(r"\d{4}", plain(value)):
+        return value
+    said = plain(" ".join(messages))
+    alone = re.search(rf"(?<!\d){plain(value)}(?!\d)", said)
+    ends = any(number.endswith(plain(value)) for number in re.findall(r"\d{12,}", said))
+    return value if alone or not ends else "****" + plain(value)
 
 
 def read_since_words(steps: list[dict]) -> bool:
@@ -135,12 +157,16 @@ class ReactTools:
         return [item["ref"] for item in plan["requirements"] if item["lookup"]]
 
     def find_features(self, state: AgentState, given: dict) -> tuple[dict, dict]:
-        """The closest features by TEI, as the workflow's understand narrows them."""
-        text = hidden([given["text"].strip() or state["messages"][-1]])[0]
+        """The closest features by TEI to the user's newest words, as the workflow's understand
+        narrows them, and a few more closest to the model's own words."""
+        # The user's newest words first, as the workflow narrows them, then any the model's words add.
+        texts = hidden([state["messages"][-1], given["text"].strip() or state["messages"][-1]])
         try:
-            found = self.nodes.tools.index.closest(text)
+            found = self.nodes.tools.index.closest(texts[0])
+            extra = self.nodes.tools.index.closest(texts[1]) if texts[1] != texts[0] else []
         except ModelError:
             return {"error": "the feature search is not reachable"}, {}
+        found += [item for item in extra if item not in found][:EXTRA_FEATURES]
         features = [
             {"intent": item["intent"], "title": item["title"], "words": feature_words(item["intent"])}
             for item in found
@@ -226,7 +252,11 @@ class ReactTools:
         """The model's values, and the workflow's reading of the missing ones it left empty, through
         the workflow's check and resolve: what is kept, refused and still missing. A new value
         replaces one held before."""
-        said = {ref: value for ref, value in given["values"].items() if value is not None}
+        said = {
+            ref: shown_again(value, state["messages"])
+            for ref, value in given["values"].items()
+            if value is not None
+        }
         lookups = {item["ref"]: item["lookup"] for item in state["plan"]["requirements"]}
         # A record comes only from the user's words, never from a label the model read in find_records.
         unnamed = [

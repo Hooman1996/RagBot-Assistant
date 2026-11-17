@@ -31,10 +31,14 @@ from assistant.steps import masked, show
 STEP_BUDGET = 12  # tool calls in one turn, counted from the user's last answer
 TOO_MANY_STEPS = "دستیار نتوانست این کار را در چند گام آماده کند؛ چیزی ارسال یا تأیید نشد."
 AGENTS = ("workflow", "react")
+REPEATED = "the same call as your last step: its result is above; do the next thing"
 RULES = [
     "Rules:",
     "- For anything the user wants to do or see in the app: find_features, then feature_requirements",
     "  with the one feature that fits, then set_values with every value the user gave.",
+    "- Choose the feature whose title or words match the user's own words («انتقال داخلی», «شبا»).",
+    "  When the user names a thing to see (نشون بده، ببینم، بیار، برو به), choose the feature that",
+    "  shows that thing, not one that pays, sends or requests it.",
     "- When something is missing: move_app, then ask_user. When nothing is missing: open_review.",
     "- After the user answers, set_values with what the answer gives.",
     "- Never guess a value the user did not give, and never pick a record or an option for the user.",
@@ -49,6 +53,11 @@ class ReactState(AgentState):
     plus this turn's steps."""
 
     steps: list[dict]  # each {"thought", "tool", "arguments", "result"}, oldest first
+
+
+def called(step: dict) -> tuple[str, str]:
+    """A step's tool and arguments, to tell the same call made twice."""
+    return step["tool"], json.dumps(step["arguments"], sort_keys=True, ensure_ascii=False)
 
 
 def since_answer(steps: list[dict]) -> list[dict]:
@@ -137,6 +146,13 @@ class ReactAgent:
         whose app has not moved yet first moves it (D-029), as a step of its own, so the move is
         never run again when the answer resumes the question."""
         step = state["steps"][-1]
+        if (
+            len(state["steps"]) > 1
+            and step["tool"] != "ask_user"
+            and called(step) == called(state["steps"][-2])
+        ):
+            # The same call again changes nothing: the model is told so instead, and goes on.
+            return {"steps": state["steps"][:-1] + [step | {"result": {"error": REPEATED}}]}
         if step["tool"] == "ask_user" and state["task_state"] == "resolving":
             result, update = self.tools.move_app(state, {})
             steps = state["steps"][:-1] + [step | {"tool": "move_app", "arguments": {}, "result": result}]
