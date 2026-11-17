@@ -54,7 +54,8 @@ import kotlinx.coroutines.withContext
  * app and comes back when it is done; cancel is a separate control, and it closes the box.
  * It lives inside the app's own window, never in a dialog, so the executor still sees and taps the
  * screen behind it. It catches no Back press (the executor uses Back) and shows no spinner (an
- * indeterminate one reads as loading). It keeps the conversation only in memory, and it has no way
+ * indeterminate one reads as loading). Under the messages, «مراحل دستیار» opens the agent's own steps
+ * (a thought, an action and its result). It keeps the conversation only in memory, and it has no way
  * to confirm, submit or pay: only the user confirms, on the app's own review.
  */
 /** The chat box when open, the bubble always, and the polling while the agent works. */
@@ -144,6 +145,17 @@ private fun Panel(state: AssistantPanelState, scope: CoroutineScope) {
                         }
                     }
                     if (history.busy || state.sending) item { Text("در حال انجام…", color = Color.Gray) }
+                    if (history.agentSteps.isNotEmpty())
+                        item {
+                            TextButton(
+                                { state.stepsOpen = !state.stepsOpen },
+                                Modifier.testTag("assistant-agent-steps"),
+                            ) {
+                                Text("مراحل دستیار (${history.agentSteps.size}) ${if (state.stepsOpen) "▴" else "▾"}")
+                            }
+                        }
+                    if (state.stepsOpen)
+                        itemsIndexed(history.agentSteps) { index, step -> AgentStep(step, index) }
                     items(history.steps) { Text(it, color = Color.Gray, style = MaterialTheme.typography.bodySmall) }
                 }
                 state.error?.let { Text(it, Modifier.testTag("assistant-error"), color = Color(0xFFB3261E)) }
@@ -187,6 +199,26 @@ private fun Line(line: PanelLine) {
                     RoundedCornerShape(8.dp),
                 )
                 .padding(8.dp),
+        )
+    }
+}
+
+/** One of the agent's steps: its thought, then the action and its result, small and grey. */
+@Composable
+private fun AgentStep(step: PanelStep, index: Int) {
+    Column(
+        Modifier.fillMaxWidth()
+            .padding(vertical = 2.dp)
+            .background(Color(0xFFF4F5F4), RoundedCornerShape(6.dp))
+            .padding(6.dp)
+            .testTag("assistant-agent-step-$index")
+    ) {
+        Text(leftToRight(step.thought), style = MaterialTheme.typography.bodySmall)
+        Text(
+            // The action and its JSON result read left to right, with any Persian inside kept in place.
+            "\u2066${step.action} → ${step.result.ifEmpty { "…" }}\u2069",
+            color = Color.Gray,
+            style = MaterialTheme.typography.bodySmall,
         )
     }
 }

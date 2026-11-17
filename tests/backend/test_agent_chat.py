@@ -69,6 +69,7 @@ def test_a_fresh_page_shows_an_empty_conversation() -> None:
         "task_state": None,
         "report": None,
         "busy": False,
+        "agent_steps": [],
     }
 
 

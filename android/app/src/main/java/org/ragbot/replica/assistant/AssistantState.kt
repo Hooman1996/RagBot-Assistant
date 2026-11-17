@@ -24,6 +24,7 @@ internal object AssistantPanelState {
     var startScreen by mutableStateOf<String?>(null) // the app's screen when the last message went out
     var autoClosed by mutableStateOf(false) // the box closed itself while the agent drove the app
     var covered by mutableIntStateOf(0) // how much of the window the open box covers, in pixels from the bottom
+    var stepsOpen by mutableStateOf(false) // the agent's steps are shown under the messages
 }
 
 /** The task states in Persian, as the panel and its bubble show them. */

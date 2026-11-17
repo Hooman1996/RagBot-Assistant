@@ -20,6 +20,9 @@ internal data class PanelLine(val fromUser: Boolean, val text: String)
 
 internal data class PanelOption(val ref: String, val label: String)
 
+/** One of the agent's steps: its Persian thought, the action it took, and that action's short result. */
+internal data class PanelStep(val thought: String, val action: String, val result: String)
+
 /** What the panel shows: the messages, the pending question or the task, and the run's progress. */
 internal data class PanelHistory(
     val busy: Boolean = false,
@@ -29,6 +32,7 @@ internal data class PanelHistory(
     val fields: List<String> = emptyList(), // the form fields the question asks, on the screen behind
     val taskState: String? = null,
     val steps: List<String> = emptyList(),
+    val agentSteps: List<PanelStep> = emptyList(),
 ) {
     /** The state to show: a pending question means the task waits for the user. */
     val shownState
@@ -93,6 +97,10 @@ internal object AssistantClient {
             fields = if (question && current.has("fields")) current.strings("fields") else emptyList(),
             taskState = if (!current.isNull && current.has("task_state")) current.str("task_state") else null,
             steps = root.list("steps") { "${it.str("operation")} → ${it.str("screen")}: ${it.str("outcome")}" },
+            agentSteps =
+                if (root.has("agent_steps"))
+                    root.list("agent_steps") { PanelStep(it.str("thought"), it.str("action"), it.str("result")) }
+                else emptyList(),
         )
     }
 
