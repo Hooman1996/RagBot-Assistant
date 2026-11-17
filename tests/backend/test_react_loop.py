@@ -49,7 +49,8 @@ def test_a_greeting_is_answered_through_the_loop_with_nothing_sent() -> None:
     assert app.sent == []
     # The model is held to the tools it may call, each by its own branch of the schema.
     branches = chat.schemas[0]["anyOf"]
-    assert [branch["properties"]["tool"]["const"] for branch in branches] == ["ask_user", "finish"]
+    names = [branch["properties"]["tool"]["const"] for branch in branches]
+    assert names == ["find_features", "feature_requirements", "current_screen", "ask_user", "finish"]
     assert "«سلام»" in chat.prompts[0]
 
 

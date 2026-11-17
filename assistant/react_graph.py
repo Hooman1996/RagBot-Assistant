@@ -23,7 +23,7 @@ from assistant.agent_nodes import Nodes, Tools
 from assistant.agent_state import AgentState
 from assistant.lifecycle import FOLLOW_UP
 from assistant.models import ModelError
-from assistant.react_tools import TOOLS, ReactTools
+from assistant.react_tools import TEXTS, ReactTools
 from assistant.slots import hidden
 from assistant.steps import masked, show
 
@@ -32,6 +32,11 @@ TOO_MANY_STEPS = "دستیار نتوانست این کار را در چند گ�
 AGENTS = ("workflow", "react")
 RULES = [
     "Rules:",
+    "- For anything the user wants to do or see in the app, call find_features, then",
+    "  feature_requirements with the one feature that fits.",
+    "- Before asking, call find_records for each person, card, account or other record the user named,",
+    "  to see whether the app lists it.",
+    "- Ask once for everything that is missing.",
     "- Call finish to answer a greeting or thanks.",
     f"- A question asking for information or advice gets finish with «{replies.KNOWLEDGE}».",
     "- Call ask_user only when you cannot go on without the user's answer.",
@@ -58,18 +63,32 @@ def step_line(step: dict) -> str:
     return f"- {step['tool']}({called}) → {json.dumps(step.get('result', {}), ensure_ascii=False)}"
 
 
-def prompt(state: ReactState, names: list[str]) -> str:
-    """The model's view: the rules, the tools it may call now, the user's words and its steps."""
+def task_lines(state: ReactState, held: dict | None) -> list[str]:
+    """The task so far: its feature, the values held as the user reads them, and what is missing."""
+    if held is None:
+        return ["The task: none yet."]
+    asks = {item["ref"]: item["ask"] for item in state["plan"]["requirements"]}
+    missing = [f"{ref} («{asks[ref]}»)" for ref in held["missing"]]
+    return [
+        f"The task: «{held['feature']}». Held values: {json.dumps(held['held'], ensure_ascii=False)}",
+        f"Missing: {', '.join(missing) or 'nothing'}",
+    ]
+
+
+def prompt(state: ReactState, names: list[str], held: dict | None) -> str:
+    """The model's view: the rules, the tools it may call now, the user's words, the task and the
+    steps of this turn."""
     lines = [
         "You are the assistant inside a Persian mobile banking app. You work by calling one tool per",
         "step. You may prepare a task up to its review page; only the user confirms it, on the phone,",
         "so never say that anything was sent, paid or confirmed.",
         "Tools you can call now:",
     ]
-    lines += [f"- {TOOLS[name].text}" for name in names]
+    lines += [f"- {TEXTS[name]}" for name in names]
     lines += RULES
     lines += ["The user's messages, oldest first:"]
     lines += [f"{index}. «{text}»" for index, text in enumerate(hidden(state["messages"]), start=1)]
+    lines += task_lines(state, held)
     lines += ["Your steps so far:"] + ([step_line(step) for step in state["steps"]] or ["none"])
     lines += ["Write the thought in Persian, in one short sentence, then call one tool."]
     return masked("\n".join(lines))
@@ -92,9 +111,10 @@ class ReactAgent:
         """Asks the model for the next step, held to the tools this state allows."""
         if len(since_answer(state["steps"])) >= STEP_BUDGET:
             return self.nodes.failed(state, TOO_MANY_STEPS)
-        names = self.tools.available(state)
+        tools = self.tools.available(state)
+        held = self.tools.held(state) if state["plan"] else None
         try:
-            step = self.chat.step(prompt(state, names), {name: TOOLS[name].arguments for name in names})
+            step = self.chat.step(prompt(state, list(tools), held), tools)
         except ModelError:
             return self.nodes.failed(state, replies.MODEL_FAILED)
         show("think", thought=step["thought"], tool=step["tool"], arguments=step["arguments"])
