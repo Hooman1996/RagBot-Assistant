@@ -55,7 +55,7 @@ def extract_prompt(messages: list[str], wanted: list[dict]) -> str:
         lines.append(line + (f" Choose one of: {' | '.join(item['options'])}" if item.get("options") else ""))
     lines += [
         'Money is {"value": the number as the user said it, "unit": "IRT" for تومان or "IRR" for ریال}.',
-        "هزار is 1000 and میلیون is 1000000. When the user names no unit, use IRR.",
+        "هزار is 1000 and میلیون is 1000000. When the user names no unit, use IRT.",
         "For a person, card, account or record, copy the words or the ****1234 number the user wrote.",
         "Later messages answer the assistant's questions and replace anything they change.",
         "Messages:",
@@ -97,9 +97,9 @@ def money(value: object, messages: list[str]) -> dict | None:
         model = said[0] if len(set(said)) == 1 else None  # a model amount the user never wrote is not used
     elif not said and model is not None:
         # No unit or scale word. In a request «30» may mean rials, tomans or thousands, so the agent
-        # asks; a bare number counts only as the answer to its question («چند ریال…؟»).
+        # asks; a bare number counts only as the answer to its question («چند ریال…؟»), in rials.
         typed = re.findall(r"\d+", messages[-1].translate(PERSIAN_DIGITS)) if len(messages) > 1 else []
-        model = model if str(model) in typed else None
+        model = value["value"] if str(value["value"]) in typed else None
     try:
         return money_value(str(model)) if model is not None else None
     except TaskStopped:

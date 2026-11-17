@@ -15,8 +15,8 @@ from langgraph.types import interrupt
 from assistant import replies
 from assistant.agent_state import AgentState, moved
 from assistant.intent import KNOWLEDGE, NOT_SURE, FeatureIndex, choose
-from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, wants_cancel
-from assistant.lookups import Candidate, FixtureLookups, source_of, typed
+from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, only_looking, wants_cancel
+from assistant.lookups import Candidate, FixtureLookups, plain, source_of, typed
 from assistant.models import Chat, ModelError
 from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
 from assistant.slots import checked, extract, hidden
@@ -143,7 +143,7 @@ class Nodes:
             # A chosen value sends the app another way or makes it ask more (a weekly day): plan again.
             replanned = self.planned(self.features[plan["intent"]], values, plan["start"])
             plan, values = replanned["plan"], replanned["values"]
-        plan, values, note = self.payable(plan, values)
+        plan, values, note = self.payable(plan, values, state["messages"])
         note = self.amounts(plan, values) or note
         values |= self.plate(plan, values)
         missing = [item["ref"] for item in plan["requirements"] if item["ref"] not in values]
@@ -191,9 +191,10 @@ class Nodes:
             show("named", found=found)
         return found
 
-    def payable(self, plan: dict, values: dict) -> tuple[dict, dict, str | None]:
+    def payable(self, plan: dict, values: dict, messages: list[str]) -> tuple[dict, dict, str | None]:
         """Code only: an installment choice keeps the installments the app lets the user pick for
-        the named policy or loan. The only one is set; one the app greys out is dropped and named."""
+        the named policy or loan. The only one is set; one the app greys out is dropped, and named
+        when the user wrote it."""
         plan, values, note = deepcopy(plan), dict(values), None
         items = {item["ref"]: item for item in plan["requirements"]}
         for item in plan["requirements"]:
@@ -206,12 +207,15 @@ class Nodes:
                 continue  # resolve asks which record
             keys = self.tools.lookups.installments(parent["lookup"], found.key)
             chosen = values.get(item["ref"])
+            named = False
             if chosen is not None and chosen not in keys:
                 label = next(option["label"] for option in item["options"] if option["key"] == chosen)
-                note = replies.NOT_OFFERED.format(text=label)
+                # Named only when the user wrote it; else it was the model's reading («قسط بعدی»).
+                named = plain(label) in plain(" ".join(messages))
+                note = replies.NOT_OFFERED.format(text=label) if named else note
                 del values[item["ref"]]
             item["options"] = [option for option in item["options"] if option["key"] in keys]
-            if chosen is None and len(item["options"]) == 1:
+            if not named and item["ref"] not in values and len(item["options"]) == 1:
                 values[item["ref"]] = item["options"][0]["key"]
         return plan, values, note
 
@@ -270,13 +274,20 @@ class Nodes:
         answer = interrupt(
             {"question": text, "options": options, "fields": fields, "task_state": update["task_state"]}
         )
-        if wants_cancel(answer):
+        if wants_cancel(answer) or only_looking(answer):
             reply = replies.CANCELLED_OPEN if state["report"] else replies.CANCELLED  # the app moved
             return update | moved(update, "cancelled") | {"reply": reply}
         if answer in [item["ref"] for item in options]:
             ref, key = answer.split("=", 1)
             missing = [item for item in state["missing"] if item != ref]
             return update | {"values": state["values"] | {ref: key}, "missing": missing}
+        record = self.record(wanted[0], answer) if len(wanted) == 1 and wanted[0]["lookup"] else None
+        if record:
+            # A typed answer to one record question that names exactly one listed record is that
+            # record, as an option would be, so a name the model kept from before can't win.
+            missing = [item for item in state["missing"] if item != wanted[0]["ref"]]
+            values = state["values"] | {wanted[0]["ref"]: record.key}
+            return update | {"messages": state["messages"] + [answer], "values": values, "missing": missing}
         # Typed words may answer the question or change any value given before: all are read again.
         again = [
             item["ref"]

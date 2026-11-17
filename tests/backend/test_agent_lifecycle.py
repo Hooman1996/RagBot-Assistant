@@ -67,6 +67,15 @@ def test_the_cancel_option_ends_a_question_and_sends_nothing() -> None:
     assert not reviewed(app)
 
 
+def test_only_wanting_to_see_ends_a_question_and_leaves_the_page_open() -> None:
+    app = RecordingApp()
+    graph = build_agent(FakeChat([CARD, card(None)]), app)
+    graph.invoke(new_request("c", CARD_SENTENCE), CONFIG)
+    result = graph.invoke(Command(resume="هیچکدوم می‌خواستم ببینم فقط"), CONFIG)
+    assert result["task_state"] == "cancelled" and result["reply"] == replies.CANCELLED_OPEN
+    assert not reviewed(app)
+
+
 def test_a_cancel_phrase_ends_a_not_sure_question() -> None:
     graph = build_agent(FakeChat([{"choice": "not_sure"}]), RecordingApp())
     graph.invoke(new_request("c", "یه کاری دارم"), CONFIG)

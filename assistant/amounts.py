@@ -2,7 +2,8 @@
 
 Called by slots.checked. It reads Persian and Latin digits, number words up to the billions
 («دویست», «یک میلیون و پونصد هزار»), and the units تومان/تومن/ت and ریال. Only a number with a
-scale word or a unit counts as an amount. It returns whole rials and never guesses.
+scale word or a unit counts as an amount, and with no unit it is in tomans, as people say it
+(«۵۰ هزار» is 50,000 toman). It returns whole rials and never guesses.
 """
 
 import re
@@ -30,7 +31,7 @@ def tokens(text: str) -> list[str]:
 
 
 def amounts(text: str) -> list[int]:
-    """Every amount in the text, in rials, in order. No unit means rials, as the extract prompt says."""
+    """Every amount in the text, in rials, in order. No unit means tomans, as the extract prompt says."""
     found, total, current, scaled, joined = [], 0, 0, False, True
     for word in tokens(text) + [""]:
         number = int(word) if word.isdigit() else WORDS.get(word)
@@ -43,7 +44,7 @@ def amounts(text: str) -> list[int]:
         elif word == "و" and (current or total):
             joined = True
         else:
-            unit = 10 if word in TOMAN else 1
+            unit = 1 if word in RIAL else 10
             if (scaled or word in TOMAN | RIAL) and total + current:
                 found.append((total + current) * unit)
             total, current, scaled, joined = 0, 0, False, True

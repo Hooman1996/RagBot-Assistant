@@ -29,7 +29,9 @@ flowchart LR
 2. **Choose** (`intent.choose`). The model sees the sentence and only those 8 features, each with
    its intent, Persian title, Persian words and slot names, and answers `{"choice": ...}`, where
    `choice` is held by the schema to the 8 intents, `"knowledge_question"` or `"not_sure"`. Code
-   turns anything else into `"not_sure"`.
+   turns anything else into `"not_sure"`. A message that only asks to see or open something
+   («نشون بده»، «برو به») gets a feature that shows it, not one that pays or sends (#164): «خانه»
+   and «تسهیلات جاری و پرداخت اقساط» are such features since #164.
 3. **Route** (`agent_nodes.plan_for`). The navigator plans the chosen feature from the replica's
    current screen and lists every requirement on the route.
 4. **Fill** (`slots.extract`). The model sees only the missing requirements (ref, type, Persian

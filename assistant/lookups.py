@@ -100,10 +100,21 @@ class FixtureLookups:
         self.folder = folder
 
     def records(self, lookup: str) -> list[dict]:
-        """Every record of a lookup."""
+        """Every record of a lookup. Contacts are the people and the saved destinations («مقصدهای
+        آشنا»), each destination a contact with its one number: «حساب آزمایشی 3» has an account."""
         source = SOURCES[source_of(lookup)]
         data = json.loads((self.folder / f"{source.file}.json").read_text(encoding="utf-8"))
-        return data[source.rows]
+        if source_of(lookup) != "contacts":
+            return data[source.rows]
+        saved = [
+            {"id": row["id"], "name": row["name"], row["type"].lower(): row["destination"]}
+            for row in data.get("destinations", [])
+        ]
+        return data[source.rows] + saved
+
+    def people(self) -> list[dict]:
+        """The contacts that are people, without the saved destinations."""
+        return json.loads((self.folder / "contacts.json").read_text(encoding="utf-8"))["people"]
 
     def candidates(self, lookup: str, where: dict | None = None) -> list[Candidate]:
         """The lookup's records, only those with every field in `where` when it is given.
@@ -177,6 +188,10 @@ class FixtureLookups:
         said = plain(text)
         if lookup.endswith(".iban") and said.isdigit():
             return []  # a bare number is no IBAN: never matched inside one, so the user is asked
+        if typed(lookup, said):
+            # A typed number is the user's own: it names a person who has it, never a saved destination.
+            people = {row["id"] for row in self.people()}
+            candidates = [item for item in candidates if item.key in people]
         exact = [
             item for item in candidates if said in (plain(item.key), plain(item.value), plain(item.label))
         ]

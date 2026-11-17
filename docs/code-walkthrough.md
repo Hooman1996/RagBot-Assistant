@@ -135,7 +135,7 @@ The code is small because the knowledge lives in data files.
 
 | File | What it holds | Read by | Documented in |
 |---|---|---|---|
-| `app_profiles/replica.profile.json` | The replica's map: 259 screens, 265 edges, 103 forms, 77 features, the user-only list | `navigator.py`, `graph_data.py`, `graph_tasks.py`, the profile check | [app_profiles/README.md](../app_profiles/README.md) |
+| `app_profiles/replica.profile.json` | The replica's map: 259 screens, 265 edges, 103 forms, 79 features, the user-only list | `navigator.py`, `graph_data.py`, `graph_tasks.py`, the profile check | [app_profiles/README.md](../app_profiles/README.md) |
 | `app_profiles/navigation-graph.json` | The whole original app's screens (built and not built), for drawing grey nodes | `graph_data.py` | [screen-catalogue.md](../app_profiles/screen-catalogue.md) |
 | `app_profiles/profile.schema.json` | The shape every profile must have | the profile and contracts checks | same README |
 | `mock_services/fixtures/*.json` | All synthetic people, cards, accounts, bills... | `lookups.py`; also packed into the app for its in-app mock bank | [docs/runbook/mock-data.md](runbook/mock-data.md) |
@@ -886,7 +886,7 @@ What was built: [replica-complete.md](reports/replica-complete.md).
 | `HomeNavigation.kt` | `HomeDestinations`: `HOME = "S-026"`, `FRONT = "D-000"`, and `implemented`, the set of every built screen. `Executor` refuses a `navigate` to anything else. |
 | `ReplicaGraph.kt` | Every screen move. Each `Edge` has `from`, `to`, `action` (tags joined by ` > `) and a kind: `REAL` and `DEMO` are exported; `USER_ONLY` needs the user; `STEP` is covered by others. |
 | `ReplicaProfile.kt` | The shape of the profile (`FormField`, `ProfileForm`, `ProfileFeature`) and the object the app reads it through. |
-| `ProfileForms.kt`, `ProfileWords.kt`, `ProfileSelections.kt`, `ProfileFeatures.kt`, `ProfileUserOnly.kt` | The forms and their fields, their Persian questions, row choices, the 77 features, and the user-only list. Exported to `replica.profile.json`. |
+| `ProfileForms.kt`, `ProfileWords.kt`, `ProfileSelections.kt`, `ProfileFeatures.kt`, `ProfileUserOnly.kt` | The forms and their fields, their Persian questions, row choices, the 79 features, and the user-only list. Exported to `replica.profile.json`. |
 | `MockBank.kt` | The in-app mock bank: every service screen calls it; it checks against the fixtures and returns a receipt or a Persian failure. In memory; resets on restart. Only the user's own confirm reaches it. |
 | `MockData.kt`, `MockJson.kt` | Read the fixtures packed into the app from `mock_services/fixtures/` at build time. |
 | `src/debug/.../devtools/KeyboardLayouts.kt`, `src/debug/res/raw/keyboard_layout_persian_standard.kcm` | **Debug build only.** Offers Android a full Persian physical-keyboard layout (Android's own has no «گ»), so the browser viewer's simulated keyboard types every Persian letter on the emulator ([the viewer](runbook/replica-development.md#desktop-viewer-and-stopping-the-simulation)). The receiver does nothing; Android reads its metadata. |

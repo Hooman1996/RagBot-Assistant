@@ -19,6 +19,8 @@ CANCEL_WORDS = {
     "لغو", "لغو کن", "لغوش کن", "کنسل", "کنسل کن", "کنسلش کن", "بیخیال", "بی خیال", "بیخیالش",
     "منصرف شدم", "ولش کن", "انصراف", "نمیخوام", "نمی خوام", "دیگه نمیخوام", "cancel",
 }  # fmt: skip
+# While a question is asked: the user only wanted to see the page, so the task stops there.
+LOOKING = ("فقط ببینم", "میخواستم ببینم", "می خواستم ببینم", "فقط میخواستم", "فقط می خواستم", "فقط نگاه")
 FOLLOW_UP = ("ready_for_user", "paused")  # a new message continues these tasks instead of replacing them
 # What the runner's stop means for the task: the path of states, and what to tell the user.
 AFTER_STOP = {
@@ -34,6 +36,11 @@ def wants_cancel(answer: str) -> bool:
     return answer == CANCEL["ref"] or words in CANCEL_WORDS
 
 
+def only_looking(answer: str) -> bool:
+    """True for an answer that says the user only wanted to see the page («میخواستم ببینم فقط»)."""
+    return any(phrase in plain(answer) for phrase in LOOKING)
+
+
 def next_input(previous: dict, conversation_id: str, text: str) -> dict:
     """What a new message starts: a follow-up of a task at its review or paused, else a new request."""
     if previous.get("task_state") in FOLLOW_UP:
@@ -41,19 +48,21 @@ def next_input(previous: dict, conversation_id: str, text: str) -> dict:
     return new_request(conversation_id, text)
 
 
-def follow_up_prompt(title: str, messages: list[str]) -> str:
+def follow_up_prompt(title: str, words: str, messages: list[str]) -> str:
     """The question for the model: does the newest message change the prepared task?"""
-    lines = [f"The assistant prepared «{title}» for the user from these messages:"]
+    lines = [f"The assistant prepared the task «{title}» ({words}) for the user from these messages:"]
     lines += [f"- «{text}»" for text in hidden(messages[:-1])]
     lines += [
         f"Then the user wrote: «{hidden(messages)[-1]}»",
-        "Answer correction when it changes or adds a value of that same task (an amount, an account,",
-        "a card, a person, a date), and new_request when it asks for something else.",
+        "Answer new_request when the newest message asks for a task of its own: it names a kind of task",
+        "(a transfer, a payment, a page to see) and that task's own words, even if it is the same kind.",
+        "Answer correction only when it just changes or adds a value of the prepared task (an amount,",
+        "an account, a card, a person, a date) without asking for a task again.",
     ]
     return "\n".join(lines)
 
 
-def corrects(chat: Chat, title: str, messages: list[str]) -> bool:
+def corrects(chat: Chat, title: str, words: str, messages: list[str]) -> bool:
     """True when the model reads the newest message as a correction of the prepared task."""
     schema = {
         "type": "object",
@@ -61,7 +70,7 @@ def corrects(chat: Chat, title: str, messages: list[str]) -> bool:
         "required": ["answer"],
         "additionalProperties": False,
     }
-    return chat.json(follow_up_prompt(title, messages), schema).get("answer") == "correction"
+    return chat.json(follow_up_prompt(title, words, messages), schema).get("answer") == "correction"
 
 
 class StoppableBridge:

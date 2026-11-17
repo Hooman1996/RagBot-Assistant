@@ -4,7 +4,7 @@ The agent turns one Persian sentence, such as «۲۵۰ هزار تومان به 
 prepared review on the replica, and stops there. Only the user confirms. It is built in #136; the
 decision is [D-024](../decisions/0024-agent-loop-first.md).
 
-TEI embeddings narrow the profile's 77 features to the closest 8. The Gemma model on vLLM chooses
+TEI embeddings narrow the profile's 79 features to the closest 8. The Gemma model on vLLM chooses
 one of them and fills the values the route needs. Everything else is code: the navigator plans,
 the lookups resolve, the task runner drives the app, and a check confirms the app reached the
 review. The agent asks **once** for whatever is missing or ambiguous. There is no RAG yet: a
@@ -122,7 +122,7 @@ In production the bank's app cannot be changed, so what the assistant must know 
 a file the assistant owns, `app_profiles/assistant_words.json`, read by `assistant/words.py`
 ([D-026](../decisions/0026-assistant-side-knowledge.md)):
 
-- `features`: Persian words for each of the 77 features, used for the embeddings and the model's
+- `features`: Persian words for each of the 79 features, used for the embeddings and the model's
   choice (the profile's descriptions are English, and two pairs of features share a title).
 - `choices`: the allowed keys of every choice field and row selection the agent can ask, each with
   a Persian label, either listed or taken from a lookup's records. A key that is screen-specific is
@@ -163,9 +163,10 @@ ask has allowed keys.
 - **Money** is taken from the user's own words (`assistant/amounts.py` reads digits or number
   words, هزار/میلیون/میلیارد and تومان/تومن/تمن/ریال): the amount in the newest answer wins;
   otherwise the model's amount is used only if the user wrote it; otherwise the one amount the user
-  wrote; otherwise the agent asks. An amount under 1,000 toman is asked, not used («شصت تمن» usually
+  wrote; otherwise the agent asks. An amount with no unit is in tomans («۵۰ هزار» is 500,000 rials;
+  owner, 17 Nov 2026, #164). An amount under 1,000 toman is asked, not used («شصت تمن» usually
   means sixty thousand), and so is a bare number in a request («30 جابجا شه»); a bare number counts
-  only as the answer to «چند ریال…؟».
+  only as the answer to «چند ریال…؟», in rials.
 - **A choice** reaches the app only as one of its allowed keys, so no other text is ever sent as a
   key.
 - **A record** is matched after making digits Latin, ي/ك Persian, and dropping ZWNJ, «ٔ», generic
@@ -175,6 +176,16 @@ ask has allowed keys.
 - **A text value** loses its field's own label word in front: «عنوان محل کار» is the title «محل کار».
   A value made only of digits reaches the app in Latin digits, as the app keeps it: «۱۲» is sent as
   «12».
+- **Contacts** are the people and the app's saved destinations («مقصدهای ذخیره‌شده»): «حساب آزمایشی ۳»
+  is found for an account field, «کارت آزمایشی ۲» for a card field, and they are offered as the
+  app's picker lists them (#164). A typed number names a person who has it, never a saved
+  destination: it is sent as typed.
+- **An installment the user never named** gives way to the only one the app lets them pay: the
+  model reading «قسط بعدی» as «قسط اول» doesn't block the task. One the user wrote and the app
+  greys out is still named and asked again (#164).
+- **A typed answer to one record question** that names exactly one record the app lists is that
+  record, as if its option was tapped, so a name the model kept from an earlier message cannot win
+  («سارا» not found, then «کارت آزمایشی ۳», #164).
 - **A record the model left out** is taken from the user's words when they name exactly one record
   the app lists for the field, by its whole label or by the words no other record has («پس‌انداز»;
   never «نمایشی», which every label has, and never «پس» alone), and no other field of the plan takes
@@ -190,11 +201,13 @@ Plan §13 and `contracts/transitions/task.json`, done in #142, all on the assist
 
 - **Cancel.** The «لغو» option of any question, the chat box's «لغو» button, or a message that is
   only a cancel phrase (لغو، کنسل، بیخیال، منصرف شدم…) cancels the task at a question, at its
-  review or while paused. While the task runs, the button stops it before its next command: the
+  review or while paused. At a question, an answer saying the user only wanted to see the page
+  («میخواستم ببینم فقط») ends the task the same way and leaves the page open (#164). While the task runs, the button stops it before its next command: the
   app stays where it is, and a command already sent is never undone (`lifecycle.StoppableBridge`).
 - **A correction after the review.** While the task is `ready_for_user`, a new message in the same
-  conversation is a follow-up (`lifecycle.next_input`). The model says whether it corrects the
-  prepared task or is a new request; a correction is prepared again from the app's current screen,
+  conversation is a follow-up (`lifecycle.next_input`). The model, shown the task's title and its
+  Persian words, says whether it corrects the prepared task or is a new request (a message that
+  names a task of its own, such as «انتقال وجه داخلی…» after a loan payment, is new, #164); a correction is prepared again from the app's current screen,
   so the old review is replaced by a fresh one.
 - **Paused.** If the app cannot be reached (the backend has never seen it), the task pauses with its
   values instead of failing. The next message resumes it from wherever the app is, or cancels it.
