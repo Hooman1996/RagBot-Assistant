@@ -26,4 +26,7 @@ The owner's live test showed requests the held-out set did not cover: «برو �
 
 ## The fresh run
 
-RUN_RESULTS
+Held-out run twice: 0 / 145 critical wrong actions both times; unambiguous 100 / 101 and 101 / 101;
+prepared 107 / 108 and 108 / 108; 27 / 27 safe stops. The one miss, H-075 in the first run, is a
+safe stop: the model copied «نمایشی» for «حساب نمایشی», which several accounts share, so the agent
+asked which. H-144 and H-145 pass on both runs. Tuning: 0 / 55, 41 / 41, 45 / 45, 7 / 7.

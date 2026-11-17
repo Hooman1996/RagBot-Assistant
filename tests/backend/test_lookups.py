@@ -18,6 +18,12 @@ def test_a_saved_destination_is_found_by_its_name() -> None:
     assert FixtureLookups().resolve("contacts.card", "کارت آزمایشی ۲") == "0000000000000026"
 
 
+def test_a_typed_number_names_a_person_but_never_a_saved_destination() -> None:
+    lookups = FixtureLookups()
+    assert [item.key for item in lookups.matching("contacts.iban", "IR070000000000000000000077")] == ["reza"]
+    assert lookups.matching("contacts.iban", "IR380000000000000000000004") == []
+
+
 def test_a_typed_card_number_needs_no_contact() -> None:
     assert FixtureLookups().resolve("contacts.card", "0000000000000026") == "0000000000000026"
 

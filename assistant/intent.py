@@ -51,8 +51,8 @@ def choice_prompt(text: str, offered: list[dict]) -> str:
     lines += [
         f"Answer {KNOWLEDGE} when the message asks a question for information or advice (how, why, what,",
         "where, how much), not for something to do, even when a feature uses the same words.",
-        "When the message only asks to see, show or open something (نشون بده، ببینم، بیار، برو به),",
-        "choose a feature that shows it, not one that pays, sends or requests.",
+        "When the message names a thing to see (نشون بده، ببینم، بیار، برو به), choose the feature that",
+        "shows that thing, not one that pays, sends or requests it.",
         f"Answer {NOT_SURE} when no feature clearly fits, or the message is too vague to pick one.",
         f"User message: «{text}»",
     ]

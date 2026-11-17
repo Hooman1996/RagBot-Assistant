@@ -154,6 +154,17 @@ def test_a_loans_next_installment_is_set_by_code() -> None:
     assert fills[-1]["loan-installment"] == "1"
 
 
+def test_an_installment_the_user_never_named_gives_way_to_the_only_payable_one() -> None:
+    # «قسط بعدی» read by the model as «قسط اول», which the app greys out: the next one is set.
+    said = {"loan": "تسهیلات شخصی", "loan-installment": "قسط اول", "loan-source": "حساب نمایشی"}
+    chat = FakeChat([{"choice": "loan_repayment"}, said])
+    app = RecordingApp()
+    request = new_request("c", "تسهیلات در جریان و پرداخت: قسط بعدی تسهیلات شخصی")
+    result = build_agent(chat, app).invoke(request, CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    assert given(app)["loan-installment"] == "1"
+
+
 def test_a_wallet_top_up_amount_the_operator_does_not_list_is_asked_again() -> None:
     said = {
         "wallet-op-source": "کیف نمایشی شخصی",

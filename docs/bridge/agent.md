@@ -178,7 +178,11 @@ ask has allowed keys.
   «12».
 - **Contacts** are the people and the app's saved destinations («مقصدهای ذخیره‌شده»): «حساب آزمایشی ۳»
   is found for an account field, «کارت آزمایشی ۲» for a card field, and they are offered as the
-  app's picker lists them (#164).
+  app's picker lists them (#164). A typed number names a person who has it, never a saved
+  destination: it is sent as typed.
+- **An installment the user never named** gives way to the only one the app lets them pay: the
+  model reading «قسط بعدی» as «قسط اول» doesn't block the task. One the user wrote and the app
+  greys out is still named and asked again (#164).
 - **A typed answer to one record question** that names exactly one record the app lists is that
   record, as if its option was tapped, so a name the model kept from an earlier message cannot win
   («سارا» not found, then «کارت آزمایشی ۳», #164).
