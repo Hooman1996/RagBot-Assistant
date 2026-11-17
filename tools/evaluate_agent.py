@@ -1,6 +1,7 @@
 """Scores the agent on a Persian case file, with the real models, on the stand-in app.
 
-Run by a person: `python tools/evaluate_agent.py tests/evaluation/heldout.json`. The tests call
+Run by a person: `python tools/evaluate_agent.py tests/evaluation/heldout.json`, with
+`--agent react` for the ReAct agent (D-032). The tests call
 main() with fake models. Each case gets a fresh app and graph, built as main_debug.py builds them.
 It reaches the app only through the agent and the stand-in, never the replica, and it never
 changes the agent, the cases or a model service. It writes one record file under local/scratch/.
@@ -18,7 +19,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from langgraph.types import Command
 
-from assistant.agent_graph import build_graph
 from assistant.agent_nodes import Tools, plan_for
 from assistant.agent_state import new_request
 from assistant.app import DEVICE_ID
@@ -28,6 +28,7 @@ from assistant.intent import FeatureIndex
 from assistant.lookups import FixtureLookups
 from assistant.models import Chat, Embeddings, ModelError
 from assistant.navigator import HOME, Navigator
+from assistant.react_graph import build_agent
 from tools.evaluation_score import report, score
 from tools.stand_in_app import StandInApp
 
@@ -96,13 +97,15 @@ def talk(graph, config: dict, case: dict, record: dict) -> dict | None:
     return pending
 
 
-def run_case(case: dict, profile: dict, navigator: Navigator, chat: Chat, index: FeatureIndex) -> dict:
+def run_case(
+    case: dict, profile: dict, navigator: Navigator, chat: Chat, index: FeatureIndex, agent: str = "workflow"
+) -> dict:
     """Runs one case on a fresh app and graph. A crash is recorded, never raised."""
     record = {"id": case["id"], "tags": case["tags"], "expect": case["expect"], "offered": [], "chosen": None}
     record |= {"questions": 0, "asked_before_prepare": False, "failure": None, "crash": None}
     app = RecordingApp(profile)
     tools = Tools(chat, index, navigator, FixtureLookups(), app, app.current_screen)
-    graph = build_graph(tools)
+    graph = build_agent(tools, agent)
     config = {"configurable": {"thread_id": case["id"]}}
     try:
         pending = talk(graph, config, case, record)
@@ -128,7 +131,7 @@ def run_case(case: dict, profile: dict, navigator: Navigator, chat: Chat, index:
     return record
 
 
-def main(chat: Chat, embeddings: Embeddings, cases_path: str) -> int:
+def main(chat: Chat, embeddings: Embeddings, cases_path: str, agent: str = "workflow") -> int:
     """Runs every case and prints the report. 0: every gate passes; 1: a gate fails; 2: cannot run."""
     started = time.monotonic()
     profile = read_json("replica.profile.json")
@@ -143,7 +146,7 @@ def main(chat: Chat, embeddings: Embeddings, cases_path: str) -> int:
     records = []
     for number, case in enumerate(cases, start=1):
         print(f"[{number}/{len(cases)}] {case['id']}", flush=True)
-        records.append(run_case(case, profile, navigator, chat, index))
+        records.append(run_case(case, profile, navigator, chat, index, agent))
     facts = feature_facts(profile, navigator)
     for record in records:
         record["score"] = score(record, facts)
@@ -157,4 +160,7 @@ def main(chat: Chat, embeddings: Embeddings, cases_path: str) -> int:
 
 
 if __name__ == "__main__":
-    sys.exit(main(Chat(), Embeddings(), sys.argv[1]))
+    args = sys.argv[1:]
+    agent = args[args.index("--agent") + 1] if "--agent" in args else "workflow"
+    paths = [arg for arg in args if arg not in ("--agent", agent)]
+    sys.exit(main(Chat(), Embeddings(), paths[0], agent))
