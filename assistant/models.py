@@ -54,21 +54,26 @@ class Chat:
     def step(self, prompt: str, tools: dict[str, dict]) -> dict:
         """One ReAct step: {"thought", "tool", "arguments"}. tools maps each tool the model may call
         now to the JSON schema of its arguments, so the server holds the answer to one of them."""
-        branches = [
-            {
-                "type": "object",
-                "properties": {
-                    "thought": {"type": "string", "maxLength": THOUGHT_CHARACTERS},
-                    "tool": {"const": name},
-                    "arguments": arguments,
-                },
-                "required": ["thought", "tool", "arguments"],
-                "additionalProperties": False,
+        branches = []
+        for name, arguments in tools.items():
+            properties = {
+                "thought": {"type": "string", "maxLength": THOUGHT_CHARACTERS},
+                "tool": {"const": name},
             }
-            for name, arguments in tools.items()
-        ]
+            # A tool without arguments has no "arguments" key, so the answer can end right after the
+            # tool's name; a required empty object there made the model pad it with whitespace.
+            properties |= {"arguments": arguments} if arguments["properties"] else {}
+            branches.append(
+                {
+                    "type": "object",
+                    "properties": properties,
+                    "required": list(properties),
+                    "additionalProperties": False,
+                }
+            )
         answer = self.json(prompt, {"anyOf": branches}, STEP_TOKENS)
-        if answer.get("tool") not in tools or not isinstance(answer.get("arguments"), dict):
+        answer.setdefault("arguments", {})
+        if answer.get("tool") not in tools or not isinstance(answer["arguments"], dict):
             raise ModelError("chat: the step calls no tool it may call")
         return answer
 

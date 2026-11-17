@@ -20,6 +20,12 @@ A command has to pass all of these to touch a control.
 `navigate`'s arguments carry row keys and nothing else. The executor refuses a name no edge
 declares and a key that is not one plain word, and the tag a key makes must still pass `Policy`.
 
+The ReAct agent ([D-032](../decisions/0032-react-agent-beside-the-workflow.md)) adds no way past
+these walls. Its model picks only among nine tools, none of which confirms, submits or pays. The
+schema is built from the tools the state allows, and code refuses any other name. Every act goes
+through the workflow's own code and `TaskRunner`. A record must be in the user's own words or picked
+by the user, never one the model only read in `find_records`.
+
 The backend adds its own limits. `assistant/command_queue.py` builds only the four operations, and
 `assistant/task_runner.py` only ever sends three of them. A run refuses any value its plan did not
 ask for, and it refuses a row key that would spell a user-only tag before the app sees it. The
@@ -56,6 +62,8 @@ unless marked.
 | A run refuses a value its plan did not ask for | `test_task_runner.py::test_a_value_the_plan_does_not_ask_for_is_refused` |
 | A row key spelling a user-only tag never reaches the app | `test_task_runner.py::test_a_row_key_that_spells_a_user_only_tag_never_reaches_the_app` |
 | Every feature sends only the allowed operations | `test_task_runner.py::test_no_feature_ever_sends_an_operation_outside_the_four` |
+| The ReAct agent has no tool that confirms, submits or pays, and sends only the three operations | `test_react_act.py::test_no_tool_can_confirm_submit_or_pay` |
+| The ReAct agent's model cannot set a record the user never named | `test_react_act.py::test_a_record_the_user_never_named_is_refused` |
 | Every feature's route stays off user-only actions, and every requirement can be asked | `python tools/project_checks.py profile` |
 | This page lists every user-only action | `thisPageOfTheDocsListsEveryUserOnlyAction` |
 

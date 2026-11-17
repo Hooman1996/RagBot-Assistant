@@ -9,7 +9,7 @@ from assistant.agent_nodes import Tools
 from assistant.agent_state import new_request
 from assistant.intent import FeatureIndex
 from assistant.lookups import FixtureLookups
-from assistant.models import Chat
+from assistant.models import Chat, ModelError
 from assistant.navigator import Navigator
 from assistant.react_graph import STEP_BUDGET, TOO_MANY_STEPS, build_react_graph
 
@@ -41,28 +41,25 @@ def results(state: dict) -> list[dict]:
     return [step.get("result") for step in state["steps"]]
 
 
-def test_a_card_transfer_to_reza_reads_the_feature_its_fields_and_reza_then_asks() -> None:
+def test_a_card_transfer_to_reza_reads_the_feature_its_fields_and_reza() -> None:
     chat = StepChat(
         [
             call("find_features", text="کارت به کارت"),
             call("feature_requirements", intent="card_transfer"),
             call("find_records", ref="card-transfer-destination", words="رضا"),
-            call("ask_user", question="از کدام کارت و چه مبلغی؟"),
+            call("current_screen"),
+            ModelError("chat: stop here"),
         ]
     )
     app = RecordingApp()
-    graph = react(chat, app)
-    result = graph.invoke(new_request("c", "کارت به کارت به رضا"), CONFIG)
-    assert result["__interrupt__"][0].value["question"] == "از کدام کارت و چه مبلغی؟"
-    state = graph.get_state(CONFIG).values
-    found, planned, records, asking = results(state)
-    assert asking is None  # the question still waits
+    result = react(chat, app).invoke(new_request("c", "کارت به کارت به رضا"), CONFIG)
+    found, planned, records, screen = results(result)
     assert found["features"][0] == {
         "intent": "card_transfer",
         "title": "کارت به کارت",
         "words": found["features"][0]["words"],
     }
-    assert state["offered"][0] == "card_transfer" and state["chosen"] == "card_transfer"
+    assert result["offered"][0] == "card_transfer" and result["chosen"] == "card_transfer"
     assert planned["feature"] == "کارت به کارت"
     assert [item["ref"] for item in planned["fields"]] == [
         "card-transfer-source",
@@ -71,7 +68,7 @@ def test_a_card_transfer_to_reza_reads_the_feature_its_fields_and_reza_then_asks
     ]
     assert planned["fields"][0]["question"] == "از کدام کارت انتقال انجام شود؟"
     assert records == {"records": ["رضا محمدی ****8880"], "count": 1}
-    assert result["__interrupt__"][0].value["task_state"] == "clarifying"
+    assert screen == {"page": "خانه", "filled": {}}
     # Reading changes nothing in the app.
     assert app.sent == []
     # The model was told what it read, and never a full number, an app key or a screen ID.
@@ -81,7 +78,7 @@ def test_a_card_transfer_to_reza_reads_the_feature_its_fields_and_reza_then_asks
 
 
 def test_find_records_is_offered_only_for_a_planned_record_field() -> None:
-    chat = StepChat([call("feature_requirements", intent="card_transfer"), call("finish", message="باشه")])
+    chat = StepChat([call("feature_requirements", intent="card_transfer"), ModelError("chat: stop here")])
     react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
     before = [branch["properties"]["tool"]["const"] for branch in chat.schemas[0]["anyOf"]]
     after = {branch["properties"]["tool"]["const"]: branch for branch in chat.schemas[1]["anyOf"]}
@@ -95,7 +92,7 @@ def test_find_records_lists_only_what_the_apps_picker_lists() -> None:
         [
             call("feature_requirements", intent="card_transfer"),
             call("find_records", ref="card-transfer-source", words=""),
-            call("finish", message="باشه"),
+            ModelError("chat: stop here"),
         ]
     )
     result = react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
@@ -104,9 +101,7 @@ def test_find_records_lists_only_what_the_apps_picker_lists() -> None:
 
 
 def test_a_choice_shows_its_labels_never_its_keys() -> None:
-    chat = StepChat(
-        [call("feature_requirements", intent="internal_transfer"), call("finish", message="باشه")]
-    )
+    chat = StepChat([call("feature_requirements", intent="internal_transfer"), ModelError("chat: stop here")])
     result = react(chat).invoke(new_request("c", "انتقال داخلی"), CONFIG)
     fields = {item["ref"]: item for item in result["steps"][0]["result"]["fields"]}
     reason = fields["account-transfer-reason"]

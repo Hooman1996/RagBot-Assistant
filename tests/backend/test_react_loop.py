@@ -142,3 +142,14 @@ def test_the_evaluator_runs_a_case_through_the_react_agent() -> None:
     assert record["crash"] is None
     assert record["reply"] == "سلام!" and record["task_state"] == "created"
     assert record["operations"] == []
+
+
+def test_a_tool_without_arguments_can_end_right_after_its_name() -> None:
+    chat = StepChat([{"thought": "…", "tool": "current_screen"}])
+    step = chat.step(
+        "p", {"current_screen": {"type": "object", "properties": {}}, "finish": {"properties": {"m": {}}}}
+    )
+    assert step["arguments"] == {}
+    no_arguments, finish = chat.schemas[0]["anyOf"]
+    assert "arguments" not in no_arguments["properties"] and no_arguments["required"] == ["thought", "tool"]
+    assert finish["required"] == ["thought", "tool", "arguments"]

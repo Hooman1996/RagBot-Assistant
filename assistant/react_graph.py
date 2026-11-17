@@ -4,8 +4,9 @@ Chosen by ASSISTANT_AGENT=react in app.py, `main_debug.py --agent react` and
 `tools/evaluate_agent.py --agent react`. The default is the workflow agent of agent_graph.py, which
 this file does not change. `think` asks the model for {"thought", "tool", "arguments"}, held to the
 tools the state allows; `act` runs that tool in code (react_tools.py) and keeps its short result.
-A turn ends when a tool sets the reply, or after STEP_BUDGET tool calls. A message to a task at its
-review or paused goes to the workflow's own follow-up. No tool can confirm, submit or pay.
+A turn ends when a tool sets the reply (a finish, the review reached, a cancel, a failure or a
+pause), or after STEP_BUDGET tool calls. A message to a task at its review or paused goes to the
+workflow's own follow-up. No tool can confirm, submit or pay.
 
 [D-032]: docs/decisions/0032-react-agent-beside-the-workflow.md
 """
@@ -32,15 +33,14 @@ TOO_MANY_STEPS = "دستیار نتوانست این کار را در چند گ�
 AGENTS = ("workflow", "react")
 RULES = [
     "Rules:",
-    "- For anything the user wants to do or see in the app, call find_features, then",
-    "  feature_requirements with the one feature that fits.",
-    "- Before asking, call find_records for each person, card, account or other record the user named,",
-    "  to see whether the app lists it.",
-    "- Ask once for everything that is missing.",
+    "- For anything the user wants to do or see in the app: find_features, then feature_requirements",
+    "  with the one feature that fits, then set_values with every value the user gave.",
+    "- When something is missing: move_app, then ask_user. When nothing is missing: open_review.",
+    "- After the user answers, set_values with what the answer gives.",
+    "- Never guess a value the user did not give, and never pick a record or an option for the user.",
     "- Call finish to answer a greeting or thanks.",
     f"- A question asking for information or advice gets finish with «{replies.KNOWLEDGE}».",
-    "- Call ask_user only when you cannot go on without the user's answer.",
-    "- Never guess a value the user did not give.",
+    "- Without a task, call ask_user only when you cannot go on without the user's answer.",
 ]
 
 
@@ -100,12 +100,24 @@ class ReactAgent:
     def __init__(self, tools: Tools) -> None:
         self.nodes = Nodes(tools)
         self.lifecycle = Lifecycle(self.nodes)
-        self.tools = ReactTools(self.nodes)
+        self.tools = ReactTools(self.nodes, self.lifecycle)
         self.chat = tools.chat
 
     def begin(self, state: ReactState) -> dict:
         """A new message starts a new turn: its steps start empty."""
         return {"steps": []}
+
+    def follow_up(self, state: ReactState) -> dict:
+        """The workflow's follow-up: cancel, resume, a correction or a new request. A correction is
+        read again by the workflow's own reader, as in the workflow, and a task going on is settled
+        at once, so the model sees what it holds and what is missing."""
+        update = self.lifecycle.follow_up(state)
+        task = state | update
+        if task["task_state"] != "resolving":
+            return update
+        if state["task_state"] == "ready_for_user":  # a correction: every value is read again
+            update["values"] = task["values"] | self.tools.read(task, {})
+        return update | self.tools.settle(state | update)
 
     def think(self, state: ReactState) -> dict:
         """Asks the model for the next step, held to the tools this state allows."""
@@ -121,8 +133,17 @@ class ReactAgent:
         return {"steps": state["steps"] + [step]}
 
     def act(self, state: ReactState) -> dict:
-        """Runs the step's tool in code and keeps its result with the step."""
+        """Runs the step's tool in code and keeps its result with the step. A question about a task
+        whose app has not moved yet first moves it (D-029), as a step of its own, so the move is
+        never run again when the answer resumes the question."""
         step = state["steps"][-1]
+        if step["tool"] == "ask_user" and state["task_state"] == "resolving":
+            result, update = self.tools.move_app(state, {})
+            steps = state["steps"][:-1] + [step | {"tool": "move_app", "arguments": {}, "result": result}]
+            if (state | update)["task_state"] == "preparing":
+                steps.append({key: step[key] for key in ("thought", "tool", "arguments")})
+            show("act", tool="move_app", result=result)
+            return update | {"steps": steps}
         result, update = getattr(self.tools, step["tool"])(state, step["arguments"])
         show("act", tool=step["tool"], result=result)
         return update | {"steps": state["steps"][:-1] + [step | {"result": result}]}
@@ -134,8 +155,11 @@ def start(state: ReactState) -> str:
 
 
 def go_on(state: ReactState) -> str:
-    """The turn ends once something set the reply; else the model thinks again."""
-    return END if state["reply"] is not None else "think"
+    """The turn ends once something set the reply; a question waiting on its moved app is asked;
+    else the model thinks again."""
+    if state["reply"] is not None:
+        return END
+    return "act" if state["steps"] and "result" not in state["steps"][-1] else "think"
 
 
 def after_think(state: ReactState) -> str:
@@ -148,14 +172,14 @@ def build_react_graph(tools: Tools) -> CompiledStateGraph:
     agent = ReactAgent(tools)
     graph = StateGraph(ReactState)
     graph.add_node("begin", agent.begin)
-    graph.add_node("follow_up", agent.lifecycle.follow_up)
+    graph.add_node("follow_up", agent.follow_up)
     graph.add_node("think", agent.think)
     graph.add_node("act", agent.act)
     graph.add_edge(START, "begin")
     graph.add_conditional_edges("begin", start, ["follow_up", "think"])
     graph.add_conditional_edges("follow_up", go_on, ["think", END])
     graph.add_conditional_edges("think", after_think, ["act", END])
-    graph.add_conditional_edges("act", go_on, ["think", END])
+    graph.add_conditional_edges("act", go_on, ["think", "act", END])
     return graph.compile(checkpointer=InMemorySaver())
 
 
