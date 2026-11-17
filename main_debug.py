@@ -1,8 +1,9 @@
 """Runs the agent top to bottom in one process, so every line can be stepped through.
 
 `python main_debug.py ["turn" ...]` drives a stand-in app on this thread, with no web server.
-`python main_debug.py --replica` drives the real replica on the emulator instead. Both use the
-real Gemma and TEI services. The run stops at the review: nothing here can confirm or pay.
+`python main_debug.py --replica` drives the real replica on the emulator instead, and
+`--agent react` runs the ReAct agent instead of the workflow (D-032). All use the real Gemma and
+TEI services. The run stops at the review: nothing here can confirm or pay.
 """
 
 import os
@@ -17,7 +18,6 @@ from threading import Thread
 import uvicorn
 from langgraph.types import Command
 
-from assistant.agent_graph import build_graph
 from assistant.agent_nodes import Tools
 from assistant.app import DEVICE_ID, create_app
 from assistant.bridge_link import BridgeLink
@@ -28,6 +28,7 @@ from assistant.lifecycle import next_input
 from assistant.lookups import FixtureLookups
 from assistant.models import Chat, Embeddings
 from assistant.navigator import HOME, Navigator
+from assistant.react_graph import build_agent
 from tools.stand_in_app import StandInApp
 
 EXAMPLE = ["۲۵۰ هزار تومان به رضا کارت به کارت کن", "1"]  # the request, then option 1 for the source card
@@ -50,7 +51,9 @@ def said(result: dict) -> dict | None:
     return pending
 
 
-def main(chat: Chat, embeddings: Embeddings, turns: list[str], replica: bool = False) -> dict:
+def main(
+    chat: Chat, embeddings: Embeddings, turns: list[str], replica: bool = False, agent: str = "workflow"
+) -> dict:
     """Builds the same objects as app.py, except the bridge, and talks to the agent turn by turn."""
     profile = read_json("replica.profile.json")  # screens, edges, forms and features
     navigator = Navigator(profile)  # plans routes and lists requirements
@@ -70,7 +73,7 @@ def main(chat: Chat, embeddings: Embeddings, turns: list[str], replica: bool = F
         screen = bridge.current_screen
     index = FeatureIndex(profile["features"], embeddings)  # embeds every feature once, on first use
     tools = Tools(chat, index, navigator, FixtureLookups(), bridge, screen)
-    graph = build_graph(tools)  # the compiled agent, with its in-memory checkpointer
+    graph = build_agent(tools, agent)  # the compiled agent, with its in-memory checkpointer
     config = {"configurable": {"thread_id": CONVERSATION}}  # one conversation
 
     pending = None
@@ -89,6 +92,8 @@ def main(chat: Chat, embeddings: Embeddings, turns: list[str], replica: bool = F
 
 
 if __name__ == "__main__":
-    replica = "--replica" in sys.argv
-    turns = [arg for arg in sys.argv[1:] if arg != "--replica"] or EXAMPLE
-    main(Chat(), Embeddings(), turns, replica)
+    args = sys.argv[1:]
+    replica = "--replica" in args
+    agent = args[args.index("--agent") + 1] if "--agent" in args else "workflow"
+    turns = [arg for arg in args if arg not in ("--replica", "--agent", agent)] or EXAMPLE
+    main(Chat(), Embeddings(), turns, replica, agent)

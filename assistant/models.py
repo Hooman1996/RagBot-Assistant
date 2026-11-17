@@ -1,9 +1,10 @@
 """The two model clients: the Gemma chat model on vLLM, and the TEI embeddings.
 
-Called by intent.py and slots.py, through the agent graph. Both are read-only HTTP clients over
-httpx, with their addresses from ASSISTANT_LLM_URL, ASSISTANT_LLM_MODEL and ASSISTANT_EMBED_URL.
-They never configure, restart or write to either service. Any failure raises ModelError, so the
-task ends as failed instead of going on with a guess.
+Called by intent.py and slots.py through the workflow agent, and by react_graph.py through
+Chat.step. Both are read-only HTTP clients over httpx, with their addresses from
+ASSISTANT_LLM_URL, ASSISTANT_LLM_MODEL and ASSISTANT_EMBED_URL. They never configure, restart or
+write to either service. Any failure raises ModelError, so the task ends as failed instead of
+going on with a guess.
 """
 
 import json
@@ -13,6 +14,8 @@ import httpx
 
 TIMEOUT_SECONDS = 30
 MAX_ANSWER_TOKENS = 400
+STEP_TOKENS = 800  # a ReAct step: a short thought and one tool's arguments
+THOUGHT_CHARACTERS = 200
 
 
 class ModelError(Exception):
@@ -26,12 +29,12 @@ class Chat:
         self.url = os.environ.get("ASSISTANT_LLM_URL", "")
         self.model = os.environ.get("ASSISTANT_LLM_MODEL", "")
 
-    def json(self, prompt: str, schema: dict) -> dict:
+    def json(self, prompt: str, schema: dict, tokens: int = MAX_ANSWER_TOKENS) -> dict:
         """Sends the prompt as one user turn, at temperature 0, with the answer held to schema."""
         body = {
             "model": self.model,
             "temperature": 0,
-            "max_tokens": MAX_ANSWER_TOKENS,
+            "max_tokens": tokens,
             "messages": [{"role": "user", "content": prompt}],
             "response_format": {
                 "type": "json_schema",
@@ -46,6 +49,27 @@ class Chat:
             raise ModelError(f"chat: {type(error).__name__}") from error
         if not isinstance(answer, dict):
             raise ModelError("chat: the answer is not a JSON object")
+        return answer
+
+    def step(self, prompt: str, tools: dict[str, dict]) -> dict:
+        """One ReAct step: {"thought", "tool", "arguments"}. tools maps each tool the model may call
+        now to the JSON schema of its arguments, so the server holds the answer to one of them."""
+        branches = [
+            {
+                "type": "object",
+                "properties": {
+                    "thought": {"type": "string", "maxLength": THOUGHT_CHARACTERS},
+                    "tool": {"const": name},
+                    "arguments": arguments,
+                },
+                "required": ["thought", "tool", "arguments"],
+                "additionalProperties": False,
+            }
+            for name, arguments in tools.items()
+        ]
+        answer = self.json(prompt, {"anyOf": branches}, STEP_TOKENS)
+        if answer.get("tool") not in tools or not isinstance(answer.get("arguments"), dict):
+            raise ModelError("chat: the step calls no tool it may call")
         return answer
 
 
