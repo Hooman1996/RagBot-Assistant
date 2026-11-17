@@ -18,10 +18,10 @@ from assistant.graph_tasks import GraphTasks, RunInProgress
 from assistant.panel_api import build_panel_router
 
 CARD = {"choice": "card_transfer"}
-FULL = "۲۵۰ هزار تومان از کارت 0018 به رضا کارت به کارت کن"
+FULL = "۲۵۰ هزار تومان از کارت 3566 به رضا کارت به کارت کن"
 
 
-def card(source: str | None = "کارت 0018") -> dict:
+def card(source: str | None = "کارت 3566") -> dict:
     amount = {"value": 250000, "unit": "IRT"}
     return {
         "card-transfer-source": source,

@@ -87,9 +87,9 @@ class SavedDestinationsTest {
         val draft = "یادداشت فرم DEMO"
         compose.onNodeWithTag("picker-review-draft").performScrollTo().performTextInput(draft)
         review("S-198")
-        compose.onNodeWithTag("saved-search").performTextInput("DEMO-LOAN-2")
+        compose.onNodeWithTag("saved-search").performTextInput("171248107569")
         compose.activityRule.scenario.recreate()
-        compose.onNodeWithTag("saved-search").assertTextContains("DEMO-LOAN-2", substring = true)
+        compose.onNodeWithTag("saved-search").assertTextContains("171248107569", substring = true)
         compose.onNodeWithTag("saved-item-loan-1").assertDoesNotExist()
         compose.onNodeWithTag("saved-item-loan-2").performClick()
         compose
@@ -150,28 +150,28 @@ class SavedDestinationsTest {
         review("S-066")
         compose.onNodeWithTag("saved-add").performClick()
         compose.onNodeWithTag("saved-name").performTextInput("حساب جدید نمونه")
-        compose.onNodeWithTag("saved-number").performTextInput("0000000000001")
+        compose.onNodeWithTag("saved-number").performTextInput("0391304359280")
         compose.onNodeWithTag("saved-save").performScrollTo().performClick()
         compose.onNodeWithTag("saved-validation").assertIsDisplayed()
         compose.onNodeWithTag("saved-number").performTextReplacement("123")
         compose.onNodeWithTag("saved-save").performScrollTo().performClick()
         compose.onNodeWithTag("saved-validation").assertIsDisplayed()
-        compose.onNodeWithTag("saved-number").performTextReplacement("0000000000099")
+        compose.onNodeWithTag("saved-number").performTextReplacement("0281707721676")
         compose.onNodeWithTag("saved-save").performScrollTo().performClick()
         compose.waitUntil(5_000) { compose.activity.hasWindowFocus() }
         compose.onNodeWithTag("saved-search").performTextInput("حساب جدید نمونه")
-        compose.onNodeWithText("0000000000099").assertIsDisplayed()
+        compose.onNodeWithText("0281707721676").assertIsDisplayed()
         back()
         back()
         review("S-066")
         compose.onNodeWithTag("saved-search").performTextInput("حساب جدید نمونه")
-        compose.onNodeWithText("0000000000099").assertIsDisplayed()
+        compose.onNodeWithText("0281707721676").assertIsDisplayed()
     }
 
     @Test
     fun loanManagementSearchDeleteAndUnavailableEditStayOnTheSameScreen() {
         review("S-197")
-        compose.onNodeWithTag("saved-search").performTextInput("DEMO-LOAN-3")
+        compose.onNodeWithTag("saved-search").performTextInput("107200317167")
         reveal("loan-3")
         compose.onNodeWithTag("saved-edit-loan-3").performClick()
         compose.onNodeWithTag("unavailable").assertIsDisplayed()
@@ -190,7 +190,7 @@ class SavedDestinationsTest {
         compose.onNodeWithTag("saved-delete-confirm").performClick()
         compose.waitUntil(5_000) { compose.activity.hasWindowFocus() }
         compose.onNodeWithTag("data-empty").assertIsDisplayed()
-        compose.onNodeWithTag("saved-search").assertTextContains("DEMO-LOAN-3", substring = true)
+        compose.onNodeWithTag("saved-search").assertTextContains("107200317167", substring = true)
         compose.onNodeWithTag("saved-search").performTextClearance()
         compose.onNodeWithTag("saved-item-loan-1").assertIsDisplayed()
         compose.onNodeWithTag("saved-item-loan-3").assertDoesNotExist()

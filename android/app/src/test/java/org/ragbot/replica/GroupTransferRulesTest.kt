@@ -14,17 +14,17 @@ class GroupTransferRulesTest {
             GroupTransferRules.parse(
                 listOf(
                     listOf("ردیف", "شبا", "مبلغ", "بابت", "شناسه", "شرح"),
-                    listOf("1", "IR920000000000000000000002", "150000", "بابت", "12", "شرح"),
+                    listOf("1", "IR310120078094788868405633", "150000", "بابت", "12", "شرح"),
                     listOf(null, " ", "", null, "", ""),
-                    listOf("3", "650000000000000000000003", "250000"),
+                    listOf("3", "950120755237739603015817", "250000"),
                 )
             )
         assertEquals(listOf(1L, 3L), parsed.map { it.id })
         assertEquals(
-            GroupRow(1, "920000000000000000000002", "150000", "بابت", "12", "شرح"),
+            GroupRow(1, "310120078094788868405633", "150000", "بابت", "12", "شرح"),
             parsed[0],
         )
-        assertEquals(GroupRow(3, "650000000000000000000003", "250000"), parsed[1])
+        assertEquals(GroupRow(3, "950120755237739603015817", "250000"), parsed[1])
     }
 
     @Test

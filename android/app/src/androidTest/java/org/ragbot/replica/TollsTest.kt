@@ -133,12 +133,12 @@ class TollsTest {
         click("toll-owner-false")
         click("toll-inquiry")
         compose.onAllNodesWithText(PaymentRules.MANDATORY).assertCountEquals(3)
-        compose.onNodeWithTag("toll-code").performTextReplacement("0000000018")
+        compose.onNodeWithTag("toll-code").performTextReplacement("4418145514")
         compose.onNodeWithTag("toll-phone").performTextReplacement("09123456789")
-        compose.onNodeWithTag("toll-vin").performTextReplacement("IRFC0000000006903")
+        compose.onNodeWithTag("toll-vin").performTextReplacement("IRFC0230864729188")
         click("toll-inquiry")
         compose.onNodeWithText(PaymentRules.INVALID).assertExists()
-        compose.onNodeWithTag("toll-code").performTextReplacement("0000000019")
+        compose.onNodeWithTag("toll-code").performTextReplacement("5840573851")
         inquire()
         shown("S-242")
         compose.onNodeWithTag("toll-total").assertTextEquals("مبلغ کل: ۱٬۰۲۵٬۰۰۰ ریال")
@@ -147,7 +147,7 @@ class TollsTest {
         back()
         back()
         shown("S-241")
-        compose.onNodeWithTag("toll-vin").assertTextContains("IRFC0000000006903")
+        compose.onNodeWithTag("toll-vin").assertTextContains("IRFC0230864729188")
     }
 
     @Test
@@ -167,7 +167,7 @@ class TollsTest {
         shown("S-257")
         compose.onNodeWithTag("toll-type-false").assertDoesNotExist()
         click("toll-inquiry")
-        compose.onNodeWithTag("toll-fee-0000000000101").performClick()
+        compose.onNodeWithTag("toll-fee-0176453202938").performClick()
         compose.waitUntil(5_000) {
             compose.onAllNodesWithTag("otp-code").fetchSemanticsNodes().isNotEmpty()
         }

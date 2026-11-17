@@ -20,7 +20,7 @@ class AssistantClientTest {
 
     @Test
     fun anOptionCarriesItsQuestionAndRefAndNoMessage() {
-        val option = PanelOption("card-transfer-source=card-1", "****0018")
+        val option = PanelOption("card-transfer-source=card-1", "****3566")
         val body = Json.parse("body", AssistantClient.requestBody("c1", null, option, "q1", observation))
         assertEquals("q1", body["selection"].str("question_id"))
         assertEquals("card-transfer-source=card-1", body["selection"].str("ref"))

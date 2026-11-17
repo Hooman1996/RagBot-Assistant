@@ -35,10 +35,10 @@ class TollRulesTest {
 
     @Test
     fun othersNeedAValidNationalCodeAndMobileAndAnnualNeedsAVin() {
-        assertTrue(TollRules.nationalCode("0000000019"))
-        assertFalse(TollRules.nationalCode("0000000018"))
+        assertTrue(TollRules.nationalCode("5840573851"))
+        assertFalse(TollRules.nationalCode("4418145514"))
         assertFalse(TollRules.nationalCode("1111111111"))
-        assertFalse(TollRules.nationalCode("000000019"))
+        assertFalse(TollRules.nationalCode("840573851"))
         val others = plate.copy(mine = false)
         assertEquals(
             mapOf("code" to PaymentRules.MANDATORY, "phone" to PaymentRules.MANDATORY),
@@ -46,10 +46,10 @@ class TollRulesTest {
         )
         assertEquals(
             mapOf("code" to PaymentRules.INVALID, "phone" to PaymentRules.INVALID),
-            TollRules.errors(others.copy(code = "0000000018", phone = "0812345678")),
+            TollRules.errors(others.copy(code = "4418145514", phone = "0812345678")),
         )
         assertTrue(
-            TollRules.errors(others.copy(code = "۰۰۰۰۰۰۰۰۱۹", phone = "09123456789")).isEmpty()
+            TollRules.errors(others.copy(code = "۵۸۴۰۵۷۳۸۵۱", phone = "09123456789")).isEmpty()
         )
         assertEquals(
             mapOf("vin" to PaymentRules.MANDATORY),

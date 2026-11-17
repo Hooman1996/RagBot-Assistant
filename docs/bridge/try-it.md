@@ -97,7 +97,7 @@ The words in the steps are explained in
 
 ## 8. Talk to the agent
 
-Type a request in **Chat with the agent**, for example «۲۵۰ هزار تومان از کارت 0018 به رضا کارت به
+Type a request in **Chat with the agent**, for example «۲۵۰ هزار تومان از کارت 3566 به رضا کارت به
 کارت کن». It stops on the review. Then try the task's life
 ([the agent](agent.md#the-tasks-life-around-the-review)):
 

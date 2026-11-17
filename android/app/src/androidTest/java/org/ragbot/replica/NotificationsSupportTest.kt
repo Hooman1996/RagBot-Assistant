@@ -198,7 +198,7 @@ class NotificationsSupportTest {
         compose.onNodeWithTag("notification-detail").assertIsDisplayed()
         compose
             .onNode(
-                hasText("DEMO-6", substring = true) and
+                hasText("1405-6", substring = true) and
                     hasAnyAncestor(hasTestTag("notification-detail")),
                 useUnmergedTree = true,
             )
@@ -257,29 +257,29 @@ class NotificationsSupportTest {
         compose.onNodeWithTag("unavailable").assertTextContains("ارسال نشد", substring = true)
         back()
         compose.onNodeWithTag("message-tab-history").performClick()
-        compose.onNodeWithTag("ticket-DEMO-1002").performClick()
+        compose.onNodeWithTag("ticket-21387").performClick()
         compose.onNodeWithTag("S-081").assertIsDisplayed()
-        compose.onNodeWithTag("support-ticket-DEMO-1002").assertIsDisplayed()
+        compose.onNodeWithTag("support-ticket-21387").assertIsDisplayed()
         compose.onNodeWithTag("message-tab-history").performClick()
         compose.onNodeWithTag("tickets-more").performScrollTo().performClick()
-        compose.onNodeWithTag("ticket-DEMO-1003").performScrollTo().performClick()
-        compose.onNodeWithTag("support-ticket-DEMO-1003").assertIsDisplayed()
+        compose.onNodeWithTag("ticket-91135").performScrollTo().performClick()
+        compose.onNodeWithTag("support-ticket-91135").assertIsDisplayed()
         compose.onNodeWithTag("message-tab-history").performClick()
-        compose.onNodeWithTag("ticket-DEMO-1003").assertIsDisplayed()
+        compose.onNodeWithTag("ticket-91135").assertIsDisplayed()
         compose.onNodeWithTag("message-tab-compose").performClick()
         compose.onNodeWithTag("support-draft").assertTextContains("پیش‌نویس پیام نمونه")
-        compose.onNodeWithTag("support-ticket-DEMO-1003").assertDoesNotExist()
+        compose.onNodeWithTag("support-ticket-91135").assertDoesNotExist()
         back()
         compose.onNodeWithTag("S-078").assertIsDisplayed()
     }
 
     @Test
     fun ticketsKeepTheirIdentityAndLocalDraftsAcrossBackAndRecreation() {
-        val draft = "پیش‌نویس ویرایش DEMO-1001"
+        val draft = "پیش‌نویس ویرایش 21971"
         compose.onNodeWithTag("demo-S-080").performScrollTo().performClick()
-        compose.onNodeWithTag("ticket-DEMO-1001").performClick()
+        compose.onNodeWithTag("ticket-21971").performClick()
         compose.onNodeWithTag("S-082").assertIsDisplayed()
-        compose.onNodeWithTag("support-ticket-DEMO-1001").assertIsDisplayed()
+        compose.onNodeWithTag("support-ticket-21971").assertIsDisplayed()
         compose.onNodeWithTag("support-edit").performClick()
         compose.onNodeWithTag("support-draft").performTextReplacement("کوتا")
         compose.onNodeWithTag("support-send").assertIsNotEnabled()
@@ -291,17 +291,17 @@ class NotificationsSupportTest {
         back()
         back()
         compose.onNodeWithTag("S-080").assertIsDisplayed()
-        compose.onNodeWithTag("ticket-DEMO-1001").performClick()
+        compose.onNodeWithTag("ticket-21971").performClick()
         compose.onNodeWithTag("support-edit").performClick()
         compose.onNodeWithTag("support-draft").assertTextContains(draft)
         back()
         compose.onNodeWithTag("tickets-more").performScrollTo().performClick()
-        compose.onNodeWithTag("ticket-DEMO-1003").performScrollTo().performClick()
-        compose.onNodeWithTag("support-ticket-DEMO-1003").assertIsDisplayed()
+        compose.onNodeWithTag("ticket-91135").performScrollTo().performClick()
+        compose.onNodeWithTag("support-ticket-91135").assertIsDisplayed()
         compose.onNodeWithTag("support-draft").assertDoesNotExist()
         compose.onNodeWithTag("support-send").assertDoesNotExist()
         back()
-        compose.onNodeWithTag("ticket-DEMO-1003").assertIsDisplayed()
+        compose.onNodeWithTag("ticket-91135").assertIsDisplayed()
     }
 
     @Test
@@ -328,8 +328,8 @@ class NotificationsSupportTest {
         back()
         back()
         compose.onNodeWithTag("demo-S-080").performScrollTo().performClick()
-        compose.onNodeWithTag("ticket-DEMO-1001").performClick()
-        compose.onNodeWithTag("support-ticket-DEMO-1001").assertIsDisplayed()
+        compose.onNodeWithTag("ticket-21971").performClick()
+        compose.onNodeWithTag("support-ticket-21971").assertIsDisplayed()
         compose.onNodeWithTag("support-edit").performClick()
         compose
             .onNodeWithTag("support-draft")
@@ -391,7 +391,7 @@ class NotificationsSupportTest {
             compose.onNodeWithTag("support-$scenario").assertIsDisplayed()
             if (scenario == "error") {
                 compose.onNodeWithTag("support-retry").performClick()
-                compose.onNodeWithTag("ticket-DEMO-1001").assertIsDisplayed()
+                compose.onNodeWithTag("ticket-21971").assertIsDisplayed()
             }
             back()
             back()

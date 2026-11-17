@@ -403,9 +403,9 @@ Scroll the demo page past saved destinations to **بازبینی مستقل ان
 The two card entries open S-174/S-175; local review opens S-176. The independent
 transfer-menu entry opens S-193, then S-192 internal or S-191 interbank;
 Continue opens S-173 local review. Separate receipt entries open S-093/S-098/S-097.
-Use source card `0000000000000001`, destination `0000000000000002`, or internal
-account destination `0000000000002`; synthetic checksum-valid IBAN is
-`IR220000000000000000000001`. Amounts are positive integers in rial (IRR).
+Use source card `6104339896671083`, destination `6104339896671084`, or internal
+account destination `0212355097104`; synthetic checksum-valid IBAN is
+`IR320120470240363429009957`. Amounts are positive integers in rial (IRR).
 Choose a synthetic reason for account forms. None of these identifies a bank
 account, performs an inquiry or submits money. OTP, submission, attachments,
 remote favorites and sharing remain unavailable. Card secrets reset on recreation.
@@ -432,7 +432,7 @@ check. The **نمونه-رد-ثبت-ساختگی** sheet routes through S-185 er
 waiting step opens S-189 local verify, where OTP and confirmation are unavailable.
 Back on waiting/validation/errors asks to cancel; **ابطال** returns to S-187 with
 its inputs kept. Valid synthetic destination IBANs (without IR) include
-`920000000000000000000002` and `650000000000000000000003`.
+`310120078094788868405633` and `950120755237739603015817`.
 
 Separate demo entries open group history S-089 (→ destinations S-087 → detail
 S-088) and an independent labelled receipt S-096. S-183 is a wage-advance receipt
@@ -467,8 +467,8 @@ approved in #66; later batches still require owner approval.
 
 Demo entries open the three bill source modes: **پرداخت قبض با حساب** (S-209),
 **پرداخت قبض با کارت** (S-210) and **پرداخت قبض بدون ورود** (S-208, typed
-16-digit card). Bill and payment IDs need 6–13 digits. Bill ID `9000000000001`
-with payment ID `1250001` opens S-207; `9000000000002`/`430002` is a paid fixture
+16-digit card). Bill and payment IDs need 6–13 digits. Bill ID `2058601103691`
+with payment ID `1250001` opens S-207; `7154889187604`/`430002` is a paid fixture
 bill. From S-207, account payment is unavailable and card modes open S-205/S-206,
 whose card fields are never kept. **منوی بیمه — نمونهٔ مستقل** opens S-403 →
 S-402 → S-401; only due or postponed installments can be chosen, then a source
@@ -536,13 +536,13 @@ No new assets. Stop before FR-23.
 
 ## FR-23 identifier conversion (#74, D-021)
 
-From the demo screen, open **تبدیل شناسه با ورود — نمونه** (S-201) or **تبدیل شناسه بدون ورود — نمونه** (S-202). Expand a direction and enter the synthetic account/card/IBAN printed above the sections; account→IBAN also requires **بانک داخلی ساختگی**. Calculate opens the shared result S-011, with copy and Back; IBAN→card shows two distinct card groups. Each direction keeps its own non-secret draft. The other-bank fixture opens an unavailable notice; it cannot start payment.
+From the demo screen, open **تبدیل شناسه با ورود — نمونه** (S-201) or **تبدیل شناسه بدون ورود — نمونه** (S-202). Expand a direction and enter the synthetic account/card/IBAN printed above the sections; account→IBAN also requires **بانک ملت**. Calculate opens the shared result S-011, with copy and Back; IBAN→card shows two distinct card groups. Each direction keeps its own non-secret draft. The other-bank fixture opens an unavailable notice; it cannot start payment.
 
 The two **استعلام کارمزدی … نمونهٔ مستقل** demo entries preview S-203/S-204 with picker or typed source. OTP/final payment remain unavailable, and credentials reset on recreation/Back. Scenario controls cover loading, empty and error/retry. Real fees/eligibility, original menu configuration, ownership/conversion algorithms and exact E/M joins remain Unknown. Clipboard feedback and formatted-input normalization are local mock choices; original fidelity remains unscored. Only S-201–S-204/S-011 are registered. Private IDENTIFIER-RECOVERY evidence and QA: `local/evidence/identifier-conversion/`. Acceptance: 73 JVM / 96 device tests, 0 skipped; lint 0 errors / 117 warnings, unchanged from clean-main baseline 66 / 90 tests. Stop before FR-14.
 
 ## FR-14 wallet operations (#75, D-021)
 
-Home → **کیف پول** (S-111). **انتقال کیف به کیف** opens S-116 and **برداشت از کیف** S-106; **شارژ کیف** opens the payment-type sheet, where **واریز از حساب** opens S-104 (the gateway option is FR-15). The menu opens **خرید با کیف** (S-100), **پرداخت قبض با کیف** (S-109) and **خرید شارژ با کیف** (S-102). Synthetic destinations: wallet `0000000000000201`, merchant `0000000000000301`; bill `9000000000001` / `1250001` (unpaid) and `9000000000002` / `430002` (paid). An amount above the source's synthetic balance is refused locally. Continue opens the matching confirmation (S-117, S-101, S-107, S-105, S-103, S-099). **بازگشت و ویرایش** keeps the draft and **انصراف** leaves the operation. The final step (signature or OTP) only shows a notice.
+Home → **کیف پول** (S-111). **انتقال کیف به کیف** opens S-116 and **برداشت از کیف** S-106; **شارژ کیف** opens the payment-type sheet, where **واریز از حساب** opens S-104 (the gateway option is FR-15). The menu opens **خرید با کیف** (S-100), **پرداخت قبض با کیف** (S-109) and **خرید شارژ با کیف** (S-102). Synthetic destinations: wallet `5041124072452997`, merchant `5041757551253168`; bill `2058601103691` / `1250001` (unpaid) and `7154889187604` / `430002` (paid). An amount above the source's synthetic balance is refused locally. Continue opens the matching confirmation (S-117, S-101, S-107, S-105, S-103, S-099). **بازگشت و ویرایش** keeps the draft and **انصراف** leaves the operation. The final step (signature or OTP) only shows a notice.
 
 S-100 needs a scanned payment. From the menu its Continue shows a notice; the demo entry **خرید با کیف با بارکد نمونه — نمونهٔ مستقل** stands in for a scan with a fixed synthetic destination. The QR scanner S-108, camera, bill-barcode scan and the familiar-destination picker are not built. Private WO-RECOVERY evidence and QA: `local/evidence/wallet-operations/`. Acceptance: 79 JVM / 101 device tests, 0 skipped; lint 0 errors / 117 warnings, identical diagnostics to baseline; baseline 73 / 96. Stop before FR-15.
 
@@ -578,7 +578,7 @@ Home → **خدمات خودرو** opens the vehicle menu (S-253). The toll, doc
 ## FR-17 road tolls (#80, D-021)
 
 Home → **خدمات خودرو** → **عوارض سالیانه / عوارض طرح ترافیک / عوارض آزادراه / طرح آلودگی هوا** → a saved plate (or **پلاک جدید**) opens the inquiry.
-- **Others' vehicles:** **دیگران** needs a valid national code (for example `0000000019`) and a `09…` mobile; annual also needs a VIN.
+- **Others' vehicles:** **دیگران** needs a valid national code (for example `5840573851`) and a `09…` mobile; annual also needs a VIN.
 - **Inquiry:** **استعلام** asks for the fee source, then the local OTP (`12345`, never saved).
 - **Results:** the first saved automobile plate has dues; select rows (traffic/freeway) and **پرداخت** opens the confirmation, whose final button only shows a notice. Pollution shows quota only.
 - **Receipt:** the demo entry **رسید مستقل عوارض — نمونه** opens S-261.
@@ -629,7 +629,7 @@ To start the backend and open the graph beside the emulator, follow
 
 ## Complete replica (D-022)
 
-Tap **ورود با کاربر نمایشی** on the front page for the intro, welcome and login pages; the demo user is in `customer.json`. **ورود به خانه** still goes straight to Home.
+Tap **ورود با امیرحسین کاظمی** on the front page for the intro, welcome and login pages; the demo user is in `customer.json`. **ورود به خانه** still goes straight to Home.
 
 Every service runs against the local mock bank, so a confirm now changes balances and history for the session. Its result is a receipt page, a result dialog, or a failure dialog with the reason. See the [mock data runbook](mock-data.md).
 

@@ -21,10 +21,10 @@ def test_a_card_number_is_masked_and_persian_stays_readable(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
 ) -> None:
     monkeypatch.setenv("ASSISTANT_TRACE", "1")
-    show("step", card="6037991234567890", values={"name": "رضا", "iban": "IR120000000000000000001234"})
+    show("step", card="6037991234567890", values={"name": "رضا", "iban": "IR030150743258913763102918"})
     out = capsys.readouterr().out
     assert "****7890" in out
-    assert "****1234" in out
+    assert "****2918" in out
     assert "6037991234567890" not in out
     assert "رضا" in out
 
@@ -35,8 +35,8 @@ def test_a_traced_card_to_reza_run_never_prints_the_full_card(
     monkeypatch.setenv("ASSISTANT_TRACE", "1")
     assert run(FakeApp(), CARD_VALUES).state == "review"
     out = capsys.readouterr().out
-    assert "0091" in out
-    assert "0000000000000091" not in out
+    assert "8880" in out
+    assert "6037990836388880" not in out
 
 
 def test_debug_mode_keeps_a_command_for_an_hour() -> None:

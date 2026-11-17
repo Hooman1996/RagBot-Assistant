@@ -37,7 +37,7 @@ def test_a_card_transfer_on_the_stand_in_matches_the_contract_at_every_step() ->
     assert [item["observation"]["observation_version"] for item in results] == [2, 3, 4]
     assert results[1]["observation"]["fields"] == [
         {"ref": "card-transfer-source", "value": "card-1"},
-        {"ref": "card-transfer-destination", "value": "****0091"},
+        {"ref": "card-transfer-destination", "value": "****8880"},
         {"ref": "card-transfer-amount", "value": "2500000"},
     ]
     assert results[1]["observation"]["draft"]["draft_version"] == 1

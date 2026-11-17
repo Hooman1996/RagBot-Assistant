@@ -1,10 +1,10 @@
 {
-  "name": "کاربر نمایشی",
-  "customerNumber": "۰۰۰۰۰۱",
+  "name": "امیرحسین کاظمی",
+  "customerNumber": "۲۴۸۴۱۳",
   "lastLogin": "۱۴۰۵/۰۸/۰۷ - ۰۹:۳۰",
   "inviteCode": "PREVIEW01",
-  "nationalCode": "0000000019",
-  "mobile": "09000000000",
+  "nationalCode": "5840573851",
+  "mobile": "09129013458",
   "username": "demo.user",
   "password": "Demo@1234",
   "otp": "12345",
@@ -15,14 +15,14 @@
     {
       "key": "address-1",
       "title": "خانه",
-      "address": "خیابان نمونه، کوچه یک، پلاک ۲",
-      "postalCode": "۰۰۰۰۰۰۰۰۰۱"
+      "address": "تهران، خیابان شریعتی، کوچه بهار، پلاک ۱۲",
+      "postalCode": "۱۹۱۵۶۸۳۴۷۱"
     },
     {
       "key": "address-2",
       "title": "محل کار",
-      "address": "میدان نمونه، ساختمان دو",
-      "postalCode": "۰۰۰۰۰۰۰۰۰۲"
+      "address": "تهران، میدان ونک، خیابان ملاصدرا، پلاک ۴۸",
+      "postalCode": "۱۹۹۴۸۳۴۹۱۷"
     }
   ],
   "inquiries": {
@@ -76,7 +76,7 @@
       ],
       [
         "بانک",
-        "بانک نمایشی"
+        "بانک ملی ایران"
       ]
     ],
     "rate": [

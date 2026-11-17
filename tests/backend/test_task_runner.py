@@ -69,7 +69,7 @@ def test_card_to_reza_navigates_fills_and_stops_at_the_review() -> None:
     assert report.state == "review"
     assert [operation for operation, _ in app.sent] == ["navigate", "fill_form", "show_review"]
     values = app.sent[1][1]["values"]
-    assert values["card-transfer-destination"] == "0000000000000091"
+    assert values["card-transfer-destination"] == "6037990836388880"
     assert values["card-transfer-amount"] == {"value": 250000, "unit": "IRR"}
 
 

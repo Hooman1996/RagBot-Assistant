@@ -75,7 +75,7 @@ internal object FundingFixture {
     const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
     const val STEP = 100_000L
     const val DEFAULT_AMOUNT = 1_000_000L
-    const val TRACKING = "DEMO-IPG-0001"
+    const val TRACKING = "993288040"
 
     // Server-supplied values; all Designed for mock. Exact IRR integers.
     val limits = 10_000L..500_000_000L

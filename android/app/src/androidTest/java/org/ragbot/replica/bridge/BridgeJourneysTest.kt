@@ -40,12 +40,12 @@ class BridgeJourneysTest {
         rig.fill(
             "S-174",
             "card-transfer-source" to text("card-1"),
-            "card-transfer-destination" to text("0000000000000091"),
+            "card-transfer-destination" to text("6037990836388880"),
             "card-transfer-amount" to rials(250_000),
         )
         val seen = rig.executor.observer.observe()
         val destination = seen.fields.first { it.ref == "card-transfer-destination" }
-        assertEquals("****0091", destination.value)
+        assertEquals("****8880", destination.value)
         val review = rig.expect(rig.review(), "S-176")
         assertEquals(1L, review.observation.draft?.review_version)
     }
@@ -55,7 +55,7 @@ class BridgeJourneysTest {
         rig.reach("S-181")
         rig.fill(
             "S-181",
-            "schedule-title" to text("اجاره نمونه"),
+            "schedule-title" to text("اجاره آپارتمان"),
             "schedule-start" to text("1405/09/01"),
             "schedule-end" to text("1405/12/01"),
             "schedule-frequency" to text("WEEKLY"),
@@ -84,7 +84,7 @@ class BridgeJourneysTest {
         rig.reach("S-209")
         rig.fill(
             "S-209",
-            "bill-id" to text("9000000000001"),
+            "bill-id" to text("2058601103691"),
             "bill-pay-id" to text("1250001"),
         )
         rig.expect(rig.review(), "S-207")
@@ -95,7 +95,7 @@ class BridgeJourneysTest {
         rig.reach("S-211")
         rig.fill(
             "S-211",
-            "topup-phone" to text("09010000000"),
+            "topup-phone" to text("09358346703"),
             "topup-amount" to text("200000"),
         )
         rig.expect(rig.review(), "S-212")
@@ -158,7 +158,7 @@ class BridgeJourneysTest {
         rig.fill(
             "S-335",
             "svc-guarantor" to text("رضا"),
-            "svc-guarantorCode" to text("0000000019"),
+            "svc-guarantorCode" to text("5840573851"),
         )
         rig.reach("S-285")
         consent("svc-agree-yes", "S-334")
@@ -186,9 +186,9 @@ class BridgeJourneysTest {
     @Test
     fun theUsersOwnEditMakesTheDraftStale() {
         rig.reach("S-209")
-        rig.fill("S-209", "bill-id" to text("9000000000001"))
+        rig.fill("S-209", "bill-id" to text("2058601103691"))
         val before = rig.executor.observer.draftVersion
-        rig.controls.setText("bill-id", "9000000000002")
+        rig.controls.setText("bill-id", "7154889187604")
         rig.executor.observer.let { observer ->
             val changed =
                 Actions(rig.controls).waitUntil { observer.observe().draft?.draft_version != before }

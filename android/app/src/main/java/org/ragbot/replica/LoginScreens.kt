@@ -83,7 +83,7 @@ private fun LoginForm(onLogin: () -> Unit) {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
-    Text("کاربر نمایشی: ${MockData.current.customer.username}")
+    Text("امیرحسین کاظمی: ${MockData.current.customer.username}")
     Text("رمز نمایشی در customer.json است؛ رمز واقعی وارد نکنید.")
     OutlinedTextField(
         username,

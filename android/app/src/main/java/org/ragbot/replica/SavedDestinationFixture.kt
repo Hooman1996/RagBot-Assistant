@@ -14,7 +14,7 @@ data class SavedDestination(
     val type: String,
     val name: String,
     val destination: String,
-    val description: String = "داده ساختگی برای پیش‌نمایش",
+    val description: String = "مقصد ذخیره‌شده",
 ) : Serializable
 
 /**

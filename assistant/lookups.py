@@ -13,7 +13,7 @@ from pathlib import Path
 FIXTURES = Path(__file__).resolve().parent.parent / "mock_services" / "fixtures"
 IBAN = re.compile(r"IR\d{24}")
 DIGITS = str.maketrans("۰۱۲۳۴۵۶۷۸۹٠١٢٣٤٥٦٧٨٩", "01234567890123456789")
-# Words a user puts before a name or number («کارت 0018», «حساب رضا»); they name no record.
+# Words a user puts before a name or number («کارت 3566», «حساب رضا»); they name no record.
 GENERIC = {"کارت", "کارتم", "حساب", "حسابم", "کیف", "کیفم", "پول", "پولم", "شبا", "شبای", "شماره", "به", "از"}
 ENDINGS = ("مو", "تو", "شو", "م", "ت", "ش")  # spoken endings such as «تجاریمو»
 
@@ -101,7 +101,7 @@ class FixtureLookups:
 
     def records(self, lookup: str) -> list[dict]:
         """Every record of a lookup. Contacts are the people and the saved destinations («مقصدهای
-        آشنا»), each destination a contact with its one number: «حساب آزمایشی 3» has an account."""
+        آشنا»), each destination a contact with its one number: «نگار صادقی» has an account."""
         source = SOURCES[source_of(lookup)]
         data = json.loads((self.folder / f"{source.file}.json").read_text(encoding="utf-8"))
         if source_of(lookup) != "contacts":
@@ -158,7 +158,7 @@ class FixtureLookups:
 
     def named(self, text: str, records: list[Candidate]) -> list[Candidate]:
         """The records the text names by their whole label, or by the words of it no other record
-        has («پس‌انداز» names «پس‌انداز نمایشی» among «حساب نمایشی» and the rest)."""
+        has («پس‌انداز» names «سپرده پس‌انداز» among «سپرده کوتاه‌مدت» and the rest)."""
         said = " " + " ".join(re.sub(r"[^\w\s]", " ", plain(text)).split()) + " "
         labels = {item.key: plain(item.label).split() for item in records}
         found = []

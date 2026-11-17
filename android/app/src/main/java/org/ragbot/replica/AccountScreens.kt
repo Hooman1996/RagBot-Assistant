@@ -112,7 +112,7 @@ internal fun AccountTab(
                 }
             }
             AccountValue("صاحب حساب", account?.owner ?: "—")
-            AccountValue("شماره مشتری", "۰۰۰۰۰۱")
+            AccountValue("شماره مشتری", "۲۴۸۴۱۳")
             AccountValue("شماره حساب", account?.number ?: "—") {
                 copied = "شماره حساب"
                 copyPreview(context, account?.number.orEmpty())
@@ -166,7 +166,7 @@ internal fun AccountTab(
 
 internal fun copyPreview(context: Context, text: String) {
     (context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager).setPrimaryClip(
-        ClipData.newPlainText("حساب نمایشی", text)
+        ClipData.newPlainText("سپرده کوتاه‌مدت", text)
     )
 }
 
@@ -452,8 +452,8 @@ private fun AccountList(
                                 14.sp,
                             )
                         AccountValue("صاحب حساب", item.owner, 14.sp)
-                        if (!fetching && !managing) AccountValue("شماره مشتری", "۰۰۰۰۰۱", 14.sp)
-                        AccountValue("دسته بندی", "سپرده نمایشی", 14.sp)
+                        if (!fetching && !managing) AccountValue("شماره مشتری", "۲۴۸۴۱۳", 14.sp)
+                        AccountValue("دسته بندی", "سپرده کوتاه‌مدت", 14.sp)
                         AccountValue("نوع حساب", item.type, 14.sp)
                         if (!fetching && !managing) AccountValue("شماره شبا", item.iban, 14.sp)
                         if (managing)

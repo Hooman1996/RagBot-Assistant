@@ -56,7 +56,7 @@ Both files are a JSON list, UTF-8, one case per object:
 {
   "id": "H-061",
   "tags": ["unambiguous", "e2e"],
-  "turns": ["از کارت 0018 مبلغ ۵۰۰ هزار تومان برای رضا کارت به کارت کن"],
+  "turns": ["از کارت 3566 مبلغ ۵۰۰ هزار تومان برای رضا کارت به کارت کن"],
   "expect": {
     "intent": "card_transfer",
     "values": {

@@ -67,8 +67,8 @@ class IndividualTransfersTest {
         click("card-transfer-review")
         compose.onNodeWithTag("S-175").assertIsDisplayed()
         compose.onNodeWithTag("S-176").assertDoesNotExist()
-        compose.onNodeWithTag("card-transfer-source").performTextInput("0000000000000018")
-        compose.onNodeWithTag("card-transfer-destination").performTextInput("0000000000000026")
+        compose.onNodeWithTag("card-transfer-source").performTextInput("6104336383233566")
+        compose.onNodeWithTag("card-transfer-destination").performTextInput("6104334806064544")
         compose.onNodeWithTag("card-transfer-amount").performTextInput("250000")
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("card-transfer-amount").assertTextContains("250000", substring = true)
@@ -76,7 +76,7 @@ class IndividualTransfersTest {
         compose.waitUntil(5_000) { compose.onNodeWithTag("S-176").isDisplayed() }
         compose
             .onNodeWithTag("card-transfer-review-destination")
-            .assertTextContains("0000000000000026", substring = true)
+            .assertTextContains("6104334806064544", substring = true)
         compose.onNodeWithTag("card-transfer-cvv2").performTextInput("123")
         compose.onNodeWithTag("card-transfer-password").performScrollTo().performTextInput("98765")
         compose
@@ -112,7 +112,7 @@ class IndividualTransfersTest {
         compose.onNodeWithTag("S-175").assertIsDisplayed()
         compose
             .onNodeWithTag("card-transfer-destination")
-            .assertTextContains("0000000000000026", substring = true)
+            .assertTextContains("6104334806064544", substring = true)
         compose.onNodeWithTag("card-transfer-amount").performTextReplacement("300000")
         click("card-transfer-review")
         compose
@@ -132,7 +132,7 @@ class IndividualTransfersTest {
         compose.onNodeWithTag("card-transfer-source-card-1").performClick()
         compose
             .onNodeWithTag("card-transfer-source-picker")
-            .assertTextContains("0000000000000018", substring = true)
+            .assertTextContains("6104336383233566", substring = true)
         for (tag in
             listOf("card-transfer-scan", "card-transfer-contacts")) {
             click(tag)
@@ -153,7 +153,7 @@ class IndividualTransfersTest {
         click("account-transfer-source")
         compose.onNodeWithTag("account-transfer-source-account-2").performClick()
         compose.waitUntil(5_000) { compose.activity.hasWindowFocus() }
-        compose.onNodeWithTag("account-transfer-destination").performTextInput("0000000000002")
+        compose.onNodeWithTag("account-transfer-destination").performTextInput("0212355097104")
         compose.onNodeWithTag("account-transfer-amount").performTextInput("250000")
         click("account-transfer-reason")
         compose.onNodeWithTag("account-transfer-reason-0").performClick()
@@ -190,7 +190,7 @@ class IndividualTransfersTest {
         click("transfer-interbank")
         compose
             .onNodeWithTag("account-transfer-destination")
-            .performTextInput("IR000000000000000000000001")
+            .performTextInput("IR100120470240363429009957")
         compose.onNodeWithTag("account-transfer-amount").performTextInput("250000")
         click("account-transfer-reason")
         compose.onNodeWithTag("account-transfer-reason-1").performClick()
@@ -199,10 +199,10 @@ class IndividualTransfersTest {
         compose.onNodeWithTag("account-transfer-error").assertIsDisplayed()
         compose
             .onNodeWithTag("account-transfer-destination")
-            .performTextReplacement("IR220000000000000000000001")
+            .performTextReplacement("IR320120470240363429009957")
         click("account-transfer-continue")
         compose.onNodeWithTag("S-173").assertIsDisplayed()
-        compose.onNodeWithText("IR220000000000000000000001").assertIsDisplayed()
+        compose.onNodeWithText("IR320120470240363429009957").assertIsDisplayed()
         back()
         back()
         click("transfer-internal")
@@ -215,7 +215,7 @@ class IndividualTransfersTest {
         click("transfer-interbank")
         compose
             .onNodeWithTag("account-transfer-destination")
-            .assertTextContains("IR220000000000000000000001", substring = true)
+            .assertTextContains("IR320120470240363429009957", substring = true)
     }
 
     @Test

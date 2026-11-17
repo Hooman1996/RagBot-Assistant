@@ -388,7 +388,7 @@ fun ReplicaApp() {
                     (WalletOperation.BUY to
                         WalletOperationDraft(
                             WalletRules.active(WalletFixture.wallets).first().number,
-                            "0000000000000301",
+                            "5041757551253168",
                         ))
         open(entry.to)
     }
@@ -486,7 +486,7 @@ fun ReplicaApp() {
                             },
                             Modifier.testTag("login-start"),
                         ) {
-                            Text("ورود با کاربر نمایشی")
+                            Text("ورود با امیرحسین کاظمی")
                         }
                         Button(
                             onClick = { entered = navigation.navigate(HomeDestinations.HOME) },
@@ -510,7 +510,7 @@ fun ReplicaApp() {
                         OutlinedTextField(
                             pickerDraft,
                             { pickerDraft = it },
-                            label = { Text("یادداشت فرم آزمایشی") },
+                            label = { Text("یادداشت") },
                             modifier = Modifier.testTag("picker-review-draft"),
                         )
                         Text(

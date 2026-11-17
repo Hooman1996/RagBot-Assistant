@@ -26,7 +26,7 @@ MONEY = {
     "required": ["value", "unit"],
     "additionalProperties": False,
 }
-# Words that may stand around a number the model copied: «کارت ****0091», «چک صیادی ****0311».
+# Words that may stand around a number the model copied: «کارت ****8880», «چک صیادی ****3498».
 AROUND_NUMBER = GENERIC | {"چک", "صیادی", "صیاد", "دریافتی", "شناسه", "قبض", "IR"}
 
 

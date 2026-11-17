@@ -6,7 +6,7 @@ import org.junit.Test
 class IndividualTransferRulesTest {
     @Test
     fun cardPreviewRejectsMalformedEqualAndOverflowingInputs() {
-        val valid = CardTransferDraft("0000000000000018", "0000000000000026", "250000")
+        val valid = CardTransferDraft("6104336383233566", "6104334806064544", "250000")
         assertTrue(CardTransferRules.errors(valid).isEmpty())
         assertTrue(CardTransferRules.errors(valid.copy(source = "123")).containsKey("source"))
         assertTrue(
@@ -28,7 +28,7 @@ class IndividualTransferRulesTest {
     fun accountReviewRequiresSourceRecipientAmountAndSyntheticReason() {
         val valid =
             AccountTransferDraft(
-                destination = "0000000000002",
+                destination = "0212355097104",
                 amount = "250000",
                 reason = AccountTransferFixture.reasons.first(),
             )
@@ -49,19 +49,19 @@ class IndividualTransferRulesTest {
         val valid =
             AccountTransferDraft(
                 mode = AccountTransferDestinations.INTERBANK,
-                destination = "IR220000000000000000000001",
+                destination = "IR320120470240363429009957",
                 amount = "250000",
                 reason = AccountTransferFixture.reasons.first(),
             )
         assertNull(AccountTransferFixture.validate(valid))
         assertNull(
-            AccountTransferFixture.validate(valid.copy(destination = "۲۲۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۱"))
+            AccountTransferFixture.validate(valid.copy(destination = "۳۲۰۱۲۰۴۷۰۲۴۰۳۶۳۴۲۹۰۰۹۹۵۷"))
         )
         listOf(
-                "IR000000000000000000000001",
-                "IR220000000000000000000001X",
-                "garbage220000000000000000000001",
-                "220000000000000000000001IR",
+                "IR100120470240363429009957",
+                "IR320120470240363429009957X",
+                "garbage320120470240363429009957",
+                "320120470240363429009957IR",
                 "000000000000000000000000",
             )
             .forEach {

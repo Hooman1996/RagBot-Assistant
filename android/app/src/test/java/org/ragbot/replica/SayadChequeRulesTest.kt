@@ -13,7 +13,7 @@ class SayadChequeRulesTest {
 
     @Test
     fun aRegisteredIdCannotBeUsedTwice() {
-        val id = "0000000000000900"
+        val id = "6104332113067045"
         assertTrue(MockBank.sayadRegister(id, 1_000L, "۱۴۰۵/۱۰/۰۱", "رضا") is BankResult.Done)
         assertTrue(MockBank.sayadRegister(id, 1_000L, "۱۴۰۵/۱۰/۰۱", "رضا") is BankResult.Failed)
         assertTrue(MockBank.sayadInquiry(id) is BankResult.Done)
@@ -21,7 +21,7 @@ class SayadChequeRulesTest {
 
     @Test
     fun onlyAPendingChequeIsAnsweredAndOnlyAHeldChequeMoves() {
-        val id = "0000000000000311"
+        val id = "1404887131933498"
         assertTrue(MockBank.sayadTransfer(id, "رضا") is BankResult.Failed)
         assertTrue(MockBank.sayadAnswer(id, true) is BankResult.Done)
         assertTrue(MockBank.sayadAnswer(id, false) is BankResult.Failed)

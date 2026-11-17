@@ -37,7 +37,7 @@ class AccountsTest {
         compose.onNodeWithTag("control-ACCOUNT").assertIsSelected()
         compose.onNodeWithTag("account-list").performClick()
         compose.onNodeWithTag("S-085").assertIsDisplayed()
-        compose.onNodeWithTag("account-search").performTextReplacement("0000000002")
+        compose.onNodeWithTag("account-search").performTextReplacement("9818460579")
         compose.onNodeWithTag("choose-account-1").assertDoesNotExist()
         compose
             .onNodeWithTag("choose-account-2")
@@ -46,7 +46,7 @@ class AccountsTest {
             .onNodeWithTag("choose-account-2")
             .assertTextContains(AccountFixture.accounts[1].iban, substring = true)
         compose.onNodeWithTag("choose-account-2").performClick()
-        compose.onNodeWithText("۰۰۰۰۰۰۰۰۰۲", useUnmergedTree = true).assertIsDisplayed()
+        compose.onNodeWithText("۹۸۱۸۴۶۰۵۷۹", useUnmergedTree = true).assertIsDisplayed()
         compose.onNodeWithTag("account-balance").performClick()
         compose.onNodeWithText("۳٬۷۵۰٬۰۰۰ ریال · عدم نمایش").assertIsDisplayed()
         compose.activityRule.scenario.recreate()
@@ -63,7 +63,7 @@ class AccountsTest {
             0f,
         )
         compose.onNodeWithTag("menu-branches").assertIsDisplayed()
-        compose.onNodeWithTag("account-number").assertTextContains("۰۰۰۰۰۰۰۰۰۲", substring = true)
+        compose.onNodeWithTag("account-number").assertTextContains("۹۸۱۸۴۶۰۵۷۹", substring = true)
     }
 
     @Test

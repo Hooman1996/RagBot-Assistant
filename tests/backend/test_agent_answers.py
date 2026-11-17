@@ -26,11 +26,11 @@ def sent_values(app: RecordingApp) -> dict:
 
 def test_a_correction_in_an_answer_replaces_the_value_held_before() -> None:
     # The second model answer keeps the old amount: the newest amount the user wrote still wins.
-    chat = FakeChat([CARD, card(None, toman=200000), card("کارت 0026", toman=200000)])
+    chat = FakeChat([CARD, card(None, toman=200000), card("کارت 4544", toman=200000)])
     app = RecordingApp()
     graph = build_agent(chat, app)
     graph.invoke(new_request("c", "۲۰۰ هزار تومن به رضا کارت به کارت کن"), CONFIG)
-    result = graph.invoke(Command(resume="از کارت 0026، مبلغ رو ۳۰۰ هزار تومن کن"), CONFIG)
+    result = graph.invoke(Command(resume="از کارت 4544، مبلغ رو ۳۰۰ هزار تومن کن"), CONFIG)
     assert result["task_state"] == "ready_for_user"
     assert set(chat.schemas[2]["properties"]) == set(card(None))  # every value was read again
     values = sent_values(app)
@@ -39,38 +39,38 @@ def test_a_correction_in_an_answer_replaces_the_value_held_before() -> None:
 
 
 def test_a_hidden_number_inside_words_is_put_back() -> None:
-    sentence = "۱۵۰ هزار تومان از کارت 0018 به کارت 0000000000000091 بریز"
-    chat = FakeChat([CARD, card("کارت 0018", "کارت ****0091", 150000)])
+    sentence = "۱۵۰ هزار تومان از کارت 3566 به کارت 6037990836388880 بریز"
+    chat = FakeChat([CARD, card("کارت 3566", "کارت ****8880", 150000)])
     app = RecordingApp()
     build_agent(chat, app).invoke(new_request("c", sentence), CONFIG)
-    assert "****0091" in chat.prompts[1] and "0000000000000091" not in chat.prompts[1]
-    assert sent_values(app)["card-transfer-destination"] == "0000000000000091"
+    assert "****8880" in chat.prompts[1] and "6037990836388880" not in chat.prompts[1]
+    assert sent_values(app)["card-transfer-destination"] == "6037990836388880"
 
 
 def test_a_typed_iban_not_saved_reaches_the_review() -> None:
-    sentence = "۴۰۰ هزار تومن از حساب نمایشی به شبا IR380000000000000000000004 بفرست، بابت نمونه اول"
+    sentence = "۴۰۰ هزار تومن از سپرده کوتاه‌مدت به شبا IR910180319412535974461725 بفرست، بابت اجاره"
     found = {
-        "account-transfer-source": "حساب نمایشی",
-        "account-transfer-destination": "شبا IR****0004",
+        "account-transfer-source": "سپرده کوتاه‌مدت",
+        "account-transfer-destination": "شبا IR****1725",
         "account-transfer-amount": {"value": 400000, "unit": "IRT"},
-        "account-transfer-reason": "بابت نمونهٔ اول — ساختگی",
+        "account-transfer-reason": "پرداخت اجاره",
     }
     app = RecordingApp()
     result = build_agent(FakeChat([{"choice": "interbank_transfer"}, found]), app).invoke(
         new_request("c", sentence), CONFIG
     )
     assert result["task_state"] == "ready_for_user"
-    assert sent_values(app)["account-transfer-destination"] == "IR380000000000000000000004"
+    assert sent_values(app)["account-transfer-destination"] == "IR910180319412535974461725"
     assert sent_values(app)["account-transfer-reason"] == "0"
 
 
-SCHEDULE = {"schedule-title": "اجاره نمونه", "schedule-start": "1405/09/01", "schedule-end": "1405/12/01"}
+SCHEDULE = {"schedule-title": "اجاره آپارتمان", "schedule-start": "1405/09/01", "schedule-end": "1405/12/01"}
 
 
 def test_a_choice_is_one_of_its_labels_and_reaches_the_app_as_its_key() -> None:
     chat = FakeChat([{"choice": "recurring_transfer"}, SCHEDULE | {"schedule-frequency": "روزانه"}])
     app = RecordingApp()
-    result = build_agent(chat, app).invoke(new_request("c", "انتقال خودکار روزانه اجاره نمونه"), CONFIG)
+    result = build_agent(chat, app).invoke(new_request("c", "انتقال خودکار روزانه اجاره آپارتمان"), CONFIG)
     frequency = chat.schemas[1]["properties"]["schedule-frequency"]["anyOf"][0]
     assert frequency == {"enum": ["روزانه", "هفتگی", "ماهانه"]}
     assert "DAILY" not in chat.prompts[1]
@@ -83,7 +83,7 @@ def test_a_weekly_transfer_asks_its_day_and_sends_it_after_the_frequency() -> No
     chat = FakeChat([{"choice": "recurring_transfer"}, SCHEDULE | {"schedule-frequency": "هفتگی"}])
     app = RecordingApp()
     graph = build_agent(chat, app)
-    result = graph.invoke(new_request("c", "انتقال خودکار هفتگی اجاره نمونه"), CONFIG)
+    result = graph.invoke(new_request("c", "انتقال خودکار هفتگی اجاره آپارتمان"), CONFIG)
     pending = result["__interrupt__"][0].value
     assert pending["question"] == "در چه روزی انجام شود؟"
     assert [item["label"] for item in pending["options"]][:2] == ["شنبه", "یکشنبه"]
@@ -97,7 +97,7 @@ def test_text_that_is_no_allowed_key_is_asked_again_with_the_options() -> None:
     chat = FakeChat([{"choice": "recurring_transfer"}, SCHEDULE | {"schedule-frequency": "هر ماه یکبار"}])
     app = RecordingApp()
     graph = build_agent(chat, app)
-    pending = graph.invoke(new_request("c", "انتقال خودکار اجاره نمونه"), CONFIG)["__interrupt__"][0].value
+    pending = graph.invoke(new_request("c", "انتقال خودکار اجاره آپارتمان"), CONFIG)["__interrupt__"][0].value
     assert [item["ref"] for item in pending["options"]] == [
         "schedule-frequency=DAILY",
         "schedule-frequency=WEEKLY",
@@ -112,7 +112,7 @@ def test_text_that_is_no_allowed_key_is_asked_again_with_the_options() -> None:
 
 
 def test_a_card_sent_by_post_asks_the_address_and_goes_by_the_address_page() -> None:
-    said = {"source": "حساب نمایشی", "delivery": "ارسال پستی", "color": "سبز"}
+    said = {"source": "سپرده کوتاه‌مدت", "delivery": "ارسال پستی", "color": "سبز"}
     chat = FakeChat([{"choice": "card_request"}, said])
     app = RecordingApp()
     graph = build_agent(chat, app)
@@ -125,11 +125,11 @@ def test_a_card_sent_by_post_asks_the_address_and_goes_by_the_address_page() -> 
 
 
 def test_a_label_word_before_a_text_value_is_dropped() -> None:
-    said = {"field-title": "عنوان محل کار", "field-postal": "0000000002", "field-address": "میدان نمونه"}
+    said = {"field-title": "عنوان محل کار", "field-postal": "1969833114", "field-address": "میدان ونک"}
     chat = FakeChat([{"choice": "saved_addresses"}, said])
     app = RecordingApp()
     title = next(item["title"] for item in PROFILE["features"] if item["intent"] == "saved_addresses")
-    build_agent(chat, app).invoke(new_request("c", f"{title}: عنوان محل کار، کد پستی 0000000002"), CONFIG)
+    build_agent(chat, app).invoke(new_request("c", f"{title}: عنوان محل کار، کد پستی 1969833114"), CONFIG)
     assert sent_values(app)["field-title"] == "محل کار"
 
 
@@ -147,9 +147,9 @@ def test_an_account_the_model_left_out_is_taken_when_the_user_named_only_that_on
 
 
 def test_a_selection_the_feature_decides_is_set_by_code_and_never_asked() -> None:
-    chat = FakeChat([{"choice": "credit_report"}, {"svc-source": "حساب نمایشی"}])
+    chat = FakeChat([{"choice": "credit_report"}, {"svc-source": "سپرده کوتاه‌مدت"}])
     app = RecordingApp()
-    result = build_agent(chat, app).invoke(new_request("c", "گزارش اعتباری بگیر از حساب نمایشی"), CONFIG)
+    result = build_agent(chat, app).invoke(new_request("c", "گزارش اعتباری بگیر از سپرده کوتاه‌مدت"), CONFIG)
     assert result["task_state"] == "ready_for_user"
     assert set(chat.schemas[1]["properties"]) == {"svc-source"}
     navigate = next(arguments for operation, arguments in app.sent if operation == "navigate")
@@ -164,12 +164,12 @@ def test_the_card_sentence_still_asks_once_for_the_source() -> None:
 
 
 def test_an_account_number_given_for_an_iban_is_asked_again() -> None:
-    sentence = "یک میلیون ریال از پس‌انداز به شماره حساب 0000000000077 واریز کن، بابت نمونه دوم"
+    sentence = "یک میلیون ریال از پس‌انداز به شماره حساب 0970836557800 واریز کن، بابت خرید کالا"
     found = {
         "account-transfer-source": "پس‌انداز",
-        "account-transfer-destination": "****0077",
+        "account-transfer-destination": "****6115",
         "account-transfer-amount": {"value": 1000000, "unit": "IRR"},
-        "account-transfer-reason": "بابت نمونهٔ دوم — ساختگی",
+        "account-transfer-reason": "خرید کالا و خدمات",
     }
     app = RecordingApp()
     result = build_agent(FakeChat([{"choice": "interbank_transfer"}, found]), app).invoke(
@@ -283,11 +283,11 @@ def test_each_screen_is_asked_on_that_screen_after_the_ones_before_are_filled() 
 
 
 def test_a_value_changed_for_a_page_already_passed_is_filled_there_again() -> None:
-    guarantor = {"svc-guarantor": "علی نمونه", "svc-guarantorCode": "0000000019"}
+    guarantor = {"svc-guarantor": "حمید نوروزی", "svc-guarantorCode": "5840573851"}
     raised = guarantor | {"svc-amount": {"value": 200000000, "unit": "IRT"}}
     app, graph, _ = loan_request([{"svc-job": "کارمند"}, raised])
     graph.invoke(Command(resume="کارمند"), CONFIG)
-    result = graph.invoke(Command(resume="ضامن علی نمونه 0000000019، مبلغ رو ۲۰۰ میلیون تومن کن"), CONFIG)
+    result = graph.invoke(Command(resume="ضامن حمید نوروزی 5840573851، مبلغ رو ۲۰۰ میلیون تومن کن"), CONFIG)
     assert result["task_state"] == "ready_for_user"
     loan = [arguments["values"] for operation, arguments in app.sent if operation == "fill_form"]
     assert loan[-3]["svc-amount"] == {"value": 2000000000, "unit": "IRR"}  # S-308 filled again

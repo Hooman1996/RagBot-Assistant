@@ -167,5 +167,5 @@ private fun WalletConfirm(
         InfoRow("آدرس:", address?.address ?: "—")
     }
     Buttons(true, "wallet-submit", { done = true }, onClose, "ثبت درخواست")
-    if (done) MockResult("درخواست صدور کیف کارت ثبت شد. شماره پیگیری: ۰۰۰۰۰۲", onClose)
+    if (done) MockResult("درخواست صدور کیف کارت ثبت شد. شماره پیگیری: ۷۳۵۴۸۰", onClose)
 }

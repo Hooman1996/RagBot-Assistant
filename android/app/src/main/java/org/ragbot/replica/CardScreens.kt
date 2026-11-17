@@ -496,7 +496,7 @@ private fun LegacyCardList() {
     rows.forEach { card ->
         CardRow(card) {
             WhiteRow("صاحب کارت", card.owner)
-            WhiteRow("شماره مشتری", "۰۰۰۰۰۱")
+            WhiteRow("شماره مشتری", "۲۴۸۴۱۳")
             WhiteRow("شماره حساب", card.primaryAccount)
             WhiteRow("موجودی", card.accountBalance?.let { "${persianNumber(it)} ریال" } ?: "نامشخص")
             WhiteRow("شماره شبا", card.iban)

@@ -305,7 +305,7 @@ private fun ChequeTrack(
                     PaymentRow("حساب", chequeAccount(accountKey))
                     PaymentRow("شعبه عامل", cheque.branch)
                     PaymentRow("تاریخ آخرین وضعیت", cheque.lastStatusDate)
-                    PaymentRow("بانک", "بانک نمایشی")
+                    PaymentRow("بانک", "بانک ملی ایران")
                 }
             },
             confirmButton = { TextButton({ resultNo = null }) { Text("بازگشت") } },
@@ -515,12 +515,12 @@ private fun ChequeTaskDetail(
     TransferValue("وضعیت", task.statusDesc)
     if (page == ChequeDestinations.PAY_DETAIL) {
         TransferValue("مبلغ چک", "${persianNumber(task.amount)} ریال")
-        TransferValue("گیرنده:", "گیرندهٔ نمایشی")
-        TransferValue("بابت:", "بابت نمایشی")
-        TransferValue("امضاداران", "کاربر نمایشی، عضو نمایشی")
+        TransferValue("گیرنده:", "یاسمن رنجبر")
+        TransferValue("بابت:", "بابت قرارداد اجاره")
+        TransferValue("امضاداران", "امیرحسین کاظمی، زهرا نوری")
     } else {
         TransferValue("کارمزد درخواست:", "${persianNumber(task.amount)} ریال")
-        TransferValue("امضاداران", "کاربر نمایشی، عضو نمایشی")
+        TransferValue("امضاداران", "امیرحسین کاظمی، زهرا نوری")
     }
     // Recovered actions (approve, reject, cancel) need the user's OTP.
     if (task.tab == "WAITING") {

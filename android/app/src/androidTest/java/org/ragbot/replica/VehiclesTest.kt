@@ -82,7 +82,7 @@ class VehiclesTest {
         compose.onNodeWithText("مخاطب خدمت را انتخاب کنید.").assertExists()
         click("vehicle-history-contact-2")
         shown("S-252")
-        compose.onNodeWithText("0000000035", useUnmergedTree = true).assertExists()
+        compose.onNodeWithText("4738346172", useUnmergedTree = true).assertExists()
         click("vehicle-inquiry-result")
         unavailable("نتیجه استعلام پلاک‌های فعال")
         back()

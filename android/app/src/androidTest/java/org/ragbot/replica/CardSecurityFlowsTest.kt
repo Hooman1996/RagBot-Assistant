@@ -30,7 +30,7 @@ class CardSecurityFlowsTest {
         compose.onNodeWithTag("security-result").assertDoesNotExist()
         compose.onNodeWithTag("block-card-6").performClick()
         compose.onNodeWithTag("block-ok").performClick()
-        compose.onNodeWithTag("security-result").assertTextContains("بانک نمایشی", substring = true)
+        compose.onNodeWithTag("security-result").assertTextContains("بانک ملی ایران", substring = true)
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("security-done").performClick()
         compose.onNodeWithTag("card-tab").assertIsDisplayed()
@@ -96,11 +96,11 @@ class CardSecurityFlowsTest {
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithTag("noLogin-ok").performScrollTo().performClick()
         compose.onNodeWithText("شماره کارت باید ۱۶ رقم باشد.").assertExists()
-        compose.onNodeWithTag("noLogin-number").performTextReplacement("0000000000000009")
+        compose.onNodeWithTag("noLogin-number").performTextReplacement("6104339896671081")
         compose.onNodeWithTag("secret-cvv2").performTextReplacement("1234")
         compose.onNodeWithTag("noLogin-expiry").performTextReplacement("05/08")
         compose.onNodeWithTag("secret-password").performTextReplacement("12345")
         compose.onNodeWithTag("noLogin-ok").performScrollTo().performClick()
-        compose.onNodeWithTag("security-result").assertTextContains("۰۰۰۹", substring = true)
+        compose.onNodeWithTag("security-result").assertTextContains("۱۰۸۱", substring = true)
     }
 }

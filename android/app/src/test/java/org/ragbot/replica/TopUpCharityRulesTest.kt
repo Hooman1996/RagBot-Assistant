@@ -5,22 +5,22 @@ import org.junit.Test
 
 class TopUpCharityRulesTest {
     private val irancell = checkNotNull(TopUpRules.config("IRANCELL"))
-    private val valid = TopUpDraft("account-1", "09010000000", "IRANCELL", "100000")
+    private val valid = TopUpDraft("account-1", "09358346703", "IRANCELL", "100000")
 
     @Test
     fun prefixesSelectTheOperatorFromFourDigits() {
         assertEquals("", TopUpRules.detect("090", "IRANCELL"))
-        assertEquals("IRANCELL", TopUpRules.detect("0901", ""))
-        assertEquals("RIGHTEL", TopUpRules.detect("۰۹۰۲۱", "IRANCELL"))
+        assertEquals("IRANCELL", TopUpRules.detect("0935", ""))
+        assertEquals("RIGHTEL", TopUpRules.detect("۰۹۲۱۱", "IRANCELL"))
         assertEquals("HAMRAH_AVAL", TopUpRules.detect("0999", "HAMRAH_AVAL"))
     }
 
     @Test
     fun phoneMustBeElevenDigitsStartingWithZeroNine() {
         assertEquals(PaymentRules.MANDATORY, TopUpRules.phoneError(""))
-        assertEquals(PaymentRules.INVALID, TopUpRules.phoneError("0901000000"))
-        assertEquals(PaymentRules.INVALID, TopUpRules.phoneError("08010000000"))
-        assertNull(TopUpRules.phoneError("۰۹۰۱۰۰۰۰۰۰۰"))
+        assertEquals(PaymentRules.INVALID, TopUpRules.phoneError("0935834670"))
+        assertEquals(PaymentRules.INVALID, TopUpRules.phoneError("08013206651"))
+        assertNull(TopUpRules.phoneError("۰۹۳۵۸۳۴۶۷۰۳"))
     }
 
     @Test

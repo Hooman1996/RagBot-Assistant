@@ -9,7 +9,7 @@ class SavedDestinationRulesTest {
         val records = SavedDestinationFixture.records
         assertEquals(
             listOf("loan-2"),
-            SavedDestinationFixture.visible(records, "LOAN", " demo-loan-2 ").map { it.id },
+            SavedDestinationFixture.visible(records, "LOAN", " 171248107569 ").map { it.id },
         )
         val accounts = SavedDestinationFixture.visible(records, "ACCOUNT", "")
         assertEquals(records.filter { it.type == "ACCOUNT" }, accounts)
@@ -58,8 +58,8 @@ class SavedDestinationRulesTest {
     fun creationKeepsUniqueIdentityAfterAnEditAndUnrelatedDeletion() {
         val original = SavedDestinationFixture.records
         val firstId = SavedDestinationFixture.nextId(original)
-        val created = SavedDestination(firstId, "ACCOUNT", "local", "0000000000099")
-        val edited = created.copy(destination = "0000000000098")
+        val created = SavedDestination(firstId, "ACCOUNT", "local", "0281707721676")
+        val edited = created.copy(destination = "0162718460824")
         val afterDeletion = original.dropLast(1) + edited
         val nextId = SavedDestinationFixture.nextId(afterDeletion)
         assertNotEquals(firstId, nextId)

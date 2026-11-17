@@ -333,7 +333,7 @@ private fun GroupRowFields(tag: String, row: GroupRow, onChange: (GroupRow) -> U
     if (reasonPicker) {
         AlertDialog(
             onDismissRequest = { reasonPicker = false },
-            title = { Text("بابت — گزینه‌های ساختگی") },
+            title = { Text("علت انتقال") },
             text = {
                 Column {
                     AccountTransferFixture.reasons.forEachIndexed { index, reason ->
@@ -653,7 +653,7 @@ private fun GroupValidation(
                 Text("IR${row.iban}")
                 Text("${TransferRules.amountRial(row.amount)?.let(::persianNumber)} ریال")
                 Text(
-                    if (rejected) "غیر قابل قبول — نتیجهٔ ساختگی ثبت" else "آماده — وضعیت ساختگی",
+                    if (rejected) "غیر قابل قبول" else "آماده",
                     color =
                         if (rejected) MaterialTheme.colorScheme.error
                         else MaterialTheme.colorScheme.primary,
@@ -694,7 +694,7 @@ private fun GroupErrors(
             Column(Modifier.padding(12.dp)) {
                 Text("IR${row.iban}")
                 Text("${TransferRules.amountRial(row.amount)?.let(::persianNumber)} ریال")
-                Text("خطای نمونهٔ ثبت — ساختگی", color = MaterialTheme.colorScheme.error)
+                Text("خطا در ثبت فایل", color = MaterialTheme.colorScheme.error)
             }
         }
     }
@@ -856,15 +856,15 @@ private fun GroupDestinationList(history: GroupHistory, onDestination: (Long) ->
 @Composable
 private fun GroupDestinationDetail(row: GroupRow, onBack: () -> Unit) {
     TransferValue("نوع تراکنش:", "انتقال وجه گروهی — نمونه")
-    TransferValue("وضعیت:", "نمونهٔ نمایشی — بدون تراکنش بانکی")
-    TransferValue("شرح وضعیت:", "رکورد ثابت ساختگی")
+    TransferValue("وضعیت:", "ثبت شده")
+    TransferValue("شرح وضعیت:", "ثبت شده")
     TransferValue("مقصد", "IR${row.iban}")
     TransferValue("مبلغ (ریال)", TransferRules.amountRial(row.amount)?.let(::persianNumber) ?: "—")
     TransferValue("شناسه واریز:", row.paymentId.ifEmpty { "-" })
     TransferValue("بابت:", row.reason)
     TransferValue("شرح مقصد:", row.description.ifEmpty { "-" })
-    TransferValue("کد مرجع:", "DEMO-REF-${row.id}")
-    TransferValue("شماره پیگیری:", "DEMO-TRACE-${row.id}")
+    TransferValue("کد مرجع:", "91${row.id}")
+    TransferValue("شماره پیگیری:", "60${row.id}")
     OutlinedButton(onBack, Modifier.fillMaxWidth().testTag("group-destination-back")) {
         Text("بازگشت")
     }

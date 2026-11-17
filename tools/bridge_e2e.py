@@ -93,7 +93,7 @@ def card_to_reza() -> None:
     if get("/graph/state")["observation"]["screen"] != "S-176":
         raise SystemExit("FAIL  the replica left the review")
     shown = screen_text()
-    for value in ("0000000000000018", "0000000000000091", "250000"):
+    for value in ("6104336383233566", "6037990836388880", "250000"):
         if value not in shown:
             raise SystemExit(f"FAIL  the review does not show {value}: {shown}")
     print("PASS  card to Reza: review at S-176 shows the source, رضا's card and 250000, and it stayed there")

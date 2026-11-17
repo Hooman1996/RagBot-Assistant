@@ -83,7 +83,7 @@ to see which file does what. The long version, with the real JSON of every messa
 | 5 | The backend plans: `S-026 → S-174` by tapping `menu-card-transfer`; three questions | `graph_page.plan` → `graph_tasks.preview` → `navigator.plan_feature` |
 | 6 | It suggests demo answers (`card-1`, `رضا`, `250000`) | `demo_values.demo_value` |
 | 7 | You press Run | `graph_task.js run` → `POST /graph/run` → `graph_tasks.start` (background thread) |
-| 8 | Before anything moves, every value is prepared: `رضا` → `0000000000000091`; `250000` → `{"value": 250000, "unit": "IRR"}` | `task_runner.prepared` → `lookups.resolve`, `task_runner.money_value` |
+| 8 | Before anything moves, every value is prepared: `رضا` → `6037990836388880`; `250000` → `{"value": 250000, "unit": "IRR"}` | `task_runner.prepared` → `lookups.resolve`, `task_runner.money_value` |
 | 9 | The runner queues `navigate {"destination": "S-174"}` and waits | `task_runner.move` → `bridge_link.send` → `command_queue.queue_command` |
 | 10 | On its next poll the app receives that command | `command_queue.next_command` → `mobile_api.reply_with` |
 | 11 | The app checks it (right device? not expired? still the same screen?) and walks the edge by tapping `menu-card-transfer` | `Executor.execute` → `Navigator.navigate` → `Actions.tap` (asks `Policy.mayTap`) → `ComposeControls.click` |
@@ -91,7 +91,7 @@ to see which file does what. The long version, with the real JSON of every messa
 | 13 | The backend records it; the runner sees it and checks the screen is `S-174` | `mobile_api.post_result` → `command_queue.record_result` → `bridge_link.wait_for` → `task_runner.move` |
 | 14 | The runner sends `fill_form` with the three values | `task_runner.fill` |
 | 15 | The app types each value through the field's own handler and reads it back | `FormFiller.fill` → `Actions.type` (asks `Policy.mayType`) → `ComposeControls.setText` |
-| 16 | The runner compares what the screen shows (`****0091`, `250,000`) with what it sent | `task_runner.shows` |
+| 16 | The runner compares what the screen shows (`****8880`, `250,000`) with what it sent | `task_runner.shows` |
 | 17 | The runner sends `show_review`; the app taps `card-transfer-review` and lands on `S-176` | `task_runner.show_review` → `FormFiller.showReview` |
 | 18 | The run ends in state `review`. The confirm button is the user's alone | `TaskReport.state = "review"`; `ProfileUserOnly.kt` lists `card-transfer-submit` |
 
@@ -397,7 +397,7 @@ as `contacts.card` and the user's words. **Output:** the value to send to the ap
 | 8-11 | Imports. |
 | 13 | `FIXTURES`: the path of `mock_services/fixtures/`. |
 | 14-15 | `IBAN` (`IR` and 24 digits), and `DIGITS`, which turns Persian and Arabic digits Latin. |
-| 16-18 | `GENERIC`: words a user puts before a name or number («کارت 0018», «حساب رضا») that name no record; `ENDINGS`: spoken endings such as «تجاریمو». |
+| 16-18 | `GENERIC`: words a user puts before a name or number («کارت 3566», «حساب رضا») that name no record; `ENDINGS`: spoken endings such as «تجاریمو». |
 | 21-28 | `Source`: where one lookup's records are: the `file`, the list inside it (`rows`), the field that is the record's `key`, and the field shown to the user (`label`). |
 | 31-52 | `SOURCES`: twenty lookups. For example `contacts` reads `contacts.json`, list `people`, key `id`, label `name`. `loan_groups` and `loans` share a file. |
 | 55-56 | `NotFound`: nothing matches what the user said. |
@@ -436,7 +436,7 @@ text (ref → text), and whether to finish on the review. **Output:** a `TaskRep
 | 52-62 | `TaskReport`: `state` (`running`, `review`, `arrived`, `stopped`, `uncertain`, `unreachable`, `cancelled`; `idle` before any run), `reason`, and `steps` (each command and what came back). `as_json` for the page. |
 | 65-67 | `plain_digits(text)`: only the digits, in Latin form. `"۲۵۰,۰۰۰"` → `"250000"`. |
 | 70-75 | `money_value(text)`: a whole number of rials as `{"value": 250000, "unit": "IRR"}`. Anything else (a decimal point, letters) stops the task. This is rule 6 (exact integers) in code. |
-| 78-88 | `shows(requirement, sent, shown)`: does the screen agree with what was sent? No value shown is fine only for a picker or choice. Money: compare digits. A masked number (`****0091`): compare the last four digits. Text: must be equal. Anything else: must not be empty. |
+| 78-88 | `shows(requirement, sent, shown)`: does the screen agree with what was sent? No value shown is fine only for a picker or choice. Money: compare digits. A masked number (`****8880`): compare the last four digits. Text: must be equal. Anything else: must not be empty. |
 | 91-97 | `TaskRunner`: keeps the bridge, the navigator and the lookups. |
 | 99-101 | `missing(plan, values)`: the requirements with no answer yet, so all can be asked at once. |
 | 103-112 | `prepared(plan, values)`: turns every answer into what the app takes. **Runs before the app moves**, so a bad value moves nothing. A value the plan did not ask for is refused (stops anyone smuggling in, say, a PIN field); a missing one stops the run. |
@@ -560,7 +560,7 @@ callers do.
 | 8-11 | Imports: a counter, JSON, environment variables and regular expressions. All standard library. |
 | 13 | `LONG_NUMBER`: any run of 12 or more digits. |
 | 14 | `counter`: one step number for the whole process, never reset. |
-| 17-19 | `masked(text)`: replaces each long number with `****` and its last 4 digits, so `0000000000000091` prints as `****0091`. |
+| 17-19 | `masked(text)`: replaces each long number with `****` and its last 4 digits, so `6037990836388880` prints as `****8880`. |
 | 22-23 | `show(title, **values)`: prints one step. |
 | 24-25 | Reads `ASSISTANT_TRACE` on every call, so tests can switch it; anything but `1` prints nothing. |
 | 26 | The header: `── 3 · send navigate ─────`, numbered from the counter. |
@@ -631,7 +631,7 @@ messages and the offered requirements. **Output:** the model's values, then only
 | 20 | `UNITS`: `IRR` is 1, `IRT` (toman) is 10. |
 | 21-22 | `SMALLEST`: 10,000 rials. A written amount under 1,000 toman is usually shorthand («شصت تمن» for sixty thousand), so it is asked, not used. |
 | 23-28 | `MONEY`: the schema of an amount: a whole number and a unit. |
-| 30 | `AROUND_NUMBER`: words that may stand around a number the model copied («کارت ****0091», «چک صیادی ****0311»). |
+| 30 | `AROUND_NUMBER`: words that may stand around a number the model copied («کارت ****8880», «چک صیادی ****3498»). |
 | 33-35 | `numbers(messages)`: every long number in the messages, in order, in Latin digits. |
 | 38-43 | `hidden(messages)` and `shown_as`: each long number shown only as `****` and its last 4 digits. |
 | 46-64 | `extract_prompt(messages, wanted)`: one line per requirement (ref, type, Persian ask and description, and a choice's labels), how money is written (`هزار` is 1000, toman is `IRT`, no unit means `IRR`), that later messages replace what they change, and the messages with their numbers shown as `****1234`. |
@@ -653,7 +653,7 @@ messages and the offered requirements. **Output:** the model's values, then only
 | 11-21 | The fixed sentences: the knowledge message, "which one?", the failure messages, the review and page messages, and the notes for a name not found or found twice. |
 | 22-29 | `CANCELLED`; `STOPPED`, what to say when a run stops on its own terms (cancelled: the app stays where it is; out of reach: the task is kept until «ادامه»; uncertain: nothing, the agent reconciles); `UNCERTAIN`, the reason when a second uncertain command fails the task. |
 | 30 | `FEW, MANY = 2, 8`: a lookup with this many records offers them as options (owner, 9 Nov 2026). |
-| 33-36 | `option(ref, item)`: one record as a choice. Its ref is `field=key`, so the answer says which field and which record; its label is the record's label, plus its value when that differs (`رضا ****0091`), masked. |
+| 33-36 | `option(ref, item)`: one record as a choice. Its ref is `field=key`, so the answer says which field and which record; its label is the record's label, plus its value when that differs (`رضا ****8880`), masked. |
 | 39-53 | `lookup_options(lookups, wanted)`: each missing choice's allowed keys by their labels, and each missing ref field's records when its lookup has 2 to 8. |
 | 56-58 | `question(note, asks)`: one message: the note, if any, then every question. |
 | 61-72 | `shown(value, item, lookups)`: an amount as `2,500,000 ریال`; a choice by its label; a record by its option label; anything else masked. |
@@ -1099,7 +1099,7 @@ backend tests in `tests/backend/` are the ones that prove our runtime code.
 | `tests/backend/test_command_queue.py` | 13 | A device must report first; a queued command matches the contract; it is delivered once; one outstanding command per device; the same request returns the same command; a result frees the device; a repeated result changes nothing; unknown results are refused; an expired command is never delivered; a delivered one with no result ends `uncertain`; a stale one is closed, not delivered; each of the four builds a valid command and no other can be built. |
 | `tests/backend/test_bridge_link.py` | 6 | A result comes back; a stale observation is resent; it gives up on a screen that keeps moving; a stale draft is not resent; a device never seen is out of reach (`Unreachable`) and a busy one stops the task; no result makes the command `Uncertain`. |
 | `tests/backend/test_navigator.py` | 10 | Direct and multi-step routes; selections and fields in order; screens without fields pass inside one navigate; no route; a user-only crossing is refused; secret and optional fields are never asked; going back by way of Home; a row key that spells a user-only tag is refused; a feature routes through its form. |
-| `tests/backend/test_lookups.py` | 20 | رضا becomes her card; a typed number needs no contact; an unknown name is not guessed; two matches are ambiguous; every source finds records; the attribute picks what is sent; unknown lookups are unknown; it never writes.; «کارت 0018», «حساب رضا», «پس انداز», Arabic ي/ك, Persian digits and spoken endings are matched, «حساب» stays ambiguous and «علی» not found; a typed IBAN is kept unless it is a saved one; a typed number must fit its field. |
+| `tests/backend/test_lookups.py` | 20 | رضا becomes her card; a typed number needs no contact; an unknown name is not guessed; two matches are ambiguous; every source finds records; the attribute picks what is sent; unknown lookups are unknown; it never writes.; «کارت 3566», «حساب رضا», «پس انداز», Arabic ي/ك, Persian digits and spoken endings are matched, «حساب» stays ambiguous and «علی» not found; a typed IBAN is kept unless it is a saved one; a typed number must fit its field. |
 | `tests/backend/test_task_runner.py` | 13 | Card to رضا navigates, fills and stops at the review; a missing value stops before the app moves; all missing values are found at once; an unknown contact stops first; money must be a whole number, Persian digits too; an unexpected screen or a blocked navigate stops the run; a page with the wrong amount stops before the review; a selection travels as a navigate argument; a value the plan does not ask for is refused; a crafted row key never reaches the app; **no feature ever sends an operation outside the four**. |
 | `tests/backend/test_api.py` | 17 | The HTTP routes: idle status; a click reaches the app and the result reaches the page; bodies outside the contract, unknown commands, unbuilt screens, extra fields, unseen devices are refused; a second destination waits; **no route can confirm, submit or pay**; the page loads nothing from the internet; plans, demo values and runs behave. |
 | `tests/backend/test_steps.py` | 4 | The step prints are silent unless `ASSISTANT_TRACE=1`; a card number is masked and Persian stays readable; a traced card-to-رضا run never prints the full card; `ASSISTANT_DEBUG=1` gives a one-hour command and result wait. |
@@ -1111,7 +1111,7 @@ backend tests in `tests/backend/` are the ones that prove our runtime code.
 | `tests/backend/test_main_debug.py` | 1 | `main_debug.main` runs the built-in example to the review with the fakes, and never prints the full card. |
 | `tests/backend/test_amounts.py` | 14 | Amounts in digits or words, with هزار/میلیون, separators, spoken forms and toman or rial, are read in whole rials; a number with no unit or scale word (a phone, a date, a count) is not an amount. |
 | `tests/backend/test_words.py` | 3 | Every feature has Persian words; every choice the agent can ask, in every feature's plan from Home, has plain allowed keys with unique labels that hold no full number; every fixed value is an allowed key of its feature. |
-| `tests/backend/test_agent_answers.py` | 8 | A correction in an answer replaces the held source and amount; a number hidden as `****0091` inside words is put back; a typed IBAN not saved reaches the review; a choice is one of its labels and reaches the app as its key, and its label is shown on the review; text that is no allowed key is asked again with the options and sends nothing; a selection the feature decides is set by code and never asked; an account number given for an IBAN is asked again. |
+| `tests/backend/test_agent_answers.py` | 8 | A correction in an answer replaces the held source and amount; a number hidden as `****8880` inside words is put back; a typed IBAN not saved reaches the review; a choice is one of its labels and reaches the app as its key, and its label is shown on the review; text that is no allowed key is asked again with the options and sends nothing; a selection the feature decides is set by code and never asked; an account number given for an IBAN is asked again. |
 | `tests/backend/test_agent_lifecycle.py` | 9 | The «لغو» option ends a question and sends nothing; a cancel phrase ends a "not sure" question; a correction after the review prepares a new review with the new amount; a new request after the review starts a new task; a cancel after the review needs no model; an app out of reach pauses the task with its values and «ادامه» resumes it; an uncertain command is reconciled once; a second one fails visibly; a cancel during a run stops before the next command. Every change is checked against `task.json`. |
 | `tests/backend/test_panel_api.py` | 6 | The panel's calls over the real agent graph: a message reaches the review and the history shows it (contract-valid responses); a question is answered by its option and a stale question ID is refused; cancel ends the pending question (409 with nothing to cancel); a body without the observation is refused; an unknown conversation reopens empty; the panel, the graph page and a Run take one turn at a time. |
 | `tests/evaluation/conftest.py` | (helpers) | Lets the evaluation tests import `tests/backend/agent_fakes.py` (a site package named `tests` hides this repository's `tests` folder). |

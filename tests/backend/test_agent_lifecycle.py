@@ -18,10 +18,10 @@ from assistant.task_runner import Uncertain, Unreachable
 
 CONFIG = {"configurable": {"thread_id": "life"}}
 CARD = {"choice": "card_transfer"}
-FULL = "۲۵۰ هزار تومان از کارت 0018 به رضا کارت به کارت کن"
+FULL = "۲۵۰ هزار تومان از کارت 3566 به رضا کارت به کارت کن"
 
 
-def card(source: str | None = "کارت 0018", toman: int = 250000) -> dict:
+def card(source: str | None = "کارت 3566", toman: int = 250000) -> dict:
     amount = {"value": toman, "unit": "IRT"}
     return {
         "card-transfer-source": source,

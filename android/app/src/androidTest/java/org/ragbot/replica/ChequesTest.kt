@@ -87,7 +87,7 @@ class ChequesTest {
         compose.onNodeWithTag("cheque-empty").assertExists()
         click("cheque-account")
         dialog("cheque-account-account-1")
-        click("cheque-book-DEMO-BOOK-01")
+        click("cheque-book-55333147")
         shown("S-146")
         compose.onNodeWithTag("cheque-534004").assertExists()
         click("cheque-summary")
@@ -100,7 +100,7 @@ class ChequesTest {
         compose.onNodeWithTag("cheque-534001").assertDoesNotExist()
         back()
         shown("S-142")
-        compose.onNodeWithTag("cheque-book-DEMO-BOOK-01").assertExists()
+        compose.onNodeWithTag("cheque-book-55333147").assertExists()
     }
 
     @Test
@@ -153,7 +153,7 @@ class ChequesTest {
         back()
         click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_FACILITIES_TRACE_ISSUANCE_CHECKBOOK")
         shown("S-145")
-        compose.onNodeWithText("دلیل رد نمایشی").assertExists()
+        compose.onNodeWithText("عدم تطابق امضا").assertExists()
     }
 
     @Test
@@ -162,7 +162,7 @@ class ChequesTest {
         shown("S-154")
         click("cardboard-task-2")
         shown("S-155")
-        compose.onNodeWithText("گیرندهٔ نمایشی").assertExists()
+        compose.onNodeWithText("یاسمن رنجبر").assertExists()
         click("cardboard-act")
         otpPrompt()
         back()

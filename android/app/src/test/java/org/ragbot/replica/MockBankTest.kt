@@ -5,8 +5,8 @@ import org.junit.Before
 import org.junit.Test
 
 class MockBankTest {
-    private val reza = "0000000000000091"
-    private val source = "0000000000000018"
+    private val reza = "6037990836388880"
+    private val source = "6104336383233566"
 
     @Before
     fun freshSession() {
@@ -31,7 +31,7 @@ class MockBankTest {
     fun aTransferToRezaMovesExactMoneyAndAppearsInHistory() {
         val done = transfer("250000") as BankResult.Done
         assertEquals(12_250_000L, MockBank.balance("account-1"))
-        assertEquals("رضا", done.receipt.destination)
+        assertEquals("رضا محمدی", done.receipt.destination)
         assertEquals(done.receipt.trace, MockBank.transactions.first().key)
         assertEquals(250_000L, MockBank.transactions.first().amount)
         MockBank.reset()
@@ -43,7 +43,7 @@ class MockBankTest {
         val before = MockBank.transactions.size
         assertEquals(messages["insufficient-balance"], message(transfer("12500001")))
         assertEquals(messages["wrong-otp"], message(transfer("1000", password = "00000")))
-        assertEquals(messages["invalid-card"], message(transfer("1000", "0000000000000019")))
+        assertEquals(messages["invalid-card"], message(transfer("1000", "6104336383233567")))
         assertEquals(messages["recipient-not-found"], message(transfer("1000", "4000000000000002")))
         assertEquals(12_500_000L, MockBank.balance("account-1"))
         assertEquals(before, MockBank.transactions.size)
@@ -52,15 +52,15 @@ class MockBankTest {
     @Test
     fun cardChecksumAndIbanRecipientsAreChecked() {
         assertTrue(MockBank.validCard(reza))
-        assertFalse(MockBank.validCard("0000000000000092"))
+        assertFalse(MockBank.validCard("6037990836388881"))
         assertFalse(MockBank.validCard("123"))
-        assertTrue(MockBank.knownIban("IR070000000000000000000077"))
-        assertFalse(MockBank.knownIban("IR080000000000000000000077"))
+        assertTrue(MockBank.knownIban("IR290170455491846632336115"))
+        assertFalse(MockBank.knownIban("IR300170455491846632336115"))
     }
 
     @Test
     fun aBillPaysOnceAndAnUnknownBillFails() {
-        val id = "9000000000001"
+        val id = "2058601103691"
         assertTrue(MockBank.bill("account-1", id, "1250001") is BankResult.Done)
         assertEquals(messages["bill-paid"], message(MockBank.bill("account-1", id, "1250001")))
         assertEquals(messages["bill-not-found"], message(MockBank.bill("account-1", id, "1")))
@@ -69,7 +69,7 @@ class MockBankTest {
 
     @Test
     fun walletsMoveMoneyBothWays() {
-        val wallet = "0000000000101"
+        val wallet = "0176453202938"
         assertTrue(MockBank.walletCharge("account-1", wallet, 1_000L) is BankResult.Done)
         assertEquals(3_251_000L, MockBank.walletBalance(wallet))
         assertEquals(12_499_000L, MockBank.balance("account-1"))

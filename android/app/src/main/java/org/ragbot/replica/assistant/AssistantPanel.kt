@@ -191,7 +191,7 @@ private fun Line(line: PanelLine) {
     }
 }
 
-/** The text with each masked number, such as 000000******0034, kept left to right in Persian. */
+/** The text with each masked number, such as 610433******3086, kept left to right in Persian. */
 private fun leftToRight(text: String) = MASKED_NUMBER.replace(text) { "\u2066${it.value}\u2069" }
 
 private val MASKED_NUMBER = Regex("[0-9۰-۹]*\\*+[0-9۰-۹*]*")

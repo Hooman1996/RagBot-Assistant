@@ -34,7 +34,7 @@ class BridgeServicesTest {
         rig.fill(
             "S-192",
             "account-transfer-source" to text("account-1"),
-            "account-transfer-destination" to text("0000000000077"),
+            "account-transfer-destination" to text("0970836557800"),
             "account-transfer-amount" to rials(500_000),
             "account-transfer-reason" to text("0"),
         )
@@ -66,8 +66,8 @@ class BridgeServicesTest {
         rig.reach("S-116")
         rig.fill(
             "S-116",
-            "wallet-op-source" to text("0000000000101"),
-            "wallet-op-destination" to text("0000000000000201"),
+            "wallet-op-source" to text("0176453202938"),
+            "wallet-op-destination" to text("5041124072452997"),
             "wallet-op-amount" to rials(50_000),
         )
         rig.expect(rig.review(), "S-117")
@@ -93,7 +93,7 @@ class BridgeServicesTest {
         rig.reach("S-164")
         rig.fill("S-164", "svc-kind" to text("holder"))
         rig.reach("S-162")
-        rig.fill("S-162", "svc-sayad" to text("0000000000000321"))
+        rig.fill("S-162", "svc-sayad" to text("1404851462561429"))
         rig.expect(rig.review(), "S-162")
     }
 
@@ -141,7 +141,7 @@ class BridgeServicesTest {
         rig.reach("S-428")
         rig.fill(
             "S-428",
-            "svc-mobile" to text("09010000000"),
+            "svc-mobile" to text("09358346703"),
             "svc-points" to text("100"),
         )
         rig.expect(rig.review(), "S-427")

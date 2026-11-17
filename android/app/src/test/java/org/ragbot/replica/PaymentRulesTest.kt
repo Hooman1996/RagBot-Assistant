@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class PaymentRulesTest {
-    private val bill = BillDraft("account-1", "9000000000001", "1250001")
+    private val bill = BillDraft("account-1", "2058601103691", "1250001")
 
     @Test
     fun billAndPaymentIdsAreRequiredDigitsOfAtLeastSix() {
@@ -22,7 +22,7 @@ class PaymentRulesTest {
             setOf("source", "bill", "pay"),
             PaymentRules.billErrors(BillPaymentDestinations.CARD, BillDraft()).keys,
         )
-        val typed = bill.copy(source = "000000000000001")
+        val typed = bill.copy(source = "875877592893705")
         assertEquals(
             PaymentRules.INVALID,
             PaymentRules.billErrors(BillPaymentDestinations.WITHOUT_SOURCE, typed)["source"],
@@ -30,7 +30,7 @@ class PaymentRulesTest {
         assertTrue(
             PaymentRules.billErrors(
                     BillPaymentDestinations.WITHOUT_SOURCE,
-                    typed.copy(source = "0000000000000018"),
+                    typed.copy(source = "6104336383233566"),
                 )
                 .isEmpty()
         )
@@ -42,7 +42,7 @@ class PaymentRulesTest {
         assertNull(error)
         assertEquals(1_250_000L, found?.amount)
         assertNotNull(
-            PaymentRules.inquiry(bill.copy(billId = "9000000000002", payId = "430002")).second
+            PaymentRules.inquiry(bill.copy(billId = "7154889187604", payId = "430002")).second
         )
         assertNotNull(PaymentRules.inquiry(bill.copy(payId = "1250002")).second)
     }

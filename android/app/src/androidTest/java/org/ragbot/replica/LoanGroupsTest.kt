@@ -34,7 +34,7 @@ class LoanGroupsTest {
         compose.onNodeWithTag("loan-group-standard").performScrollTo().performClick()
         compose.onNodeWithTag("S-309").assertIsDisplayed()
         compose.activityRule.scenario.recreate()
-        compose.onNodeWithTag("loan-group-detail-title").assertTextEquals("گروه تسهیلات نمونه")
+        compose.onNodeWithTag("loan-group-detail-title").assertTextEquals("گروه تسهیلات طلایی")
         compose
             .onNodeWithTag("loan-option-warning-limited")
             .performScrollTo()
