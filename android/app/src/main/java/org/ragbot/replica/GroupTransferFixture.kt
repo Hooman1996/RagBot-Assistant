@@ -133,9 +133,9 @@ internal object GroupTransferFixture {
                 files +
                     GroupFile(
                         "large",
-                        "نمونه-۵۰۱-رکورد-ساختگی.xlsx",
+                        "لیست-۵۰۱-ردیفی.xlsx",
                         listOf(sheet[0]) + List(501) { index ->
-                            listOf("${index + 1}", row[1], "1000", row[3], "", "مقصد نمایشی")
+                            listOf("${index + 1}", row[1], "1000", row[3], "", "گیرنده")
                         },
                     )
             }

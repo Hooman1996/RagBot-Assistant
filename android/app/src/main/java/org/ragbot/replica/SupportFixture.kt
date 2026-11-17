@@ -31,7 +31,7 @@ data class PreviewSupportMessage(
 
 /** NS-FIXTURE: every question, answer, ticket, conversation and identifier is invented. */
 object SupportFixture {
-    const val firstTicket = "DEMO-1001"
+    const val firstTicket = "21971"
 
     // Owner-traced entries of the Home support menu; the page itself is Designed for mock.
     val menu =
@@ -71,14 +71,14 @@ object SupportFixture {
                 "۱۴۰۵/۰۸/۰۸ • ۱۰:۳۰",
             ),
             PreviewSupportTicket(
-                "DEMO-1002",
+                "21387",
                 "نمونه پاسخ و ادامه گفتگو",
                 "این درخواست ساختگی فقط برای بررسی متن فارسی است.",
                 "ANSWERED",
                 "۱۴۰۵/۰۸/۰۷ • ۰۹:۲۳",
             ),
             PreviewSupportTicket(
-                "DEMO-1003",
+                "91135",
                 "نمونه پیام پایان یافته",
                 "این پیام ساختگی پایان‌یافته است.",
                 "CLOSED",
@@ -92,7 +92,7 @@ object SupportFixture {
                     ticket.key,
                     ticket.question,
                     false,
-                    if (ticket.key == "DEMO-1002") "۱۴۰۵/۰۸/۰۷ • ۰۹:۱۰" else ticket.modified,
+                    if (ticket.key == "21387") "۱۴۰۵/۰۸/۰۷ • ۰۹:۱۰" else ticket.modified,
                 )
             ) +
                 if (ticket.status == "ASKED") emptyList()
@@ -102,14 +102,14 @@ object SupportFixture {
                             ticket.key,
                             "پاسخ ساختگی برای بررسی نمایش گفتگو؛ این متن پاسخ پشتیبانی بانک نیست.",
                             true,
-                            if (ticket.key == "DEMO-1002") "۱۴۰۵/۰۸/۰۷ • ۰۹:۱۵" else ticket.modified,
+                            if (ticket.key == "21387") "۱۴۰۵/۰۸/۰۷ • ۰۹:۱۵" else ticket.modified,
                         )
                     )
         } +
             List(8) { index ->
                 PreviewSupportMessage(
-                    "DEMO-1002",
-                    "پیام ساختگی ${index + 1} درباره چیدمان نمایشی و شناسه DEMO-1002؛ این متن طولانی فقط برای بررسی خوانایی فارسی، ترتیب گفتگو و پیمایش است. هیچ پاسخ یا سیاست بانکی را بیان نمی‌کند. "
+                    "21387",
+                    "پیام ساختگی ${index + 1} درباره چیدمان نمایشی و شناسه 21387؛ این متن طولانی فقط برای بررسی خوانایی فارسی، ترتیب گفتگو و پیمایش است. هیچ پاسخ یا سیاست بانکی را بیان نمی‌کند. "
                         .repeat(2),
                     index % 2 == 0,
                     "۱۴۰۵/۰۸/۰۷ • ۰۹:${persianNumber((16 + index).toLong())}",

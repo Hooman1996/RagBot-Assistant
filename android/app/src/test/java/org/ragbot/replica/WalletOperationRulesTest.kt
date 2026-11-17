@@ -4,19 +4,19 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class WalletOperationRulesTest {
-    private val personal = "0000000000101"
-    private val receiver = "0000000000000201"
+    private val personal = "0176453202938"
+    private val receiver = "5041124072452997"
 
     @Test
     fun destinationChecksEmptyThenSameSourceThenSixteenCharacters() {
         assertEquals(PaymentRules.MANDATORY, WalletOperationRules.destinationError("", personal))
         assertEquals(
             WalletOperationRules.SAME,
-            WalletOperationRules.destinationError("۰۰۰۰۰۰۰۰۰۰۱۰۱", personal),
+            WalletOperationRules.destinationError("۰۱۷۶۴۵۳۲۰۲۹۳۸", personal),
         )
         assertEquals(
             PaymentRules.INVALID,
-            WalletOperationRules.destinationError("000000000000020", personal),
+            WalletOperationRules.destinationError("151123109807681", personal),
         )
         assertNull(WalletOperationRules.destinationError(receiver, personal))
     }
@@ -62,7 +62,7 @@ class WalletOperationRulesTest {
     fun previewNamesTheDestinationAndRejectsMoreThanTheSyntheticBalance() {
         val draft = WalletOperationDraft(personal, receiver, "3250000")
         assertEquals(
-            WalletPreview("گیرندهٔ نمایشی", 3_250_000L) to null,
+            WalletPreview("یاسمن رنجبر", 3_250_000L) to null,
             WalletOperationRules.preview(WalletOperation.W2W, draft),
         )
         val (over, error) =
@@ -72,7 +72,7 @@ class WalletOperationRulesTest {
         assertNull(
             WalletOperationRules.preview(
                     WalletOperation.W2W,
-                    draft.copy(destination = "0000000000000999"),
+                    draft.copy(destination = "6104332658420740"),
                 )
                 .first
         )
@@ -82,23 +82,23 @@ class WalletOperationRulesTest {
     fun chargeUsesTheAccountBalanceAndBillTheInquiryAmount() {
         // account-3 reports no balance, so only the bank could refuse it.
         assertEquals(
-            WalletPreview("کاربر نمایشی", 99_000_000L),
+            WalletPreview("امیرحسین کاظمی", 99_000_000L),
             WalletOperationRules.preview(
                     WalletOperation.CHARGE,
                     WalletOperationDraft("account-3", personal, "99000000"),
                 )
                 .first,
         )
-        val bill = WalletOperationDraft(personal, billId = "9000000000001", payId = "1250001")
+        val bill = WalletOperationDraft(personal, billId = "2058601103691", payId = "1250001")
         assertEquals(
-            WalletPreview("شرکت آب نمایشی", 1_250_000L),
+            WalletPreview("شرکت آب و فاضلاب تهران", 1_250_000L),
             WalletOperationRules.preview(WalletOperation.BILL, bill).first,
         )
         assertEquals(
             "این قبض در دادهٔ نمایشی پرداخت شده است.",
             WalletOperationRules.preview(
                     WalletOperation.BILL,
-                    bill.copy(billId = "9000000000002", payId = "430002"),
+                    bill.copy(billId = "7154889187604", payId = "430002"),
                 )
                 .second,
         )

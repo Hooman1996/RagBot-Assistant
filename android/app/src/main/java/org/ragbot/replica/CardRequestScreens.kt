@@ -52,7 +52,7 @@ data class PreviewCardColor(val key: String, val title: String, val color: Long)
  */
 object CardRequestFixture {
     const val NOTICE = "کارمزد صدور یا تغییر کارت از حساب انتخابی برداشت می‌شود."
-    const val BRANCH = "شعبه نمایشی مرکزی، خیابان نمونه، پلاک ۱"
+    const val BRANCH = "شعبه مرکزی تهران، خیابان نمونه، پلاک ۱"
     const val PHONE = "۰۰۰۰۰۰۰۰۰۰۰"
     val addresses
         get() = MockData.current.customer.addresses

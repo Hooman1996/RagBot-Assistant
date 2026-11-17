@@ -38,7 +38,7 @@ internal data class LoanRecord(
     val guaranteeAccount: String,
     val installments: List<LoanInstallment>,
     val corporateTitle: String? = null,
-    val loanType: String = "نوع نمایشی",
+    val loanType: String = "قرض‌الحسنه",
 )
 
 /** A product of the generic loan request; Designed for mock. [rate] is a yearly percent. */

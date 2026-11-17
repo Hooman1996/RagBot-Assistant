@@ -25,6 +25,6 @@ def test_main_debug_runs_the_example_to_the_review(
     assert main_debug.EXAMPLE[0] == CARD_SENTENCE
     assert result["task_state"] == "ready_for_user"
     out = capsys.readouterr().out
-    assert "1. ****0018" in out
+    assert "1. ****3566" in out
     assert "2,500,000 ریال" in out
-    assert "0000000000000091" not in out
+    assert "6037990836388880" not in out

@@ -75,8 +75,8 @@ internal object ConversionFixture {
 
     val banks =
         listOf(
-            ConversionBank("internal", "بانک داخلی ساختگی", true),
-            ConversionBank("external", "بانک دیگر ساختگی", false),
+            ConversionBank("internal", "بانک ملت", true),
+            ConversionBank("external", "سایر بانک‌ها", false),
         )
 
     fun normalizeIdentifier(mode: ConversionMode, value: String): String {
@@ -105,8 +105,8 @@ internal object ConversionFixture {
                     "شماره شبا معتبر نیست."
                 } else
                     when (identifier.substring(2, 5)) {
-                        "000" -> null
-                        "001" -> "این تبدیل فقط برای بانک داخلی ساختگی در دسترس است."
+                        "012" -> null
+                        "054" -> "این تبدیل فقط برای بانک ملت در دسترس است."
                         else -> "بانک این شماره شبا در فهرست ساختگی نیست."
                     }
             }
@@ -140,8 +140,8 @@ internal object ConversionFixture {
 
     private fun cardBank(identifier: String): ConversionBank? =
         when {
-            identifier.startsWith("000000") -> banks[0]
-            identifier.startsWith("000001") -> banks[1]
+            identifier.startsWith("610433") -> banks[0]
+            identifier.startsWith("622106") -> banks[1]
             else -> null
         }
 }

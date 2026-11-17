@@ -78,7 +78,7 @@ internal fun VehiclePage(
                                     Column(Modifier.padding(12.dp)) {
                                         PaymentRow("خدمت", service)
                                         PaymentRow("تاریخ استعلام", "۱۴۰۵/۰۸/۰۱")
-                                        PaymentRow("کد رهگیری", "DEMO-ITOLL-0001")
+                                        PaymentRow("کد رهگیری", "547309710")
                                     }
                                 }
                                 Button(

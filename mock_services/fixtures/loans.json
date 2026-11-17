@@ -3,13 +3,13 @@
   "loans": [
     {
       "id": "loan-personal",
-      "title": "تسهیلات شخصی نمایشی",
-      "fileNumber": "900000000001",
+      "title": "تسهیلات شخصی قرض‌الحسنه",
+      "fileNumber": "213368311287",
       "principalIrr": 15000000,
       "paidIrr": 5000000,
       "totalDebtIrr": 10000000,
       "discountIrr": 250000,
-      "guaranteeAccount": "000.000.000001.1",
+      "guaranteeAccount": "214.110.248413.1",
       "installments": [
         {
           "number": 1,
@@ -40,17 +40,17 @@
         }
       ],
       "corporateTitle": null,
-      "loanType": "نوع نمایشی"
+      "loanType": "قرض‌الحسنه"
     },
     {
       "id": "loan-overdue",
-      "title": "تسهیلات دارای بدهی نمایشی",
-      "fileNumber": "900000000002",
+      "title": "تسهیلات خرید خودرو",
+      "fileNumber": "217625717796",
       "principalIrr": 12000000,
       "paidIrr": 0,
       "totalDebtIrr": 12150000,
       "discountIrr": 0,
-      "guaranteeAccount": "000.000.000001.1",
+      "guaranteeAccount": "214.110.248413.1",
       "installments": [
         {
           "number": 1,
@@ -81,17 +81,17 @@
         }
       ],
       "corporateTitle": null,
-      "loanType": "نوع نمایشی"
+      "loanType": "قرض‌الحسنه"
     },
     {
       "id": "loan-corporate",
-      "title": "تسهیلات سازمانی نمایشی",
-      "fileNumber": "900000000003",
+      "title": "تسهیلات سازمانی کارکنان",
+      "fileNumber": "212262324258",
       "principalIrr": 8000000,
       "paidIrr": 0,
       "totalDebtIrr": 8000000,
       "discountIrr": 0,
-      "guaranteeAccount": "000.000.000002.2",
+      "guaranteeAccount": "214.110.735480.2",
       "installments": [
         {
           "number": 1,
@@ -103,18 +103,18 @@
           "remainingIrr": 8000000
         }
       ],
-      "corporateTitle": "سازمان نمایشی",
-      "loanType": "نوع نمایشی"
+      "corporateTitle": "شرکت صنایع آریان",
+      "loanType": "قرض‌الحسنه"
     },
     {
       "id": "loan-paid",
-      "title": "تسهیلات تسویه‌شدهٔ نمایشی",
-      "fileNumber": "900000000004",
+      "title": "تسهیلات مسکن تسویه‌شده",
+      "fileNumber": "216716360706",
       "principalIrr": 3000000,
       "paidIrr": 3000000,
       "totalDebtIrr": 0,
       "discountIrr": 0,
-      "guaranteeAccount": "000.000.000001.1",
+      "guaranteeAccount": "214.110.248413.1",
       "installments": [
         {
           "number": 1,
@@ -127,15 +127,15 @@
         }
       ],
       "corporateTitle": null,
-      "loanType": "نوع نمایشی"
+      "loanType": "قرض‌الحسنه"
     }
   ],
   "groups": [
     {
       "key": "standard",
-      "title": "گروه تسهیلات نمونه",
+      "title": "گروه تسهیلات طلایی",
       "details": [
-        "نمایش شرایط ساختگی",
+        "سود ۴ درصد، بدون ضامن",
         "بررسی گزینه‌های بازپرداخت"
       ],
       "active": true,
@@ -144,7 +144,7 @@
     },
     {
       "key": "inactive",
-      "title": "گروه غیرفعال نمونه",
+      "title": "گروه تسهیلات نقره‌ای",
       "details": [
         "این گروه در دسترس نیست."
       ],
@@ -154,7 +154,7 @@
     },
     {
       "key": "recent",
-      "title": "حساب تازه نمونه",
+      "title": "ویژه حساب‌های جدید",
       "details": [
         "بررسی مدت افتتاح حساب"
       ],
@@ -164,7 +164,7 @@
     },
     {
       "key": "credit",
-      "title": "گروه نیازمند استعلام نمونه",
+      "title": "گروه تسهیلات ویژه",
       "details": [
         "نیازمند بررسی رتبه اعتباری"
       ],
@@ -176,31 +176,31 @@
   "options": [
     {
       "key": "normal",
-      "title": "گزینه عادی نمونه",
+      "title": "بازپرداخت ۱۲ ماهه",
       "amountRial": 100000000,
       "active": true,
       "availableMonths": 12,
       "maximumMonths": 12,
-      "subtitle": "بازپرداخت نمونه",
+      "subtitle": "بازپرداخت اقساطی",
       "details": [
-        "شرایط صرفاً برای نمایش است."
+        "نرخ سود و سقف بر اساس میانگین موجودی حساب تعیین می‌شود."
       ]
     },
     {
       "key": "limited",
-      "title": "گزینه با دوره محدود نمونه",
+      "title": "بازپرداخت ۲۴ ماهه",
       "amountRial": 100000000,
       "active": true,
       "availableMonths": 6,
       "maximumMonths": 12,
       "subtitle": null,
       "details": [
-        "دوره در دسترس بر اساس امتیاز نمونه محدود است."
+        "دوره بازپرداخت بر اساس امتیاز باشگاه مشتریان محدود است."
       ]
     },
     {
       "key": "inactive",
-      "title": "گزینه غیرفعال نمونه",
+      "title": "بازپرداخت ۳۶ ماهه",
       "amountRial": 200000000,
       "active": false,
       "availableMonths": 12,

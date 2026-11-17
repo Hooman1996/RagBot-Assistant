@@ -513,7 +513,7 @@ internal object ServiceCatalog {
                     "مدارک هویتی",
                     listOf(
                         choice("document", "مرحله نمایشی؛ فایلی بارگذاری نمی‌شود") {
-                            listOf("card" to "کارت ملی نمایشی")
+                            listOf("card" to "کارت ملی")
                         }
                     ),
                 ),

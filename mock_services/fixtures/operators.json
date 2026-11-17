@@ -8,7 +8,7 @@
       "max": 5000000,
       "multiplier": 50000,
       "defaults": [100000, 200000, 500000, 1000000],
-      "prefixes": ["0900"]
+      "prefixes": ["0912", "0919"]
     },
     {
       "operator": "IRANCELL",
@@ -17,7 +17,7 @@
       "max": 5000000,
       "multiplier": 50000,
       "defaults": [100000, 200000, 500000, 1000000],
-      "prefixes": ["0901"]
+      "prefixes": ["0935", "0936"]
     },
     {
       "operator": "RIGHTEL",
@@ -26,7 +26,7 @@
       "max": 2000000,
       "multiplier": 100000,
       "defaults": [200000, 500000, 1000000],
-      "prefixes": ["0902"]
+      "prefixes": ["0921", "0922"]
     }
   ]
 }

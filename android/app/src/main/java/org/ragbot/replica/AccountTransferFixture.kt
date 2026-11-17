@@ -27,7 +27,7 @@ object AccountTransferDestinations {
 
 internal object AccountTransferFixture {
     const val NOTICE = "نسخه نمایشی با داده و بانک محلی؛ هیچ پول واقعی جابه‌جا نمی‌شود."
-    val reasons = listOf("بابت نمونهٔ اول — ساختگی", "بابت نمونهٔ دوم — ساختگی")
+    val reasons = listOf("پرداخت اجاره", "خرید کالا و خدمات")
 
     fun validate(draft: AccountTransferDraft): String? {
         val destination = latinDigits(draft.destination).trim().uppercase()

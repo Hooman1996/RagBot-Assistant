@@ -7,27 +7,27 @@ class DigitalChequeRulesTest {
     @Test
     fun onlyAnEmptySayadIdIsRejectedBeforeTheInquiry() {
         assertEquals(PaymentRules.MANDATORY, DigitalChequeRules.sayadError(""))
-        assertNull(DigitalChequeRules.sayadError("0000000000000201"))
+        assertNull(DigitalChequeRules.sayadError("5041124072452997"))
     }
 
     @Test
     fun cartableAndPickerSearchBySayadId() {
         assertEquals(2, DigitalChequeRules.search("").size)
         assertEquals(
-            listOf("0000000000000202"),
-            DigitalChequeRules.search("۲۰۲").map { it.sayadId },
+            listOf("1404713921090897"),
+            DigitalChequeRules.search("۰۸۹۷").map { it.sayadId },
         )
         assertTrue(DigitalChequeRules.search("999").isEmpty())
-        assertEquals(listOf("0000000000000201"), DigitalChequeRules.assigned("201"))
+        assertEquals(listOf("5041124072452997"), DigitalChequeRules.assigned("2997"))
         assertTrue(DigitalChequeRules.assigned("999").isEmpty())
     }
 
     @Test
     fun inquiryCarriesTheHoldersAndDigitalIban() {
-        val cheque = checkNotNull(DigitalChequeRules.inquiry("0000000000000202"))
-        assertEquals(listOf("کاربر نمایشی", "دارندهٔ نمایشی"), cheque.holders)
+        val cheque = checkNotNull(DigitalChequeRules.inquiry("1404713921090897"))
+        assertEquals(listOf("امیرحسین کاظمی", "محمد جعفری"), cheque.holders)
         assertEquals(2_500_000L, cheque.amount)
-        assertNull(DigitalChequeRules.inquiry("0000000000000999"))
+        assertNull(DigitalChequeRules.inquiry("6104332658420740"))
     }
 
     @Test

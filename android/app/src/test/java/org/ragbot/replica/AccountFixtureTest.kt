@@ -18,14 +18,14 @@ class AccountFixtureTest {
     @Test
     fun searchAcceptsPersianArabicAndLatinDigitsWithoutLosingPrecision() {
         val second = AccountFixture.accounts[1]
-        assertTrue(accountMatches(second, "0000000002"))
-        assertTrue(accountMatches(second, "٠٠٠٠٠٠٠٠٠٢"))
-        assertTrue(accountMatches(second, "کاربر"))
-        assertFalse(accountMatches(second, "0000000001"))
+        assertTrue(accountMatches(second, "9818460579"))
+        assertTrue(accountMatches(second, "٩٨١٨٤٦٠٥٧٩"))
+        assertTrue(accountMatches(second, "کاظمی"))
+        assertFalse(accountMatches(second, "7234143231"))
         val transaction = HomeFixture.transactions.first()
         assertTrue(historyMatches(transaction, "۱٬۲۵۰٬۰۰۰"))
         assertTrue(historyMatches(transaction, "۱۲۵۰۰۰۰"))
-        assertTrue(historyMatches(transaction, "کارت نمایشی"))
+        assertTrue(historyMatches(transaction, "کارت ملت"))
         assertFalse(historyMatches(transaction, "1.25"))
     }
 }

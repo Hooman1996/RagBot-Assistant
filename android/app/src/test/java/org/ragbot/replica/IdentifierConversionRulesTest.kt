@@ -26,10 +26,10 @@ class IdentifierConversionRulesTest {
         assertNull(ConversionFixture.error(draft.copy(identifier = "0".repeat(30))))
         assertNotNull(ConversionFixture.error(draft.copy(identifier = "0".repeat(31))))
         assertEquals(
-            "000.000.000001.1",
-            ConversionFixture.normalizeIdentifier(draft.mode, " ۰۰۰.۰۰۰.۰۰۰۰۰۱.۱ "),
+            "214.110.248413.1",
+            ConversionFixture.normalizeIdentifier(draft.mode, " ۲۱۴.۱۱۰.۲۴۸۴۱۳.۱ "),
         )
-        assertNull(ConversionFixture.result(draft.copy(identifier = "000.000.000001.1")))
+        assertNull(ConversionFixture.result(draft.copy(identifier = "214.110.248413.1")))
     }
 
     @Test
@@ -37,7 +37,7 @@ class IdentifierConversionRulesTest {
         for (mode in listOf(ConversionMode.CARD_TO_IBAN, ConversionMode.CARD_TO_ACCOUNT)) {
             val draft = ConversionDraft(mode, ConversionFixture.card)
             assertNull(ConversionFixture.error(draft))
-            assertNull(ConversionFixture.error(draft.copy(identifier = "۰۰۰۰ ۰۰۰۰ ۰۰۰۰ ۰۰۰۱")))
+            assertNull(ConversionFixture.error(draft.copy(identifier = "۶۱۰۴ ۳۳۹۸ ۹۶۶۷ ۱۰۸۳")))
             for (identifier in
                 listOf(
                     "",
@@ -52,7 +52,7 @@ class IdentifierConversionRulesTest {
                 )
             }
             assertFalse(ConversionFixture.paidQuery(draft))
-            val paid = draft.copy(identifier = "0000010000000001")
+            val paid = draft.copy(identifier = "6221062259478395")
             assertNull(ConversionFixture.error(paid))
             assertTrue(ConversionFixture.paidQuery(paid))
             assertNull(ConversionFixture.result(paid))
@@ -65,16 +65,16 @@ class IdentifierConversionRulesTest {
         for (identifier in
             listOf(
                 ConversionFixture.iban,
-                "۲۲۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۰۱",
-                "ir22 0000 0000 0000 0000 0000 01",
-                "220000000000000000000001IR",
+                "۳۲۰۱۲۰۴۷۰۲۴۰۳۶۳۴۲۹۰۰۹۹۵۷",
+                "ir32 0120 4702 4036 3429 0099 57",
+                "320120470240363429009957IR",
             )) {
             assertNull(identifier, ConversionFixture.error(draft.copy(identifier = identifier)))
         }
         for (identifier in
             listOf(
                 "",
-                "IR000000000000000000000001",
+                "IR100120470240363429009957",
                 "0".repeat(24),
                 "2".repeat(24),
                 "22000000000000000000000",
@@ -92,7 +92,7 @@ class IdentifierConversionRulesTest {
             assertNotNull(ConversionFixture.error(other))
             assertNull(ConversionFixture.result(other))
             assertFalse(ConversionFixture.paidQuery(other))
-            val unknownRecord = ConversionDraft(mode, "IR920000000000000000000002")
+            val unknownRecord = ConversionDraft(mode, "IR310120078094788868405633")
             assertNull(ConversionFixture.error(unknownRecord))
             assertNull(ConversionFixture.result(unknownRecord))
         }
@@ -109,7 +109,7 @@ class IdentifierConversionRulesTest {
                 }
             val draft = ConversionDraft(mode, identifier, "internal")
             val result = ConversionFixture.result(draft)!!
-            assertEquals("دارندهٔ ساختگی", result.owner)
+            assertEquals("نرگس طاهری", result.owner)
             assertEquals(ConversionFixture.account, result.account)
             assertEquals(ConversionFixture.iban, result.iban)
             assertEquals(ConversionFixture.cards, result.cards)
@@ -124,10 +124,10 @@ class IdentifierConversionRulesTest {
         assertNull(ConversionFixture.error(account))
         assertTrue(ConversionFixture.paidQuery(account))
         assertNull(ConversionFixture.result(account))
-        val unknown = account.copy(identifier = "0000000000999", bankKey = "internal")
+        val unknown = account.copy(identifier = "0983165215834", bankKey = "internal")
         assertNull(ConversionFixture.error(unknown))
         assertNull(ConversionFixture.result(unknown))
-        val unknownCard = ConversionDraft(ConversionMode.CARD_TO_IBAN, "0000000000000999")
+        val unknownCard = ConversionDraft(ConversionMode.CARD_TO_IBAN, "6104332658420740")
         assertNull(ConversionFixture.error(unknownCard))
         assertNull(ConversionFixture.result(unknownCard))
     }

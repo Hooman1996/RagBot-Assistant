@@ -10,9 +10,9 @@ class MockDataTest {
     @Test
     fun theFilesLoadWithTheirExactAmounts() {
         val files = MockData.current
-        assertEquals("رضا", files.people.single().name)
+        assertEquals("رضا محمدی", files.people.single().name)
         assertEquals(12_500_000L, files.accounts.first().balance)
-        assertEquals(4, files.destinations.count { it.name == "رضا" })
+        assertEquals(4, files.destinations.count { it.name == "رضا محمدی" })
     }
 
     @Test

@@ -63,7 +63,7 @@ The backend never calls into the phone. If they prefer push, that is an open que
   "arguments": {
     "form": "S-174",
     "values": {
-      "card-transfer-destination": "0000000000000091",
+      "card-transfer-destination": "6037990836388880",
       "card-transfer-amount": { "value": 250000, "unit": "IRR" }
     }
   },
@@ -103,7 +103,7 @@ these):
   "observation_version": 7, "app_version": 1, "profile_version": 1,
   "screen": "S-174", "modal": null, "loading": false,
   "fields": [
-    { "ref": "card-transfer-destination", "value": "****0091" },
+    { "ref": "card-transfer-destination", "value": "****8880" },
     { "ref": "card-transfer-amount", "value": "250,000" }
   ],
   "draft": { "draft_id": "draft-1", "draft_version": 2, "review_version": 0 },
@@ -212,7 +212,7 @@ user):
 ```text
 GET /<their-prefix>/lookups/contacts
 200 {"records": [
-      {"key": "reza", "label": "رضا", "card": "0000000000000091", "iban": "IR070000000000000000000077", "account": "0000000000077", "wallet": "0000000000000201"}
+      {"key": "reza", "label": "رضا", "card": "6037990836388880", "iban": "IR290170455491846632336115", "account": "0970836557800", "wallet": "5041124072452997"}
     ]}
 ```
 

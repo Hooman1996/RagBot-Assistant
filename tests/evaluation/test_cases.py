@@ -20,7 +20,7 @@ from assistant.navigator import HOME, Navigator, Requirement
 from assistant.words import options, when
 
 FOLDER = Path("tests/evaluation")
-DECISION = Path("docs/decisions/0030-live-test-fixes.md")  # the hash since D-030
+DECISION = Path("docs/decisions/0031-real-looking-mock-data.md")  # the hash since D-031
 PROFILE = json.loads(Path("app_profiles/replica.profile.json").read_text(encoding="utf-8"))
 FEATURES = {item["intent"]: item for item in PROFILE["features"]}
 NAVIGATOR = Navigator(PROFILE)
@@ -202,6 +202,6 @@ def test_no_heldout_first_turn_appears_in_the_tuning_set() -> None:
     assert shared == []
 
 
-def test_the_heldout_set_is_frozen_at_the_hash_in_d030() -> None:
+def test_the_heldout_set_is_frozen_at_the_hash_in_d031() -> None:
     recorded = re.search(r"SHA-256 `([0-9a-f]{64})`", DECISION.read_text(encoding="utf-8")).group(1)
     assert hashlib.sha256((FOLDER / "heldout.json").read_bytes()).hexdigest() == recorded

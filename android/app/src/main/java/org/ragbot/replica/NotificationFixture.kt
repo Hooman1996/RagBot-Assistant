@@ -13,18 +13,36 @@ data class PreviewNotification(
 /** Synthetic local inbox; categories and read totals are preview data, not server rules. */
 object NotificationFixture {
     val categories = linkedMapOf("all" to "همه", "info" to "اطلاع‌رسانی", "reminder" to "یادآوری")
+    private val titles =
+        listOf(
+            "واریز حقوق",
+            "یادآوری قسط تسهیلات",
+            "تمدید کارت",
+            "سررسید چک",
+            "به‌روزرسانی برنامه",
+            "تغییر شرایط سپرده‌ها",
+        )
+    private val messages =
+        listOf(
+            "مبلغ ۴۵٬۰۰۰٬۰۰۰ ریال بابت حقوق آبان به سپرده کوتاه‌مدت شما واریز شد.",
+            "قسط تسهیلات خرید خودرو تا ۱۴۰۵/۰۹/۰۱ سررسید می‌شود؛ موجودی حساب را بررسی کنید.",
+            "کارت شما با پایان ۳۵۶۶ تا یک ماه دیگر منقضی می‌شود؛ برای تمدید به شعبه مراجعه کنید.",
+            "چک صیادی شما به مبلغ ۲٬۵۰۰٬۰۰۰ ریال فردا سررسید می‌شود.",
+            "نسخه جدید همراه‌بانک با امکانات تازه منتشر شد.",
+            "نرخ سود سپرده‌های کوتاه‌مدت از ابتدای ماه آینده تغییر می‌کند.",
+        )
+    private const val terms =
+        "سود سپرده‌های کوتاه‌مدت به‌صورت روزشمار محاسبه و در پایان هر ماه به حساب واریز می‌شود. "
     val records =
         (1..6).map { index ->
             PreviewNotification(
                 id = "notice-$index",
                 category = if (index % 2 == 0) "reminder" else "info",
-                title = "اعلان آزمایشی $index",
+                title = titles[index - 1],
                 message =
-                    "این متن ساختگی برای بررسی نمایش اعلان‌ها است. " +
-                        "شناسه نمونه DEMO-$index فقط به داده محلی مربوط است و پیام بانک نیست. " +
-                        if (index == 6)
-                            "برای بررسی متن بلند، این بخش چند بار ادامه دارد. ".repeat(18)
-                        else "می‌توانید جزئیات را ببینید، اعلان را بخوانید یا حذف کنید.",
+                    messages[index - 1] +
+                        " شماره پیگیری 1405-$index. " +
+                        if (index == 6) terms.repeat(6) else "",
                 date = "۱۴۰۵/۰۸/۰${"۶۵۴۳۲۱"[index - 1]}",
                 time = "۱۰:۱۵",
                 read = index == 3,

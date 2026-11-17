@@ -104,7 +104,7 @@ def test_card_to_reza_runs_to_the_review_and_stops(app: ContractApp) -> None:
     assert progress["state"] == "review"
     assert [item["operation"] for item in app.commands] == ["navigate", "fill_form", "show_review"]
     values = app.commands[1]["arguments"]["values"]
-    assert values["card-transfer-destination"] == "0000000000000091"
+    assert values["card-transfer-destination"] == "6037990836388880"
     assert values["card-transfer-amount"] == {"value": 250000, "unit": "IRR"}
     assert app.commands[1]["expected_draft_version"] == 0
 

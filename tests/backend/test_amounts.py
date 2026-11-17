@@ -29,8 +29,8 @@ def test_an_amount_is_read_in_whole_rials(text: str, rials: list[int]) -> None:
 @pytest.mark.parametrize(
     "text",
     [
-        "۱۲ قسط، کد ملی 0000000019",
-        "برای 09000000001",
+        "۱۲ قسط، کد ملی 5840573851",
+        "برای 09128978800",
         "از 1405/09/01 تا 1405/12/01",
         "۱۰۰ امتیاز",
         "نه، ممنون",

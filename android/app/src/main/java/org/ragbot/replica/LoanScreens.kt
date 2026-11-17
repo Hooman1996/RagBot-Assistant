@@ -221,7 +221,7 @@ private fun LoanDetail(
                     Modifier.verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text("حساب‌های ساختگی")
+                    Text("حساب‌های من")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(false to "انفرادی", true to "مشترک").forEach { (value, label) ->
                             FilterChip(

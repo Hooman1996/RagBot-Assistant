@@ -10,22 +10,22 @@ from assistant.words import offered
 
 
 def test_a_contact_name_becomes_their_card() -> None:
-    assert FixtureLookups().resolve("contacts.card", "رضا") == "0000000000000091"
+    assert FixtureLookups().resolve("contacts.card", "رضا") == "6037990836388880"
 
 
 def test_a_saved_destination_is_found_by_its_name() -> None:
-    assert FixtureLookups().resolve("contacts.account", "حساب آزمایشی ۳") == "0000000000003"
-    assert FixtureLookups().resolve("contacts.card", "کارت آزمایشی ۲") == "0000000000000026"
+    assert FixtureLookups().resolve("contacts.account", "نگار صادقی") == "0235942675932"
+    assert FixtureLookups().resolve("contacts.card", "پریسا نیک‌نام") == "6104334806064544"
 
 
 def test_a_typed_number_names_a_person_but_never_a_saved_destination() -> None:
     lookups = FixtureLookups()
-    assert [item.key for item in lookups.matching("contacts.iban", "IR070000000000000000000077")] == ["reza"]
-    assert lookups.matching("contacts.iban", "IR380000000000000000000004") == []
+    assert [item.key for item in lookups.matching("contacts.iban", "IR290170455491846632336115")] == ["reza"]
+    assert lookups.matching("contacts.iban", "IR910180319412535974461725") == []
 
 
 def test_a_typed_card_number_needs_no_contact() -> None:
-    assert FixtureLookups().resolve("contacts.card", "0000000000000026") == "0000000000000026"
+    assert FixtureLookups().resolve("contacts.card", "6104334806064544") == "6104334806064544"
 
 
 def test_an_unknown_name_is_not_guessed() -> None:
@@ -47,7 +47,7 @@ def test_every_source_finds_its_records() -> None:
 
 
 def test_an_attribute_picks_what_is_sent() -> None:
-    assert FixtureLookups().resolve("cards.number", "card-1") == "0000000000000018"
+    assert FixtureLookups().resolve("cards.number", "card-1") == "6104336383233566"
     assert FixtureLookups().resolve("cards", "card-1") == "card-1"
 
 
@@ -67,8 +67,8 @@ def test_installments_are_the_ones_the_app_lets_the_user_pick() -> None:
 
 def test_a_wallet_top_up_amount_comes_from_the_operators_charge_list() -> None:
     assert FixtureLookups().operator(name="RIGHTEL")["defaults"] == [200000, 500000, 1000000]
-    assert FixtureLookups().operator(phone="۰۹۰۲۱۲۳۴۵۶۷")["operator"] == "RIGHTEL"  # by its prefix
-    assert FixtureLookups().balance("wallets", "0000000000101") == 3250000
+    assert FixtureLookups().operator(phone="۰۹۲۱۱۲۳۴۵۶۷")["operator"] == "RIGHTEL"  # by its prefix
+    assert FixtureLookups().balance("wallets", "0176453202938") == 3250000
 
 
 def test_the_inactive_wallet_is_not_offered_and_records_behind_a_tab_are() -> None:
@@ -81,9 +81,9 @@ def test_a_record_is_named_by_its_label_or_the_words_no_other_record_has() -> No
     accounts = FixtureLookups().candidates("accounts")
     named = FixtureLookups().named
     assert [item.key for item in named("با کارمزد از پس‌انداز استعلام کن", accounts)] == ["account-2"]
-    assert [item.key for item in named("بریز به حساب نمایشی", accounts)] == ["account-1"]
+    assert [item.key for item in named("بریز به سپرده کوتاه‌مدت", accounts)] == ["account-1"]
     assert named("پس از واریز خبرم کن", accounts) == []  # «پس» alone is not «پس‌انداز»
-    assert named("از کیف نمایشی شخصی", accounts) == []  # «نمایشی» is in every label
+    assert named("از کیف پول شخصی", accounts) == []  # «نمایشی» is in every label
 
 
 def test_the_offer_rule_filters_only_its_own_lookup() -> None:
@@ -105,14 +105,14 @@ def test_lookups_read_and_never_write() -> None:
 @pytest.mark.parametrize(
     ("lookup", "said", "keys"),
     [
-        ("cards", "کارت 0018", ["card-1"]),
-        ("cards", "كارت ۰۰۴۲", ["card-4"]),
-        ("accounts", "پس انداز نمایشی", ["account-2"]),
+        ("cards", "کارت 3566", ["card-1"]),
+        ("cards", "كارت ۰۸۹۰", ["card-4"]),
+        ("accounts", "پس انداز", ["account-2"]),
         ("accounts", "حساب پس‌انداز بگیر", ["account-2"]),
-        ("wallets", "کیف نمایشی تجاریمو", ["0000000000102"]),
+        ("wallets", "کیف پول فروشگاهمو", ["0339168371132"]),
         ("contacts.account", "حساب رضا", ["reza"]),
         ("charities", "خیریه آموزش", ["1"]),
-        ("accounts", "حساب", ["account-1", "account-3"]),
+        ("accounts", "حساب", ["account-3"]),
         ("accounts", "حساب جاری", []),
         ("contacts.card", "به علی", []),
     ],
@@ -125,12 +125,12 @@ def test_matching_ignores_digits_letters_zwnj_and_generic_words(
 
 def test_a_typed_iban_is_kept_unless_it_is_a_saved_one() -> None:
     lookups = FixtureLookups()
-    assert lookups.resolve("contacts.iban", "IR380000000000000000000004") == "IR380000000000000000000004"
-    assert [item.key for item in lookups.matching("contacts.iban", "IR070000000000000000000077")] == ["reza"]
+    assert lookups.resolve("contacts.iban", "IR910180319412535974461725") == "IR910180319412535974461725"
+    assert [item.key for item in lookups.matching("contacts.iban", "IR290170455491846632336115")] == ["reza"]
 
 
 def test_a_typed_number_must_fit_its_field() -> None:
     lookups = FixtureLookups()
     with pytest.raises(NotFound):  # an account number is no IBAN, even one inside a saved IBAN
-        lookups.resolve("contacts.iban", "0000000000077")
-    assert lookups.resolve("contacts.account", "0000000000099") == "0000000000099"
+        lookups.resolve("contacts.iban", "0970836557800")
+    assert lookups.resolve("contacts.account", "0281707721676") == "0281707721676"

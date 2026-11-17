@@ -64,8 +64,13 @@ problem instead of crashing.
 - **A card:** add an entry to `cards` in `cards.json`. `primaryAccount` must be the `number` of an
   account in `accounts.json` for the card to spend from it.
 
-Card numbers must pass the Luhn check and IBANs the mod-97 check. Keep them obviously synthetic:
-start cards with `000000` and use bank code `000` in IBANs. The project check rejects a bad checksum.
+Card numbers must pass the Luhn check and IBANs the mod-97 check; the project check rejects a bad
+checksum. The data looks real and stays synthetic ([D-031](../decisions/0031-real-looking-mock-data.md)):
+the user's own cards start with Mellat's `610433` and their IBANs use Mellat's bank code `012`, so the
+identifier conversion treats them as this bank's; other banks' prefixes (Melli `603799`, Parsian
+`622106`, Saman `621986`…) are for destinations. Generate the digits; never copy a real card,
+account, IBAN or national code. Names are invented Iranian full names; keep «علی» and «سارا» unused,
+since the evaluation set expects them to be unknown.
 
 ## Force a failure for a demo
 

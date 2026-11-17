@@ -56,12 +56,12 @@ def test_another_unit_fails(checkout: Path):
 
 
 def test_a_card_with_a_bad_checksum_fails(checkout: Path):
-    edit(checkout, "contacts", lambda d: d["people"][0].update(card="0000000000000092"))
+    edit(checkout, "contacts", lambda d: d["people"][0].update(card="6037990836388881"))
     assert any("card passes" in f for f in failures(checkout))
 
 
 def test_an_iban_with_a_bad_checksum_fails(checkout: Path):
-    edit(checkout, "contacts", lambda d: d["people"][0].update(iban="IR080000000000000000000077"))
+    edit(checkout, "contacts", lambda d: d["people"][0].update(iban="IR300170455491846632336115"))
     assert any("IBAN passes" in f for f in failures(checkout))
 
 

@@ -223,7 +223,7 @@ class ExecutorTest {
 
     @Test
     fun cardAndIbanNumbersAreMasked() {
-        assertEquals("****0007", Observer.mask("6037 0000 0000 0007"))
+        assertEquals("****8880", Observer.mask("6037 9908 3638 8880"))
         assertEquals("250000", Observer.mask("250000"))
     }
 }

@@ -94,7 +94,7 @@ private fun ConversionForm(
                         drafts = drafts + (mode.name to value)
                         error = null
                     }
-                    if (mode.isIbanInput) Text("فقط برای بانک داخلی ساختگی؛ پیشوند IR اختیاری است.")
+                    if (mode.isIbanInput) Text("فقط برای بانک ملت؛ پیشوند IR اختیاری است.")
                     PaymentInput("conversion-identifier", mode.inputLabel, draft.identifier, null) {
                         update(draft.copy(identifier = it))
                     }
@@ -185,7 +185,7 @@ private fun ConversionPaidPreview(
     var source by pageValue("conversion-source", "")
     var picker by rememberSaveable { mutableStateOf(false) }
     Text("کارمزد استعلام: ${persianNumber(ConversionFixture.fee)} ریال")
-    Text("کارت مقصد ساختگی: 0000010000000001")
+    Text("کارت مقصد ساختگی: 6221062259478395")
     if (page == ConversionDestinations.PAID) {
         OutlinedButton(
             { picker = true },
@@ -196,7 +196,7 @@ private fun ConversionPaidPreview(
         if (picker) {
             AlertDialog(
                 onDismissRequest = { picker = false },
-                title = { Text("کارت‌های مبدا — دادهٔ ساختگی") },
+                title = { Text("کارت‌های مبدا") },
                 text = {
                     Column {
                         CardFixture.of(CardKind.DEBIT).forEach { card ->

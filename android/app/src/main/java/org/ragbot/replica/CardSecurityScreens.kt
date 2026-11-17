@@ -77,7 +77,7 @@ internal fun MockResult(text: String, onDone: () -> Unit) {
         text = {
             Column(Modifier.semantics(mergeDescendants = true) {}.testTag("security-result")) {
                 Text(text)
-                Text("این نتیجه از بانک نمایشی محلی آمده است.")
+                Text("این نتیجه از بانک ملی ایران محلی آمده است.")
                 Text("طراحی برای ماک", fontSize = 11.sp, color = Color.Gray)
             }
         },

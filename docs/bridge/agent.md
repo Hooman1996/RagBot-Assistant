@@ -132,7 +132,7 @@ a file the assistant owns, `app_profiles/assistant_words.json`, read by `assista
 - `offer`: per lookup and field, the fields a record must have to be offered or accepted, as the
   app's own picker lists them: a card-transfer source is an active debit card; a bill, top-up or
   conversion source is a debit card; a wallet is an active one. A record the user names that the
-  app doesn't list («کارت 0042», a credit card) is refused and the listed ones are offered. Corporate
+  app doesn't list («کارت 0890», a credit card) is refused and the listed ones are offered. Corporate
   loans and joint accounts are offered: they sit on a second tab, which the executor opens.
 - `installments`: which policy or loan field an installment choice belongs to. Only the installments
   the app lets the user pick are offered (`FixtureLookups.installments`, from the recovered rules):
@@ -176,8 +176,8 @@ ask has allowed keys.
 - **A text value** loses its field's own label word in front: «عنوان محل کار» is the title «محل کار».
   A value made only of digits reaches the app in Latin digits, as the app keeps it: «۱۲» is sent as
   «12».
-- **Contacts** are the people and the app's saved destinations («مقصدهای ذخیره‌شده»): «حساب آزمایشی ۳»
-  is found for an account field, «کارت آزمایشی ۲» for a card field, and they are offered as the
+- **Contacts** are the people and the app's saved destinations («مقصدهای ذخیره‌شده»): «نگار صادقی»
+  is found for an account field, «پریسا نیک‌نام» for a card field, and they are offered as the
   app's picker lists them (#164). A typed number names a person who has it, never a saved
   destination: it is sent as typed.
 - **An installment the user never named** gives way to the only one the app lets them pay: the
@@ -185,7 +185,7 @@ ask has allowed keys.
   greys out is still named and asked again (#164).
 - **A typed answer to one record question** that names exactly one record the app lists is that
   record, as if its option was tapped, so a name the model kept from an earlier message cannot win
-  («سارا» not found, then «کارت آزمایشی ۳», #164).
+  («سارا» not found, then «سعید فلاحی», #164).
 - **A record the model left out** is taken from the user's words when they name exactly one record
   the app lists for the field, by its whole label or by the words no other record has («پس‌انداز»;
   never «نمایشی», which every label has, and never «پس» alone), and no other field of the plan takes

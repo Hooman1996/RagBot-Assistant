@@ -64,7 +64,7 @@ class AssistantPanelTest {
         rig.fill(
             "S-174",
             "card-transfer-source" to FieldValue.Text("card-1"),
-            "card-transfer-destination" to FieldValue.Text("0000000000000091"),
+            "card-transfer-destination" to FieldValue.Text("6037990836388880"),
             "card-transfer-amount" to FieldValue.Money(250_000),
         )
         rig.expect(rig.review(), "S-176")

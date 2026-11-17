@@ -259,7 +259,7 @@ private fun AccountTransferForm(
     if (reasonPicker) {
         AlertDialog(
             onDismissRequest = { reasonPicker = false },
-            title = { Text("بابت — گزینه‌های ساختگی") },
+            title = { Text("علت انتقال") },
             text = {
                 Column {
                     AccountTransferFixture.reasons.forEachIndexed { index, reason ->

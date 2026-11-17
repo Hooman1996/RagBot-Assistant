@@ -16,7 +16,7 @@ class WalletRulesTest {
             "10:15",
             "TRACE",
             "TX",
-            "0000000000001",
+            "0391304359280",
             "طرف",
             "یادداشت",
         )
@@ -33,7 +33,7 @@ class WalletRulesTest {
     @Test
     fun pickersListOnlyActiveWallets() {
         assertEquals(
-            listOf("0000000000101", "0000000000102"),
+            listOf("0176453202938", "0339168371132"),
             WalletRules.active(WalletFixture.wallets).map { it.number },
         )
         assertEquals(3, WalletRules.shown(WalletFixture.wallets).size)
@@ -42,12 +42,12 @@ class WalletRulesTest {
     @Test
     fun qrContentIsTheRecoveredJsonWithAnOptionalAmount() {
         assertEquals(
-            "{\n  \"amount\": null,\n  \"destination\": \"0000000000101\"\n}",
-            WalletRules.qrContent("0000000000101", null),
+            "{\n  \"amount\": null,\n  \"destination\": \"0176453202938\"\n}",
+            WalletRules.qrContent("0176453202938", null),
         )
         assertEquals(
-            "{\n  \"amount\": \"250000\",\n  \"destination\": \"0000000000101\"\n}",
-            WalletRules.qrContent("0000000000101", "250000"),
+            "{\n  \"amount\": \"250000\",\n  \"destination\": \"0176453202938\"\n}",
+            WalletRules.qrContent("0176453202938", "250000"),
         )
     }
 

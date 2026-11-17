@@ -190,12 +190,12 @@ internal fun StatementDetailScreen(account: PreviewAccount?, key: String) {
         Text("جزئیات", Modifier.padding(16.dp))
         val fields =
             listOf(
-                "شعبه" to "شعبه نمایشی (۰۰۰)",
+                "شعبه" to "شعبه ونک (۰۰۰)",
                 "شماره مرجع" to "DEMO-${row.key}",
-                (if (row.amount > 0) "شناسه واریز" else "شناسه برداشت") to "DEMO-001",
-                (if (row.amount > 0) "نام فرستنده" else "نام گیرنده") to "طرف نمایشی",
-                "شماره سند" to "DEMO-002",
-                "کد پیگیری" to "DEMO-003",
+                (if (row.amount > 0) "شناسه واریز" else "شناسه برداشت") to "96996",
+                (if (row.amount > 0) "نام فرستنده" else "نام گیرنده") to "حمید سلیمانی",
+                "شماره سند" to "88491",
+                "کد پیگیری" to "89648",
             )
         fields.forEach { (label, value) ->
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {

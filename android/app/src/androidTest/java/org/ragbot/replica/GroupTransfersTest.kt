@@ -91,7 +91,7 @@ class GroupTransfersTest {
         input("group-withdraw-id", "1234")
         click("group-continue")
         shown("S-184")
-        input("group-row-0-iban", "920000000000000000000002")
+        input("group-row-0-iban", "310120078094788868405633")
         input("group-row-0-amount", "150000")
         click("group-row-0-reason")
         dialog("group-row-0-reason-0")
@@ -101,7 +101,7 @@ class GroupTransfersTest {
             .assertTextContains(GroupTransferRules.SINGLE_WARNING)
         dialog("group-accept-ok")
         click("group-add")
-        input("group-row-1-iban", "930000000000000000000002")
+        input("group-row-1-iban", "320120078094788868405633")
         input("group-row-1-amount", "100000")
         click("group-row-1-reason")
         dialog("group-row-1-reason-1")
@@ -109,7 +109,7 @@ class GroupTransfersTest {
         compose.onNodeWithTag("group-accept-message").assertIsDisplayed()
         dialog("group-accept-ok")
         compose.onNodeWithTag("group-row-1-error").performScrollTo().assertIsDisplayed()
-        compose.onNodeWithTag("group-row-1-iban").performTextReplacement("650000000000000000000003")
+        compose.onNodeWithTag("group-row-1-iban").performTextReplacement("950120755237739603015817")
         compose.activityRule.scenario.recreate()
         compose
             .onNodeWithTag("group-row-1-amount")
@@ -139,7 +139,7 @@ class GroupTransfersTest {
         compose
             .onNodeWithTag("group-row-0-iban")
             .performScrollTo()
-            .assertTextContains("920000000000000000000002", substring = true)
+            .assertTextContains("310120078094788868405633", substring = true)
         click("group-accept")
         shown("S-190")
         click("group-cancel")
@@ -216,7 +216,7 @@ class GroupTransfersTest {
         shown("S-189")
         compose.onNodeWithText("۲۵۰٬۰۰۰").assertExists()
         click("group-verify-details")
-        compose.onNodeWithText("IR650000000000000000000003", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("IR950120755237739603015817", substring = true).assertDoesNotExist()
     }
 
     @Test
@@ -226,22 +226,22 @@ class GroupTransfersTest {
         compose.onNodeWithTag("group-history-search").performTextInput("999")
         compose.onNodeWithTag("group-history-empty").assertIsDisplayed()
         compose.onNodeWithTag("group-history-search").performTextReplacement("۵۰۰")
-        click("group-history-DEMO-GROUP-0001-attachment")
+        click("group-history-823862551-attachment")
         compose.onNodeWithTag("unavailable").assertIsDisplayed()
         back()
-        click("group-history-DEMO-GROUP-0001-destinations")
+        click("group-history-823862551-destinations")
         shown("S-087")
-        compose.onNodeWithTag("group-destination-search").performTextInput("0003")
+        compose.onNodeWithTag("group-destination-search").performTextInput("5817")
         compose.onNodeWithTag("group-destination-1").assertDoesNotExist()
         click("group-destination-2")
         shown("S-088")
-        compose.onNodeWithText("DEMO-REF-2").assertExists()
+        compose.onNodeWithText("912").assertExists()
         click("group-destination-back")
         shown("S-087")
         compose.activityRule.scenario.recreate()
         compose
             .onNodeWithTag("group-destination-search")
-            .assertTextContains("0003", substring = true)
+            .assertTextContains("5817", substring = true)
     }
 
     @Test

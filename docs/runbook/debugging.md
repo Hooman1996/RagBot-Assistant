@@ -45,7 +45,7 @@ ASSISTANT_TRACE=1 python -m pytest tests/backend/test_task_runner.py -k card_to_
    field    card-transfer-destination
    lookup   contacts.card
    said     رضا
-   sends    ****0091
+   sends    ****8880
 ── 4 · send navigate ───────────────────────────
    arguments   {"destination": "S-174"}
 ── 5 · answer to navigate ──────────────────────
@@ -53,7 +53,7 @@ ASSISTANT_TRACE=1 python -m pytest tests/backend/test_task_runner.py -k card_to_
    screen    S-174
    fields    []
 ── 6 · send fill_form ──────────────────────────
-   arguments   {"form": "S-174", "values": {"card-transfer-source": "card-1", "card-transfer-destination": "****0091", "card-transfer-amount": {"value": 250000, "unit": "IRR"}}}
+   arguments   {"form": "S-174", "values": {"card-transfer-source": "card-1", "card-transfer-destination": "****8880", "card-transfer-amount": {"value": 250000, "unit": "IRR"}}}
    ...
 ── 11 · run ended ──────────────────────────────
    state   review
@@ -213,7 +213,7 @@ in `.kt`, which are in `android/app/src/main/java/org/ragbot/replica/bridge/`.
 | 4 | List what it needs | `navigator.py` `legs`, `fields_of` | One leg on `S-174` with three fields: source, destination, amount |
 | 5 | Press Run | `graph_tasks.py` `start` | The values you typed; the `TaskRunner` and its `BridgeLink` being made |
 | 6 | Prepare every value | `task_runner.py` `prepared`, `prepared_value` | `250000` becoming `{"value": 250000, "unit": "IRR"}` |
-| 7 | Find رضا's card | `lookups.py` `resolve` | `رضا` becoming `0000000000000091` |
+| 7 | Find رضا's card | `lookups.py` `resolve` | `رضا` becoming `6037990836388880` |
 | 8 | Go to the form | `task_runner.py` `move` | The `navigate` arguments, `{"destination": "S-174"}` |
 | 9 | Build the command | `command_queue.py` `queue_command` | The full command, its `expected_observation_version` and `expires_at` |
 | 10 | Wait for the answer | `bridge_link.py` `wait_for` | The loop checking `last_result` every 0.1 s |
@@ -222,7 +222,7 @@ in `.kt`, which are in `android/app/src/main/java/org/ragbot/replica/bridge/`.
 | 13 | The app runs it | `Executor.kt` `execute`, then `Navigator.kt` `navigate` | The checks before the screen is touched, then each edge it walks |
 | 14 | The result comes back | `mobile_api.py` `post_result`, then `command_queue.py` `record_result` | The result with its fresh observation |
 | 15 | The runner reads the answer | `task_runner.py` `command` | Outcome, screen and fields of the result |
-| 16 | Fill and check | `task_runner.py` `fill`, `shows` | The values sent, and what the screen shows (`****0091`, `250,000`) |
+| 16 | Fill and check | `task_runner.py` `fill`, `shows` | The values sent, and what the screen shows (`****8880`, `250,000`) |
 | 17 | Open the review and stop | `task_runner.py` `show_review` | The run ending in `review`. The confirm is the user's alone |
 
 `resume` and `post_result` are defined inside `build_mobile_router`; a breakpoint on their first
@@ -243,7 +243,7 @@ conda activate assistant
 set -a; source .env; set +a
 python main_debug.py                                   # the built-in example
 python main_debug.py "قبض برقمو پرداخت کن" "1"          # your own turns
-python main_debug.py "۲۵۰ هزار تومان از کارت 0018 به رضا کارت به کارت کن" "نه، مبلغ رو ۳۰۰ هزار تومن کن"
+python main_debug.py "۲۵۰ هزار تومان از کارت 3566 به رضا کارت به کارت کن" "نه، مبلغ رو ۳۰۰ هزار تومن کن"
                                                        # a correction after the review
 python main_debug.py --replica                         # the real replica (below)
 ```

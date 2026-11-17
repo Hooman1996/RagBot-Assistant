@@ -85,7 +85,7 @@ class DemoWalkTest {
 
         // Pay a bill.
         click("menu-bill")
-        type("bill-id", "9000000000001")
+        type("bill-id", "2058601103691")
         type("bill-pay-id", "1250001")
         click("bill-continue")
         click("bill-accept")
@@ -94,7 +94,7 @@ class DemoWalkTest {
 
         // Buy mobile charge.
         click("menu-topup")
-        type("topup-phone", "09010000000")
+        type("topup-phone", "09358346703")
         click("topup-amount-200000")
         click("topup-continue")
         click("topup-accept")
@@ -106,7 +106,7 @@ class DemoWalkTest {
         click("cheque-menu-AUTHENTICATED_HOME_CHEQUE_INQUIRY_BYHOLDER")
         click("svc-kind-holder")
         click("svc-continue")
-        compose.onNodeWithTag("svc-sayad").performScrollTo().performTextReplacement("0000000000000321")
+        compose.onNodeWithTag("svc-sayad").performScrollTo().performTextReplacement("1404851462561429")
         click("svc-confirm")
         shown("S-166")
         click("bank-receipt-done")
@@ -141,7 +141,7 @@ class DemoWalkTest {
         type("svc-job", "کارمند")
         click("svc-continue")
         type("svc-guarantor", "رضا")
-        type("svc-guarantorCode", "0000000019")
+        type("svc-guarantorCode", "5840573851")
         click("svc-continue")
         click("svc-agree-yes")
         click("svc-continue")

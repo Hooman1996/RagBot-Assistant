@@ -279,7 +279,7 @@ private fun ContinuousHistory(
             Column(Modifier.padding(12.dp)) {
                 Text(record.name)
                 Text(
-                    if (record.cancelled) "لغو شده — وضعیت ساختگی" else "فعال — وضعیت ساختگی",
+                    if (record.cancelled) "لغو شده" else "فعال",
                     color = MaterialTheme.colorScheme.primary,
                 )
                 Text("مبدا: ${record.source}")
@@ -326,7 +326,7 @@ private fun ContinuousDetail(
         "نوع تکرار انتقال وجه:",
         RecurringTransferRules.frequencyTitle(record.frequency, 0),
     )
-    TransferValue("وضعیت", if (record.cancelled) "لغو شده — ساختگی" else "فعال — ساختگی")
+    TransferValue("وضعیت", if (record.cancelled) "لغو شده" else "فعال")
     Text("اجراها")
     record.executions.forEachIndexed { index, execution ->
         OutlinedCard(Modifier.fillMaxWidth().testTag("continuous-execution-$index")) {

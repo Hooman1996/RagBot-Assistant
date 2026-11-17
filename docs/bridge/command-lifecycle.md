@@ -20,7 +20,7 @@ sequenceDiagram
     R->>U: the three questions, at once
     U-->>R: card-1, رضا, 250000
     R->>K: رضا as a card
-    K-->>R: 0000000000000091
+    K-->>R: 6037990836388880
     P->>R: resume, with an observation
     R-->>P: command: navigate to S-174
     P->>E: execute
@@ -75,7 +75,7 @@ assistant will ask them in one message later. `TaskRunner.prepared` then turns t
 the app takes, before the app moves:
 
 - `card-1` is the key of a card in the `cards` lookup.
-- `رضا` goes through `contacts.card`, and becomes `0000000000000091`.
+- `رضا` goes through `contacts.card`, and becomes `6037990836388880`.
 - `250000` becomes `{ "value": 250000, "unit": "IRR" }`.
 
 If a value is missing, a contact is unknown, two contacts match, or an amount is not a whole number,
@@ -146,7 +146,7 @@ One generic command fills every form, driven by field tags. Money is a whole num
     "form": "S-174",
     "values": {
       "card-transfer-source": "card-1",
-      "card-transfer-destination": "0000000000000091",
+      "card-transfer-destination": "6037990836388880",
       "card-transfer-amount": { "value": 250000, "unit": "IRR" }
     }
   },
@@ -182,8 +182,8 @@ stops if one disagrees: a masked number by its last four digits, and an amount b
     "observation_version": 3,
     "screen": "S-174",
     "fields": [
-      { "ref": "card-transfer-source", "value": "****0018" },
-      { "ref": "card-transfer-destination", "value": "****0091" },
+      { "ref": "card-transfer-source", "value": "****3566" },
+      { "ref": "card-transfer-destination", "value": "****8880" },
       { "ref": "card-transfer-amount", "value": "250000" }
     ],
     "draft": { "draft_id": "draft-1", "draft_version": 1, "review_version": 0 }
