@@ -114,6 +114,21 @@ only commands are `navigate`, `fill_form` and `show_review`.
   with a plain message and nothing more is sent.
 - **A model error ends the task as `failed`,** as in the workflow.
 
+## The steps in the panel
+
+The panel's history and the graph page's chat both carry `agent_steps`, built by
+`panel_api.agent_steps`:
+
+- **The ReAct agent:** each step's Persian thought, its tool, and the tool's result as one masked
+  line, cut to 160 characters.
+- **The workflow:** each node that ran for the request, with a short Persian description and the
+  task state after it, read from the checkpointer's history.
+
+Both lists grow while the turn runs. In the panel, «مراحل دستیار (n)» under the messages opens and
+closes them; each step shows its thought, then `action → result` left to right. On the graph page
+they sit under the chat box in a collapsed «مراحل دستیار» section. The contract leaves the
+history's body open (`docs/bridge/panel.md`), so `contracts/` does not change.
+
 ## Status
 
 | Step | Issue | What |

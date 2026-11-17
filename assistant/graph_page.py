@@ -16,6 +16,7 @@ from assistant.agent_chat import AgentChat, TurnRefused
 from assistant.command_queue import CommandQueue
 from assistant.graph_tasks import GraphTasks, RunInProgress
 from assistant.navigator import CrossesUserOnly, NoRoute
+from assistant.panel_api import agent_steps
 
 STATIC = Path(__file__).resolve().parent / "static"
 PAGE = STATIC / "graph.html"
@@ -112,8 +113,9 @@ def build_graph_router(
 
     @router.get("/chat")
     def chat_progress() -> dict:
-        """The conversation: its messages, the pending question and options, and the task so far."""
-        return chat.progress()
+        """The conversation: its messages, the pending question and options, the task so far, and
+        the agent's steps."""
+        return chat.progress() | {"agent_steps": agent_steps(chat)}
 
     @router.post("/chat", status_code=202)
     def chat_turn(request: ChatRequest) -> dict:
@@ -122,7 +124,7 @@ def build_graph_router(
             chat.start(request.text, request.option)
         except TurnRefused as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
-        return chat.progress()
+        return chat.progress() | {"agent_steps": agent_steps(chat)}
 
     @router.post("/chat/cancel", status_code=202)
     def chat_cancel() -> dict:

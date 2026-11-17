@@ -55,6 +55,22 @@ class AssistantClientTest {
     }
 
     @Test
+    fun aHistoryGivesTheAgentsStepsInOrder() {
+        val reply =
+            """{"conversation_id":"c1","busy":true,"messages":[],"current":null,"steps":[],"agent_steps":[""" +
+                """{"thought":"کارت به کارت است.","action":"feature_requirements","result":"{}"},""" +
+                """{"thought":"مبدا را می‌پرسم.","action":"ask_user","result":""}]}"""
+        val history = AssistantClient.parseHistory(reply)
+        assertEquals(
+            listOf(
+                PanelStep("کارت به کارت است.", "feature_requirements", "{}"),
+                PanelStep("مبدا را می‌پرسم.", "ask_user", ""),
+            ),
+            history.agentSteps,
+        )
+    }
+
+    @Test
     fun anEmptyHistoryShowsNothing() {
         val reply = """{"conversation_id":"c1","busy":false,"messages":[],"current":null,"steps":[]}"""
         assertEquals(PanelHistory(), AssistantClient.parseHistory(reply))

@@ -1,4 +1,5 @@
-// The chat box: send a Persian request, answer the agent's question, watch the task state.
+// The chat box: send a Persian request, answer the agent's question, watch the task state and the
+// agent's own steps (a thought, an action and its result, under «مراحل دستیار»).
 // Loaded by graph.html after graph_task.js, whose stepBlock shows the runner's steps. Every decision
 // is the backend's. Its only buttons send the user's words, one of the options the agent offered, or
 // a cancel, which stops the agent's work and never undoes or confirms anything.
@@ -9,6 +10,13 @@ function chatLine(line) {
   const block = document.createElement("pre");
   block.className = `chat ${line.from}`;
   block.textContent = line.text;
+  return block;
+}
+
+function agentStep(step) {
+  const block = document.createElement("pre");
+  block.className = "chat agent-step";
+  block.textContent = `${step.thought}\n${step.action} → ${step.result || "…"}`;
   return block;
 }
 
@@ -23,6 +31,9 @@ function optionButton(option) {
 function showChat(chat) {
   document.getElementById("chat-messages").replaceChildren(...chat.messages.map(chatLine));
   document.getElementById("chat-options").replaceChildren(...chat.options.map(optionButton));
+  const steps = chat.agent_steps ?? [];
+  document.getElementById("chat-steps-title").textContent = `مراحل دستیار (${steps.length})`;
+  document.getElementById("chat-steps-list").replaceChildren(...steps.map(agentStep));
   const state = chat.busy ? "Working…" : chat.task_state ?? "No task yet";
   document.getElementById("chat-state").textContent = `Task state: ${state}`;
   if (chat.report) {

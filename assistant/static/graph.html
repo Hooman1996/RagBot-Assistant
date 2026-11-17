@@ -34,6 +34,8 @@
   .chat { direction: rtl; text-align: right; margin-top: 6px; padding: 6px; border-radius: 4px; }
   .chat.user { background: #e7f0fb; }
   .chat.assistant { background: #eef6f0; }
+  .chat.agent-step { background: #f4f5f4; color: #4d5a52; font-size: 12px; }
+  #chat-steps summary { direction: rtl; text-align: right; margin-top: 6px; cursor: pointer; }
   #chat-text { direction: rtl; margin-top: 8px; }
   #chat-options button { display: block; width: 100%; margin: 4px 0 0; direction: rtl; text-align: right; }
 </style>
@@ -53,6 +55,7 @@
   <button id="chat-send" type="button">Send</button>
   <button id="chat-cancel" type="button">لغو</button>
   <pre id="chat-state">Task state: No task yet</pre>
+  <details id="chat-steps"><summary id="chat-steps-title">مراحل دستیار (0)</summary><div id="chat-steps-list"></div></details>
   <h2>Now</h2><pre id="now">Waiting for the replica</pre>
   <h2>Clicked</h2><pre id="clicked">Nothing yet</pre>
   <h2>Route</h2><pre id="route">None yet</pre>
