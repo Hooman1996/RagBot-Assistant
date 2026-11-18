@@ -1,6 +1,5 @@
-"""The ReAct agent's read tools (D-032): features, requirements, records and the current screen."""
-
-import json
+"""The ReAct agent's read tools and its view of the task (D-032, D-033): the chosen feature's fields,
+records and the current screen, the step budget and repeated calls; nothing shown in full."""
 
 from agent_fakes import PROFILE, FakeChat, FakeEmbeddings, RecordingApp
 from langgraph.types import Command
@@ -14,6 +13,8 @@ from assistant.navigator import Navigator
 from assistant.react_graph import REPEATED, STEP_BUDGET, TOO_MANY_STEPS, build_react_graph
 
 CONFIG = {"configurable": {"thread_id": "react"}}
+CARD = {"choice": "card_transfer"}
+STOP = ModelError("chat: stop here")
 REZA_CARD = "6037990836388880"
 
 
@@ -37,117 +38,97 @@ def react(chat: FakeChat, app: RecordingApp | None = None):
     return build_react_graph(tools)
 
 
-def results(state: dict) -> list[dict]:
-    return [step.get("result") for step in state["steps"]]
+def tools_offered(chat: FakeChat, step_number: int) -> list[str]:
+    steps = [schema for schema in chat.schemas if "anyOf" in schema]
+    return [branch["properties"]["tool"]["const"] for branch in steps[step_number]["anyOf"]]
 
 
-def test_a_card_transfer_to_reza_reads_the_feature_its_fields_and_reza() -> None:
+def test_the_model_starts_with_the_chosen_task_and_reads_records_and_the_screen() -> None:
     chat = StepChat(
         [
-            call("find_features", text="کارت به کارت"),
-            call("feature_requirements", intent="card_transfer"),
+            CARD,
             call("find_records", ref="card-transfer-destination", words="رضا"),
             call("current_screen"),
-            ModelError("chat: stop here"),
+            STOP,
         ]
     )
     app = RecordingApp()
     result = react(chat, app).invoke(new_request("c", "کارت به کارت به رضا"), CONFIG)
-    found, planned, records, screen = results(result)
-    assert found["features"][0] == {
-        "intent": "card_transfer",
-        "title": "کارت به کارت",
-        "words": found["features"][0]["words"],
-    }
-    assert result["offered"][0] == "card_transfer" and result["chosen"] == "card_transfer"
-    assert planned["feature"] == "کارت به کارت"
-    assert [item["ref"] for item in planned["fields"]] == [
-        "card-transfer-source",
-        "card-transfer-destination",
-        "card-transfer-amount",
-    ]
-    assert planned["fields"][0]["question"] == "از کدام کارت انتقال انجام شود؟"
+    understood, records, screen = (step["result"] for step in result["steps"])
+    assert understood == {"chosen": "کارت به کارت"}
+    assert result["chosen"] == "card_transfer" and result["plan"]["intent"] == "card_transfer"
     assert records == {"records": ["رضا محمدی ****8880"], "count": 1}
     assert screen == {"page": "خانه", "filled": {}}
-    # Reading changes nothing in the app.
-    assert app.sent == []
-    # The model was told what it read, and never a full number, an app key or a screen ID.
+    assert app.sent == []  # reading changes nothing in the app
+    first = chat.prompts[1]
+    assert "«کارت به کارت»" in first and "از کدام کارت انتقال انجام شود؟" in first
+    # No tool searches or picks a feature: the feature is the workflow's choice.
+    assert not {"find_features", "feature_requirements", "finish"} & set(tools_offered(chat, 0))
     seen = "\n".join(chat.prompts)
     assert "رضا محمدی ****8880" in seen and REZA_CARD not in seen
     assert "card-1" not in seen and "S-174" not in seen and "S-026" not in seen
 
 
-def test_find_records_is_offered_only_for_a_planned_record_field() -> None:
-    chat = StepChat([call("feature_requirements", intent="card_transfer"), ModelError("chat: stop here")])
+def test_find_records_is_offered_for_the_tasks_record_fields() -> None:
+    chat = StepChat([CARD, STOP])
     react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
-    before = [branch["properties"]["tool"]["const"] for branch in chat.schemas[0]["anyOf"]]
-    after = {branch["properties"]["tool"]["const"]: branch for branch in chat.schemas[1]["anyOf"]}
-    assert "find_records" not in before
-    refs = after["find_records"]["properties"]["arguments"]["properties"]["ref"]["enum"]
+    offered = {branch["properties"]["tool"]["const"]: branch for branch in chat.schemas[1]["anyOf"]}
+    refs = offered["find_records"]["properties"]["arguments"]["properties"]["ref"]["enum"]
     assert refs == ["card-transfer-source", "card-transfer-destination"]
 
 
 def test_find_records_lists_only_what_the_apps_picker_lists() -> None:
-    chat = StepChat(
-        [
-            call("feature_requirements", intent="card_transfer"),
-            call("find_records", ref="card-transfer-source", words=""),
-            ModelError("chat: stop here"),
-        ]
-    )
+    chat = StepChat([CARD, call("find_records", ref="card-transfer-source", words=""), STOP])
     result = react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
     # Only the active debit cards, as for the workflow's question.
     assert result["steps"][1]["result"] == {"records": ["****3566", "****4544"], "count": 2}
 
 
 def test_a_choice_shows_its_labels_never_its_keys() -> None:
-    chat = StepChat([call("feature_requirements", intent="internal_transfer"), ModelError("chat: stop here")])
+    chat = StepChat([{"choice": "internal_transfer"}, STOP])
     result = react(chat).invoke(new_request("c", "انتقال داخلی"), CONFIG)
-    fields = {item["ref"]: item for item in result["steps"][0]["result"]["fields"]}
-    reason = fields["account-transfer-reason"]
-    assert "پرداخت اجاره" in reason["options"]
-    shown = json.dumps(result["steps"][0]["result"], ensure_ascii=False)
-    keys = [option["key"] for option in result["plan"]["requirements"][-1]["options"]]
-    assert result["plan"]["requirements"][-1]["ref"] == "account-transfer-reason"
-    assert not any(f'"{key}"' in shown for key in keys if key not in reason["options"])
-
-
-def test_current_screen_names_the_page_never_its_id() -> None:
-    chat = StepChat([call("current_screen"), call("finish", message="خانه هستید")])
-    result = react(chat).invoke(new_request("c", "کجام؟"), CONFIG)
-    assert result["steps"][0]["result"] == {"page": "خانه"}
+    reason = next(item for item in result["plan"]["requirements"] if item["ref"] == "account-transfer-reason")
+    labels = [option["label"] for option in reason["options"]]
+    keys = [option["key"] for option in reason["options"] if option["key"] not in labels]
+    assert "پرداخت اجاره" in labels and "پرداخت اجاره" in chat.prompts[1]
+    shape = chat.schemas[1]["anyOf"]
+    values = next(b for b in shape if b["properties"]["tool"]["const"] == "set_values")
+    reason_shape = values["properties"]["arguments"]["properties"]["values"]["properties"][
+        "account-transfer-reason"
+    ]
+    assert reason_shape["anyOf"][0] == {"enum": labels}
+    assert not any(f'"{key}"' in chat.prompts[1] for key in keys)
 
 
 def test_a_turn_ends_after_the_step_budget() -> None:
-    chat = StepChat([call("current_screen")] * STEP_BUDGET)
+    reading = [call("current_screen"), call("find_records", ref="card-transfer-source", words="")]
+    chat = StepChat([CARD] + reading * 6)
     app = RecordingApp()
-    result = react(chat, app).invoke(new_request("c", "کجام؟"), CONFIG)
+    result = react(chat, app).invoke(new_request("c", "کارت به کارت"), CONFIG)
     assert len(result["steps"]) == STEP_BUDGET
     assert result["task_state"] == "failed" and result["reply"] == TOO_MANY_STEPS
     assert app.sent == []
 
 
 def test_the_budget_counts_again_after_the_users_answer() -> None:
+    reading = [call("current_screen"), call("find_records", ref="card-transfer-source", words="")]
+    nothing = {"card-transfer-source": None, "card-transfer-destination": None, "card-transfer-amount": None}
     chat = StepChat(
-        [call("current_screen")] * (STEP_BUDGET - 1)
-        + [call("ask_user", question="کدام؟")]
-        + [call("current_screen")] * 3
-        + [call("finish", message="باشه")]
+        [CARD]
+        + reading * 4
+        + [call("ask_user", question="؟"), nothing]  # the workflow's reader, before the app moves
+        + [call("set_values", values=nothing), nothing]
+        + reading * 2
+        + [STOP]
     )
     graph = react(chat)
-    graph.invoke(new_request("c", "کجام؟"), CONFIG)
-    result = graph.invoke(Command(resume="خانه"), CONFIG)
-    assert result["reply"] == "باشه"
+    graph.invoke(new_request("c", "کارت به کارت"), CONFIG)
+    graph.invoke(Command(resume="نمیدونم"), CONFIG)
+    state = graph.get_state(CONFIG).values
+    assert len(state["steps"]) > STEP_BUDGET and state["reply"] != TOO_MANY_STEPS
 
 
 def test_the_same_call_twice_is_not_run_again() -> None:
-    chat = StepChat([call("current_screen"), call("current_screen"), call("finish", message="باشه")])
-    result = react(chat).invoke(new_request("c", "کجام؟"), CONFIG)
-    assert result["steps"][1]["result"] == {"error": REPEATED}
-    assert result["reply"] == "باشه"
-
-
-def test_find_features_searches_the_users_own_words_first() -> None:
-    chat = StepChat([call("find_features", text="وام"), ModelError("chat: stop here")])
-    result = react(chat).invoke(new_request("c", "کارت به کارت کن"), CONFIG)
-    assert result["offered"][0] == "card_transfer"
+    chat = StepChat([CARD, call("current_screen"), call("current_screen"), STOP])
+    result = react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
+    assert result["steps"][2]["result"] == {"error": REPEATED}

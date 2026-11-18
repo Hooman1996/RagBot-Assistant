@@ -58,8 +58,9 @@ def tools_offered(chat: FakeChat, step_number: int) -> list[str]:
 def test_a_card_transfer_in_one_sentence_reaches_the_review_and_stops() -> None:
     chat = StepChat(
         [
-            call("feature_requirements", intent="card_transfer"),
+            {"choice": "card_transfer"},
             card_values("****3566"),
+            card_values("****3566")["arguments"]["values"],  # the workflow's reader agrees
             call("open_review"),
         ]
     )
@@ -82,9 +83,9 @@ def test_a_card_transfer_in_one_sentence_reaches_the_review_and_stops() -> None:
 def test_a_missing_source_moves_the_app_then_asks_the_workflows_question() -> None:
     chat = StepChat(
         [
-            call("feature_requirements", intent="card_transfer"),
+            {"choice": "card_transfer"},
             card_values(),
-            {"card-transfer-source": None},  # the workflow reads the field the model left empty
+            card_values()["arguments"]["values"],  # the workflow's reader
             call("move_app"),
             call("ask_user", question="کارت؟"),
             call("open_review"),
@@ -101,8 +102,8 @@ def test_a_missing_source_moves_the_app_then_asks_the_workflows_question() -> No
     assert app.screen == "S-174" and not reviewed(app)
     assert set(app.sent[1][1]["values"]) == {"card-transfer-destination", "card-transfer-amount"}
     # Only ask_user (and current_screen) once the app waits; no review before every value is in.
-    assert tools_offered(chat, 3) == ["current_screen", "ask_user"]
-    assert "open_review" not in tools_offered(chat, 2) and "ask_user" in tools_offered(chat, 2)
+    assert tools_offered(chat, 2) == ["current_screen", "ask_user"]
+    assert "open_review" not in tools_offered(chat, 1) and "ask_user" in tools_offered(chat, 1)
     result = graph.invoke(Command(resume="card-transfer-source=card-1"), CONFIG)
     assert result["task_state"] == "ready_for_user"
     assert given(app)["card-transfer-source"] == "card-1"
@@ -115,7 +116,7 @@ def test_asking_at_once_reads_the_words_moves_the_app_and_never_moves_it_twice()
     # moves as a step of its own, and the answer resumes only the question.
     chat = StepChat(
         [
-            call("feature_requirements", intent="card_transfer"),
+            {"choice": "card_transfer"},
             call("ask_user", question="کارت؟"),
             {
                 "card-transfer-source": None,
@@ -134,7 +135,7 @@ def test_asking_at_once_reads_the_words_moves_the_app_and_never_moves_it_twice()
     result = graph.invoke(Command(resume="card-transfer-source=card-2"), CONFIG)
     assert result["task_state"] == "ready_for_user"
     assert [step["tool"] for step in result["steps"]] == [
-        "feature_requirements",
+        "understand",
         "move_app",
         "ask_user",
         "open_review",
@@ -146,8 +147,9 @@ def test_asking_at_once_reads_the_words_moves_the_app_and_never_moves_it_twice()
 def test_an_amount_the_user_never_wrote_is_refused() -> None:
     chat = StepChat(
         [
-            call("feature_requirements", intent="card_transfer"),
+            {"choice": "card_transfer"},
             card_values("****3566", amount={"value": 900000, "unit": "IRT"}),
+            card_values("****3566", amount=None)["arguments"]["values"],  # the reader finds no amount
             ModelError("chat: stop here"),
         ]
     )
@@ -170,7 +172,7 @@ def test_a_record_the_user_never_named_is_refused() -> None:
     }
     chat = StepChat(
         [
-            call("feature_requirements", intent="internal_transfer"),
+            {"choice": "internal_transfer"},
             call("set_values", values=values),
             {"account-transfer-source": None, "account-transfer-reason": None},
             ModelError("chat: stop here"),
@@ -187,8 +189,9 @@ def test_a_record_the_user_never_named_is_refused() -> None:
 def test_a_name_not_found_is_asked_with_the_workflows_note_and_records() -> None:
     chat = StepChat(
         [
-            call("feature_requirements", intent="card_transfer"),
+            {"choice": "card_transfer"},
             card_values("****3566", "علی"),
+            card_values("****3566", "علی")["arguments"]["values"],
             call("move_app"),
             call("ask_user", question="به چه کسی؟"),
         ]
@@ -205,9 +208,9 @@ def test_cancel_or_only_looking_at_a_question_leaves_the_page_and_sends_nothing_
     for answer in ("cancel", "میخواستم ببینم فقط"):
         chat = StepChat(
             [
-                call("feature_requirements", intent="card_transfer"),
+                {"choice": "card_transfer"},
                 card_values(),
-                {"card-transfer-source": None},
+                card_values()["arguments"]["values"],  # the workflow's reader
                 call("move_app"),
                 call("ask_user", question="کارت؟"),
             ]
@@ -225,8 +228,9 @@ def test_cancel_or_only_looking_at_a_question_leaves_the_page_and_sends_nothing_
 def test_a_correction_after_the_review_prepares_it_again() -> None:
     chat = StepChat(
         [
-            call("feature_requirements", intent="card_transfer"),
+            {"choice": "card_transfer"},
             card_values("****3566"),
+            card_values("****3566")["arguments"]["values"],
             call("open_review"),
             {"answer": "correction"},  # the workflow's follow-up reads the new message
             card_values("****3566", "رضا", {"value": 300000, "unit": "IRT"})["arguments"]["values"],
@@ -243,34 +247,36 @@ def test_a_correction_after_the_review_prepares_it_again() -> None:
     assert app.sent[-2][1]["values"]["card-transfer-amount"] == {"value": 3000000, "unit": "IRR"}
     assert "3,000,000" in result["reply"]
     # The workflow's reader read the correction, so the review can open again at once.
-    assert "open_review" in tools_offered(chat, 3)
+    assert "open_review" in tools_offered(chat, 2)
 
 
 def test_a_page_to_see_opens_it() -> None:
-    chat = StepChat([call("feature_requirements", intent="home"), call("open_review")])
+    chat = StepChat([{"choice": "home"}])
     app = RecordingApp(screen="S-174")
     result = react(chat, app).invoke(new_request("c", "برو به خانه"), CONFIG)
     assert result["task_state"] == "completed"
     assert app.screen == "S-026"
     assert result["reply"] == replies.PAGE_OPEN.format(title="خانه")
+    # A page to see has nothing for the model to set: code opens it, with no model step.
+    assert len(chat.prompts) == 1 and result["steps"][-1]["tool"] == "open_review"
 
 
-def test_a_loan_installment_with_a_task_open_offers_no_finish_and_reaches_the_review() -> None:
+def test_a_loan_installment_offers_no_feature_tool_and_reaches_the_review() -> None:
     values = {"loan": "وام شخصی", "loan-installment": None, "loan-source": "سپرده پس‌انداز"}
     chat = StepChat(
         [
-            call("feature_requirements", intent="loan_repayment"),
+            {"choice": "loan_repayment"},
             call("set_values", values=values),
-            {"loan-installment": None},
+            values,  # the workflow's reader
             call("open_review"),
         ]
     )
     app = RecordingApp()
     result = react(chat, app).invoke(
-        new_request("c", "قسط بعدی وام شخصیمو از سپرده پس‌انداز پرداخت کن"), CONFIG
+        new_request("c", "تسهیلات در جریان و پرداخت: قسط بعدی وام شخصیمو از سپرده پس‌انداز بده"), CONFIG
     )
-    assert "finish" not in tools_offered(chat, 1)
-    assert tools_offered(chat, 1)[-3:] == ["set_values", "move_app", "ask_user"]
+    assert not {"finish", "find_features", "feature_requirements"} & set(tools_offered(chat, 0))
+    assert tools_offered(chat, 0)[-3:] == ["set_values", "move_app", "ask_user"]
     # The only installment the app lets the user pay is set by the workflow's code.
     assert result["steps"][1]["result"]["missing"] == []
     assert result["task_state"] == "ready_for_user"
@@ -279,22 +285,19 @@ def test_a_loan_installment_with_a_task_open_offers_no_finish_and_reaches_the_re
 
 def test_no_tool_can_confirm_submit_or_pay() -> None:
     assert set(TEXTS) == {
-        "find_features",
-        "feature_requirements",
         "find_records",
         "current_screen",
         "set_values",
         "move_app",
         "open_review",
         "ask_user",
-        "finish",
     }
     # Every tool any state offers is one of these, and every command reaching the app is one of three.
     chat = StepChat(
         [
-            call("feature_requirements", intent="card_transfer"),
+            {"choice": "card_transfer"},
             card_values(),
-            {"card-transfer-source": None},
+            card_values()["arguments"]["values"],  # the workflow's reader
             call("move_app"),
             call("ask_user", question="کارت؟"),
             call("open_review"),
@@ -314,6 +317,8 @@ def test_no_tool_can_confirm_submit_or_pay() -> None:
 def test_a_typed_iban_the_model_copies_masked_is_the_users() -> None:
     assert named_by_user("IR****6115", ["به شبای IR290170455491846632336115 بفرست"])
     assert not named_by_user("سپرده پس‌انداز", ["به شبای IR290170455491846632336115 بفرست"])
+    # «حساب» alone names no record, though one label holds the word: it is asked, never matched.
+    assert not named_by_user("حساب", ["از حساب برای 09129013458 شارژ بگیر"])
 
 
 def test_a_bare_last_four_of_a_long_number_is_read_as_that_number() -> None:
@@ -321,3 +326,41 @@ def test_a_bare_last_four_of_a_long_number_is_read_as_that_number() -> None:
     assert shown_again("3691", bill) == "****3691"
     assert shown_again("4544", ["از کارت 4544 به شماره کارت 6104331610890890"]) == "4544"
     assert shown_again("1250001", bill) == "1250001"
+
+
+def test_the_workflows_reader_wins_over_the_model_for_a_missing_field() -> None:
+    said = {
+        "account-transfer-source": "سپرده کوتاه‌مدت",
+        "account-transfer-destination": "رضا",
+        "account-transfer-amount": {"value": 1000000, "unit": "IRT"},
+        "account-transfer-reason": "خرید کالا و خدمات",  # the model's misreading of «بابت اجاره»
+    }
+    chat = StepChat(
+        [
+            {"choice": "internal_transfer"},
+            call("set_values", values=said),
+            said | {"account-transfer-reason": "پرداخت اجاره"},  # the workflow's reader
+            ModelError("chat: stop here"),
+        ]
+    )
+    sentence = "یک میلیون تومن از سپرده کوتاه‌مدت به رضا انتقال داخلی بزن، بابت اجاره"
+    result = react(chat, RecordingApp()).invoke(new_request("c", sentence), CONFIG)
+    assert result["values"]["account-transfer-reason"] == "0"
+
+
+def test_a_missing_field_the_reader_finds_nothing_for_is_asked_whatever_the_model_set() -> None:
+    # Seen live: the model put «رضا» in the source card too; the user would read «رضا» پیدا نشد.
+    chat = StepChat(
+        [
+            {"choice": "card_transfer"},
+            card_values("رضا"),
+            card_values()["arguments"]["values"],  # the workflow's reader: no source
+            ModelError("chat: stop here"),
+        ]
+    )
+    result = react(chat, RecordingApp()).invoke(new_request("c", CARD_SENTENCE), CONFIG)
+    found = result["steps"][1]["result"]
+    assert found["missing"] == ["card-transfer-source"] and found["note"] != replies.NOT_FOUND.format(
+        text="رضا"
+    )
+    assert "card-transfer-source" in found["refused"]

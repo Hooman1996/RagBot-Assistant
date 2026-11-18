@@ -4,7 +4,9 @@ code that runs it.
 Called by react_graph's act node, which runs the tool the model named. A tool returns a short result
 for the model, and the state keys it changes. The model sees Persian titles, questions and labels,
 never an app key, a screen ID or a full card, account or IBAN number: every result is masked. The
-read tools change nothing in the app. The act tools run the workflow's own code: set_values its
+task's feature is chosen by the workflow's own understanding before the loop (react_graph), so no
+tool searches or picks a feature. The read tools change nothing in the app. The act tools run the
+workflow's own code: set_values its
 reader, check and resolve, move_app its advance, open_review its prepare and verify, and a task's
 question is the workflow's, with its options. The app is reached only through TaskRunner, so the
 only commands are navigate, fill_form and show_review. No tool can confirm, submit or pay.
@@ -21,15 +23,12 @@ from assistant.agent_state import AgentState, moved
 from assistant.lifecycle import CANCEL, only_looking, wants_cancel
 from assistant.lookups import GENERIC, plain
 from assistant.models import ModelError
-from assistant.navigator import HOME, CrossesUserOnly, NoRoute
+from assistant.navigator import HOME
 from assistant.slots import extract, hidden, shape
-from assistant.steps import masked
-from assistant.words import feature_words, field_words, plates
+from assistant.words import field_words, plates
 
 TEXT = {"type": "string"}
 SHOWN = re.compile(r"\*{4}(\d{4})")  # a long number as the model is shown it
-EXTRA_FEATURES = 2  # features the model's own search words may add to the user's closest 8
-NEXT_AFTER_PLAN = "set_values with every value the user gave"
 NEXT_MISSING = "move_app, then ask_user"
 NEXT_READY = "open_review"
 NEXT_ANSWER = "set_values with what the answer gives"
@@ -37,11 +36,6 @@ NOT_KEPT = "a value not kept: use only the user's own words, or ask"
 NOT_NAMED = "a record must be in the user's own words, not one you read; else ask"
 # What the model is told each tool does, in the order it is shown.
 TEXTS = {
-    "find_features": "find_features(text): the app's features closest to the text: intent, title, words.",
-    "feature_requirements": (
-        "feature_requirements(intent): plans that feature from the app's current page and lists the"
-        " values it needs: each field's ref, type, question and options, and what is held or missing."
-    ),
     "find_records": (
         "find_records(ref, words): the records the app lists for that field that match the words"
         " (all of them when words is empty)."
@@ -57,18 +51,19 @@ TEXTS = {
     ),
     "move_app": "move_app(): takes the app to the page of the next missing value, before ask_user.",
     "open_review": "open_review(): fills the task in the app and opens its review, for the user to check.",
-    "ask_user": "ask_user(question): asks the user, in Persian, and waits for the answer.",
-    "finish": "finish(message): says the message to the user, in Persian, and ends the turn.",
+    "ask_user": "ask_user(question): asks the user about what is missing (code words the question).",
 }
 
 
 def named_by_user(value: str, messages: list[str]) -> bool:
-    """True when each word of a record's value is in the user's messages: a ****1234 number (or an
-    IR****1234 IBAN) by its last digits, and the generic words («کارت», «حساب») aside."""
+    """True when the value names a record by words of the user's messages: a ****1234 number (or an
+    IR****1234 IBAN) by its last digits, and the generic words («کارت», «حساب») aside. A value of
+    generic words only names no record («حساب» alone), so it is asked, never matched."""
     said = plain(" ".join(messages))
     words = [word for word in plain(value).split() if word not in GENERIC]
     shown = [SHOWN.search(word) for word in words]
-    return all((found.group(1) if found else word) in said for word, found in zip(words, shown, strict=True))
+    named = all((found.group(1) if found else word) in said for word, found in zip(words, shown, strict=True))
+    return bool(words) and named
 
 
 def shown_again(value: object, messages: list[str]) -> object:
@@ -84,12 +79,13 @@ def shown_again(value: object, messages: list[str]) -> object:
 
 
 def read_since_words(steps: list[dict]) -> bool:
-    """True when set_values ran after the user's newest words in this turn: the task's plan or a
-    typed answer. A follow-up that starts a turn was read by the workflow's own reader already."""
+    """True when set_values ran after the user's newest words in this turn: the request the task
+    was understood from, or a typed answer. A follow-up that starts a turn was read by the
+    workflow's own reader already."""
     words = [
         index
         for index, step in enumerate(steps)
-        if step["tool"] == "feature_requirements" or "answer" in step.get("result", {})
+        if step["tool"] == "understand" or "answer" in step.get("result", {})
     ]
     read = [index for index, step in enumerate(steps) if step["tool"] == "set_values"]
     return not words or bool(read) and read[-1] > words[-1]
@@ -114,22 +110,18 @@ class ReactTools:
         self.lookups = nodes.tools.lookups
 
     def available(self, state: AgentState) -> dict[str, dict]:
-        """The tools the model may call in this state, each with the schema of its arguments. While the
-        app waits on a question's page, only ask_user (and current_screen). With a task, move_app and
-        ask_user while something is missing, and open_review once nothing is; a task ends only at
-        its review, a cancel or a failure, so finish is for a turn without one."""
+        """The tools the model may call for the task, each with the schema of its arguments. While
+        the app waits on a question's page, only ask_user (and current_screen). Else move_app and
+        ask_user while something is missing, and open_review once nothing is. The feature is the
+        workflow's choice, so no tool changes it, and the task ends only at its review, a cancel or a
+        failure."""
         if state["task_state"] == "preparing":
             return {"current_screen": arguments(), "ask_user": arguments(question=TEXT)}
-        tools = {
-            "find_features": arguments(text=TEXT),
-            "feature_requirements": arguments(intent={"enum": sorted(self.nodes.features)}),
-        }
+        tools = {}
         records = self.with_records(state)
         if records:
             tools["find_records"] = arguments(ref={"enum": records}, words=TEXT)
         tools["current_screen"] = arguments()
-        if not state["plan"]:
-            return tools | {"ask_user": arguments(question=TEXT), "finish": arguments(message=TEXT)}
         settable = self.settable(state)
         if settable:
             values = {item["ref"]: {"anyOf": [shape(item), {"type": "null"}]} for item in settable}
@@ -153,56 +145,27 @@ class ReactTools:
 
     def with_records(self, state: AgentState) -> list[str]:
         """The planned fields whose value is a record the app lists."""
-        plan = state["plan"] or {"requirements": []}
-        return [item["ref"] for item in plan["requirements"] if item["lookup"]]
+        return [item["ref"] for item in state["plan"]["requirements"] if item["lookup"]]
 
-    def find_features(self, state: AgentState, given: dict) -> tuple[dict, dict]:
-        """The closest features by TEI to the user's newest words, as the workflow's understand
-        narrows them, and a few more closest to the model's own words."""
-        # The user's newest words first, as the workflow narrows them, then any the model's words add.
-        texts = hidden([state["messages"][-1], given["text"].strip() or state["messages"][-1]])
-        try:
-            found = self.nodes.tools.index.closest(texts[0])
-            extra = self.nodes.tools.index.closest(texts[1]) if texts[1] != texts[0] else []
-        except ModelError:
-            return {"error": "the feature search is not reachable"}, {}
-        found += [item for item in extra if item not in found][:EXTRA_FEATURES]
-        features = [
-            {"intent": item["intent"], "title": item["title"], "words": feature_words(item["intent"])}
-            for item in found
-        ]
-        return {"features": features}, {"offered": [item["intent"] for item in found]}
-
-    def feature_requirements(self, state: AgentState, given: dict) -> tuple[dict, dict]:
-        """Plans the feature from the app's current screen with the workflow's own planning, keeping
-        the values held for it. Values the feature decides itself are set and not shown."""
-        intent = given["intent"]
-        held = state["values"] if state["plan"] and state["plan"]["intent"] == intent else {}
-        try:
-            planned = self.nodes.planned(self.nodes.features[intent], held)
-        except (NoRoute, CrossesUserOnly):
-            return {"error": replies.NOT_POSSIBLE}, {}
-        update = moved(state, "resolving") | planned | {"chosen": intent, "question": None, "options": []}
-        task = state | update
+    def held(self, state: AgentState) -> dict:
+        """The task's feature, the fields the model may set (ref, type, Persian question and words, a
+        choice's labels, never its keys), the values as the user reads them, and what is missing."""
+        items = {item["ref"]: item for item in state["plan"]["requirements"]}
+        settable = {item["ref"] for item in self.settable(state)}
         fields = [
             {"ref": item["ref"], "type": item["type"], "question": item["ask"]}
             | {"about": field_words(item["ref"]) or item["description"] or ""}
             | ({"options": [o["label"] for o in item["options"]]} if item.get("options") else {})
-            for item in task["plan"]["requirements"]
-            if item["ref"] not in task["plan"]["preset"]
+            for item in state["plan"]["requirements"]
+            if item["ref"] in settable
         ]
-        return self.held(task) | {"fields": fields, "next": NEXT_AFTER_PLAN}, update
-
-    def held(self, state: AgentState) -> dict:
-        """The task's feature, its values as the user reads them, and what is still missing."""
-        items = {item["ref"]: item for item in state["plan"]["requirements"]}
         shown = {
             ref: self.label(items[ref], value)
             for ref, value in state["values"].items()
             if ref in items and ref not in state["plan"]["preset"]
         }
         title = self.nodes.features[state["plan"]["intent"]]["title"]
-        return {"feature": title, "held": shown, "missing": state["missing"]}
+        return {"feature": title, "fields": fields, "held": shown, "missing": state["missing"]}
 
     def label(self, item: dict, value: str | dict) -> str:
         """A value as the user reads it, masked: a record by its label, never its key."""
@@ -249,9 +212,8 @@ class ReactTools:
         return "صفحه‌ای دیگر از برنامه"
 
     def set_values(self, state: AgentState, given: dict) -> tuple[dict, dict]:
-        """The model's values, and the workflow's reading of the missing ones it left empty, through
-        the workflow's check and resolve: what is kept, refused and still missing. A new value
-        replaces one held before."""
+        """The workflow's reading of the missing fields, and the model's new values for fields held
+        before, through the workflow's check and resolve: what is kept, refused and still missing."""
         said = {
             ref: shown_again(value, state["messages"])
             for ref, value in given["values"].items()
@@ -265,17 +227,20 @@ class ReactTools:
             if lookups.get(ref) and isinstance(value, str) and not named_by_user(value, state["messages"])
         ]
         said = {ref: value for ref, value in said.items() if ref not in unnamed}
-        update = self.settle(state | {"values": state["values"] | self.read(state, said) | said})
+        # A missing field is the workflow's reader's alone (tuned on the frozen set): what it finds
+        # nothing for is asked. The model's value counts for a value held before (a correction).
+        held = {ref: value for ref, value in said.items() if ref not in state["missing"]}
+        update = self.settle(state | {"values": state["values"] | held | self.read(state, {})})
         task = state | update
         items = {item["ref"]: item for item in task["plan"]["requirements"]}
-        kept = {ref: self.label(items[ref], task["values"][ref]) for ref in said if ref in task["values"]}
+        kept = {ref: self.label(items[ref], value) for ref, value in task["values"].items() if ref in said}
         refused = unnamed + [ref for ref in said if ref not in task["values"]]
         note = task["question"] or (NOT_NAMED if unnamed else NOT_KEPT if refused else None)
         return {"kept": kept, "refused": refused, "note": note} | self.next_step(task), update
 
     def read(self, state: AgentState, said: dict) -> dict:
-        """The workflow's own reading (slots.extract) of the missing fields the model left empty, so
-        no value the user wrote is lost when the model misses it. A model error reads nothing."""
+        """The workflow's own reading (slots.extract) of the missing fields, but those in said, so no
+        value the user wrote is lost when the model misses it. A model error reads nothing."""
         offered = [
             {"ref": item["ref"], "type": item["type"], "ask": item["ask"]}
             | {"description": field_words(item["ref"]) or item["description"]}
@@ -361,20 +326,10 @@ class ReactTools:
         return {"note": replies.UNCERTAIN} | self.next_step(task), update
 
     def ask_user(self, state: AgentState, given: dict) -> tuple[dict, dict]:
-        """Asks and waits. With a task, the question and options are the workflow's: every missing
-        value of the page the app waits on, its records or allowed choices, and «لغو». Without one,
-        the model's question with «لغو». «لغو» cancels; a picked option or a typed answer naming one
-        listed record sets that value; other words are a new message for the model to read."""
-        if not state["plan"]:
-            question = masked(given["question"].strip())
-            if not question:
-                return {"error": "the question is empty"}, {}
-            answer = interrupt(
-                {"question": question, "options": [CANCEL], "fields": [], "task_state": "created"}
-            )
-            if wants_cancel(answer):
-                return {"answer": "cancel"}, moved(state, "cancelled") | {"reply": replies.CANCELLED}
-            return {"answer": hidden([answer])[0]}, {"messages": state["messages"] + [answer]}
+        """Asks and waits. The question and options are the workflow's, never the model's words: every
+        missing value of the page the app waits on, its records or allowed choices, and «لغو». «لغو»
+        cancels; a picked option or a typed answer naming one listed record sets that value; other
+        words are a new message for the model to read, never a new request."""
         wanted = [item for item in state["plan"]["requirements"] if item["ref"] in state["missing"]]
         options = (state["options"] or replies.lookup_options(self.lookups, wanted)) + [CANCEL]
         asked = moved(state, "clarifying") | {"question": None, "options": []}
@@ -409,10 +364,3 @@ class ReactTools:
         }
         item = next(item for item in wanted if item["ref"] == ref)
         return {"picked": {ref: self.label(item, key)}} | self.next_step(state | update), update
-
-    def finish(self, state: AgentState, given: dict) -> tuple[dict, dict]:
-        """Ends a turn without a task with the model's message."""
-        message = masked(given["message"].strip())
-        if not message:
-            return {"error": "the message is empty"}, {}
-        return {}, {"reply": message}

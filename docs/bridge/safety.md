@@ -21,7 +21,7 @@ A command has to pass all of these to touch a control.
 declares and a key that is not one plain word, and the tag a key makes must still pass `Policy`.
 
 The ReAct agent ([D-032](../decisions/0032-react-agent-beside-the-workflow.md)) adds no way past
-these walls. Its model picks only among nine tools, none of which confirms, submits or pays. The
+these walls. Code picks the feature with the workflow's chooser ([D-033](../decisions/0033-react-uses-the-workflows-feature-choice.md)), and the model picks only among six tools for that task, none of which confirms, submits or pays. The
 schema is built from the tools the state allows, and code refuses any other name. Every act goes
 through the workflow's own code and `TaskRunner`. A record must be in the user's own words or picked
 by the user, never one the model only read in `find_records`.
