@@ -17,6 +17,7 @@ import org.ragbot.replica.MainActivity
 import org.ragbot.replica.assistant.AssistantPanelState
 import org.ragbot.replica.assistant.PanelHistory
 import org.ragbot.replica.assistant.PanelLine
+import org.ragbot.replica.assistant.PanelStep
 
 /**
  * The assistant panel never stands between the executor and the screen, opens from the support
@@ -136,5 +137,30 @@ class AssistantPanelTest {
         rig.controls.click("assistant-minimize")
         waitFor("assistant-panel", present = false)
         assertTrue("the bubble stays", shown("assistant-bubble"))
+    }
+
+    @Test
+    fun theAgentsStepsOpenUnderTheMessages() {
+        val steps =
+            listOf(
+                PanelStep("کارت به کارت است.", "feature_requirements", "{\"feature\": \"کارت به کارت\"}"),
+                PanelStep("مبدا را می‌پرسم.", "ask_user", ""),
+            )
+        onMain {
+            AssistantPanelState.stepsOpen = false
+            AssistantPanelState.open = true
+        }
+        waitFor("assistant-panel")
+        Thread.sleep(1_000) // opening reloads the conversation; the steps come after that
+        onMain {
+            AssistantPanelState.history =
+                PanelHistory(lines = listOf(PanelLine(true, "کارت به کارت")), agentSteps = steps)
+        }
+        waitFor("assistant-agent-steps")
+        assertFalse("closed until asked", shown("assistant-agent-step-0"))
+        rig.controls.click("assistant-agent-steps")
+        waitFor("assistant-agent-step-1")
+        rig.controls.click("assistant-agent-steps")
+        waitFor("assistant-agent-step-0", present = false)
     }
 }

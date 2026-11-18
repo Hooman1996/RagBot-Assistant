@@ -52,7 +52,7 @@ clarification in `response.schema.json`: `fields`, the refs of the form fields t
 | Call | Body or query | Answer |
 |---|---|---|
 | `POST /assistant/v1/messages` | `conversation_request.schema.json`: the app's conversation ID, the session and device, the synthetic user, **exactly one of** `message` or `selection` (`question_id` and the option's `ref`), and the app's current observation | A `status` response at once. The turn runs on a background thread. 409 `turn_in_progress`, `run_in_progress`, `unknown_option` or `stale_question`; 422 for a body outside the contract |
-| `GET /assistant/v1/history?conversation_id=` | — | `{conversation_id, busy, messages: [{from, text}], current, steps: [{operation, screen, outcome}]}`. `current` is a contract response: `status` (the live task state while a turn runs), `clarification` (question ID, text, options, fields) or `null` |
+| `GET /assistant/v1/history?conversation_id=` | — | `{conversation_id, busy, messages: [{from, text}], current, steps: [{operation, screen, outcome}], agent_steps: [{thought, action, result}]}`. `agent_steps` are the agent's own steps for the request ([RA-4](react-agent.md#the-steps-in-the-panel)): the ReAct agent's Persian thought, tool and short masked result, or the workflow's nodes with the task state after each; the result is empty while the step runs. `current` is a contract response: `status` (the live task state while a turn runs), `clarification` (question ID, text, options, fields) or `null` |
 | `POST /assistant/v1/sessions/{session_id}/cancel` | — | The task's `status`. 409 `nothing_to_cancel` |
 
 The contract leaves the history's body open, so its shape is written here. The observation in a

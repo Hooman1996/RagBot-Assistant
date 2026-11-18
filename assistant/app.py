@@ -1,18 +1,19 @@
 """The FastAPI app: the command loop, the test harness, the graph page, its runs and its chat box.
 
 Started by `python -m assistant`, by tests through create_app, and by `main_debug.py --replica`.
-It listens on a local address only. The chat box's agent reads the Gemma model and the TEI
-embeddings, and only when a turn runs. There is no RAG and no route to a bank or a mock bank. Its
-only data is the read-only fixtures behind lookups.
+It listens on a local address only. ASSISTANT_AGENT picks the agent: `workflow` (the default) or
+`react` (D-032). The agent reads the Gemma model and the TEI embeddings, and only when a turn
+runs. There is no RAG and no route to a bank or a mock bank. Its only data is the read-only
+fixtures behind lookups.
 """
 
+import os
 import subprocess
 from threading import Event
 
 from fastapi import FastAPI
 
 from assistant.agent_chat import Chats
-from assistant.agent_graph import build_graph
 from assistant.agent_nodes import Tools
 from assistant.bridge_link import BridgeLink
 from assistant.command_queue import CommandQueue
@@ -23,6 +24,7 @@ from assistant.intent import FeatureIndex
 from assistant.mobile_api import build_mobile_router
 from assistant.models import Chat, Embeddings
 from assistant.panel_api import build_panel_router
+from assistant.react_graph import build_agent
 from assistant.test_harness_api import build_harness_router
 
 DEVICE_ID = "replica-dev"
@@ -46,7 +48,8 @@ def create_app(queue: CommandQueue | None = None) -> FastAPI:
     bridge = BridgeLink(commands, DEVICE_ID)
     stop = Event()  # the chat box's cancel, read by the agent between commands
     tools = Tools(Chat(), index, tasks.navigator, tasks.lookups, bridge, tasks.current_screen, stop.is_set)
-    chats = Chats(build_graph(tools), tasks, stop)  # the graph page's and the panel's conversations
+    graph = build_agent(tools, os.environ.get("ASSISTANT_AGENT", "workflow"))  # the switch (D-032)
+    chats = Chats(graph, tasks, stop)  # the graph page's and the panel's conversations
     tasks.chat_busy = chats.busy
     app.include_router(build_panel_router(chats))
     app.include_router(
