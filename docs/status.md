@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 17 November 2026. This page is updated whenever a task changes state.
+Last updated: 18 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Stages 2 and 3 are done: the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the Python navigator and interactive graph (#94) are on `main`. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
 
@@ -19,7 +19,8 @@ on the replica and picks the next fixes; then P7 (fault cases, latency, clean de
 RA-6 (#172, native tool calls) is blocked on RagBot's vLLM settings.
 RA-0 to RA-4 are merged into `sub/react-agent`. RA-5's report ([ReAct vs workflow](reports/react-vs-workflow.md)):
 ReAct passes the tuning gates but has 3 / 145 critical wrong actions on held-out (a wrong feature, which no guard
-catches), at about 10 s a case against 2 s; `workflow` stays the demo default, and RA-5 stopped at its stop condition.
+catches), at about 10 s a case against 2 s; RA-5 stopped at its stop condition. The owner decided on 18 Nov 2026: `workflow`
+stays the demo default, and the ReAct agent goes to `main` behind `ASSISTANT_AGENT=react`.
 
 **D-022 (5 Nov 2026):** the replica was completed before the bridge. See the
 [decision](decisions/0022-complete-replica-with-mock-data.md). The owner approved it on 6 Nov 2026,
@@ -71,7 +72,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
-| #171 RA-5 ReAct and workflow side by side | Stopped | Two held-out runs and one tuning run per agent ([report](reports/react-vs-workflow.md)). Workflow: 0, 101 / 101, 108 / 108, 27 / 27 on both held-out runs; 1.7 model calls and 2.0 s a case. ReAct: 3 / 145 critical wrong actions on both runs (H-114 wrong feature, H-135 and H-137 not-sure requests acted on; nothing confirmed), 99 / 101, 106 and 105 / 108, 27 / 27; 4.3 calls and 9.9 s a case. Tuning: both pass every gate. Stop condition hit: recorded, tuning stopped. The evaluator now records model calls and seconds per case |
+| #171 RA-5 ReAct and workflow side by side | Done | Two held-out runs and one tuning run per agent ([report](reports/react-vs-workflow.md)). Workflow: 0, 101 / 101, 108 / 108, 27 / 27 on both held-out runs; 1.7 model calls and 2.0 s a case. ReAct: 3 / 145 critical wrong actions on both runs (H-114 wrong feature, H-135 and H-137 not-sure requests acted on; nothing confirmed), 99 / 101, 106 and 105 / 108, 27 / 27; 4.3 calls and 9.9 s a case. Tuning: both pass every gate. Stop condition hit: recorded, tuning stopped. The evaluator now records model calls and seconds per case. Owner, 18 Nov 2026: `workflow` stays the default; merged to `main` with the rest of `sub/react-agent` |
 | #167–#170 RA-1 to RA-4 The ReAct agent | Done | The switch `ASSISTANT_AGENT` (default `workflow`), the think ⇄ act loop with nine tools over the workflow's own checks, and the agent's steps in the panel («مراحل دستیار») and on the graph page; five demo flows reached their review on the replica. Merged into `sub/react-agent` (PRs #176–#179) |
 | #166 RA-0 Decide the ReAct agent | Done | D-032 and the design note: a ReAct agent beside the workflow, chosen by `ASSISTANT_AGENT` (default `workflow`); nine tools, the workflow's own checks as guards, no confirm, submit or pay tool, at most 12 tool calls a turn, tool calls held by a JSON schema. Docs only. Merged into `sub/react-agent` |
 | #144 P6-05 The assistant panel in the replica | Done | A native panel in the replica (owner's choice), opened from a floating **دستیار** bubble the user can drag anywhere (or beside **چت بات**): a small chat box with options and progress that steps aside while the agent moves the app, and a separate **لغو کار** that closes it; in the app's own window so the executor still drives the screen behind it. The browser viewer types Persian with the user's own keyboard (a debug-only full Persian layout) and runs about twice as smoothly. Spoken transfer requests («شصت تمن بزن برا رضا», «30 جابجا شه برا رضا») now reach card to card, and an amount that may be shorthand is asked. The backend serves the contract's `POST /assistant/v1/messages`, `GET /history` and `POST /sessions/{id}/cancel`; one turn at a time per device. No storage, no RAG. Tried live on the emulator through the panel. Many options scroll under their question, the bubble stays above the open box, and masked card numbers read left to right. In production the bank's team builds the panel (handover deliverable 5). [The panel](bridge/panel.md). The owner checked it; merged to `main` in PR #145 |

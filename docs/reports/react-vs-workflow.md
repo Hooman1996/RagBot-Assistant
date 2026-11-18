@@ -75,7 +75,7 @@ After these changes, the ReAct agent passed every tuning gate. The held-out runs
 - **Show the ReAct agent only with the switch** (`ASSISTANT_AGENT=react`), for the panel's «مراحل دستیار». It is a good way to show the model reasoning step by step, and every act still goes through the workflow's checks. It should not be the default until it passes the critical gate.
 - **The likely fix is to give the ReAct agent the workflow's own feature choice.** For example, `find_features` could return the chooser's pick, `not_sure` included, and `feature_requirements` would refuse any other feature. That is a design change, not tuning, so it needs a new issue and the owner's approval. A fresh held-out run is then needed: the cases above are now known, so a fix aimed at them would make held-out numbers optimistic.
 
-The owner picks the demo default from this report.
+**Owner's decision (18 Nov 2026):** keep `workflow` as the demo default, and merge the ReAct agent into `main` behind the switch.
 
 ## How to repeat
 
