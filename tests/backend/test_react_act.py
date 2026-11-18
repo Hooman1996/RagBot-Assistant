@@ -13,7 +13,7 @@ from assistant.lookups import FixtureLookups
 from assistant.models import Chat, ModelError
 from assistant.navigator import Navigator
 from assistant.react_graph import build_react_graph
-from assistant.react_tools import NOT_NAMED, TEXTS
+from assistant.react_tools import NOT_NAMED, TEXTS, named_by_user, shown_again
 
 CONFIG = {"configurable": {"thread_id": "react"}}
 CARD_SENTENCE = "۲۵۰ هزار تومان به رضا کارت به کارت کن"
@@ -309,3 +309,15 @@ def test_no_tool_can_confirm_submit_or_pay() -> None:
     assert offered <= set(TEXTS)
     assert {operation for operation, _ in app.sent} <= ALLOWED
     assert not any(word in name for name in TEXTS for word in ("confirm", "submit", "pay", "authoriz"))
+
+
+def test_a_typed_iban_the_model_copies_masked_is_the_users() -> None:
+    assert named_by_user("IR****6115", ["به شبای IR290170455491846632336115 بفرست"])
+    assert not named_by_user("سپرده پس‌انداز", ["به شبای IR290170455491846632336115 بفرست"])
+
+
+def test_a_bare_last_four_of_a_long_number_is_read_as_that_number() -> None:
+    bill = ["قبض آب 2058601103691 با شناسه پرداخت 1250001 رو پرداخت کن"]
+    assert shown_again("3691", bill) == "****3691"
+    assert shown_again("4544", ["از کارت 4544 به شماره کارت 6104331610890890"]) == "4544"
+    assert shown_again("1250001", bill) == "1250001"

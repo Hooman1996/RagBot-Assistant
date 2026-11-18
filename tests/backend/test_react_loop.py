@@ -142,6 +142,7 @@ def test_the_evaluator_runs_a_case_through_the_react_agent() -> None:
     assert record["crash"] is None
     assert record["reply"] == "سلام!" and record["task_state"] == "created"
     assert record["operations"] == []
+    assert record["model_calls"] == 1 and record["seconds"] >= 0
 
 
 def test_a_tool_without_arguments_can_end_right_after_its_name() -> None:

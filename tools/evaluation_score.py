@@ -1,6 +1,7 @@
 """Scores one case's record, and prints the evaluation report with P6-07's four gates.
 
-Called by tools/evaluate_agent.py. Plain counting over the records: no model and no app. Every
+Called by tools/evaluate_agent.py. Plain counting over the records, including each case's model
+calls and seconds (mean, p50, p95): no model and no app. Every
 value it prints goes through steps.masked, so it never shows a full card, account or IBAN number.
 """
 
@@ -126,6 +127,11 @@ def group(intent: str | None) -> str:
     return intent if intent in (KNOWLEDGE, NOT_SURE) else ("feature" if intent else "none")
 
 
+def percentile(values: list, share: int) -> object:
+    """The value below which share percent of the sorted values fall (nearest rank)."""
+    return values[max(0, -(-share * len(values) // 100) - 1)]
+
+
 def report(records: list[dict], seconds: float) -> bool:
     """Prints the gates and the details, and returns True only when every gate passes."""
     wrong = [record for record in records if record["score"]["wrong_action"]]
@@ -161,6 +167,11 @@ def report(records: list[dict], seconds: float) -> bool:
             f"  {intent:<28} {len(mine):>3}   {ratio(*scored(mine, 'unambiguous')):<22} "
             f"{ratio(*scored(mine, 'preparation'))}"
         )
+    print("\nCost per case")
+    for name in ("model_calls", "seconds"):
+        values = sorted(record[name] for record in records)
+        mean = sum(values) / len(values)
+        print(f"  {name:<12} mean {mean:.1f}   p50 {percentile(values, 50)}   p95 {percentile(values, 95)}")
     model_errors = sum(record["reply"] == replies.MODEL_FAILED for record in records)
     crashes = sum(record["crash"] is not None for record in records)
     print(f"\nModel errors: {model_errors}   Crashes: {crashes}   Time: {seconds:.0f} s")

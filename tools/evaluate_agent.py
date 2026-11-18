@@ -4,7 +4,8 @@ Run by a person: `python tools/evaluate_agent.py tests/evaluation/heldout.json`,
 `--agent react` for the ReAct agent (D-032). The tests call
 main() with fake models. Each case gets a fresh app and graph, built as main_debug.py builds them.
 It reaches the app only through the agent and the stand-in, never the replica, and it never
-changes the agent, the cases or a model service. It writes one record file under local/scratch/.
+changes the agent, the cases or a model service. Each record also keeps the case's model calls and
+seconds. It writes one record file under local/scratch/, named by the cases and the agent.
 """
 
 # ruff: noqa: E402 - the repository's packages are imported after the root is put on the path
@@ -34,6 +35,21 @@ from tools.stand_in_app import StandInApp
 
 RECORDS = Path("local/scratch/p6-02")  # where each run's full record is written
 OPTION = "option:"
+
+
+class CountingChat:
+    """The chat model, counting the calls one case makes. Chat.step goes through json too."""
+
+    step = Chat.step
+
+    def __init__(self, chat: Chat) -> None:
+        self.chat = chat
+        self.calls = 0
+
+    def json(self, *question: object) -> dict:
+        """Counts the call, then asks the model."""
+        self.calls += 1
+        return self.chat.json(*question)
 
 
 class RecordingApp(StandInApp):
@@ -104,9 +120,11 @@ def run_case(
     record = {"id": case["id"], "tags": case["tags"], "expect": case["expect"], "offered": [], "chosen": None}
     record |= {"questions": 0, "asked_before_prepare": False, "failure": None, "crash": None}
     app = RecordingApp(profile)
-    tools = Tools(chat, index, navigator, FixtureLookups(), app, app.current_screen)
+    counting = CountingChat(chat)
+    tools = Tools(counting, index, navigator, FixtureLookups(), app, app.current_screen)
     graph = build_agent(tools, agent)
     config = {"configurable": {"thread_id": case["id"]}}
+    started = time.monotonic()
     try:
         pending = talk(graph, config, case, record)
         final = graph.get_state(config).values
@@ -128,7 +146,7 @@ def run_case(
         record |= {"crash": f"{type(error).__name__}: {error}", "task_state": None, "missing": []}
         record |= {"values": {}, "planned": None, "planned_types": {}, "prepared": False, "reply": None}
     record |= {"operations": app.operations, "last_screen": app.current_screen()}
-    return record
+    return record | {"model_calls": counting.calls, "seconds": round(time.monotonic() - started, 2)}
 
 
 def main(chat: Chat, embeddings: Embeddings, cases_path: str, agent: str = "workflow") -> int:
@@ -152,7 +170,7 @@ def main(chat: Chat, embeddings: Embeddings, cases_path: str, agent: str = "work
         record["score"] = score(record, facts)
     RECORDS.mkdir(parents=True, exist_ok=True)
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
-    out = RECORDS / f"{Path(cases_path).stem}-{stamp}.json"
+    out = RECORDS / f"{Path(cases_path).stem}-{agent}-{stamp}.json"
     out.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
     passed = report(records, time.monotonic() - started)
     print(f"Full record: {out}")

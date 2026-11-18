@@ -77,7 +77,7 @@ The read tools are `find_features`, `feature_requirements`, `find_records` and `
 
 | Tool | What code does |
 |---|---|
-| `find_features(text)` | Returns the 8 closest features by TEI: intent, Persian title and words. |
+| `find_features(text)` | Returns the 8 features closest by TEI to the user's newest words, as the workflow narrows them, then up to 2 more closest to the model's own text: intent, Persian title and words. |
 | `feature_requirements(intent)` | Plans the feature from the app's current screen, with the workflow's `planned`. Returns each field's ref, type, Persian question and words, and a choice's labels (never keys), plus what is held and missing. |
 | `find_records(ref, words)` | Returns the records the app's picker lists for that field that match the words, as masked labels (at most 8). |
 | `current_screen()` | Returns the page by its Persian name (Home, a feature's page or review) and the values given there. Never a screen ID. |
@@ -110,6 +110,7 @@ only commands are `navigate`, `fill_form` and `show_review`.
 - **Nothing is shown in full.** The user's words are masked as in the workflow, and every tool
   result and every prompt goes through `steps.masked`. The model never sees an app key or a
   screen ID.
+- **The same call twice in a row is not run again**: the model is told so (`REPEATED`), except `ask_user`.
 - **A turn has at most 12 tool calls,** counted from the user's last answer. Then the task fails
   with a plain message and nothing more is sent.
 - **A model error ends the task as `failed`,** as in the workflow.
