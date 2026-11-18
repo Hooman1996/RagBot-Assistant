@@ -1,5 +1,8 @@
 # The agent
 
+This page is the workflow agent, the default. The ReAct agent beside it, chosen with
+`ASSISTANT_AGENT=react`, is described in [the ReAct agent](react-agent.md).
+
 The agent turns one Persian sentence, such as «۲۵۰ هزار تومان به رضا کارت به کارت کن», into a
 prepared review on the replica, and stops there. Only the user confirms. It is built in #136; the
 decision is [D-024](../decisions/0024-agent-loop-first.md).
