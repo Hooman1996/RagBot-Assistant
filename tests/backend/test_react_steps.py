@@ -20,7 +20,7 @@ from assistant.lookups import FixtureLookups
 from assistant.models import Chat
 from assistant.navigator import Navigator
 from assistant.panel_api import RESULT_CHARACTERS, brief, build_panel_router
-from assistant.react_graph import build_react_graph
+from assistant.react_graph import UNDERSTOOD, build_react_graph
 
 CARD_VALUES = {
     "card-transfer-source": None,
@@ -84,21 +84,22 @@ def settled(client: TestClient) -> dict:
 
 def test_the_react_agents_steps_show_its_thoughts_tools_and_results() -> None:
     answers = [
-        call("feature_requirements", "کارت به کارت است.", intent="card_transfer"),
+        {"choice": "card_transfer"},  # the workflow's chooser
         call("set_values", "مقدارها را می‌گذارم.", values=CARD_VALUES),
-        {"card-transfer-source": None},  # the workflow's reader, for the source the model left empty
+        CARD_VALUES,  # the workflow's reader
         call("ask_user", "مبدا را می‌پرسم.", question="کدام کارت؟"),
     ]
     client = served(react(answers))
     client.post("/assistant/v1/messages", json=message(CARD_SENTENCE))
     steps = settled(client)["agent_steps"]
     assert [step["action"] for step in steps] == [
-        "feature_requirements",
+        "understand",
         "set_values",
         "move_app",
         "ask_user",
     ]
-    assert steps[0]["thought"] == "کارت به کارت است."
+    assert steps[0] == {"thought": UNDERSTOOD, "action": "understand", "result": '{"chosen": "کارت به کارت"}'}
+    assert steps[1]["thought"] == "مقدارها را می‌گذارم."
     assert "رضا محمدی ****8880" in steps[1]["result"]
     assert steps[-1]["result"] == ""  # the question still waits
     assert all(len(step["result"]) <= RESULT_CHARACTERS for step in steps)
@@ -123,14 +124,14 @@ def test_the_workflows_steps_are_its_nodes() -> None:
 
 
 def test_the_graph_pages_chat_shows_the_same_steps() -> None:
-    client = served(react([call("finish", "سلام کرد.", message="سلام!")]))
+    client = served(react([]))
     client.post("/graph/chat", json={"text": "سلام"})
     for _ in range(200):
         progress = client.get("/graph/chat").json()
         if not progress["busy"]:
             break
         time.sleep(0.02)
-    assert progress["agent_steps"] == [{"thought": "سلام کرد.", "action": "finish", "result": "{}"}]
+    assert progress["agent_steps"] == [{"thought": UNDERSTOOD, "action": "understand", "result": "{}"}]
 
 
 def test_a_long_result_is_cut_and_masked() -> None:

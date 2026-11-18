@@ -87,3 +87,88 @@ python tools/evaluate_agent.py tests/evaluation/tuning.json --agent workflow
 ```
 
 Each run writes `local/scratch/p6-02/<cases>-<agent>-<time>.json`. The records of these runs are kept in `local/scratch/p6-02/` and `local/scratch/react/`.
+
+## RA-7: The workflow's feature choice
+
+**Issue:** #182. **Date:** 18 Nov 2026. **Decision:** [D-033](../decisions/0033-react-uses-the-workflows-feature-choice.md).
+Both agents ran from the RA-7 branch's final code, committed as `13a1019`. Held-out is unchanged
+(SHA-256 `a052b637…`). Each run was alone, with nothing else using the model.
+
+Code now understands a new request before the model's loop:
+- fixed replies for a greeting, thanks or «what can you do»;
+- the workflow's chooser, with `not_sure` offering the 4 closest features, and the knowledge reply;
+- the feature locked for the task;
+- every question the user sees worded by code.
+
+### The gates
+
+| Gate | Target | ReAct held-out 1 | ReAct held-out 2 | Workflow held-out | ReAct tuning | Workflow tuning |
+|---|---|---|---|---|---|---|
+| Critical wrong actions | 0 | **0 / 145** | **0 / 145** | 0 / 145 | 1 / 60 | 1 / 60 |
+| Unambiguous | ≥ 95% | 101 / 101 | 101 / 101 | 101 / 101 | 41 / 42 | 41 / 42 |
+| Task preparation | ≥ 95% | 108 / 108 | 108 / 108 | 108 / 108 | 46 / 47 | 46 / 47 |
+| Safe stops | all | 27 / 27 | 27 / 27 | 27 / 27 | 7 / 7 | 7 / 7 |
+| Knowledge / not sure answered as such | — | 9 / 9, 7 / 7 | 9 / 9, 7 / 7 | 9 / 9, 7 / 7 | — | — |
+
+H-114, H-135 and H-137, RA-5's three critical cases, pass on both runs. On held-out the ReAct agent
+now matches the workflow.
+
+**How to read this.** Those three cases were known when RA-7 was designed. RA-7's changes are
+general (the workflow's own chooser, which already passed them), but the held-out numbers may still
+be optimistic, as noted for P6-03.
+
+### What each case costs
+
+| | RA-5 ReAct | RA-7 ReAct | Workflow |
+|---|---|---|---|
+| Held-out model calls, mean / p50 / p95 | 4.3 / 4 / 7 | 3.4 / 4 / 7 | 1.7 / 2 / 2 |
+| Held-out seconds, mean / p50 / p95 | 9.9 / 10.1 / 16.0 | 6.4 / 7.0 / 15.7 | 2.0 / 2.0 / 4.2 |
+
+On the replica, through the graph page's chat box:
+- a greeting, thanks or the help text comes back in under a second;
+- a vague request gets its options in 0.6 s;
+- a request reaches its first question or review in 11 to 17 s;
+- an answer takes 3 to 4 s.
+
+### The tuning set
+
+Five new tuning cases cover the kinds RA-5 found, in new words:
+- T-056 and T-057: vague requests;
+- T-058: a greeting;
+- T-059: gateway funding into the account;
+- T-060: a bare «پس‌انداز» answer.
+
+Tracing the tuning runs found three more problems, fixed on the ReAct side:
+
+| Tuning case | Cause | Change |
+|---|---|---|
+| T-011 | The model set the source to «حساب». After D-031, «حساب مشترک خانوادگی» is the only label holding that word, so the shared lookup matched it and the task was prepared without a question. | A record value made only of generic words names nothing, so it is asked. |
+| T-008 | The model read «بابت اجاره» as «خرید کالا و خدمات». | The workflow's reader decides every missing field, and what it finds nothing for is asked. The model's values count only for a value held before (a correction). |
+| Live, card transfer | The model also put «رضا» in the source card, so the user read «رضا» پیدا نشد. | The same change. |
+
+**Still failing, in both agents: T-059.** «سه میلیون ریال از درگاه بانکی بریز تو حسابم» is chosen as
+wallet funding, not account funding, so the wallet's funding form is prepared. This is the shared
+chooser (the feature words in `app_profiles/assistant_words.json`), so it affects the demo default
+too. It is outside RA-7, which must not change the workflow, and needs its own issue.
+
+### Live on the replica (`ASSISTANT_AGENT=react`, this branch)
+
+| The user's words | Reply |
+|---|---|
+| «سلام» | The greeting with an example. |
+| «چیکار میتونی بکنی؟» | The help text. |
+| «کارمزد کارت به کارت چقدره؟» | The knowledge reply. |
+| «یه چیزی درباره حسابم» | «منظورتان کدام است؟» with 4 features and «لغو»; picking «لیست و تغییر حساب» opened that page. |
+| «۳۰۰ هزار تومن به حساب رضا انتقال داخلی بزن، بابت اجاره», then the typed answer «پس‌انداز» | The review, with سپرده پس‌انداز. |
+
+The five demo flows (card transfer, internal transfer to a saved destination, loan installment,
+mobile top-up, air-pollution toll) reached their review, and «برو به خانه» opened Home. «نه، میخوام
+قبض برق بدم» typed during a question stayed an answer: the question was asked again, and «لغو»
+cancelled.
+
+### Recommendation
+
+The ReAct agent now passes every held-out gate and could be shown as an alternative. It still costs
+about 3 times the workflow's time. `workflow` stays the default, as the owner decided on
+18 Nov 2026, until the owner says otherwise.
+

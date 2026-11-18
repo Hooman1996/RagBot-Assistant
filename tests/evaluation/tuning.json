@@ -1144,5 +1144,96 @@
         "account-transfer-reason"
       ]
     }
+  },
+  {
+    "id": "T-056",
+    "tags": [
+      "not_sure"
+    ],
+    "turns": [
+      "یه کاری با حساب پس‌اندازم داشتم"
+    ],
+    "expect": {
+      "intent": "not_sure",
+      "values": {},
+      "end": "created",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-057",
+    "tags": [
+      "not_sure"
+    ],
+    "turns": [
+      "برام سکه طلا بخر"
+    ],
+    "expect": {
+      "intent": "not_sure",
+      "values": {},
+      "end": "created",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-058",
+    "tags": [
+      "not_sure"
+    ],
+    "turns": [
+      "سلام"
+    ],
+    "expect": {
+      "intent": "not_sure",
+      "values": {},
+      "end": "created",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-059",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "سه میلیون ریال از درگاه بانکی بریز تو حسابم"
+    ],
+    "expect": {
+      "intent": "account_funding",
+      "values": {
+        "funding-amount": {
+          "value": 3000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-060",
+    "tags": [
+      "e2e"
+    ],
+    "turns": [
+      "۳۰۰ هزار تومن به حساب رضا انتقال داخلی بزن، بابت اجاره",
+      "پس‌انداز"
+    ],
+    "expect": {
+      "intent": "internal_transfer",
+      "values": {
+        "account-transfer-source": "account-2",
+        "account-transfer-destination": "reza",
+        "account-transfer-amount": {
+          "value": 3000000,
+          "unit": "IRR"
+        },
+        "account-transfer-reason": "0"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
   }
 ]

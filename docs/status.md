@@ -21,6 +21,9 @@ RA-0 to RA-4 are merged into `sub/react-agent`. RA-5's report ([ReAct vs workflo
 ReAct passes the tuning gates but has 3 / 145 critical wrong actions on held-out (a wrong feature, which no guard
 catches), at about 10 s a case against 2 s; RA-5 stopped at its stop condition. The owner decided on 18 Nov 2026: `workflow`
 stays the demo default, and the ReAct agent goes to `main` behind `ASSISTANT_AGENT=react`.
+RA-7 (#182, [D-033](decisions/0033-react-uses-the-workflows-feature-choice.md)): the ReAct agent uses the workflow's
+feature choice first; held-out 0 / 145, 101 / 101, 108 / 108, 27 / 27 on two runs, at 3.4 calls and 6.4 s a case.
+Found on the way: the shared chooser takes gateway funding into the account for wallet funding (tuning T-059), in both agents.
 
 **D-022 (5 Nov 2026):** the replica was completed before the bridge. See the
 [decision](decisions/0022-complete-replica-with-mock-data.md). The owner approved it on 6 Nov 2026,
@@ -72,6 +75,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #182 RA-7 ReAct uses the workflow's feature choice | Done | Code understands a new request first: fixed replies for a greeting, thanks or «چیکار میتونی بکنی؟»; the workflow's chooser, with `not_sure` offering the 4 closest features; the knowledge reply; the feature locked; every question code's; the workflow's reader decides missing fields; a record of generic words only is asked ([D-033](decisions/0033-react-uses-the-workflows-feature-choice.md)). Held-out twice: 0 / 145, 101 / 101, 108 / 108, 27 / 27 (RA-5: 3 critical); 3.4 calls, 6.4 s a case (RA-5: 4.3, 9.9). Tuning (5 new cases): ReAct and workflow both 1 / 60 critical, T-059 (shared chooser: gateway funding into the account chosen as wallet funding). Tried live on the replica. `workflow` stays the default |
 | #171 RA-5 ReAct and workflow side by side | Done | Two held-out runs and one tuning run per agent ([report](reports/react-vs-workflow.md)). Workflow: 0, 101 / 101, 108 / 108, 27 / 27 on both held-out runs; 1.7 model calls and 2.0 s a case. ReAct: 3 / 145 critical wrong actions on both runs (H-114 wrong feature, H-135 and H-137 not-sure requests acted on; nothing confirmed), 99 / 101, 106 and 105 / 108, 27 / 27; 4.3 calls and 9.9 s a case. Tuning: both pass every gate. Stop condition hit: recorded, tuning stopped. The evaluator now records model calls and seconds per case. Owner, 18 Nov 2026: `workflow` stays the default; merged to `main` with the rest of `sub/react-agent` |
 | #167–#170 RA-1 to RA-4 The ReAct agent | Done | The switch `ASSISTANT_AGENT` (default `workflow`), the think ⇄ act loop with nine tools over the workflow's own checks, and the agent's steps in the panel («مراحل دستیار») and on the graph page; five demo flows reached their review on the replica. Merged into `sub/react-agent` (PRs #176–#179) |
 | #166 RA-0 Decide the ReAct agent | Done | D-032 and the design note: a ReAct agent beside the workflow, chosen by `ASSISTANT_AGENT` (default `workflow`); nine tools, the workflow's own checks as guards, no confirm, submit or pay tool, at most 12 tool calls a turn, tool calls held by a JSON schema. Docs only. Merged into `sub/react-agent` |
