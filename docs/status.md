@@ -13,17 +13,14 @@ the owner's live test with toman as the default unit (#164). The owner deferred 
 (P6-06): the focus is the agent, tool calling and navigation. Next: the owner tests the demo flows
 on the replica and picks the next fixes; then P7 (fault cases, latency, clean demo runs).
 
-**ReAct (17 Nov 2026):** the owner approved a bounded ReAct agent beside the workflow, chosen by
-`ASSISTANT_AGENT` with `workflow` the default ([D-032](decisions/0032-react-agent-beside-the-workflow.md),
-[design](bridge/react-agent.md)). It is built on `sub/react-agent` in steps RA-0 to RA-5 (#166–#171);
-RA-6 (#172, native tool calls) is blocked on RagBot's vLLM settings.
-RA-0 to RA-4 are merged into `sub/react-agent`. RA-5's report ([ReAct vs workflow](reports/react-vs-workflow.md)):
-ReAct passes the tuning gates but has 3 / 145 critical wrong actions on held-out (a wrong feature, which no guard
-catches), at about 10 s a case against 2 s; RA-5 stopped at its stop condition. The owner decided on 18 Nov 2026: `workflow`
-stays the demo default, and the ReAct agent goes to `main` behind `ASSISTANT_AGENT=react`.
-RA-7 (#182, [D-033](decisions/0033-react-uses-the-workflows-feature-choice.md)): the ReAct agent uses the workflow's
-feature choice first; held-out 0 / 145, 101 / 101, 108 / 108, 27 / 27 on two runs, at 3.4 calls and 6.4 s a case.
-Found on the way: the shared chooser takes gateway funding into the account for wallet funding (tuning T-059), in both agents.
+**ReAct (18 Nov 2026):** a bounded ReAct agent sits beside the workflow on `main`, chosen by
+`ASSISTANT_AGENT=react`; `workflow` stays the demo default (owner, 18 Nov 2026). See
+[D-032](decisions/0032-react-agent-beside-the-workflow.md), [D-033](decisions/0033-react-uses-the-workflows-feature-choice.md),
+the [design](bridge/react-agent.md) and the [report](reports/react-vs-workflow.md). RA-0 to RA-5 (#166–#171) reached `main`
+in PR #181. RA-7 (#182, PR #183) made it use the workflow's feature choice first: held-out 0 / 145, 101 / 101,
+108 / 108, 27 / 27 on two runs, at 3.4 model calls and 6.4 s a case (the workflow: 1.7 and 2.0 s). RA-6 (#172,
+native tool calls) stays blocked on RagBot's vLLM settings. Open in both agents: the shared chooser takes gateway
+funding into the account for wallet funding (tuning T-059).
 
 **D-022 (5 Nov 2026):** the replica was completed before the bridge. See the
 [decision](decisions/0022-complete-replica-with-mock-data.md). The owner approved it on 6 Nov 2026,

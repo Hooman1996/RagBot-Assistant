@@ -57,6 +57,7 @@ Start in Python, where the decisions are. The files are in `assistant/`.
 | `graph_page.py` | Serves the page, its data, the live state, the plan and the run |
 | `static/graph.html`, `graph_map.js`, `graph_task.js` | The page: layout, the map, and a click's route and run |
 | `agent_graph.py`, `agent_nodes.py`, `agent_state.py` | The agent: one LangGraph graph from a sentence to the review ([agent.md](agent.md)) |
+| `react_graph.py`, `react_tools.py` | The ReAct agent beside it, chosen by `ASSISTANT_AGENT=react` ([react-agent.md](react-agent.md)) |
 | `intent.py`, `slots.py`, `models.py`, `replies.py` | Narrowing and the model's choice, the values and their check, the model clients, the Persian replies |
 | `agent_chat.py`, `static/graph_chat.js` | The graph page's chat box |
 | `app.py`, `__main__.py` | Put the routes together and start the server on `127.0.0.1:8100` |
