@@ -1,8 +1,10 @@
 """Scores the agent on a Persian case file, with the real models, on the stand-in app.
 
 Run by a person: `python tools/evaluate_agent.py tests/evaluation/heldout.json`, with
-`--agent react` for the ReAct agent (D-032). The tests call
-main() with fake models. Each case gets a fresh app and graph, built as main_debug.py builds them.
+`--agent react` for the ReAct agent (D-032). A conversation file (D-035) is run turn by turn and
+scored on every turn: `python tools/evaluate_agent.py tests/evaluation/conversations_heldout.json`.
+The tests call main() with fake models. Each case or conversation gets a fresh app and graph, built
+as main_debug.py builds them.
 It reaches the app only through the agent and the stand-in, never the replica, and it never
 changes the agent, the cases or a model service. Each record also keeps the case's model calls and
 seconds. It writes one record file under local/scratch/, named by the cases and the agent.
@@ -26,11 +28,13 @@ from assistant.app import DEVICE_ID
 from assistant.command_queue import CommandQueue
 from assistant.graph_data import read_json
 from assistant.intent import FeatureIndex
+from assistant.lifecycle import next_input
 from assistant.lookups import FixtureLookups
 from assistant.models import Chat, Embeddings, ModelError
 from assistant.navigator import HOME, Navigator
 from assistant.react_graph import build_agent
-from tools.evaluation_score import report, score
+from assistant.task_runner import Unreachable
+from tools.evaluation_score import conversation_report, report, score, score_conversation
 from tools.stand_in_app import StandInApp
 
 RECORDS = Path("local/scratch/p6-02")  # where each run's full record is written
@@ -38,29 +42,36 @@ OPTION = "option:"
 
 
 class CountingChat:
-    """The chat model, counting the calls one case makes. Chat.step goes through json too."""
+    """The chat model, counting the calls one case makes and keeping every prompt it was shown, so a
+    conversation can be checked for a secret the model must never see. Chat.step goes through json too."""
 
     step = Chat.step
 
     def __init__(self, chat: Chat) -> None:
         self.chat = chat
         self.calls = 0
+        self.prompts: list[str] = []
 
     def json(self, *question: object) -> dict:
-        """Counts the call, then asks the model."""
+        """Counts the call, keeps its prompt, then asks the model."""
         self.calls += 1
+        self.prompts.append(str(question[0]))
         return self.chat.json(*question)
 
 
 class RecordingApp(StandInApp):
-    """The stand-in app, keeping the name of every operation it was sent."""
+    """The stand-in app, keeping the name of every operation it was sent. While down, it cannot be
+    reached, as the replica cannot when the phone is away, so nothing is sent."""
 
     def __init__(self, profile: dict) -> None:
         self.operations: list[str] = []
+        self.down = False
         super().__init__(profile, CommandQueue(), DEVICE_ID)
 
     def send(self, operation: str, arguments: dict) -> dict:
         """Records the operation, then plays it as the stand-in does."""
+        if self.down:
+            raise Unreachable("the stand-in app is down for this turn")
         self.operations.append(operation)
         return super().send(operation, arguments)
 
@@ -149,6 +160,76 @@ def run_case(
     return record | {"model_calls": counting.calls, "seconds": round(time.monotonic() - started, 2)}
 
 
+def observed(graph, config: dict, pending: dict | None, features: set[str]) -> dict:
+    """What a person sees after a turn: how it ended, the open task's feature, its values, what is
+    asked, and the assistant's words."""
+    state = graph.get_state(config).values
+    if pending is not None:
+        refs = [option["ref"] for option in pending["options"] if option["ref"] != "cancel"]
+        end = (
+            "switch"
+            if "switch=yes" in refs
+            else "not_sure"
+            if refs and all(ref in features for ref in refs)
+            else "asking"
+        )
+    else:
+        ends = {"ready_for_user": "review", "completed": "page", "cancelled": "cancelled", "paused": "paused"}
+        end = ends.get(state.get("task_state"), "failed" if state.get("task_state") == "failed" else "idle")
+    plan = state.get("plan") if end not in ("idle", "not_sure") else None
+    return {
+        "end": end,
+        "intent": plan["intent"] if plan else None,
+        "values": state.get("values", {}) if plan else {},
+        "missing": state.get("missing", []) if end == "asking" else [],
+        "text": pending["question"] if pending else state.get("reply") or "",
+    }
+
+
+def run_conversation(
+    conversation: dict, profile: dict, navigator: Navigator, chat: Chat, index: FeatureIndex, agent: str
+) -> dict:
+    """Runs one conversation turn by turn on a fresh app and graph, as the chat box would: an option
+    resumes the question, other words resume it too or start a turn. A turn that cannot run (an
+    option not offered, a crash) ends the conversation, and the turns after it are not run."""
+    app = RecordingApp(profile)
+    counting = CountingChat(chat)
+    tools = Tools(counting, index, navigator, FixtureLookups(), app, app.current_screen)
+    graph = build_agent(tools, agent)
+    config = {"configurable": {"thread_id": conversation["id"]}}
+    features = {item["intent"] for item in profile["features"]}
+    pending, turns = None, []
+    for turn in conversation["turns"]:
+        app.down = turn.get("app_down", False)
+        before, calls, started = len(app.operations), counting.calls, time.monotonic()
+        record = {"say": turn["say"], "expect": turn["expect"], "failure": None, "crash": None}
+        try:
+            if turn["say"].startswith(OPTION):
+                ref = turn["say"][len(OPTION) :]
+                if pending is None or ref not in [option["ref"] for option in pending["options"]]:
+                    record["failure"] = f"option not offered: {ref}"
+                    turns.append(record)
+                    break
+                result = graph.invoke(Command(resume=ref), config)
+            elif pending is not None:
+                result = graph.invoke(Command(resume=turn["say"]), config)
+            else:
+                previous = graph.get_state(config).values
+                result = graph.invoke(next_input(previous, conversation["id"], turn["say"]), config)
+            pending = pending_of(result)
+            record |= observed(graph, config, pending, features)
+        except Exception as error:  # a crash is a result to report, not a stop
+            record["crash"] = f"{type(error).__name__}: {error}"
+            turns.append(record)
+            break
+        record |= {"operations": app.operations[before:], "model_calls": counting.calls - calls}
+        turns.append(record | {"seconds": round(time.monotonic() - started, 2)})
+    return {"id": conversation["id"], "tags": conversation["tags"], "turns": turns} | {
+        "planned": len(conversation["turns"]),
+        "prompts": counting.prompts,
+    }
+
+
 def main(chat: Chat, embeddings: Embeddings, cases_path: str, agent: str = "workflow") -> int:
     """Runs every case and prints the report. 0: every gate passes; 1: a gate fails; 2: cannot run."""
     started = time.monotonic()
@@ -161,11 +242,13 @@ def main(chat: Chat, embeddings: Embeddings, cases_path: str, agent: str = "work
         print(f"Cannot run: the embeddings are not reachable ({error}).")
         return 2
     index = FeatureIndex(profile["features"], embeddings)  # one index: the features are embedded once
+    facts = feature_facts(profile, navigator)
+    if cases and isinstance(cases[0]["turns"][0], dict):  # a conversation file (D-035)
+        return conversations(cases, cases_path, profile, navigator, chat, index, agent, facts, started)
     records = []
     for number, case in enumerate(cases, start=1):
         print(f"[{number}/{len(cases)}] {case['id']}", flush=True)
         records.append(run_case(case, profile, navigator, chat, index, agent))
-    facts = feature_facts(profile, navigator)
     for record in records:
         record["score"] = score(record, facts)
     RECORDS.mkdir(parents=True, exist_ok=True)
@@ -173,6 +256,23 @@ def main(chat: Chat, embeddings: Embeddings, cases_path: str, agent: str = "work
     out = RECORDS / f"{Path(cases_path).stem}-{agent}-{stamp}.json"
     out.write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
     passed = report(records, time.monotonic() - started)
+    print(f"Full record: {out}")
+    return 0 if passed else 1
+
+
+def conversations(cases, cases_path, profile, navigator, chat, index, agent, facts, started) -> int:
+    """Runs and scores every conversation, writes the record and prints the report."""
+    records = []
+    for number, conversation in enumerate(cases, start=1):
+        print(f"[{number}/{len(cases)}] {conversation['id']}", flush=True)
+        record = run_conversation(conversation, profile, navigator, chat, index, agent)
+        records.append(record | {"score": score_conversation(record, facts)})
+    RECORDS.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    out = RECORDS / f"{Path(cases_path).stem}-{agent}-{stamp}.json"
+    written = [{key: value for key, value in record.items() if key != "prompts"} for record in records]
+    out.write_text(json.dumps(written, ensure_ascii=False, indent=2), encoding="utf-8")
+    passed = conversation_report(records, time.monotonic() - started)
     print(f"Full record: {out}")
     return 0 if passed else 1
 

@@ -1,0 +1,773 @@
+[
+  {
+    "id": "CT-001",
+    "tags": [
+      "switch"
+    ],
+    "turns": [
+      {
+        "say": "۱۰۰ هزار تومن به سعید فلاحی کارت به کارت کن",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "نه، اول یه شارژ بخرم",
+        "expect": {
+          "end": "switch",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "option:switch=yes",
+        "expect": {
+          "end": "asking",
+          "intent": "mobile_top_up"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-002",
+    "tags": [
+      "switch"
+    ],
+    "turns": [
+      {
+        "say": "۴۰۰ هزار تومن از پس‌انداز به حساب رضا انتقال داخلی بزن",
+        "expect": {
+          "end": "asking",
+          "intent": "internal_transfer"
+        }
+      },
+      {
+        "say": "ولش، کارت به کارت میخوام",
+        "expect": {
+          "end": "switch",
+          "intent": "internal_transfer"
+        }
+      },
+      {
+        "say": "option:switch=no",
+        "expect": {
+          "end": "asking",
+          "intent": "internal_transfer",
+          "again": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-003",
+    "tags": [
+      "switch"
+    ],
+    "turns": [
+      {
+        "say": "قسط وام شخصیمو بپرداز",
+        "expect": {
+          "end": "asking",
+          "intent": "loan_repayment"
+        }
+      },
+      {
+        "say": "نه اصلا برو خونه",
+        "expect": {
+          "end": "switch",
+          "intent": "loan_repayment"
+        }
+      },
+      {
+        "say": "option:switch=yes",
+        "expect": {
+          "end": "page",
+          "intent": "home"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-004",
+    "tags": [
+      "switch",
+      "cancel"
+    ],
+    "turns": [
+      {
+        "say": "۲۰۰ هزار تومن به رضا کارت به کارت کن",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "بیا قسط وام بدیم",
+        "expect": {
+          "end": "switch",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "option:cancel",
+        "expect": {
+          "end": "cancelled",
+          "says": "cancelled"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-005",
+    "tags": [
+      "switch"
+    ],
+    "turns": [
+      {
+        "say": "۲۰۰ هزار تومن از کارت 4544 به رضا کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "حالا قبض آب 2058601103691 با شناسه 1250001 رو از پس‌انداز بده",
+        "expect": {
+          "end": "switch",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "option:switch=yes",
+        "expect": {
+          "end": "review",
+          "intent": "bill_payment",
+          "values": {
+            "bill-source": "account-2",
+            "bill-id": "2058601103691",
+            "bill-pay-id": "1250001"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-006",
+    "tags": [
+      "correction"
+    ],
+    "turns": [
+      {
+        "say": "۱۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "نه ۱۵۰ بشه",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-amount": {
+              "value": 1500000,
+              "unit": "IRR"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-007",
+    "tags": [
+      "correction"
+    ],
+    "turns": [
+      {
+        "say": "یه شارژ ۲۰ هزار تومنی از پس‌انداز برای 09121234567 بگیر",
+        "expect": {
+          "end": "review",
+          "intent": "mobile_top_up"
+        }
+      },
+      {
+        "say": "از کوتاه‌مدت بخر",
+        "expect": {
+          "end": "review",
+          "intent": "mobile_top_up",
+          "values": {
+            "topup-source": "account-1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-008",
+    "tags": [
+      "correction"
+    ],
+    "turns": [
+      {
+        "say": "۳۰۰ هزار تومن کارت به کارت کن برای رضا",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "از کارت دومم، ۳۵۰ هزار تومن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-source": "card-2",
+            "card-transfer-amount": {
+              "value": 3500000,
+              "unit": "IRR"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-009",
+    "tags": [
+      "correction"
+    ],
+    "turns": [
+      {
+        "say": "۵۰۰ هزار تومن از سپرده کوتاه‌مدت به حساب رضا انتقال داخلی بزن بابت اجاره",
+        "expect": {
+          "end": "review",
+          "intent": "internal_transfer"
+        }
+      },
+      {
+        "say": "به حساب نگار صادقی بزن",
+        "expect": {
+          "end": "review",
+          "intent": "internal_transfer",
+          "values": {
+            "account-transfer-destination": "account-3"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-010",
+    "tags": [
+      "reference",
+      "switch"
+    ],
+    "turns": [
+      {
+        "say": "۱۲۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "همینو برای سعید فلاحی هم بفرست",
+        "expect": {
+          "end": "switch",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "option:switch=yes",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-destination": "card-3",
+            "card-transfer-amount": {
+              "value": 1200000,
+              "unit": "IRR"
+            },
+            "card-transfer-source": "card-1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-011",
+    "tags": [
+      "reference",
+      "correction"
+    ],
+    "turns": [
+      {
+        "say": "از پس‌انداز ۳۰۰ هزار تومن انتقال داخلی به حساب رضا بزن بابت اجاره",
+        "expect": {
+          "end": "review",
+          "intent": "internal_transfer"
+        }
+      },
+      {
+        "say": "همین ولی از کوتاه‌مدت",
+        "expect": {
+          "end": "review",
+          "intent": "internal_transfer",
+          "values": {
+            "account-transfer-source": "account-1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-012",
+    "tags": [
+      "reference",
+      "cancel"
+    ],
+    "turns": [
+      {
+        "say": "۶۰ هزار تومن به رضا کارت به کارت کن",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "کنسل",
+        "expect": {
+          "end": "cancelled",
+          "says": "cancelled"
+        }
+      },
+      {
+        "say": "همونو دوباره شروع کن",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-amount": {
+              "value": 600000,
+              "unit": "IRR"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-013",
+    "tags": [
+      "chat"
+    ],
+    "turns": [
+      {
+        "say": "درود",
+        "expect": {
+          "end": "idle",
+          "says": "chat"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-014",
+    "tags": [
+      "chat"
+    ],
+    "turns": [
+      {
+        "say": "ممنونم ازت",
+        "expect": {
+          "end": "idle",
+          "says": "chat"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-015",
+    "tags": [
+      "chat"
+    ],
+    "turns": [
+      {
+        "say": "رضا رو ۹۰ هزار تومن کارت به کارت کن",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "تو کی هستی؟",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer",
+          "says": "chat",
+          "again": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-016",
+    "tags": [
+      "chat"
+    ],
+    "turns": [
+      {
+        "say": "برام بلیط قطار بگیر",
+        "expect": {
+          "end": "idle",
+          "says": "chat"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-017",
+    "tags": [
+      "chat"
+    ],
+    "turns": [
+      {
+        "say": "قسط وام شخصیمو بپرداز",
+        "expect": {
+          "end": "asking",
+          "intent": "loan_repayment"
+        }
+      },
+      {
+        "say": "خسته نباشی",
+        "expect": {
+          "end": "asking",
+          "intent": "loan_repayment",
+          "says": "chat",
+          "again": true
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-018",
+    "tags": [
+      "cancel"
+    ],
+    "turns": [
+      {
+        "say": "۲۰۰ هزار تومن به رضا کارت به کارت کن",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "منصرف شدم",
+        "expect": {
+          "end": "cancelled",
+          "says": "cancelled"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-019",
+    "tags": [
+      "cancel"
+    ],
+    "turns": [
+      {
+        "say": "قبض آب شناسه 2058601103691 پرداخت 1250001 رو بده",
+        "expect": {
+          "end": "asking",
+          "intent": "bill_payment"
+        }
+      },
+      {
+        "say": "نمیخوام دیگه",
+        "expect": {
+          "end": "cancelled",
+          "says": "cancelled"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-020",
+    "tags": [
+      "cancel"
+    ],
+    "turns": [
+      {
+        "say": "کنسل کن",
+        "expect": {
+          "end": "idle",
+          "says": "nothing_open"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-021",
+    "tags": [
+      "only_looking"
+    ],
+    "turns": [
+      {
+        "say": "۱۰۰ هزار تومن به رضا کارت به کارت کن",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "فقط میخواستم ببینم",
+        "expect": {
+          "end": "cancelled",
+          "says": "cancelled"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-022",
+    "tags": [
+      "bare_answer"
+    ],
+    "turns": [
+      {
+        "say": "از پس‌انداز به حساب رضا ۲۰۰ هزار تومن انتقال داخلی بزن",
+        "expect": {
+          "end": "asking",
+          "intent": "internal_transfer"
+        }
+      },
+      {
+        "say": "اجاره",
+        "expect": {
+          "end": "review",
+          "intent": "internal_transfer",
+          "values": {
+            "account-transfer-reason": "0"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-023",
+    "tags": [
+      "bare_answer"
+    ],
+    "turns": [
+      {
+        "say": "۸۰ هزار تومن به رضا کارت به کارت کن",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "3566",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-source": "card-1"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-024",
+    "tags": [
+      "bare_answer"
+    ],
+    "turns": [
+      {
+        "say": "برای 09121234567 شارژ ۲۰ هزار تومنی بخر",
+        "expect": {
+          "end": "asking",
+          "intent": "mobile_top_up"
+        }
+      },
+      {
+        "say": "پس انداز",
+        "expect": {
+          "end": "review",
+          "intent": "mobile_top_up",
+          "values": {
+            "topup-source": "account-2"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-025",
+    "tags": [
+      "confirm_request"
+    ],
+    "turns": [
+      {
+        "say": "۱۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "تاییدش کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "says": "confirm_refused"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-026",
+    "tags": [
+      "confirm_request"
+    ],
+    "turns": [
+      {
+        "say": "قسط بعدی وام شخصیمو از پس‌انداز بده",
+        "expect": {
+          "end": "review",
+          "intent": "loan_repayment"
+        }
+      },
+      {
+        "say": "ثبت کن",
+        "expect": {
+          "end": "review",
+          "intent": "loan_repayment",
+          "says": "confirm_refused"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-027",
+    "tags": [
+      "secret"
+    ],
+    "turns": [
+      {
+        "say": "۱۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "رمز پویا 73920 ه",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "says": "secret_refused",
+          "secret": "73920"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-028",
+    "tags": [
+      "secret"
+    ],
+    "turns": [
+      {
+        "say": "یه شارژ ۲۰ هزار تومنی از پس‌انداز برای 09121234567 بگیر",
+        "expect": {
+          "end": "review",
+          "intent": "mobile_top_up"
+        }
+      },
+      {
+        "say": "otp 6618",
+        "expect": {
+          "end": "review",
+          "intent": "mobile_top_up",
+          "says": "secret_refused",
+          "secret": "6618"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-029",
+    "tags": [
+      "two_tasks"
+    ],
+    "turns": [
+      {
+        "say": "۱۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن و یه شارژ هم برای خودم بخر",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-amount": {
+              "value": 1000000,
+              "unit": "IRR"
+            }
+          },
+          "says": "second_task"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-030",
+    "tags": [
+      "not_sure"
+    ],
+    "turns": [
+      {
+        "say": "یه کاری با حسابم دارم",
+        "expect": {
+          "end": "not_sure"
+        }
+      },
+      {
+        "say": "option:accounts",
+        "expect": {
+          "end": "page",
+          "intent": "accounts"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-031",
+    "tags": [
+      "pause"
+    ],
+    "turns": [
+      {
+        "say": "یه شارژ ۲۰ هزار تومنی از پس‌انداز برای 09121234567 بگیر",
+        "expect": {
+          "end": "paused",
+          "intent": "mobile_top_up"
+        },
+        "app_down": true
+      },
+      {
+        "say": "ادامه",
+        "expect": {
+          "end": "review",
+          "intent": "mobile_top_up",
+          "values": {
+            "topup-phone": "09121234567"
+          }
+        }
+      }
+    ]
+  }
+]
