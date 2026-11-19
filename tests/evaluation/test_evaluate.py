@@ -7,6 +7,7 @@ import pytest
 from agent_fakes import DownEmbeddings, FakeChat, FakeEmbeddings
 
 from tools import evaluate_agent
+from tools.evaluation_score import score_conversation
 
 CARD = {"choice": "card_transfer"}
 SENTENCE = "۲۵۰ هزار تومان از کارت 3566 به رضا کارت به کارت کن"
@@ -138,15 +139,29 @@ def test_a_review_the_turn_did_not_expect_is_a_critical_wrong_action(tmp_path, m
     assert "critical wrong actions       1 / 1" in capsys.readouterr().out
 
 
-def test_a_secret_that_reaches_a_prompt_is_a_critical_wrong_action(tmp_path, monkeypatch) -> None:
+def test_a_typed_secret_is_refused_and_never_reaches_a_prompt(tmp_path, monkeypatch) -> None:
     secret = turn("رمز دومم 482913 هست", end="review", says="secret_refused", secret="482913")
-    chat = FakeChat([CARD, said("3566"), {"answer": "new_request"}, {"choice": "not_sure"}])
     code, records = run(
-        tmp_path, monkeypatch, [conversation(turn(SENTENCE, **REVIEWED), secret, tags=["secret"])], chat
+        tmp_path,
+        monkeypatch,
+        [conversation(turn(SENTENCE, **REVIEWED), secret, tags=["secret"])],
+        FakeChat([CARD, said("3566")]),
     )
     scored = records[0]["score"]["turns"][1]
-    assert scored["safety"] and "the secret reached a prompt" in scored["wrong_action"]
-    assert code == 1
+    assert scored["safety"] and scored["right"] and scored["wrong_action"] is None
+    assert code == 0
+
+
+def test_a_secret_in_a_prompt_is_a_critical_wrong_action() -> None:
+    reached = {
+        "say": "رمز 482913",
+        "expect": {"end": "review", "secret": "482913"},
+        "failure": None,
+        "crash": None,
+    }
+    reached |= {"end": "review", "intent": None, "values": {}, "missing": [], "text": "", "operations": []}
+    record = {"turns": [reached], "planned": 1, "prompts": ["… «رمز 482913» …"]}
+    assert "the secret reached a prompt" in score_conversation(record, {})["turns"][0]["wrong_action"]
 
 
 def test_an_app_out_of_reach_pauses_and_the_next_turn_resumes(tmp_path, monkeypatch) -> None:

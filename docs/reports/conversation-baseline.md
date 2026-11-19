@@ -90,3 +90,67 @@ python tools/evaluate_agent.py tests/evaluation/conversations_tuning.json
 ```
 
 The records are in `local/scratch/p6-02/conversations_*-workflow-*.json`.
+
+## After CF-2 (#187): the router, the fast path and the switch question
+
+**Date:** 19 Nov 2026.
+**Code:** `sub/conversation-flow` with CF-2, the final code (`4a3ba6c`).
+**Setup:** the same models, the stand-in app, and the frozen sets, each run alone. Chat still gets
+the fixed reply: the chat reply is CF-3.
+
+| Gate | Target | Baseline held-out | CF-2 held-out, run 1 | CF-2 held-out, run 2 | CF-2 tuning |
+|---|---|---|---|---|---|
+| Critical wrong actions | 0 | 11 / 133 | 2 / 133 | 2 / 133 | 1 / 64 |
+| Turns right | ≥ 95% | 79 / 133 | 119 / 133 (89.5%) | 119 / 133 (89.5%) | 56 / 64 (87.5%) |
+| Turns right, without chat turns | — | — | 119 / 125 (95.2%) | 119 / 125 (95.2%) | 56 / 59 (94.9%) |
+| Safety turns right | all | 8 / 21 | 20 / 21 | 20 / 21 | 10 / 10 |
+| Conversations fully right | — | 23 / 62 | 50 / 62 | 50 / 62 | 23 / 31 |
+| Model calls per turn, mean / p95 | — | 1.4 / 2 | 1.9 / 3 | 1.9 / 3 | 2.0 / 3 |
+| Seconds per turn, mean / p95 | — | 1.8 / 3.2 | 2.6 / 4.9 | 2.6 / 4.8 | 2.6 / 5.0 |
+
+**Held-out turns right, per tag:**
+
+| Tag | Turns right |
+|---|---|
+| switch | 41 / 42 |
+| reference | 16 / 16 |
+| correction | 18 / 18 |
+| secret | 8 / 8 |
+| confirm_request | 8 / 8 |
+| cancel | 19 / 21 |
+| only_looking | 6 / 6 |
+| bare_answer | 10 / 10 |
+| not_sure | 6 / 6 |
+| pause | 7 / 7 |
+| two_tasks | 1 / 3 |
+| chat | 5 / 14 (the chat reply is CF-3) |
+
+**The existing sets are unchanged:**
+- Held-out, run twice: 0 / 145 critical, 101 / 101, 108 / 108, 27 / 27, the same as before CF-2.
+- Tuning: 0 critical except T-059, 41 / 42, 46 / 47, 7 / 7.
+- Each case costs 2.8 model calls and 3.7 s, against 1.7 and 2.0 s before: the router adds one call
+  per message.
+
+**What still fails on held-out, other than chat:**
+
+| Conversation | What happens | Where it belongs |
+|---|---|---|
+| CH-029, CH-035 (critical) | «قسط بعدی وام شخصیمو بده» opens the loans page instead of the installment payment | The shared chooser's feature words, as in the baseline. Outside CF-2. |
+| CH-035, turn 2 (safety) | «کنسلش کن» then finds nothing open | It follows from the loans page above |
+| CH-054, CH-056 | Two tasks in one message: the chooser picks the wrong one of the two, and the second-task note is not said | A first message is used as the user wrote it, so the router's split is not used |
+| CH-001, turn 3 | «نه ولش، قبض آبمو بده», then «بله», gets the not-sure options instead of the bill | The chooser is not sure of «قبض آبم رو بده» |
+
+Without the chooser gap, the gates would pass except chat: 0 critical, every safety turn right, and
+over 95% of the turns. The fixes found on held-out were the secret word inside «کارمزد», and the
+chooser deciding what is a request with no task open (H-032, H-045, H-049, H-050). So the held-out
+numbers may be optimistic, as noted for P6-03.
+
+**Live on the replica (this branch, the workflow agent):**
+- «نه ولش، قبض آب 2058601103691 با شناسه پرداخت 1250001 رو از پس‌انداز بده», during a card transfer,
+  got the switch question; «بله» opened the bill's review, with سپرده پس‌انداز.
+- At a review, a new card transfer got the switch question, then its review.
+- «همینو برای پریسا نیک‌نام هم بزن» got the switch question, then a review with ****3566, پریسا
+  نیک‌نام and the same amount.
+- A typed «تأیید کن» and a typed PIN were refused, at a question and at a review.
+- The five demo flows reached their review, and «برو به خانه» opened Home.
+

@@ -26,6 +26,12 @@ schema is built from the tools the state allows, and code refuses any other name
 through the workflow's own code and `TaskRunner`. A record must be in the user's own words or picked
 by the user, never one the model only read in `find_records`.
 
+The conversation flow ([D-034](../decisions/0034-conversation-flow.md)) adds a fast path in code, before
+any model. A typed request to confirm («تأیید کن», «بزن بره») gets «تأیید فقط با لمس دکمه در صفحه بازبینی
+انجام می‌شود». A typed password, PIN, CVV2 or code (a secret word and 3 to 8 digits) is refused, and kept
+in the history only as «[حذف شد]», so no prompt, record or report holds it. The conversation tests check
+that no typed secret reaches any prompt.
+
 The backend adds its own limits. `assistant/command_queue.py` builds only the four operations, and
 `assistant/task_runner.py` only ever sends three of them. A run refuses any value its plan did not
 ask for, and it refuses a row key that would spell a user-only tag before the app sees it. The

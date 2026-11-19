@@ -239,7 +239,7 @@ def test_a_choice_that_was_not_offered_becomes_not_sure() -> None:
     pending = result["__interrupt__"][0].value
     assert pending["question"] == replies.NOT_SURE
     assert [item["label"] for item in pending["options"]] == [
-        *(item["title"] for item in PROFILE["features"][:8]),
+        *(item["title"] for item in PROFILE["features"][:4]),  # the 4 closest (D-034)
         "لغو",
     ]
     assert not reviewed(app)

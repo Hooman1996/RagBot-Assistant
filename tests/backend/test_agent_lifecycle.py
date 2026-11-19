@@ -97,13 +97,28 @@ def test_a_correction_after_the_review_prepares_a_new_review() -> None:
     assert app.screen == "S-176" and "3,000,000" in result["reply"]
 
 
-def test_a_new_request_after_the_review_starts_a_new_task() -> None:
+def test_a_new_request_after_the_review_asks_to_switch_and_yes_starts_it() -> None:
     chat = FakeChat([CARD, card(), {"answer": "new_request"}, {"choice": "notifications"}])
     graph = build_agent(chat, RecordingApp())
     graph.invoke(new_request("c", FULL), CONFIG)
     result = say(graph, "اعلان‌ها را نشان بده")
+    pending = result["__interrupt__"][0].value
+    assert pending["question"] == replies.SWITCH.format(old="کارت به کارت", new="اعلان‌ها")
+    assert [item["ref"] for item in pending["options"]] == ["switch=yes", "switch=no", "cancel"]
+    result = graph.invoke(Command(resume="switch=yes"), CONFIG)
     assert result["task_state"] == "completed"
     assert result["messages"] == ["اعلان‌ها را نشان بده"]
+    assert ("ready_for_user", "cancelled") in CHANGES  # the old task is cancelled first
+
+
+def test_no_at_the_switch_question_keeps_the_review() -> None:
+    chat = FakeChat([CARD, card(), {"answer": "new_request"}, {"choice": "notifications"}])
+    graph = build_agent(chat, RecordingApp())
+    graph.invoke(new_request("c", FULL), CONFIG)
+    say(graph, "اعلان‌ها را نشان بده")
+    result = graph.invoke(Command(resume="switch=no"), CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    assert result["reply"] == replies.GOING_ON.format(title="کارت به کارت")
 
 
 def test_a_cancel_after_the_review_needs_no_model() -> None:

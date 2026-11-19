@@ -1,0 +1,197 @@
+"""The conversation around a task: the history lines, the turn router and its rewrite guard (D-034).
+
+Called by the workflow's route node (a new message) and by its waiting nodes (an answer to their
+question). The router is one model call, held to a schema: it says what the newest message is
+(an answer, a correction, a new task, chat, only looking, or a cancel), and for a new task writes it
+as one standalone request. Code acts on that. The rewrite guard keeps a rewrite only when every
+amount, number and record name in it is the user's own, so a rewrite can drop a reference but
+never invent a value. Every prompt is masked, and a secret never reaches one: the fast path in
+lifecycle.py replaced it in the history before.
+"""
+
+import re
+
+from assistant import replies
+from assistant.amounts import DIGITS, amounts
+from assistant.lookups import GENERIC, FixtureLookups, plain
+from assistant.models import Chat, ModelError
+from assistant.steps import masked, show
+
+KINDS = ("answer", "correction", "new_task", "chat", "only_looking", "cancel")
+TURNS = 8  # history lines kept: about the last 4 turns, the user's and the assistant's
+LINE_CHARACTERS = 200
+SHOWN = re.compile(r"\*{4}(\d{4})")  # a long number as the model is shown it
+LONG = re.compile(r"\d{12,}")
+TEXT_OR_NULL = {"anyOf": [{"type": "string"}, {"type": "null"}]}
+PLAIN = GENERIC | {
+    "کن",
+    "بکن",
+    "بده",
+    "بزن",
+    "برای",
+    "برا",
+    "هم",
+    "رو",
+    "را",
+    "یک",
+    "یه",
+    "این",
+    "همین",
+    "همون",
+}
+SCHEMA = {
+    "type": "object",
+    "properties": {"kind": {"enum": list(KINDS)}, "standalone": TEXT_OR_NULL, "rest": TEXT_OR_NULL},
+    "required": ["kind", "standalone", "rest"],
+    "additionalProperties": False,
+}
+KIND_LINES = [
+    "kind:",
+    "- answer: it answers the pending question, or gives values for the open task.",
+    "- correction: it changes a value the open task already holds («نه، ۳۰۰ هزار بشه», «از اون یکی کارتم»).",
+    "- new_task: it asks to do or see something in the app («قبض برقمو بده», «برو به خانه»), even while a"
+    " task is open, and even when it starts with «نه», «ولش» or «بیخیال» («ولش، یه شارژ بخر»).",
+    "- chat: a greeting, thanks, small talk, a question, a request the app cannot do, or rude words.",
+    "  The app does banking only: transfers, bills, top-ups, loans, cards, cheques, wallets, road tolls;",
+    "  a request for anything else (a ticket, shopping, stocks, food, the weather) is chat.",
+    "- only_looking: the user only wanted to see the page and wants nothing done («فقط میخواستم ببینم»).",
+    "- cancel: the user wants to stop the open task and asks for nothing else («ولش کن»، «نمیخوام دیگه»).",
+    "When the open task is none, nothing is waiting for an answer: a message asking to do or see",
+    "something is new_task, and so is a vague request about the user's money, cards or accounts",
+    "(«یه کاری با کارتم دارم»).",
+    "standalone: only for new_task. The request as one full Persian sentence in the user's own words,",
+    "filling in what it refers to from the conversation («همونو برای سارا هم بزن» → «۵۰۰ هزار تومان",
+    "به سارا کارت به کارت کن»). When it refers to an earlier request («همین», «همون», «عین همین»),",
+    "copy that request's amount, card, account, number and person into the sentence, as the user",
+    "wrote them («از کارت 4544», «به رضا»), not from the assistant's lines. Never add an amount, name",
+    "or number the conversation does not have.",
+    "rest: if the message asks for a second task too, that task as one sentence; else null.",
+]
+
+
+def line(speaker: str, text: str) -> dict:
+    """One history line, cut short. Long numbers stay whole here and are masked in prompts."""
+    return {"from": speaker, "text": text[:LINE_CHARACTERS]}
+
+
+def kept(turns: list[dict], *added: dict) -> list[dict]:
+    """The history with the added lines, the oldest dropped beyond TURNS."""
+    return (turns + list(added))[-TURNS:]
+
+
+def user_words(turns: list[dict], text: str) -> str:
+    """Everything the user wrote in the history and now, as matching compares it."""
+    return plain(" ".join([item["text"] for item in turns if item["from"] == "user"] + [text]))
+
+
+def router_prompt(turns: list[dict], task: str, pending: str, text: str) -> str:
+    """The router's question: the recent conversation, the open task, the pending question and the
+    newest message, all masked."""
+    lines = [
+        "You read the newest message in the chat of a Persian banking app's assistant and say what it is.",
+        "The assistant prepares tasks in the app up to a review page; only the user confirms, by touch.",
+        "",
+        "Recent conversation, oldest first:",
+    ]
+    lines += [f"- {item['from']}: «{item['text']}»" for item in turns] or ["- none"]
+    lines += [f"Open task: {task}", f"Pending question: {pending}", f"Newest message: «{text}»", ""]
+    return masked("\n".join(lines + KIND_LINES))
+
+
+class Conversation:
+    """The router and the guard, over the chat model and the lookups."""
+
+    def __init__(self, chat: Chat, lookups: FixtureLookups) -> None:
+        self.chat = chat
+        self.lookups = lookups
+        self.names = self.record_words()
+
+    def record_words(self) -> dict[str, list[set[str]]]:
+        """Each word of a person's, destination's or account's label, with the labels that hold it,
+        for the guard."""
+        found: dict[str, list[set[str]]] = {}
+        # People and the saved card, account, IBAN and wallet destinations, and the user's own accounts.
+        for lookup in ("contacts.card", "contacts.account", "contacts.iban", "contacts.wallet", "accounts"):
+            for record in self.lookups.candidates(lookup):
+                words = {word for word in plain(record.label).split() if word not in GENERIC}
+                for word in words:
+                    found.setdefault(word, []).append(words)
+        return found
+
+    def route(self, turns: list[dict], task: str, pending: str, text: str) -> dict:
+        """The router's answer: {kind, standalone, rest}. A model error gives None."""
+        try:
+            answer = self.chat.json(router_prompt(turns, task, pending, text), SCHEMA)
+        except ModelError:
+            return {"kind": None, "standalone": None, "rest": None}
+        kind = answer.get("kind") if answer.get("kind") in KINDS else None
+        show("router", kind=kind, standalone=str(answer.get("standalone")), rest=str(answer.get("rest")))
+        return {"kind": kind, "standalone": answer.get("standalone"), "rest": answer.get("rest")}
+
+    def guarded(self, rewrite: object, turns: list[dict], text: str) -> str | None:
+        """The rewrite with each ****1234 put back as the user's number (or dropped when the user never
+        typed it), if every amount, number and record name in it is the user's own; else None."""
+        if not isinstance(rewrite, str) or not rewrite.strip():
+            return None
+        said = user_words(turns, text)
+        numbers = LONG.findall(said)
+
+        def back(shown: re.Match) -> str:
+            """The user's own number for a ****1234: typed in full, or as its last 4 digits; a masked
+            number the user never typed (one the assistant showed) is dropped."""
+            whole = [number for number in numbers if number.endswith(shown.group(1))]
+            if len(set(whole)) == 1:
+                return whole[0]
+            return shown.group(1) if re.search(rf"(?<!\d){shown.group(1)}(?!\d)", said) else ""
+
+        # Compared as matching compares text; given back in the router's own letters («پس‌انداز»).
+        rewrite = " ".join(SHOWN.sub(back, rewrite.strip().translate(DIGITS)).split())
+        compared = plain(rewrite)
+        if not set(amounts(compared)) <= set(amounts(said)):
+            return None
+        if any(run not in said for run in re.findall(r"\d{4,}", compared)):
+            return None
+        # A record's word the user did not say is kept only beside another word of that record's label
+        # the user did say («سپرده» for the «پس‌انداز» the user named), never as a name of its own.
+        spoken = set(said.split())
+        for word in compared.split():
+            if (
+                word in self.names
+                and word not in spoken
+                and not any(label & spoken for label in self.names[word])
+            ):
+                return None
+        return rewrite
+
+    def standalone(self, routed: dict, turns: list[dict], text: str) -> str:
+        """The new task's request: the guarded rewrite once the conversation has earlier user words
+        (what «همونو» refers to, or a request without its «نه ولش،»), else the user's own message: a
+        first message stands on its own, and a rewrite could only change it."""
+        rewrite = self.guarded(routed["standalone"], turns, text)
+        earlier = any(item["from"] == "user" for item in turns)
+        return rewrite if rewrite and earlier else text
+
+    def label(self, item: dict, value: str | dict) -> str:
+        """A value as the user reads it, masked: a record by its label, never its key."""
+        if item["lookup"] and isinstance(value, str):
+            for record in self.lookups.candidates(item["lookup"]):
+                if value in (record.key, record.value):
+                    return replies.option(item["ref"], record)["label"]
+        return replies.shown(value, item, self.lookups)
+
+    def summary(self, state: dict, features: dict) -> str:
+        """The open task as the router reads it: its feature, the values held, what is missing."""
+        plan = state.get("plan")
+        if not plan or state["task_state"] in ("created", "cancelled", "failed", "completed"):
+            return "none."
+        items = {item["ref"]: item for item in plan["requirements"]}
+        held = [
+            f"{items[ref]['description'] or ref} «{self.label(items[ref], value)}»"
+            for ref, value in state["values"].items()
+            if ref in items and ref not in plan["preset"]
+        ]
+        missing = [items[ref]["description"] or ref for ref in state["missing"] if ref in items]
+        title = features[plan["intent"]]["title"]
+        where = " It is at its review." if state["task_state"] == "ready_for_user" else ""
+        held_text, missing_text = ", ".join(held) or "nothing", ", ".join(missing) or "nothing"
+        return f"«{title}».{where} Held: {held_text}. Missing: {missing_text}."
