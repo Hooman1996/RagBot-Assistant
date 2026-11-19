@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 18 November 2026. This page is updated whenever a task changes state.
+Last updated: 19 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Stages 2 and 3 are done: the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the Python navigator and interactive graph (#94) are on `main`. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
 
@@ -21,6 +21,12 @@ in PR #181. RA-7 (#182, PR #183) made it use the workflow's feature choice first
 108 / 108, 27 / 27 on two runs, at 3.4 model calls and 6.4 s a case (the workflow: 1.7 and 2.0 s). RA-6 (#172,
 native tool calls) stays blocked on RagBot's vLLM settings. Open in both agents: the shared chooser takes gateway
 funding into the account for wallet funding (tuning T-059).
+
+**Conversation flow (19 Nov 2026):** the owner approved CF-0 to CF-3 (#185–#188): every message is understood
+in context through one entry point (a safety fast path, a turn router with query rewriting, a switch question,
+a chat reply), in the workflow agent first ([D-034](decisions/0034-conversation-flow.md),
+[design](bridge/conversation-flow.md)). Built on `sub/conversation-flow`; CF-0 (the design) is done, CF-1 (a frozen
+multi-turn conversation set, baseline first) is next.
 
 **D-022 (5 Nov 2026):** the replica was completed before the bridge. See the
 [decision](decisions/0022-complete-replica-with-mock-data.md). The owner approved it on 6 Nov 2026,
@@ -72,6 +78,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #185 CF-0 Decide the conversation flow | Done | D-034 and the design note: 13 nodes with their inputs, schemas, prompts, fallbacks and guards; the router at two doors (a new message, and an answer resuming a waiting node), so the chat box, panel and evaluator keep their interface; the state gains `turns` and `rest`; no new task state. Docs only. Merged into `sub/conversation-flow` |
 | #182 RA-7 ReAct uses the workflow's feature choice | Done | Code understands a new request first: fixed replies for a greeting, thanks or «چیکار میتونی بکنی؟»; the workflow's chooser, with `not_sure` offering the 4 closest features; the knowledge reply; the feature locked; every question code's; the workflow's reader decides missing fields; a record of generic words only is asked ([D-033](decisions/0033-react-uses-the-workflows-feature-choice.md)). Held-out twice: 0 / 145, 101 / 101, 108 / 108, 27 / 27 (RA-5: 3 critical); 3.4 calls, 6.4 s a case (RA-5: 4.3, 9.9). Tuning (5 new cases): ReAct and workflow both 1 / 60 critical, T-059 (shared chooser: gateway funding into the account chosen as wallet funding). Tried live on the replica. `workflow` stays the default |
 | #171 RA-5 ReAct and workflow side by side | Done | Two held-out runs and one tuning run per agent ([report](reports/react-vs-workflow.md)). Workflow: 0, 101 / 101, 108 / 108, 27 / 27 on both held-out runs; 1.7 model calls and 2.0 s a case. ReAct: 3 / 145 critical wrong actions on both runs (H-114 wrong feature, H-135 and H-137 not-sure requests acted on; nothing confirmed), 99 / 101, 106 and 105 / 108, 27 / 27; 4.3 calls and 9.9 s a case. Tuning: both pass every gate. Stop condition hit: recorded, tuning stopped. The evaluator now records model calls and seconds per case. Owner, 18 Nov 2026: `workflow` stays the default; merged to `main` with the rest of `sub/react-agent` |
 | #167–#170 RA-1 to RA-4 The ReAct agent | Done | The switch `ASSISTANT_AGENT` (default `workflow`), the think ⇄ act loop with nine tools over the workflow's own checks, and the agent's steps in the panel («مراحل دستیار») and on the graph page; five demo flows reached their review on the replica. Merged into `sub/react-agent` (PRs #176–#179) |
