@@ -25,8 +25,9 @@ funding into the account for wallet funding (tuning T-059).
 **Conversation flow (19 Nov 2026):** the owner approved CF-0 to CF-3 (#185–#188): every message is understood
 in context through one entry point (a safety fast path, a turn router with query rewriting, a switch question,
 a chat reply), in the workflow agent first ([D-034](decisions/0034-conversation-flow.md),
-[design](bridge/conversation-flow.md)). Built on `sub/conversation-flow`; CF-0 (the design) is done, CF-1 (a frozen
-multi-turn conversation set, baseline first) is next.
+[design](bridge/conversation-flow.md)). Built on `sub/conversation-flow`; CF-0 (the design) and CF-1 (the frozen conversation set, D-035) are done.
+Today's workflow on it: 11 / 133 critical turns, 79 / 133 right, 8 / 21 safety turns ([baseline](reports/conversation-baseline.md)).
+Next: CF-2.
 
 **D-022 (5 Nov 2026):** the replica was completed before the bridge. See the
 [decision](decisions/0022-complete-replica-with-mock-data.md). The owner approved it on 6 Nov 2026,
@@ -78,6 +79,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #186 CF-1 The frozen conversation set | Done | 62 held-out conversations (133 turns, frozen in [D-035](decisions/0035-frozen-conversation-set.md)) and 31 tuning (64 turns), each turn with an outcome a person sees; the evaluator runs them turn by turn, checks that no typed secret reaches a prompt, and prints three gates. Baseline of today's workflow: held-out 11 / 133 critical, 79 / 133 turns right, 8 / 21 safety; tuning 7 / 64, 35 / 64, 4 / 10 ([report](reports/conversation-baseline.md)). Merged into `sub/conversation-flow` |
 | #185 CF-0 Decide the conversation flow | Done | D-034 and the design note: 13 nodes with their inputs, schemas, prompts, fallbacks and guards; the router at two doors (a new message, and an answer resuming a waiting node), so the chat box, panel and evaluator keep their interface; the state gains `turns` and `rest`; no new task state. Docs only. Merged into `sub/conversation-flow` |
 | #182 RA-7 ReAct uses the workflow's feature choice | Done | Code understands a new request first: fixed replies for a greeting, thanks or «چیکار میتونی بکنی؟»; the workflow's chooser, with `not_sure` offering the 4 closest features; the knowledge reply; the feature locked; every question code's; the workflow's reader decides missing fields; a record of generic words only is asked ([D-033](decisions/0033-react-uses-the-workflows-feature-choice.md)). Held-out twice: 0 / 145, 101 / 101, 108 / 108, 27 / 27 (RA-5: 3 critical); 3.4 calls, 6.4 s a case (RA-5: 4.3, 9.9). Tuning (5 new cases): ReAct and workflow both 1 / 60 critical, T-059 (shared chooser: gateway funding into the account chosen as wallet funding). Tried live on the replica. `workflow` stays the default |
 | #171 RA-5 ReAct and workflow side by side | Done | Two held-out runs and one tuning run per agent ([report](reports/react-vs-workflow.md)). Workflow: 0, 101 / 101, 108 / 108, 27 / 27 on both held-out runs; 1.7 model calls and 2.0 s a case. ReAct: 3 / 145 critical wrong actions on both runs (H-114 wrong feature, H-135 and H-137 not-sure requests acted on; nothing confirmed), 99 / 101, 106 and 105 / 108, 27 / 27; 4.3 calls and 9.9 s a case. Tuning: both pass every gate. Stop condition hit: recorded, tuning stopped. The evaluator now records model calls and seconds per case. Owner, 18 Nov 2026: `workflow` stays the default; merged to `main` with the rest of `sub/react-agent` |
