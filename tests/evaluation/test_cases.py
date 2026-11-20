@@ -205,3 +205,91 @@ def test_no_heldout_first_turn_appears_in_the_tuning_set() -> None:
 def test_the_heldout_set_is_frozen_at_the_hash_in_d031() -> None:
     recorded = re.search(r"SHA-256 `([0-9a-f]{64})`", DECISION.read_text(encoding="utf-8")).group(1)
     assert hashlib.sha256((FOLDER / "heldout.json").read_bytes()).hexdigest() == recorded
+
+
+# The conversation sets (D-035): every turn has an outcome a person can see.
+CONVERSATION_TAGS = {
+    "switch", "correction", "reference", "chat", "cancel", "only_looking", "bare_answer",
+    "confirm_request", "secret", "two_tasks", "not_sure", "pause",
+}  # fmt: skip
+TURN_ENDS = {"asking", "not_sure", "switch", "review", "page", "cancelled", "idle", "paused"}
+SAYS = {"chat", "cancelled", "confirm_refused", "secret_refused", "nothing_open", "second_task"}
+EXPECT_KEYS = {"end", "intent", "values", "asks", "says", "again", "secret"}
+SWITCH_REFS = {"switch=yes", "switch=no", "cancel"}
+CONVERSATIONS_AT_LEAST = {
+    "switch": 8, "correction": 6, "reference": 5, "chat": 6, "cancel": 6, "only_looking": 2,
+    "bare_answer": 4, "confirm_request": 3, "secret": 3, "two_tasks": 2, "not_sure": 2, "pause": 2,
+}  # fmt: skip
+CONVERSATION_DECISION = Path("docs/decisions/0035-frozen-conversation-set.md")
+
+
+def check_conversation(conversation: dict, prefix: str) -> None:
+    """One conversation: its shape, tags and every turn's expected outcome."""
+    assert set(conversation) == {"id", "tags", "turns"}, conversation
+    assert re.fullmatch(prefix + r"-\d{3}", conversation["id"]), conversation["id"]
+    assert conversation["tags"] and set(conversation["tags"]) <= CONVERSATION_TAGS, conversation["id"]
+    for turn in conversation["turns"]:
+        where = (conversation["id"], turn.get("say"))
+        assert set(turn) <= {"say", "expect", "app_down"} and turn["say"].strip(), where
+        expect = turn["expect"]
+        assert set(expect) <= EXPECT_KEYS and expect["end"] in TURN_ENDS, where
+        assert expect.get("says") in SAYS | {None}, where
+        assert "asks" not in expect or expect["end"] == "asking", where
+        assert "secret" not in expect or expect["secret"] in turn["say"], where
+        if turn["say"].startswith(OPTION):
+            ref = turn["say"][len(OPTION) :]
+            assert ref in SWITCH_REFS or ref in FEATURES or "=" in ref, where
+        intent = expect.get("intent")
+        assert intent is None or intent in FEATURES, where
+        if not intent:
+            assert "values" not in expect and "asks" not in expect, where
+            continue
+        wanted = requirements(intent, expect.get("values", {}))
+        for ref, value in expect.get("values", {}).items():
+            item = wanted[ref]
+            if item.type == "money":
+                assert money_ok(value), where
+            elif item.lookup is not None:
+                assert value in keys(item.lookup) or typed(item.lookup, value), where
+            elif item.type == "choice":
+                assert value in choice_keys(item, {"values": expect["values"]}), where
+            else:
+                assert isinstance(value, str) and value.strip(), where
+
+
+@pytest.mark.parametrize(
+    ("name", "prefix"), [("conversations_heldout.json", "CH"), ("conversations_tuning.json", "CT")]
+)
+def test_every_conversation_has_the_format_and_valid_expectations(name: str, prefix: str) -> None:
+    conversations = read(name)
+    assert len({conversation["id"] for conversation in conversations}) == len(conversations)
+    for conversation in conversations:
+        check_conversation(conversation, prefix)
+
+
+def test_the_conversation_sets_have_their_counts() -> None:
+    heldout, tuning = read("conversations_heldout.json"), read("conversations_tuning.json")
+    tags = Counter(tag for conversation in heldout for tag in conversation["tags"])
+    assert len(heldout) >= 60 and len(tuning) >= 25
+    assert all(tags[tag] >= least for tag, least in CONVERSATIONS_AT_LEAST.items()), tags
+    assert {tag for conversation in tuning for tag in conversation["tags"]} == CONVERSATION_TAGS
+
+
+def test_no_heldout_conversation_turn_appears_in_a_tuning_set() -> None:
+    def said(name: str) -> set[str]:
+        turns = [turn["say"] for conversation in read(name) for turn in conversation["turns"]]
+        return {normal(turn) for turn in turns if not turn.startswith(OPTION)}
+
+    tuning = said("conversations_tuning.json") | {
+        normal(turn) for case in read("tuning.json") for turn in case["turns"]
+    }
+    # Short fixed words («لغو», «ادامه») may be shared; a sentence of the held-out set may not.
+    shared = {turn for turn in said("conversations_heldout.json") & tuning if len(turn) > 8}
+    assert shared == set()
+
+
+def test_the_conversation_heldout_set_is_frozen_at_the_hash_in_d035() -> None:
+    recorded = re.search(
+        r"SHA-256 `([0-9a-f]{64})`", CONVERSATION_DECISION.read_text(encoding="utf-8")
+    ).group(1)
+    assert hashlib.sha256((FOLDER / "conversations_heldout.json").read_bytes()).hexdigest() == recorded

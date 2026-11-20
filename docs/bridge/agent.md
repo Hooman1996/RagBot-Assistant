@@ -19,13 +19,20 @@ One `StateGraph`, built by `build_graph` in `assistant/agent_graph.py`. Its node
 of `Nodes` in `assistant/agent_nodes.py`; each takes the state and returns only the keys it
 changes.
 
+Since CF-2 (#187, [D-034](../decisions/0034-conversation-flow.md)) every new message starts at
+`route`, and a typed answer to a question is read in the conversation inside its waiting node
+(`clarify`, `reply`, `switch`). See [the conversation flow](conversation-flow.md). The graph below
+shows the task's path; `route` replaces the old `follow_up` node.
+
 ```mermaid
 flowchart LR
-    start([user's words]) --> understand
-    start -->|"a task at its review, or paused"| follow_up
-    follow_up -->|correction, or resume| extract
-    follow_up -->|new request| understand
-    follow_up -->|cancel| stop
+    start([user's words]) --> route
+    route -->|"new request (a rewrite if it refers back)"| understand
+    route -->|"correction at the review, or resume"| extract
+    route -->|"new task while one is open"| switch
+    route -->|"cancel, refusal, chat"| stop
+    switch -->|"«بله»"| plan
+    switch -->|"«نه» at a question"| clarify
     understand -->|a feature| plan
     understand -->|knowledge question or not sure| reply
     understand -->|model failed| stop([end])
@@ -42,6 +49,8 @@ flowchart LR
     advance -->|cancelled, paused or stopped| stop
     advance -->|uncertain command| reconcile
     clarify -->|"interrupt(): the user's answer"| extract
+    clarify -->|"chat or a refusal: asked again"| clarify
+    clarify -->|"a new task"| switch
     clarify -->|cancel| stop
     resolve -->|not found, or two matches| advance
     resolve -->|one record each| prepare

@@ -3,13 +3,20 @@
 Called by agent_graph's understand node. The model sees only the user's words and the offered
 features (intent, Persian title, description and slot names). It never sees a screen, an edge, a
 form or the user-only list. Its answer is held to an enum of the offered values, and code still
-refuses anything else.
+refuses anything else; a page that only shows loans gives way to the feature that pays an
+installment when the user asks to pay one.
 """
 
+import re
+
+from assistant.lookups import plain
 from assistant.models import Chat, Embeddings
 from assistant.words import feature_words
 
 CLOSEST = 8
+SHOWN_ONLY = {"loans": "loan_repayment"}  # a page that shows loans, and the feature that pays them
+PAY = re.compile(r"(بده|بدید|بپرداز|پرداخت کن|پرداختش کن|پرداخت بشه|پرداخت شه)")
+SEE = ("نشون", "نشان", "ببین", "بیار", "لیست")
 KNOWLEDGE = "knowledge_question"
 NOT_SURE = "not_sure"
 
@@ -69,4 +76,15 @@ def choose(chat: Chat, text: str, offered: list[dict]) -> str:
         "additionalProperties": False,
     }
     choice = chat.json(choice_prompt(text, offered), schema).get("choice")
-    return choice if choice in allowed else NOT_SURE
+    choice = choice if choice in allowed else NOT_SURE
+    # Code, not the model (owner, 20 Nov 2026): a page that only shows loans is not what a request to
+    # pay an installment asks for; the feature that pays it is, when it was offered.
+    paying = SHOWN_ONLY.get(choice)
+    return paying if paying in allowed and asks_to_pay_installment(text) else choice
+
+
+def asks_to_pay_installment(text: str) -> bool:
+    """True for «قسط» with a word of paying («بده», «بپرداز», «پرداخت کن»), and no word of seeing
+    («نشون بده» shows them)."""
+    said = plain(text)
+    return "قسط" in said and bool(PAY.search(said)) and not any(word in said for word in SEE)

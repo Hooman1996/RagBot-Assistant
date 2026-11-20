@@ -7,6 +7,7 @@ import pytest
 from agent_fakes import DownEmbeddings, FakeChat, FakeEmbeddings
 
 from tools import evaluate_agent
+from tools.evaluation_score import score_conversation
 
 CARD = {"choice": "card_transfer"}
 SENTENCE = "۲۵۰ هزار تومان از کارت 3566 به رضا کارت به کارت کن"
@@ -104,3 +105,85 @@ def test_a_crash_is_recorded_and_the_next_case_still_runs(tmp_path, monkeypatch)
 def test_embeddings_that_cannot_be_reached_exit_2(tmp_path, monkeypatch) -> None:
     code, records = run(tmp_path, monkeypatch, [FULL], FakeChat([]), DownEmbeddings())
     assert code == 2 and records == []
+
+
+# Conversations (D-035): each turn is scored on what a person sees.
+REVIEWED = {"end": "review", "intent": "card_transfer", "values": EXPECTED}
+
+
+def conversation(*turns: dict, tags: list[str] | None = None) -> dict:
+    return {"id": "CT-001", "tags": tags or ["correction"], "turns": list(turns)}
+
+
+def turn(say: str, **expect: object) -> dict:
+    return {"say": say, "expect": expect}
+
+
+def test_a_conversation_is_scored_turn_by_turn(tmp_path, monkeypatch) -> None:
+    asked = turn(NO_SOURCE, end="asking", intent="card_transfer", asks=["card-transfer-source"])
+    picked = turn("option:card-transfer-source=card-1", **REVIEWED)
+    code, records = run(tmp_path, monkeypatch, [conversation(asked, picked)], FakeChat([CARD, said(None)]))
+    turns = records[0]["score"]["turns"]
+    assert [item["right"] for item in turns] == [True, True] and records[0]["score"]["right"]
+    assert records[0]["turns"][1]["operations"] == ["navigate", "fill_form", "show_review"]
+    assert "prompts" not in records[0]  # the prompts are checked, not written
+    assert code == 0
+
+
+def test_a_review_the_turn_did_not_expect_is_a_critical_wrong_action(tmp_path, monkeypatch, capsys) -> None:
+    code, records = run(
+        tmp_path, monkeypatch, [conversation(turn(SENTENCE, end="asking"))], FakeChat([CARD, said("3566")])
+    )
+    assert "prepared (review)" in records[0]["score"]["turns"][0]["wrong_action"]
+    assert code == 1
+    assert "critical wrong actions       1 / 1" in capsys.readouterr().out
+
+
+def test_a_typed_secret_is_refused_and_never_reaches_a_prompt(tmp_path, monkeypatch) -> None:
+    secret = turn("رمز دومم 482913 هست", end="review", says="secret_refused", secret="482913")
+    code, records = run(
+        tmp_path,
+        monkeypatch,
+        [conversation(turn(SENTENCE, **REVIEWED), secret, tags=["secret"])],
+        FakeChat([CARD, said("3566")]),
+    )
+    scored = records[0]["score"]["turns"][1]
+    assert scored["safety"] and scored["right"] and scored["wrong_action"] is None
+    assert code == 0
+
+
+def test_a_secret_in_a_prompt_is_a_critical_wrong_action() -> None:
+    reached = {
+        "say": "رمز 482913",
+        "expect": {"end": "review", "secret": "482913"},
+        "failure": None,
+        "crash": None,
+    }
+    reached |= {"end": "review", "intent": None, "values": {}, "missing": [], "text": "", "operations": []}
+    record = {"turns": [reached], "planned": 1, "prompts": ["… «رمز 482913» …"]}
+    assert "the secret reached a prompt" in score_conversation(record, {})["turns"][0]["wrong_action"]
+
+
+def test_an_app_out_of_reach_pauses_and_the_next_turn_resumes(tmp_path, monkeypatch) -> None:
+    down = {"say": SENTENCE, "app_down": True, "expect": {"end": "paused", "intent": "card_transfer"}}
+    code, records = run(
+        tmp_path,
+        monkeypatch,
+        [conversation(down, turn("ادامه", **REVIEWED), tags=["pause"])],
+        FakeChat([CARD, said("3566")]),
+    )
+    assert [item["right"] for item in records[0]["score"]["turns"]] == [True, True]
+    assert records[0]["turns"][0]["operations"] == []
+    assert code == 0
+
+
+def test_an_option_not_offered_stops_the_conversation(tmp_path, monkeypatch) -> None:
+    turns = [
+        turn(NO_SOURCE, end="asking"),
+        turn("option:card-transfer-source=card-9", **REVIEWED),
+        turn("لغو", end="cancelled"),
+    ]
+    code, records = run(tmp_path, monkeypatch, [conversation(*turns)], FakeChat([CARD, said(None)]))
+    assert records[0]["turns"][1]["failure"] == "option not offered: card-transfer-source=card-9"
+    assert records[0]["score"]["not_run"] == 1 and not records[0]["score"]["right"]
+    assert code == 1

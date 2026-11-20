@@ -239,7 +239,7 @@ def test_a_choice_that_was_not_offered_becomes_not_sure() -> None:
     pending = result["__interrupt__"][0].value
     assert pending["question"] == replies.NOT_SURE
     assert [item["label"] for item in pending["options"]] == [
-        *(item["title"] for item in PROFILE["features"][:8]),
+        *(item["title"] for item in PROFILE["features"][:4]),  # the 4 closest (D-034)
         "لغو",
     ]
     assert not reviewed(app)
@@ -323,12 +323,13 @@ def test_a_model_amount_the_user_never_wrote_is_not_used() -> None:
     assert money({"value": 5, "unit": "IRT"}, ["۲۰۰ هزار تومن یا ۳۰۰ هزار تومن"]) is None
 
 
-def test_a_knowledge_question_gets_the_fixed_message_and_sends_nothing() -> None:
+def test_a_knowledge_question_gets_the_chat_reply_and_sends_nothing() -> None:
     app = RecordingApp()
-    result = build_agent(FakeChat([{"choice": "knowledge_question"}]), app).invoke(
-        new_request("c", "نرخ سود سپرده چند است؟"), CONFIG
-    )
-    assert result["reply"] == "پاسخ به پرسش‌های عمومی در این مرحله فعال نیست"
+    said = "پاسخ این پرسش را اینجا نمی‌توانم بدهم؛ کارهای برنامه را برایتان آماده می‌کنم."
+    chat = FakeChat([{"choice": "knowledge_question"}, {"reply": said}])
+    result = build_agent(chat, app).invoke(new_request("c", "نرخ سود سپرده چند است؟"), CONFIG)
+    assert result["reply"] == said
+    assert "نرخ سود سپرده چند است؟" in chat.prompts[-1]
     assert result["task_state"] == "created"
     assert not reviewed(app)
 

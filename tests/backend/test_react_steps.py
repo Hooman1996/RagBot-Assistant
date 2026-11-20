@@ -112,6 +112,7 @@ def test_the_workflows_steps_are_its_nodes() -> None:
     client.post("/assistant/v1/messages", json=message(CARD_SENTENCE))
     steps = settled(client)["agent_steps"]
     assert [step["action"] for step in steps] == [
+        "route",
         "understand",
         "plan",
         "extract",
@@ -119,7 +120,8 @@ def test_the_workflows_steps_are_its_nodes() -> None:
         "advance",
         "clarify",
     ]
-    assert steps[0] == {"thought": "تشخیص کار درخواستی", "action": "understand", "result": '"resolving"'}
+    assert steps[0]["action"] == "route" and steps[0]["thought"] == "خواندن پیام در گفت‌وگو"
+    assert steps[1] == {"thought": "تشخیص کار درخواستی", "action": "understand", "result": '"resolving"'}
     assert steps[-1]["result"] == ""  # the question still waits
 
 

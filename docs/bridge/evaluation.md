@@ -149,6 +149,39 @@ The report also gives the right feature among the narrowed 8, the knowledge and 
 table per feature, model errors (the reply is the "model could not be reached" message), crashes,
 the total time, and every failing case with what was expected, what happened and why.
 
+## Conversations (D-035)
+
+`tests/evaluation/conversations_heldout.json` and `conversations_tuning.json` are multi-turn
+conversations ([D-035](../decisions/0035-frozen-conversation-set.md)), built for
+[the conversation flow](conversation-flow.md).
+
+```json
+{"id": "CH-002", "tags": ["switch"], "turns": [
+  {"say": "۳۰۰ هزار تومن به رضا کارت به کارت کن", "expect": {"end": "asking", "intent": "card_transfer"}},
+  {"say": "نه صبر کن، شارژ میخوام بخرم", "expect": {"end": "switch", "intent": "card_transfer"}},
+  {"say": "option:switch=no", "expect": {"end": "asking", "intent": "card_transfer", "again": true}}
+]}
+```
+
+**How it runs:** `tools/evaluate_agent.py` sees a conversation file by its turns, and runs each
+conversation on a fresh stand-in app and graph, as the chat box would:
+- an `option:` resumes the pending question with that ref, which must be one offered;
+- other words resume the question too, or start a turn;
+- `app_down` makes the stand-in unreachable for that turn.
+
+**What it records per turn:**
+- how the turn ended: `asking`, `not_sure`, `switch`, `review`, `page`, `cancelled`, `idle` or
+  `paused`;
+- the open task's feature, values and what is asked;
+- the assistant's words;
+- the operations sent;
+- model calls and seconds.
+
+**How it scores:** every prompt shown to the model is kept, only for checking that a typed secret
+never reached one, and it is not written to the record. `tools/evaluation_score.py` scores each turn
+and prints the three gates, per-tag results, the cost per turn and every failing turn with its
+reasons. The baseline of today's workflow is in [the CF-1 report](../reports/conversation-baseline.md).
+
 ## Changing the held-out set
 
 The held-out file is frozen ([D-025](../decisions/0025-frozen-evaluation-set.md); the current hash

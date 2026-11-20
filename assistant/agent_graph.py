@@ -1,5 +1,6 @@
 """The agent: one LangGraph StateGraph from a Persian sentence to the review, and no further. Before
-each question the app is moved to the screen the question is about.
+each question the app is moved to the screen the question is about. Every message is read in the
+conversation first (D-034): a new one at route (door A), an answer inside its waiting node (door B).
 
 Built by app.py for the graph page's chat box, and by main_debug.py with a stand-in app. The nodes
 are in agent_nodes.py and agent_lifecycle.py; this file only wires them. A paused question, and a
@@ -15,24 +16,26 @@ from assistant.agent_lifecycle import Lifecycle
 from assistant.agent_nodes import Nodes, Tools
 from assistant.agent_state import AgentState
 from assistant.intent import KNOWLEDGE, NOT_SURE
-from assistant.lifecycle import FOLLOW_UP
 
 
-def start(state: AgentState) -> str:
-    """A message to a task at its review or paused is a follow-up; anything else is understood."""
-    return "follow_up" if state["task_state"] in FOLLOW_UP else "understand"
+def after_route(state: AgentState) -> str:
+    """Where the route sends the message: a new request is understood, a corrected or resumed task
+    read again, a new task while one is open asks the switch question; a reply ends the turn."""
+    return state["route"] if state["route"] in ("understand", "extract", "switch") else END
 
 
-def after_follow_up(state: AgentState) -> str:
-    """A new request is understood, a corrected or resumed task read again, else it ends."""
-    if state["task_state"] == "created":
-        return "understand"
-    return "extract" if state["task_state"] == "resolving" else END
+def after_switch(state: AgentState) -> str:
+    """«بله» plans the new task, «نه» asks the open question again, any other answer asks again; a
+    reply (a cancel, or the review kept) ends the turn."""
+    return state["route"] if state["route"] in ("plan", "understand", "clarify", "switch") else END
 
 
 def after_clarify(state: AgentState) -> str:
-    """The answer is read, unless the user cancelled."""
-    return END if state["task_state"] == "cancelled" else "extract"
+    """The answer is read; a refusal or chat asks again; a new task asks the switch question; a cancel
+    ends."""
+    if state["task_state"] == "cancelled":
+        return END
+    return state["route"] if state["route"] in ("clarify", "switch") else "extract"
 
 
 def after_understand(state: AgentState) -> str:
@@ -43,9 +46,12 @@ def after_understand(state: AgentState) -> str:
 
 
 def after_reply(state: AgentState) -> str:
-    """A feature picked from the options is planned, new words are understood again, else it ends."""
+    """A feature picked from the options is planned, new words are understood again, a refusal or chat
+    asks again, else it ends."""
     if state["task_state"] == "cancelled":
         return END
+    if state["route"] == "reply":
+        return "reply"
     if state["chosen"] is None:
         return "understand"
     return END if state["chosen"] == KNOWLEDGE else "plan"
@@ -91,7 +97,8 @@ def build_graph(tools: Tools) -> CompiledStateGraph:
     nodes = Nodes(tools)
     lifecycle = Lifecycle(nodes)
     graph = StateGraph(AgentState)
-    graph.add_node("follow_up", lifecycle.follow_up)
+    graph.add_node("route", lifecycle.route)
+    graph.add_node("switch", lifecycle.switch)
     graph.add_node("reconcile", lifecycle.reconcile)
     graph.add_node("understand", nodes.understand)
     graph.add_node("plan", nodes.plan)
@@ -105,15 +112,16 @@ def build_graph(tools: Tools) -> CompiledStateGraph:
     graph.add_node("ready_for_user", nodes.ready_for_user)
     graph.add_node("reply", nodes.reply)
 
-    graph.add_conditional_edges(START, start, ["follow_up", "understand"])
-    graph.add_conditional_edges("follow_up", after_follow_up, ["understand", "extract", END])
+    graph.add_edge(START, "route")
+    graph.add_conditional_edges("route", after_route, ["understand", "extract", "switch", END])
+    graph.add_conditional_edges("switch", after_switch, ["plan", "understand", "clarify", "switch", END])
     graph.add_conditional_edges("understand", after_understand, ["plan", "reply", END])
-    graph.add_conditional_edges("reply", after_reply, ["understand", "plan", END])
+    graph.add_conditional_edges("reply", after_reply, ["understand", "plan", "reply", END])
     graph.add_conditional_edges("plan", after_plan, ["extract", END])
     graph.add_conditional_edges("extract", after_extract, ["check", END])
     graph.add_conditional_edges("check", until_complete, {"ask": "advance", "next": "resolve"})
     graph.add_conditional_edges("advance", after_advance, ["clarify", "reconcile", END])
-    graph.add_conditional_edges("clarify", after_clarify, ["extract", END])
+    graph.add_conditional_edges("clarify", after_clarify, ["extract", "clarify", "switch", END])
     graph.add_conditional_edges("resolve", until_complete, {"ask": "advance", "next": "prepare"})
     graph.add_edge("prepare", "verify")
     graph.add_conditional_edges("verify", after_verify, ["ready_for_user", "reconcile", END])
