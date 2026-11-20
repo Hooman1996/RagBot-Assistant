@@ -1235,5 +1235,105 @@
       "end": "ready_for_user",
       "asks": []
     }
+  },
+  {
+    "id": "T-061",
+    "tags": [
+      "unambiguous",
+      "colloquial"
+    ],
+    "turns": [
+      "قسط بعدی تسهیلات خرید خودرو رو از پس‌انداز بده"
+    ],
+    "expect": {
+      "intent": "loan_repayment",
+      "values": {
+        "loan": "loan-overdue",
+        "loan-source": "account-2"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-062",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "اقساط وام‌هامو نشون بده"
+    ],
+    "expect": {
+      "intent": "loans",
+      "values": {},
+      "end": "completed",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-063",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "colloquial"
+    ],
+    "turns": [
+      "یک میلیون تومن از درگاه بریز تو حسابم"
+    ],
+    "expect": {
+      "intent": "account_funding",
+      "values": {
+        "funding-amount": {
+          "value": 10000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-064",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "wallet_vs_bank"
+    ],
+    "turns": [
+      "با درگاه ۲۰۰ هزار تومن به کیف پولم واریز کن"
+    ],
+    "expect": {
+      "intent": "wallet_funding",
+      "values": {
+        "funding-amount": {
+          "value": 2000000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-065",
+    "tags": [
+      "missing",
+      "colloquial"
+    ],
+    "turns": [
+      "قبض برقمو بده"
+    ],
+    "expect": {
+      "intent": "bill_payment",
+      "values": {},
+      "end": "clarifying",
+      "asks": [
+        "bill-source",
+        "bill-id",
+        "bill-pay-id"
+      ]
+    }
   }
 ]

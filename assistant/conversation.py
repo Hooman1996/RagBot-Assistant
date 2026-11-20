@@ -165,11 +165,17 @@ class Conversation:
 
     def standalone(self, routed: dict, turns: list[dict], text: str) -> str:
         """The new task's request: the guarded rewrite once the conversation has earlier user words
-        (what «همونو» refers to, or a request without its «نه ولش،»), else the user's own message: a
-        first message stands on its own, and a rewrite could only change it."""
+        (what «همونو» refers to, or a request without its «نه ولش،»), or when the message holds a
+        second task, which the rewrite leaves out; else the user's own message: a first message with
+        one task stands on its own, and a rewrite could only change it."""
         rewrite = self.guarded(routed["standalone"], turns, text)
         earlier = any(item["from"] == "user" for item in turns)
-        return rewrite if rewrite and earlier else text
+        # Two tasks in one message: the rewrite is the first task alone, the chooser's one request; a
+        # rewrite that still holds the second task has it taken out.
+        rest = self.guarded(routed["rest"], turns, text)
+        if rewrite and rest and rest in rewrite and rest != rewrite:
+            rewrite = rewrite.replace(rest, "").strip(" ،,و") or rewrite
+        return rewrite if rewrite and (earlier or rest) else text
 
     def label(self, item: dict, value: str | dict) -> str:
         """A value as the user reads it, masked: a record by its label, never its key."""

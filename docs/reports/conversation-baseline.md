@@ -154,3 +154,34 @@ numbers may be optimistic, as noted for P6-03.
 - A typed «تأیید کن» and a typed PIN were refused, at a question and at a review.
 - The five demo flows reached their review, and «برو به خانه» opened Home.
 
+## CF-4 (#192): the shared chooser's wrong picks
+
+**Date:** 20 Nov 2026. **Code:** `cbd040a`, words only.
+
+**What changed, on the assistant's side (D-026):**
+- Sharper Persian words in `app_profiles/assistant_words.json` for loans vs loan payment, account vs
+  wallet funding, repeat transactions, and bill vs wallet bill.
+- The router's rewrite is used for a message with two tasks, with the second task taken out of it.
+- Seven new tuning cases in new words.
+
+On 26 probe phrases (both sides of each pair, new words) the chooser went from 19 / 22 to 26 / 26.
+
+| Set | Result |
+|---|---|
+| Existing held-out, twice | 0 / 145 critical, 101 / 101, 108 / 108, 27 / 27 (unchanged) |
+| Existing tuning (65 cases) | Every gate passes. T-059, gateway funding into the account, is fixed |
+| Conversation held-out, twice | 2 / 133 critical, safety 20 / 21, non-chat turns 122 / 125 and 121 / 125. The two-task turns (CH-054, CH-056) and CH-001 now pass |
+
+**Stop condition reached:** «قسط بعدی وام شخصیمو بده» (CH-029, CH-035) still opens the loans page in
+the full runs. The words alone leave it on the edge: the chooser picked the payment when this
+wording was tried alone, and the loans page in both full runs. One more line in the chooser prompt fixed it, and the
+conversation held-out then passed every gate except chat: 0 / 133 critical, 21 / 21 safety and
+125 / 125 non-chat turns, on two runs. But every such line also sent vague requests («کمکم کن»,
+«یه سوال داشتم») to the support page, a new critical case on the existing held-out (H-132). Three
+wordings were tried:
+- pay or do;
+- pay an installment, a bill or a debt;
+- pay an installment.
+
+None settled both, so the line was removed.
+

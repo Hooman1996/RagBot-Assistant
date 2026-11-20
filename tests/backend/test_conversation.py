@@ -213,3 +213,24 @@ def test_the_guard_gives_the_rewrite_back_in_its_own_letters() -> None:
         "از پس‌انداز برای 09121234567 شارژ ۲۰ هزار تومنی بخر", turns, "همونو دوباره بخر"
     )
     assert "پس‌انداز" in guarded  # the ZWNJ stays, so the record is found by its label
+
+
+def test_two_tasks_in_a_first_message_prepare_the_first_alone() -> None:
+    first = "۲۵۰ هزار تومان از کارت 6104336383233566 به رضا کارت به کارت کن"
+    routed = {"kind": "new_task", "standalone": first, "rest": "قبض آبمو بده"}
+    chat = FakeChat([routed, CARD, card()])
+    graph = build_agent(chat, RecordingApp())
+    result = graph.invoke(new_request("c", first + "، بعدش قبض آبمو بده"), CONFIG)
+    # The chooser and the reader see the first task alone (its digits as the guard gives them back).
+    assert len(result["messages"]) == 1 and "قبض" not in result["messages"][0]
+    assert replies.SECOND_TASK.format(rest="قبض آبمو بده") in result["reply"]
+
+
+def test_a_rewrite_that_keeps_the_second_task_has_it_taken_out() -> None:
+    conversation = Conversation(FakeChat([]), FixtureLookups())
+    text = "قسط بعدی وامم رو از پس‌انداز بده، یه کارت به کارت هم به رضا دارم"
+    routed = {
+        "standalone": "قسط بعدی وامم رو از پس‌انداز بده و یه کارت به کارت هم به رضا بده",
+        "rest": "یه کارت به کارت هم به رضا بده",
+    }
+    assert conversation.standalone(routed, [], text) == "قسط بعدی وامم رو از پس‌انداز بده"
