@@ -6,7 +6,8 @@ question). The router is one model call, held to a schema: it says what the newe
 as one standalone request. Code acts on that. The rewrite guard keeps a rewrite only when every
 amount, number and record name in it is the user's own, so a rewrite can drop a reference but
 never invent a value. Every prompt is masked, and a secret never reaches one: the fast path in
-lifecycle.py replaced it in the history before.
+lifecycle.py replaced it in the history before. The chat reply is the model's own short answer to
+chat (CF-3); code replaces any reply with a number, an amount or a claim that something was done.
 """
 
 import re
@@ -46,6 +47,30 @@ SCHEMA = {
     "required": ["kind", "standalone", "rest"],
     "additionalProperties": False,
 }
+CHAT_CHARACTERS = 300
+CHAT_SCHEMA = {
+    "type": "object",
+    "properties": {"reply": {"type": "string", "maxLength": CHAT_CHARACTERS}},
+    "required": ["reply"],
+    "additionalProperties": False,
+}
+# A claim that something was done: sent, paid, confirmed, deposited, transferred or bought.
+CLAIMED = re.compile(
+    r"(ارسال|پرداخت|انجام|تایید|تأیید|واریز|منتقل|انتقال|خرید|ثبت)\s*(شد|کردم|دادم|گردید|نمودم)"
+)
+CHAT_LINES = [
+    "You are the friendly assistant of a Persian mobile banking app. Reply to the user's newest message",
+    "in one or two short, warm Persian sentences.",
+    "What you can do: prepare tasks in this app (transfers, bill payments, top-ups, loan installments,",
+    "cards, cheques and more) up to a review page that only the user confirms, by touch.",
+    "- A greeting or thanks: answer it warmly and offer help.",
+    "- Something the app cannot do: say kindly that you cannot do it here, and say what you can do.",
+    "- A question about rates, fees, rules or anything else: say you cannot answer that here yet.",
+    "- Rude words: stay calm and polite, do not repeat them, and offer help.",
+    "- Greet only when the user greets.",
+    "- When a task is open, do not ask for its values: its question follows your reply.",
+    "Never give numbers, amounts, account details or advice. Never say anything was sent, paid or confirmed.",
+]
 KIND_LINES = [
     "kind:",
     "- answer: it answers the pending question, or gives values for the open task.",
@@ -99,6 +124,26 @@ def router_prompt(turns: list[dict], task: str, pending: str, text: str) -> str:
     return masked("\n".join(lines + KIND_LINES))
 
 
+def chat_prompt(turns: list[dict], task: str, text: str) -> str:
+    """The chat reply's question: what the assistant can do, the recent conversation, the open task
+    and the newest message, all masked."""
+    lines = CHAT_LINES + ["", "Recent conversation, oldest first:"]
+    lines += [f"- {item['from']}: «{item['text']}»" for item in turns] or ["- none"]
+    lines += [f"Open task: {task}", f"Newest message: «{text}»"]
+    return masked("\n".join(lines))
+
+
+def safe_chat(reply: object) -> str:
+    """The model's chat reply, masked, or CHAT_SAFE when it is empty, too long, or holds a number,
+    an amount or a claim that something was done."""
+    if not isinstance(reply, str) or not reply.strip() or len(reply) > CHAT_CHARACTERS:
+        return replies.CHAT_SAFE
+    said = plain(reply)
+    if re.search(r"[0-9۰-۹٠-٩]", reply) or amounts(said) or CLAIMED.search(said):
+        return replies.CHAT_SAFE
+    return masked(reply.strip())
+
+
 class Conversation:
     """The router and the guard, over the chat model and the lookups."""
 
@@ -128,6 +173,17 @@ class Conversation:
         kind = answer.get("kind") if answer.get("kind") in KINDS else None
         show("router", kind=kind, standalone=str(answer.get("standalone")), rest=str(answer.get("rest")))
         return {"kind": kind, "standalone": answer.get("standalone"), "rest": answer.get("rest")}
+
+    def chat_reply(self, turns: list[dict], task: str, text: str) -> str:
+        """The chat reply node (CF-3): one model call for a greeting, thanks, small talk, a question
+        or a request the app cannot do, held to a schema and guarded in code."""
+        try:
+            answer = self.chat.json(chat_prompt(turns, task, text), CHAT_SCHEMA)
+        except ModelError:
+            return replies.CHAT_SAFE
+        reply = safe_chat(answer.get("reply"))
+        show("chat", reply=reply)
+        return reply
 
     def guarded(
         self, rewrite: object, turns: list[dict], text: str, rest: str | None = None, second: bool = False

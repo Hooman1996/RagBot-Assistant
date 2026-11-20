@@ -98,7 +98,7 @@ class Nodes:
         if kind in ("cancel", "only_looking"):
             return {"route": "cancel"}
         if kind == "chat":
-            return {"route": here, "lead": replies.KNOWLEDGE}
+            return {"route": here, "lead": self.chatted(state, turns[:-1], answer)}
         if kind != "new_task" or here != "clarify":
             return None
         try:
@@ -106,9 +106,15 @@ class Nodes:
         except ModelError:
             return {"route": here, "lead": replies.MODEL_FAILED}
         if found["chosen"] not in self.features and found["chosen"] != NOT_SURE:
-            return {"route": here, "lead": replies.KNOWLEDGE}
+            return {"route": here, "lead": self.chatted(state, turns[:-1], answer)}
         rest = self.conversation.guarded(routed["rest"], turns[:-1], answer, second=True)
         return {"route": "switch", "switch_to": found | {"rest": rest}}
+
+    def chatted(self, state: AgentState, turns: list[dict], text: str) -> str:
+        """The chat reply node (CF-3): the model's own short reply to chat or a knowledge question,
+        guarded in code. A waiting node asks its question again after it."""
+        task = self.conversation.summary(state, self.features)
+        return self.conversation.chat_reply(turns, task, text)
 
     def failed(self, state: AgentState, reply: str) -> dict:
         """Ends the task with a plain Persian reason."""
@@ -484,11 +490,12 @@ class Nodes:
         return moved(state, "ready_for_user") | {"reply": reply}
 
     def reply(self, state: AgentState) -> dict:
-        """A knowledge question gets the fixed message; "not sure" asks with the 4 closest features.
+        """A knowledge question gets the chat reply; "not sure" asks with the 4 closest features.
         A typed answer is read in the conversation first (door B): a refusal or chat ask again, a
         cancel cancels, and other words are understood again as the request."""
         if state["chosen"] == KNOWLEDGE:
-            return {"reply": replies.KNOWLEDGE}
+            # The message is the history's last line, put there by the route node.
+            return {"reply": self.chatted(state, state["turns"][:-1], hidden(state["messages"])[-1])}
         shown = state["offered"][:NOT_SURE_OPTIONS]
         options = [{"ref": intent, "label": self.features[intent]["title"]} for intent in shown]
         question = "\n".join(part for part in (state["lead"], replies.NOT_SURE) if part)
