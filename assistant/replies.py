@@ -10,6 +10,7 @@ from assistant.lookups import Candidate, FixtureLookups
 from assistant.steps import masked
 
 KNOWLEDGE = "پاسخ به پرسش‌های عمومی در این مرحله فعال نیست"
+CHAT_SAFE = "در خدمتم؛ بنویسید چه کاری در برنامه انجام دهم."
 NOT_SURE = "منظورتان کدام است؟"
 MODEL_FAILED = "ارتباط با مدل زبانی برقرار نشد؛ کاری انجام نشد."
 NOT_POSSIBLE = "دستیار مجاز نیست به این صفحه برود؛ این کار را خودتان انجام دهید."

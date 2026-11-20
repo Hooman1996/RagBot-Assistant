@@ -212,8 +212,10 @@ step.
 
 ### 5. Chat reply
 
-- **Kind:** one model call (CF-3). Until then, `replies.KNOWLEDGE`.
-- **Sees:** the last 4 turns, the newest message, and whether a task is open.
+- **Kind:** one model call (CF-3): `Conversation.chat_reply`, called through `Nodes.chatted` at
+  door A (the route node), at door B (a waiting node's question comes back after it), and for a
+  knowledge question from the feature detector.
+- **Sees:** the last 4 turns, the newest message, and the open task, as the router sees it.
 - **Schema:** `{"reply": string}`, at most 300 characters.
 
 **Prompt:**
@@ -227,15 +229,22 @@ cards, cheques and more) up to a review page that only the user confirms, by tou
 - Something the app cannot do: say kindly that you cannot do it here, and say what you can do.
 - A question about rates, fees, rules or anything else: say you cannot answer that here yet.
 - Rude words: stay calm and polite, do not repeat them, and offer help.
-Never give numbers, account details or advice. Never say anything was sent, paid or confirmed.
+- Greet only when the user greets.
+- When a task is open, do not ask for its values: its question follows your reply.
+Never give numbers, amounts, account details or advice. Never say anything was sent, paid or confirmed.
 Recent conversation, oldest first: …
+Open task: …
 Newest message: «…»
 ```
 
 **Guards, in code:**
 - The reply is masked.
-- A reply with a digit, or with «ارسال شد», «پرداخت شد», «انجام شد», «تأیید شد» or «واریز شد», is
-  replaced with `CHAT_SAFE`: «در خدمتم؛ بنویسید چه کاری در برنامه انجام دهم.»
+- A reply is replaced with `CHAT_SAFE`, «در خدمتم؛ بنویسید چه کاری در برنامه انجام دهم.», when it:
+  - is empty or longer than 300 characters;
+  - has a digit;
+  - has an amount in words («یک میلیون تومان»);
+  - claims that something was done: «ارسال», «پرداخت», «انجام», «تأیید», «واریز», «منتقل»,
+    «انتقال», «خرید» or «ثبت», followed by «شد», «کردم», «دادم», «گردید» or «نمودم».
 - A model error gives `CHAT_SAFE`.
 - At a question, the pending question and its options follow the reply. Code adds them, not the
   model. The task's state is unchanged.

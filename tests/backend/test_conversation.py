@@ -14,7 +14,7 @@ from langgraph.types import Command
 
 from assistant import replies
 from assistant.agent_state import new_request
-from assistant.conversation import Conversation
+from assistant.conversation import Conversation, safe_chat
 from assistant.lifecycle import fast, next_input
 from assistant.lookups import FixtureLookups
 from assistant.models import ModelError
@@ -104,10 +104,13 @@ def test_a_cancel_with_nothing_open_gets_the_fixed_line() -> None:
 
 def test_chat_with_no_task_gets_a_reply_and_nothing_is_done() -> None:
     app = RecordingApp()
-    chat = FakeChat([{"kind": "chat"}, {"choice": "not_sure"}])  # the chooser finds no feature
+    said = "سلام! چه کاری برایتان انجام دهم؟"
+    # The chooser finds no feature, then the chat reply.
+    chat = FakeChat([{"kind": "chat"}, {"choice": "not_sure"}, {"reply": said}])
     result = build_agent(chat, app).invoke(new_request("c", "سلام"), CONFIG)
-    assert result["reply"] == replies.KNOWLEDGE and result["task_state"] == "created"
+    assert result["reply"] == said and result["task_state"] == "created"
     assert app.sent == []
+    assert chat.schemas[-1]["properties"]["reply"]["maxLength"] == 300
 
 
 def test_chat_that_names_a_feature_with_no_task_open_is_a_request() -> None:
@@ -119,11 +122,12 @@ def test_chat_that_names_a_feature_with_no_task_open_is_a_request() -> None:
 
 
 def test_chat_or_a_secret_in_the_middle_of_a_question_asks_it_again() -> None:
-    chat = FakeChat([CARD, card(None), {"kind": "chat"}])
+    chat = FakeChat([CARD, card(None), {"kind": "chat"}, {"reply": "سلام! ممنون، خوبم."}])
     graph = build_agent(chat, RecordingApp())
     first = pending(graph.invoke(new_request("c", CARD_SENTENCE), CONFIG))
     again = pending(graph.invoke(Command(resume="سلام، خوبی؟"), CONFIG))
-    assert again["question"] == replies.KNOWLEDGE + "\n" + first["question"]
+    assert again["question"] == "سلام! ممنون، خوبم.\n" + first["question"]
+    assert "Open task: «کارت به کارت»" in chat.prompts[-1]
     assert again["options"] == first["options"]
     refused = pending(graph.invoke(Command(resume="پین کارتم 1397 ه"), CONFIG))
     assert refused["question"] == replies.NO_SECRETS + "\n" + first["question"]
@@ -270,3 +274,31 @@ def test_a_rewrite_that_changes_paying_into_seeing_is_refused() -> None:
     assert (
         conversation.guarded("قسط بعدی وام شخصیم رو پرداخت کن", turns, "قسط بعدی وام شخصیمو بده") is not None
     )
+
+
+@pytest.mark.parametrize(
+    "said",
+    [
+        "مبلغ ۵۰۰ هزار تومان به حساب شما واریز شد.",  # a number and a claim
+        "کارت 6104337788990011 را انتخاب کنید.",  # a card number
+        "یک میلیون تومان کافی است.",  # an amount in words
+        "پرداخت شد، نگران نباشید.",  # a claim
+        "انتقال را انجام دادم.",  # a claim
+        "خیلی " * 80,  # too long
+        "",
+        None,
+    ],
+)
+def test_a_chat_reply_with_a_number_an_amount_or_a_claim_is_replaced(said: object) -> None:
+    assert safe_chat(said) == replies.CHAT_SAFE
+
+
+def test_a_plain_chat_reply_is_kept() -> None:
+    said = "سهام خریدن از اینجا ممکن نیست، ولی کارت به کارت و پرداخت قبض را می‌توانم آماده کنم."
+    assert safe_chat(said) == said
+
+
+def test_a_model_error_in_the_chat_reply_gives_a_fixed_line() -> None:
+    chat = FakeChat([{"kind": "chat"}, {"choice": "not_sure"}, ModelError("down")])
+    result = build_agent(chat, RecordingApp()).invoke(new_request("c", "سلام"), CONFIG)
+    assert result["reply"] == replies.CHAT_SAFE

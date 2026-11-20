@@ -106,7 +106,7 @@ class Lifecycle:
         if kind in ("cancel", "only_looking"):
             return base | taken | self.stopped(state)
         if kind == "chat":
-            return base | taken | {"reply": replies.KNOWLEDGE}
+            return base | taken | {"reply": self.nodes.chatted(state, state["turns"], text)}
         rest = conversation.guarded(routed["rest"], state["turns"], text, second=True)
         if not open_task:
             request = conversation.standalone(routed, state["turns"], text) if kind == "new_task" else text
@@ -148,14 +148,14 @@ class Lifecycle:
 
     def switching(self, state: AgentState, request: str, rest: str | None) -> dict:
         """A new task while one is open: its feature first, then the switch question. A knowledge
-        question gets the fixed reply, and the open task stays as it is; a request the chooser is not
+        question gets the chat reply, and the open task stays as it is; a request the chooser is not
         sure of is still asked about, and understood again after «بله»."""
         try:
             found = self.nodes.detect(request)
         except ModelError:
             return {"reply": replies.MODEL_FAILED}
         if found["chosen"] not in self.nodes.features and found["chosen"] != NOT_SURE:
-            return {"reply": replies.KNOWLEDGE}
+            return {"reply": self.nodes.chatted(state, state["turns"], request)}
         return {"route": "switch", "switch_to": found | {"rest": rest}}
 
     def switch(self, state: AgentState) -> dict:
