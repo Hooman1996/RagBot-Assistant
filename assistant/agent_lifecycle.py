@@ -107,7 +107,7 @@ class Lifecycle:
             return base | taken | self.stopped(state)
         if kind == "chat":
             return base | taken | {"reply": replies.KNOWLEDGE}
-        rest = conversation.guarded(routed["rest"], state["turns"], text)
+        rest = conversation.guarded(routed["rest"], state["turns"], text, second=True)
         if not open_task:
             request = conversation.standalone(routed, state["turns"], text) if kind == "new_task" else text
             return (

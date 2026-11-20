@@ -261,3 +261,12 @@ def test_the_paying_feature_is_chosen_only_when_it_was_offered() -> None:
 
     offered = [{"intent": "loans", "title": "", "required_slots": []}]
     assert choose(FakeChat([{"choice": "loans"}]), "قسط وامم رو بده", offered) == "loans"
+
+
+def test_a_rewrite_that_changes_paying_into_seeing_is_refused() -> None:
+    conversation = Conversation(FakeChat([]), FixtureLookups())
+    turns = [{"from": "user", "text": "برو به خانه"}]
+    assert conversation.guarded("قسط بعدی وام شخصی رو نشون بده", turns, "قسط بعدی وام شخصیمو بده") is None
+    assert (
+        conversation.guarded("قسط بعدی وام شخصیم رو پرداخت کن", turns, "قسط بعدی وام شخصیمو بده") is not None
+    )
