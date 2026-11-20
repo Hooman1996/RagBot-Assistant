@@ -3,7 +3,9 @@
 Wired into one graph by agent_graph.py. The model only returns JSON, through intent.py and
 slots.py; code plans, resolves, runs and checks. Before a question, the app is moved to the screen
 the question is about. The app is reached only through TaskRunner, so the only commands are
-navigate, fill_form and show_review. Nothing here can confirm, submit or pay.
+navigate, fill_form and show_review. A question's typed answer is read in the conversation first
+(D-034, door B): the fast path, then the turn router; an answer goes on as before, and anything else
+leaves the question with where to go next. Nothing here can confirm, submit or pay.
 """
 
 from collections.abc import Callable
@@ -14,8 +16,9 @@ from langgraph.types import interrupt
 
 from assistant import replies
 from assistant.agent_state import AgentState, moved
+from assistant.conversation import Conversation, kept, line
 from assistant.intent import KNOWLEDGE, NOT_SURE, FeatureIndex, choose
-from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, only_looking, wants_cancel
+from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, fast, wants_cancel
 from assistant.lookups import Candidate, FixtureLookups, plain, source_of, typed
 from assistant.models import Chat, ModelError
 from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
@@ -25,6 +28,8 @@ from assistant.task_runner import Bridge, TaskReport, TaskRunner
 from assistant.words import field_words, fixed, installment_of, limits, options, plates, when
 
 MODEL_SEES = ("ref", "type", "ask", "description")
+NOT_SURE_OPTIONS = 4  # the closest features a not-sure question offers (owner, 19 Nov 2026)
+REFUSALS = {"secret": replies.NO_SECRETS, "confirm": replies.CONFIRM_BY_TOUCH}
 
 
 @dataclass
@@ -55,6 +60,55 @@ class Nodes:
     def __init__(self, tools: Tools) -> None:
         self.tools = tools
         self.features = {item["intent"]: item for item in tools.navigator.features}
+        self.conversation = Conversation(tools.chat, tools.lookups)
+
+    def detect(self, text: str) -> dict:
+        """The feature a request means, as understand finds it: TEI's closest, then the chooser."""
+        offered = self.tools.index.closest(hidden([text])[0])
+        chosen = choose(self.tools.chat, hidden([text])[0], offered)
+        return {"text": text, "offered": [item["intent"] for item in offered], "chosen": chosen}
+
+    def names_a_feature(self, text: str) -> bool:
+        """True when the chooser finds a feature in words the router read as a cancel or, with no task
+        open, as chat: such words ask for a task. A model error keeps the router's reading."""
+        try:
+            return self.detect(text)["chosen"] in self.features
+        except ModelError:
+            return False
+
+    def heard(self, state: AgentState, asked: str, answer: str) -> tuple[str | None, list[dict]]:
+        """A typed answer to a question: its fast-path reading, and the history with the question and
+        the answer, a secret replaced so no prompt ever has it."""
+        kind = fast(answer)
+        said = replies.REMOVED if kind == "secret" else answer
+        return kind, kept(state["turns"], line("assistant", masked(asked)), line("user", said))
+
+    def elsewhere(
+        self, state: AgentState, turns: list[dict], answer: str, pending: str, here: str
+    ) -> dict | None:
+        """Where a typed answer that is not an answer goes, as the router reads it, or None for an
+        answer: chat gets its reply before the question again; a new task, the switch question;
+        a cancel, the cancel. here is the waiting node, to ask again."""
+        routed = self.conversation.route(
+            turns[:-1], self.conversation.summary(state, self.features), pending, answer
+        )
+        kind = routed["kind"]
+        if kind in ("cancel", "only_looking") and self.names_a_feature(answer):
+            kind = "new_task"  # «ولش، کارت به کارت میخوام» asks for another task
+        if kind in ("cancel", "only_looking"):
+            return {"route": "cancel"}
+        if kind == "chat":
+            return {"route": here, "lead": replies.KNOWLEDGE}
+        if kind != "new_task" or here != "clarify":
+            return None
+        try:
+            found = self.detect(self.conversation.standalone(routed, turns[:-1], answer))
+        except ModelError:
+            return {"route": here, "lead": replies.MODEL_FAILED}
+        if found["chosen"] not in self.features and found["chosen"] != NOT_SURE:
+            return {"route": here, "lead": replies.KNOWLEDGE}
+        rest = self.conversation.guarded(routed["rest"], turns[:-1], answer)
+        return {"route": "switch", "switch_to": found | {"rest": rest}}
 
     def failed(self, state: AgentState, reply: str) -> dict:
         """Ends the task with a plain Persian reason."""
@@ -265,22 +319,36 @@ class Nodes:
 
     def clarify(self, state: AgentState) -> dict:
         """Asks once for everything missing, and waits for the user's text or an option's ref. The
-        question names its form fields, so the app can bring the first one into view."""
-        update = moved(state, "clarifying") | {"question": None, "options": []}
+        question names its form fields, so the app can bring the first one into view. A typed answer
+        is read in the conversation first (door B): a refusal, chat or a new task leave the
+        question with where to go, and its note and options stay for asking it again."""
+        asking = moved(state, "clarifying") | {"lead": None, "route": None}
         wanted = [item for item in state["plan"]["requirements"] if item["ref"] in state["missing"]]
         options = (state["options"] or replies.lookup_options(self.tools.lookups, wanted)) + [CANCEL]
         text = replies.question(state["question"], [item["ask"] for item in wanted])
+        shown = "\n".join(part for part in (state["lead"], text) if part)
         fields = [item["ref"] for item in wanted if item["kind"] == "field"]
         answer = interrupt(
-            {"question": text, "options": options, "fields": fields, "task_state": update["task_state"]}
+            {"question": shown, "options": options, "fields": fields, "task_state": asking["task_state"]}
         )
-        if wants_cancel(answer) or only_looking(answer):
-            reply = replies.CANCELLED_OPEN if state["report"] else replies.CANCELLED  # the app moved
-            return update | moved(update, "cancelled") | {"reply": reply}
-        if answer in [item["ref"] for item in options]:
+        update = asking | {"question": None, "options": []}
+        if answer in [item["ref"] for item in options] and not wants_cancel(answer):
             ref, key = answer.split("=", 1)
             missing = [item for item in state["missing"] if item != ref]
             return update | {"values": state["values"] | {ref: key}, "missing": missing}
+        kind, turns = (
+            self.heard(state, shown, answer) if answer != CANCEL["ref"] else ("cancel", state["turns"])
+        )
+        if kind in REFUSALS:
+            return asking | {"turns": turns, "route": "clarify", "lead": REFUSALS[kind]}
+        pending = f"«{text}» Options: {' | '.join(item['label'] for item in options)}"
+        away = None if kind else self.elsewhere(state, turns, answer, pending, "clarify")
+        if kind in ("cancel", "only_looking") or (away and away["route"] == "cancel"):
+            reply = replies.CANCELLED_OPEN if state["report"] else replies.CANCELLED  # the app moved
+            return update | moved(update, "cancelled") | {"reply": reply, "turns": turns}
+        if away:
+            return asking | {"turns": turns} | away
+        update |= {"turns": turns}
         record = self.record(wanted[0], answer) if len(wanted) == 1 and wanted[0]["lookup"] else None
         if record:
             # A typed answer to one record question that names exactly one listed record is that
@@ -411,21 +479,42 @@ class Nodes:
             reply = replies.PAGE_OPEN.format(title=feature["title"])
             return moved(state, "ready_for_user", "completed") | {"reply": reply}
         reply = replies.ready(state["report"], state["plan"]["requirements"], self.tools.lookups)
+        if state.get("rest"):
+            reply += "\n" + replies.SECOND_TASK.format(rest=masked(state["rest"]))
         return moved(state, "ready_for_user") | {"reply": reply}
 
     def reply(self, state: AgentState) -> dict:
-        """A knowledge question gets the fixed message; "not sure" asks with the closest features."""
+        """A knowledge question gets the fixed message; "not sure" asks with the 4 closest features.
+        A typed answer is read in the conversation first (door B): a refusal or chat ask again, a
+        cancel cancels, and other words are understood again as the request."""
         if state["chosen"] == KNOWLEDGE:
             return {"reply": replies.KNOWLEDGE}
-        options = [{"ref": intent, "label": self.features[intent]["title"]} for intent in state["offered"]]
-        pending = {
-            "question": replies.NOT_SURE,
-            "options": options + [CANCEL],
-            "task_state": state["task_state"],
-        }
+        shown = state["offered"][:NOT_SURE_OPTIONS]
+        options = [{"ref": intent, "label": self.features[intent]["title"]} for intent in shown]
+        question = "\n".join(part for part in (state["lead"], replies.NOT_SURE) if part)
+        pending = {"question": question, "options": options + [CANCEL], "task_state": state["task_state"]}
         answer = interrupt(pending)
-        if wants_cancel(answer):
-            return moved(state, "cancelled") | {"chosen": None, "reply": replies.CANCELLED}
-        if answer in state["offered"]:
-            return {"chosen": answer}
-        return {"chosen": None, "messages": state["messages"] + [answer]}
+        if answer in shown:
+            return {"chosen": answer, "lead": None, "route": None}
+        kind, turns = (
+            self.heard(state, question, answer) if answer != CANCEL["ref"] else ("cancel", state["turns"])
+        )
+        if kind in REFUSALS:
+            return {"turns": turns, "route": "reply", "lead": REFUSALS[kind]}
+        labels = " | ".join(item["label"] for item in options)
+        away = (
+            None
+            if kind
+            else self.elsewhere(state, turns, answer, f"«{replies.NOT_SURE}» Options: {labels}", "reply")
+        )
+        if kind in ("cancel", "only_looking") or (away and away["route"] == "cancel"):
+            return moved(state, "cancelled") | {"chosen": None, "reply": replies.CANCELLED, "turns": turns}
+        if away:
+            return {"turns": turns} | away
+        return {
+            "chosen": None,
+            "messages": state["messages"] + [answer],
+            "turns": turns,
+            "lead": None,
+            "route": None,
+        }

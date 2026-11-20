@@ -6,8 +6,39 @@ an answer, a correction, a new task, small talk, a cancel, or "only looking". Th
 [workflow agent](agent.md), the default. The [ReAct agent](react-agent.md) can reuse the router
 later.
 
-This page is the design. CF-1 (#186) builds the tests first, CF-2 (#187) builds nodes 1 to 4, 6 and
-13, and CF-3 (#188) builds node 5. Nodes 7 to 12 exist today and are reused unchanged.
+This page is the design. CF-1 (#186) built the tests first, CF-2 (#187) built nodes 1 to 4, 6 and
+13, and CF-3 (#188) builds node 5. Nodes 7 to 12 are reused.
+
+## What CF-2 built, and where it differs from the design
+
+**Where the code is:**
+- `assistant/conversation.py`: the history lines, the router (prompt, schema and fallback), the
+  rewrite guard and the open task's summary.
+- `assistant/lifecycle.py`: `fast()`, the fast path, and `next_input()`, which carries the history
+  over and gives the message as the turn's `said`.
+- `assistant/agent_lifecycle.py`: `route` (door A) and `switch`.
+- `assistant/agent_nodes.py`: door B inside `clarify` and `reply`, the 4 not-sure options and the
+  second-task note.
+
+The ReAct agent is unchanged; it still uses its own follow-up.
+
+**Changes found on the tuning sets:**
+
+| Change | Why |
+|---|---|
+| A rewrite is used only once the conversation has earlier user words; a first message is used as the user wrote it | A rewrite of a first message can only change it: it lost an amount and a card (tuning T-002, T-003). Later, the rewrite is what makes «همونو» and «نه ولش، قبض آبمو بده» clear for the chooser (CH-001 picked the loans page from the raw words). |
+| A correction after the review reads the newest message on its own, plus the workflow's `named` check on it, and keeps every other value | Re-reading every message let the model bring the old value back. «از کوتاه‌مدت بخر» and «به حساب نگار صادقی بزن» prepared the old review again, which was a critical wrong action already in the baseline. |
+| When the router says cancel, the chooser also reads the message; if it names a feature, it is a new task | Gemma read «ولش، کارت به کارت میخوام» and «نه اصلا برو خونه» as a cancel. A plain cancel («بیخیالش شو») names no feature and still cancels. |
+| The router prompt says the app's domain, and that with no task open a request (even a vague one) is a new task | Out-of-app requests and vague requests were misread. |
+| With no task open, chat stands only when the chooser finds no feature in the message; else it is a new task | A request worded as a question («ببین ماشین … چند بار رفته تو طرح آلودگی هوا», held-out H-045) read as chat to the router. With no task open, the chooser decides what is a request, as before CF-2, at one more model call for a first message the router calls chat. Found on held-out. |
+| A secret word must start a word | «رمز» inside «کارمزد» (a fee) with a card's digits read as a typed secret, and three held-out requests with a fee were refused (H-032, H-049, H-050). Found on held-out. |
+| The guard checks people's and accounts' names only (contacts by card, account, IBAN or wallet, and the user's accounts), and a record's word is allowed beside another word of the same label the user said | «سپرده» in a rewrite of «پس‌انداز» is the user's own account, and «خرید» from a saved loan's title is no name; an invented «نگار صادقی» is still refused. |
+| The router is told to copy the amount, card, account, number and person of the request «همین / همون / عین همین» refers to, as the user wrote them | Rewrites of references kept the words but left the values out, or copied the assistant's masked labels. |
+| The guard restores a ****1234 as the user's full number, or as the 4 digits the user typed, and drops one the user never typed | A rewrite that copied the review's «****8880» was thrown away, and the chooser read «یکی دیگه هم عین همین بزن» as "repeat transaction" (CH-023, a critical page). |
+| A new task the chooser is not sure of still gets the switch question, naming «کار تازه»; after «بله» it is understood again and its options asked | «نه ولش، قبض آبمو بده» rewritten as «قبض آبم رو بده» was not sure, and got the fixed reply instead of the switch. |
+| Chat gets `replies.KNOWLEDGE` until CF-3 | As planned. |
+
+The router's decisions print in the step trace (`ASSISTANT_TRACE=1`, step `router`).
 
 ## What is wrong today
 

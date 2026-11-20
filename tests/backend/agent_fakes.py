@@ -47,21 +47,41 @@ def every_change_is_allowed(monkeypatch: pytest.MonkeyPatch):
     assert all(step in TRANSITIONS[current] for current, step in CHANGES), CHANGES
 
 
+FOLLOW_UP_KINDS = {"correction": "correction", "new_request": "new_task"}  # the old follow-up's answers
+
+
 class FakeChat:
-    """Returns the scripted answers in order, and records each prompt and schema it was given."""
+    """Returns the scripted answers in order, and records each prompt and schema it was given. The
+    turn router (D-034) is answered as the code before it behaved, unless the script names a kind: a
+    new task with no task open, else an answer; an old follow-up answer becomes its kind. Its
+    prompts are kept apart, in routed."""
 
     def __init__(self, answers: list[dict | Exception]) -> None:
         self.answers = list(answers)
         self.prompts: list[str] = []
         self.schemas: list[dict] = []
+        self.routed: list[str] = []
 
     def json(self, prompt: str, schema: dict) -> dict:
+        if "kind" in schema.get("properties", {}):
+            return self.route(prompt)
         self.prompts.append(prompt)
         self.schemas.append(schema)
         answer = self.answers.pop(0)
         if isinstance(answer, Exception):
             raise answer
         return answer
+
+    def route(self, prompt: str) -> dict:
+        """The router's answer: the scripted one if it is next, else as the code before it behaved."""
+        self.routed.append(prompt)
+        following = self.answers[0] if self.answers and isinstance(self.answers[0], dict) else {}
+        if "kind" in following:
+            return {"standalone": None, "rest": None} | self.answers.pop(0)
+        if following.get("answer") in FOLLOW_UP_KINDS:
+            return {"kind": FOLLOW_UP_KINDS[self.answers.pop(0)["answer"]], "standalone": None, "rest": None}
+        kind = "new_task" if "Open task: none." in prompt else "answer"
+        return {"kind": kind, "standalone": None, "rest": None}
 
 
 class FakeEmbeddings:

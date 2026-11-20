@@ -6,12 +6,16 @@ corrects the prepared task or is a new request, held to an enum; code does the r
 can confirm, submit or pay, and a command already sent is never undone.
 """
 
+import re
 from collections.abc import Callable
 
 from assistant.agent_state import new_request
+from assistant.amounts import DIGITS
+from assistant.conversation import kept, line
 from assistant.lookups import plain
 from assistant.models import Chat
 from assistant.slots import hidden
+from assistant.steps import masked
 from assistant.task_runner import Bridge, Cancelled
 
 CANCEL = {"ref": "cancel", "label": "لغو"}  # offered with every question
@@ -22,6 +26,18 @@ CANCEL_WORDS = {
 # While a question is asked: the user only wanted to see the page, so the task stops there.
 LOOKING = ("فقط ببینم", "میخواستم ببینم", "می خواستم ببینم", "فقط میخواستم", "فقط می خواستم", "فقط نگاه")
 FOLLOW_UP = ("ready_for_user", "paused")  # a new message continues these tasks instead of replacing them
+# The fast path (D-034), before any model: a whole-message request to confirm or submit, which only
+# the user does, by touch; and a secret (a password, PIN, CVV2 or code) with its digits.
+CONFIRM_WORDS = {
+    "تأیید کن", "تایید کن", "تأییدش کن", "تاییدش کن", "بزن بره", "پرداختش کن", "انجامش بده", "ثبت کن",
+    "ثبتش کن", "نهایی کن", "نهاییش کن", "ارسال کن", "ارسالش کن", "تأیید", "تایید",
+}  # fmt: skip
+# A secret word starts a word: «رمز دومم» is one, the fee in «کارمزدش» is not.
+SECRET_WORDS = re.compile(r"(?<!\w)(رمز|پین|pin|cvv|سی وی وی|کد تایید|کد تأیید|کد یکبار|کد یک بار|otp)")
+SECRET_DIGITS = re.compile(r"(?<!\d)\d{3,8}(?!\d)")
+# Typed answers to the switch question.
+YES_WORDS = {"بله", "آره", "اره", "باشه", "اوکی", "حتما", "بله شروع کن", "آره شروع کن", "شروع کن"}
+NO_WORDS = {"نه", "خیر", "نه ادامه بده", "ادامه بده", "نه ادامه", "همونو ادامه بده"}
 # What the runner's stop means for the task: the path of states, and what to tell the user.
 AFTER_STOP = {
     "cancelled": ("cancelling", "cancelled"),
@@ -36,16 +52,34 @@ def wants_cancel(answer: str) -> bool:
     return answer == CANCEL["ref"] or words in CANCEL_WORDS
 
 
+def fast(text: str) -> str | None:
+    """The fast path's reading of a typed message: "secret", "confirm", "cancel", "only_looking", or
+    None for the router."""
+    words = plain(text).strip(" .!؟?،,")
+    lowered = words.lower()
+    if SECRET_WORDS.search(lowered) and SECRET_DIGITS.search(lowered.translate(DIGITS)):
+        return "secret"
+    if words in CONFIRM_WORDS:
+        return "confirm"
+    if wants_cancel(text):
+        return "cancel"
+    return "only_looking" if only_looking(text) else None
+
+
 def only_looking(answer: str) -> bool:
     """True for an answer that says the user only wanted to see the page («میخواستم ببینم فقط»)."""
     return any(phrase in plain(answer) for phrase in LOOKING)
 
 
 def next_input(previous: dict, conversation_id: str, text: str) -> dict:
-    """What a new message starts: a follow-up of a task at its review or paused, else a new request."""
+    """What a new message starts: a follow-up of a task at its review or paused, else a new request.
+    Either way the conversation's history carries over, with what the assistant said last, and the
+    message is the turn's `said` (D-034)."""
+    said = [line("assistant", masked(previous["reply"]))] if previous.get("reply") else []
+    memory = {"said": text, "turns": kept(previous.get("turns", []), *said)}
     if previous.get("task_state") in FOLLOW_UP:
-        return {"messages": previous["messages"] + [text], "reply": None}
-    return new_request(conversation_id, text)
+        return {"messages": previous["messages"] + [text], "reply": None} | memory
+    return new_request(conversation_id, text) | memory
 
 
 def follow_up_prompt(title: str, words: str, messages: list[str]) -> str:

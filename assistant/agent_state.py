@@ -32,6 +32,12 @@ class AgentState(TypedDict):
     report: dict | None  # the task runner's report
     given: dict[str, str | dict]  # the values the app has been given in this task, as values holds them
     reply: str | None  # the last thing said to the user
+    said: str | None  # the newest message of this turn, before the route reads it (D-034)
+    turns: list[dict]  # the conversation's recent lines, {"from": "user" or "assistant", "text"}
+    rest: str | None  # a second task asked in the same message, said again at the review
+    route: str | None  # where the route or a waiting node sends this turn next
+    lead: str | None  # a line said before the next question: a refusal or a reply to chat
+    switch_to: dict | None  # the new task a switch question offers: {"text", "offered", "chosen"}
 
 
 class BadTransition(Exception):
@@ -54,6 +60,12 @@ def new_request(conversation_id: str, text: str) -> AgentState:
         report=None,
         given={},
         reply=None,
+        said=text,
+        turns=[],
+        rest=None,
+        route=None,
+        lead=None,
+        switch_to=None,
     )
 
 

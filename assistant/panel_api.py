@@ -19,6 +19,8 @@ from assistant.steps import masked
 RESULT_CHARACTERS = 160  # a step's result, cut short for the panel
 # What each of the workflow agent's nodes does, as its steps show it.
 NODE_WORDS = {
+    "route": "خواندن پیام در گفت‌وگو",
+    "switch": "پرسیدن درباره تغییر کار",
     "follow_up": "خواندن پیام پس از بازبینی",
     "understand": "تشخیص کار درخواستی",
     "reply": "پاسخ به کاربر",

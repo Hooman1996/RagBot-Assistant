@@ -34,6 +34,17 @@ STOPPED = {
     "uncertain": None,
 }
 UNCERTAIN = "معلوم نشد آخرین فرمان در برنامه انجام شد یا نه"
+# The conversation flow (D-034): the fast path's refusals, the switch question and its options.
+CONFIRM_BY_TOUCH = "تأیید فقط با لمس دکمه در صفحه بازبینی انجام می‌شود؛ من فقط آماده می‌کنم."
+NO_SECRETS = "رمز یا کد را هرگز اینجا ننویسید؛ آن را فقط خودتان در صفحه برنامه وارد کنید."
+NOTHING_OPEN = "کاری در جریان نیست؛ بنویسید چه کاری انجام دهم."
+SWITCH = "کار «{old}» نیمه‌کاره است؛ لغو شود و «{new}» شروع شود؟"
+SWITCH_YES = {"ref": "switch=yes", "label": "بله، شروع کن"}
+SWITCH_NO = {"ref": "switch=no", "label": "نه، ادامه بده"}
+GOING_ON = "باشه، کار «{title}» ادامه دارد."
+NEW_TASK = "کار تازه"  # the switch question's name for a request the chooser was not sure of
+SECOND_TASK = "درخواست دوم را بعد از این بنویسید: «{rest}»."
+REMOVED = "[حذف شد]"  # a secret, as the history keeps it
 FEW, MANY = 2, 8  # a lookup with this many records offers them as options
 
 
