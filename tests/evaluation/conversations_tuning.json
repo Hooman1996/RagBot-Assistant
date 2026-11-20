@@ -769,5 +769,58 @@
         }
       }
     ]
+  },
+  {
+    "id": "CT-032",
+    "tags": [
+      "two_tasks"
+    ],
+    "turns": [
+      {
+        "say": "۵۰ هزار تومن از کارت 4544 به سعید فلاحی کارت به کارت کن، یه قبض هم بعدش دارم",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-source": "card-2",
+            "card-transfer-destination": "card-3",
+            "card-transfer-amount": {
+              "value": 500000,
+              "unit": "IRR"
+            }
+          },
+          "says": "second_task"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-033",
+    "tags": [
+      "switch"
+    ],
+    "turns": [
+      {
+        "say": "۲۰۰ هزار تومن کارت به کارت کن برای پریسا نیک‌نام",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "نه، قسط وام خودرومو بده",
+        "expect": {
+          "end": "switch",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "option:switch=yes",
+        "expect": {
+          "end": "asking",
+          "intent": "loan_repayment"
+        }
+      }
+    ]
   }
 ]

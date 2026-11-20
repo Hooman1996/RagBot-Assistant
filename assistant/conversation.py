@@ -13,6 +13,7 @@ import re
 
 from assistant import replies
 from assistant.amounts import DIGITS, amounts
+from assistant.intent import PAY, SEE
 from assistant.lookups import GENERIC, FixtureLookups, plain
 from assistant.models import Chat, ModelError
 from assistant.steps import masked, show
@@ -128,7 +129,9 @@ class Conversation:
         show("router", kind=kind, standalone=str(answer.get("standalone")), rest=str(answer.get("rest")))
         return {"kind": kind, "standalone": answer.get("standalone"), "rest": answer.get("rest")}
 
-    def guarded(self, rewrite: object, turns: list[dict], text: str) -> str | None:
+    def guarded(
+        self, rewrite: object, turns: list[dict], text: str, rest: str | None = None, second: bool = False
+    ) -> str | None:
         """The rewrite with each ****1234 put back as the user's number (or dropped when the user never
         typed it), if every amount, number and record name in it is the user's own; else None."""
         if not isinstance(rewrite, str) or not rewrite.strip():
@@ -147,6 +150,12 @@ class Conversation:
         # Compared as matching compares text; given back in the router's own letters («پس‌انداز»).
         rewrite = " ".join(SHOWN.sub(back, rewrite.strip().translate(DIGITS)).split())
         compared = plain(rewrite)
+        # A rewrite never changes what the user asks to do: no word of seeing the user did not say
+        # («… بده» rewritten as «… نشون بده»), and no word of paying the user said dropped.
+        if not second and any(word in compared and word not in said for word in SEE):
+            return None
+        if not second and PAY.search(plain(text)) and not PAY.search(compared + " " + plain(rest or "")):
+            return None  # a word of paying may go with the second task of the message
         if not set(amounts(compared)) <= set(amounts(said)):
             return None
         if any(run not in said for run in re.findall(r"\d{4,}", compared)):
@@ -165,11 +174,17 @@ class Conversation:
 
     def standalone(self, routed: dict, turns: list[dict], text: str) -> str:
         """The new task's request: the guarded rewrite once the conversation has earlier user words
-        (what «همونو» refers to, or a request without its «نه ولش،»), else the user's own message: a
-        first message stands on its own, and a rewrite could only change it."""
-        rewrite = self.guarded(routed["standalone"], turns, text)
+        (what «همونو» refers to, or a request without its «نه ولش،»), or when the message holds a
+        second task, which the rewrite leaves out; else the user's own message: a first message with
+        one task stands on its own, and a rewrite could only change it."""
         earlier = any(item["from"] == "user" for item in turns)
-        return rewrite if rewrite and earlier else text
+        # Two tasks in one message: the rewrite is the first task alone, the chooser's one request; a
+        # rewrite that still holds the second task has it taken out.
+        rest = self.guarded(routed["rest"], turns, text, second=True)
+        rewrite = self.guarded(routed["standalone"], turns, text, rest)
+        if rewrite and rest and rest in rewrite and rest != rewrite:
+            rewrite = rewrite.replace(rest, "").strip(" ،,و") or rewrite
+        return rewrite if rewrite and (earlier or rest) else text
 
     def label(self, item: dict, value: str | dict) -> str:
         """A value as the user reads it, masked: a record by its label, never its key."""

@@ -107,7 +107,7 @@ class Nodes:
             return {"route": here, "lead": replies.MODEL_FAILED}
         if found["chosen"] not in self.features and found["chosen"] != NOT_SURE:
             return {"route": here, "lead": replies.KNOWLEDGE}
-        rest = self.conversation.guarded(routed["rest"], turns[:-1], answer)
+        rest = self.conversation.guarded(routed["rest"], turns[:-1], answer, second=True)
         return {"route": "switch", "switch_to": found | {"rest": rest}}
 
     def failed(self, state: AgentState, reply: str) -> dict:

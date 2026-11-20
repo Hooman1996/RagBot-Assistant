@@ -154,3 +154,44 @@ numbers may be optimistic, as noted for P6-03.
 - A typed «تأیید کن» and a typed PIN were refused, at a question and at a review.
 - The five demo flows reached their review, and «برو به خانه» opened Home.
 
+## CF-4 (#192): the shared chooser's wrong picks
+
+**Date:** 20 Nov 2026. **Code:** `e5ce07b`.
+
+**What changed, on the assistant's side (D-026):**
+- Sharper Persian words in `app_profiles/assistant_words.json` for loans vs loan payment, account vs
+  wallet funding, repeat transactions, and bill vs wallet bill.
+- The router's rewrite is used for a message with two tasks, with the second task taken out of it.
+- **A code rule in the chooser (owner, 20 Nov 2026):** when the model picks the page that only
+  shows loans for a message with «قسط», a word of paying («بده», «بپرداز», «پرداخت کن») and no word
+  of seeing («نشون», «ببین», «بیار», «لیست»), the installment payment is chosen instead, if TEI
+  offered it.
+- **The rewrite guard** refuses a rewrite that changes what the user asks to do: one that adds a
+  word of seeing the user did not say, or drops a word of paying the user said. Live on the
+  replica, after «برو به خانه», the router had rewritten «قسط بعدی وام شخصیمو بده» as «… رو نشون
+  بده».
+- Seven new tuning cases, in new words.
+
+On 26 probe phrases (both sides of each pair, new words) the chooser went from 19 / 22 to 26 / 26.
+
+| Set | Result |
+|---|---|
+| Existing held-out, twice | 0 / 145 critical, 101 / 101, 108 / 108, 27 / 27 (unchanged) |
+| Existing tuning (65 cases) | Every gate passes. T-059, gateway funding into the account, is fixed |
+| Conversation held-out, run 1 | **0 / 133 critical**, safety **21 / 21**, non-chat turns **125 / 125** |
+| Conversation held-out, run 2 | 0 / 133 critical, safety 21 / 21, non-chat turns 124 / 125 (CH-004 turn 3 varies) |
+| Conversation tuning | Unchanged from CF-2: CT-002, CT-005, CT-006 and CT-008. CT-007's top-up from savings picked the wallet top-up in this run, and the normal one when tried alone |
+
+Chat turns wait for CF-3: all 8 chat turns of the conversation held-out get the fixed reply.
+
+**First tries that did not work:** one more line in the chooser prompt, in three wordings. Each
+one fixed the loan case but sent vague requests («کمکم کن», «یه سوال داشتم») to the support page,
+a new critical case on held-out H-132. The code rule replaced the line.
+
+**Live on the replica (`e5ce07b`):**
+- «قسط بعدی وام شخصیمو بده» asks «قسط از کدام حساب پرداخت شود؟».
+- «سه میلیون ریال از درگاه بریز تو حسابم» opens account funding at its review.
+- «۲۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن، بعدش قبض آبمو هم بده» prepares the card
+  transfer and says at the review «درخواست دوم را بعد از این بنویسید: «قبض آبم رو بده»».
+- The five demo flows reach their review: card transfer, internal transfer, top-up, toll by plate,
+  and home.
