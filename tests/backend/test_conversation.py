@@ -234,3 +234,30 @@ def test_a_rewrite_that_keeps_the_second_task_has_it_taken_out() -> None:
         "rest": "یه کارت به کارت هم به رضا بده",
     }
     assert conversation.standalone(routed, [], text) == "قسط بعدی وامم رو از پس‌انداز بده"
+
+
+@pytest.mark.parametrize(
+    ("text", "wanted"),
+    [
+        ("قسط بعدی وام شخصیمو بده", "loan_repayment"),
+        ("قسط وام خودرو رو بپرداز", "loan_repayment"),
+        ("قسط تسهیلاتمو پرداخت کن", "loan_repayment"),
+        ("قسط‌های وامم رو نشون بده", "loans"),  # seeing them stays the page
+        ("وام‌هامو ببینم", "loans"),
+    ],
+)
+def test_a_page_that_shows_loans_gives_way_to_paying_an_installment(text: str, wanted: str) -> None:
+    from assistant.intent import choose
+
+    offered = [
+        {"intent": "loans", "title": "", "required_slots": []},
+        {"intent": "loan_repayment", "title": "", "required_slots": []},
+    ]
+    assert choose(FakeChat([{"choice": "loans"}]), text, offered) == wanted
+
+
+def test_the_paying_feature_is_chosen_only_when_it_was_offered() -> None:
+    from assistant.intent import choose
+
+    offered = [{"intent": "loans", "title": "", "required_slots": []}]
+    assert choose(FakeChat([{"choice": "loans"}]), "قسط وامم رو بده", offered) == "loans"
