@@ -22,12 +22,13 @@ in PR #181. RA-7 (#182, PR #183) made it use the workflow's feature choice first
 native tool calls) stays blocked on RagBot's vLLM settings. Open in both agents: the shared chooser takes gateway
 funding into the account for wallet funding (tuning T-059).
 
-**Conversation flow (19 Nov 2026):** the owner approved CF-0 to CF-3 (#185–#188): every message is understood
-in context through one entry point (a safety fast path, a turn router with query rewriting, a switch question,
-a chat reply), in the workflow agent first ([D-034](decisions/0034-conversation-flow.md),
-[design](bridge/conversation-flow.md)). Built on `sub/conversation-flow`; CF-0 (the design) and CF-1 (the frozen conversation set, D-035) are done.
-Today's workflow on it: 11 / 133 critical turns, 79 / 133 right, 8 / 21 safety turns ([baseline](reports/conversation-baseline.md)).
-CF-2 (the router, fast path, switch): 2 / 133, 119 / 133, 20 / 21; the existing held-out unchanged. Next: CF-3 (chat).
+**Conversation flow (on `main` since 20 Nov 2026, 8e5e0c6, #195):** every message is understood in context
+through one entry point: a safety fast path, a turn router with query rewriting, a switch question and the
+model's own chat reply, in the workflow agent ([D-034](decisions/0034-conversation-flow.md),
+[design](bridge/conversation-flow.md)). CF-0 to CF-4 (#185–#188, #192) are done. On the frozen conversation
+held-out set (D-035), the workflow went from 11 / 133 critical turns, 79 / 133 right and 8 / 21 safety turns
+to 0 / 133, 133 / 133 and 21 / 21, chat included; the existing held-out set is unchanged
+([report](reports/conversation-baseline.md)).
 
 **D-022 (5 Nov 2026):** the replica was completed before the bridge. See the
 [decision](decisions/0022-complete-replica-with-mock-data.md). The owner approved it on 6 Nov 2026,
