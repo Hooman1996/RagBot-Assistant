@@ -48,6 +48,8 @@ flowchart LR
     keeps «[حذف شد]» instead.
   - A typed confirm request is refused.
   - «لغو» or a whole-message cancel phrase cancels the open task, or says nothing is going on.
+  - Before these, a task at its review whose app has left that page (the user confirmed it or left
+    it) ends, and the message is a new request, as in the workflow (P6-12, `Lifecycle.taken_over`).
 
   None of these calls the model.
 - **`think`** sends the model one prompt. It holds:
