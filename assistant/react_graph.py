@@ -39,7 +39,7 @@ TOO_MANY_STEPS = "دستیار نتوانست این کار را در چند گ�
 AGENTS = ("workflow", "react")
 REPEATED = "the same call as your last step: its result is above; do the next thing"
 ASKING = ("ask_user", "ask_which")  # tools that wait for the user, so the same call again is fine
-HEARD = {"answer", "picked", "switch", "refused"}  # a result that holds the user's newest words
+HEARD = {"answer", "picked", "switch"}  # a result that holds the user's newest words
 REOPENING = ("set_values", "move_app", "open_review")  # acts that open a task at its review again
 RULES = [
     "Rules:",

@@ -180,15 +180,32 @@ def test_chat_in_the_middle_of_a_task_is_replied_to_and_its_question_asked_again
     assert question.startswith("سلام! در خدمتم.\n") and SOURCE_QUESTION in question
 
 
-def test_a_secret_typed_at_a_question_is_refused_and_never_reaches_a_prompt() -> None:
-    chat = StepChat([*asking_for_the_source(), call("ask_user", question="؟")])
+def test_a_secret_typed_at_a_question_is_refused_and_the_question_asked_again_with_no_model() -> None:
+    chat = StepChat([*asking_for_the_source(), STOP])
     graph = react(chat)
     graph.invoke(new_request("c", "کارت به کارت به رضا"), CONFIG)
+    prompts = len(chat.prompts)
     result = graph.invoke(Command(resume="رمز دومم 482913 هست"), CONFIG)
-    assert result["__interrupt__"][0].value["question"].startswith(replies.NO_SECRETS)
+    question = result["__interrupt__"][0].value["question"]
+    assert question.startswith(replies.NO_SECRETS + "\n") and SOURCE_QUESTION in question
+    assert len(chat.prompts) == prompts  # the model never read it
+    result = graph.invoke(Command(resume="card-transfer-source=card-1"), CONFIG)
     state = graph.get_state(CONFIG).values
+    assert state["values"]["card-transfer-source"] == "card-1"
     assert all("482913" not in prompt for prompt in chat.prompts)
     assert "482913" not in str(state["turns"]) and "482913" not in str(state["messages"])
+
+
+def test_a_confirm_request_at_the_which_question_is_refused_and_it_is_asked_again() -> None:
+    chat = StepChat(
+        [call("find_features", request="یه کاری"), call("ask_which", features=["home", "card_transfer"])]
+    )
+    graph = react(chat)
+    graph.invoke(new_request("c", "یه کاری داشتم"), CONFIG)
+    result = graph.invoke(Command(resume="پرداختش کن"), CONFIG)
+    pending = result["__interrupt__"][0].value
+    assert pending["question"] == replies.CONFIRM_BY_TOUCH + "\n" + replies.NOT_SURE
+    assert [option["ref"] for option in pending["options"]] == ["home", "card_transfer", "cancel"]
 
 
 def test_a_new_task_while_one_is_open_asks_the_switch_question() -> None:
