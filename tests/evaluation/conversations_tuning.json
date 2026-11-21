@@ -922,5 +922,103 @@
         }
       }
     ]
+  },
+  {
+    "id": "CT-038",
+    "tags": [
+      "correction"
+    ],
+    "turns": [
+      {
+        "say": "۲۰۰ هزار تومن از کارت 4544 به پریسا نیک‌نام کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "نه ۲۵۰ بشه",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-amount": {
+              "value": 2500000,
+              "unit": "IRR"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-039",
+    "tags": [
+      "correction"
+    ],
+    "turns": [
+      {
+        "say": "۴۰۰ هزار تومن از پس‌انداز به حساب مریم احمدی انتقال داخلی بزن بابت خرید کالا",
+        "expect": {
+          "end": "review",
+          "intent": "internal_transfer"
+        }
+      },
+      {
+        "say": "نه، ۴۵۰ باشه",
+        "expect": {
+          "end": "review",
+          "intent": "internal_transfer",
+          "values": {
+            "account-transfer-amount": {
+              "value": 4500000,
+              "unit": "IRR"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-040",
+    "tags": [
+      "correction"
+    ],
+    "turns": [
+      {
+        "say": "۲۰۰ هزار تومن از کارت 4544 به لیلا حسن‌زاده کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "نه ۲۵۰ بشه",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-amount": {
+              "value": 2500000,
+              "unit": "IRR"
+            }
+          }
+        }
+      },
+      {
+        "say": "از کارت 3566 باشه",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-source": "card-1",
+            "card-transfer-amount": {
+              "value": 2500000,
+              "unit": "IRR"
+            }
+          }
+        }
+      }
+    ]
   }
 ]
