@@ -278,6 +278,9 @@ def test_at_a_correction_the_workflows_reader_wins_over_the_models_copy() -> Non
     result = graph.invoke(next_input(previous, "c", "نه، ۳۰۰ هزار تومان"), CONFIG)
     assert result["task_state"] == "ready_for_user"
     assert app.sent[-2][1]["values"]["card-transfer-amount"] == {"value": 3000000, "unit": "IRR"}
+    # The model is told the value it named as it is now held, so it sees the correction landed.
+    corrected = next(step for step in result["steps"] if step["tool"] == "set_values")["result"]
+    assert corrected["kept"]["card-transfer-amount"] == "3,000,000 ریال"
 
 
 def test_held_values_sent_back_as_their_labels_are_kept_not_refused() -> None:

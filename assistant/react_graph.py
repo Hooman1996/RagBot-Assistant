@@ -46,8 +46,12 @@ RULES = [
     "- Read the newest user line in the conversation and act on what it is:",
     "  - It asks to do or see something in the app, even while a task is open and even when it starts"
     " with «نه», «ولش» or «بیخیال» («نه، اول یه شارژ بخرم»): find_features with the request as one full"
-    " sentence (fill in what it refers to from the conversation, never an amount, name or number the"
-    " user did not write), then start_task with the feature it means. A request to see, check or look"
+    " sentence, then start_task with the feature it means. When it refers to an earlier request («همین»,"
+    " «همون», «عین همین», «دوباره», «یکی دیگه»), the sentence copies that request's amount, card, account,"
+    " number and person as the user wrote them, and changes only what the newest message changes"
+    " («همینو برای سارا هم بزن» after «۵۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن» is «۵۰۰ هزار"
+    " تومن از کارت 3566 به سارا کارت به کارت کن»); never an amount, name or number the user"
+    " did not write. A request to see, check or look"
     " up something the app shows (a statement, a toll, a rating, a balance, a list) is a task too.",
     "  - It gives values for the open task or answers its question: set_values.",
     "  - It only changes a value of the open task, even at its review, and asks for no task again:"

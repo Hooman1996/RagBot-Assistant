@@ -307,7 +307,9 @@ class ReactTools:
         update = self.settle(state | {"values": state["values"] | held | self.read(state, {})})
         task = state | update
         items = {item["ref"]: item for item in task["plan"]["requirements"]}
-        kept = {ref: self.label(items[ref], value) for ref, value in task["values"].items() if ref in said}
+        # Every value the model named, as it is now held (its own, the reader's, or unchanged).
+        named = [ref for ref, value in given["values"].items() if value is not None]
+        kept = {ref: self.label(items[ref], value) for ref, value in task["values"].items() if ref in named}
         refused = unnamed + [ref for ref in said if ref not in task["values"]]
         note = task["question"] or (NOT_NAMED if unnamed else NOT_KEPT if refused else None)
         return {"kept": kept, "refused": refused, "note": note} | self.next_step(task), update
