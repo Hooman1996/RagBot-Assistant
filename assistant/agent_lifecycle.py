@@ -61,7 +61,25 @@ class Lifecycle:
         reply = replies.CANCELLED_OPEN if state["report"] else replies.CANCELLED
         return moved(state, "cancelled") | {"reply": reply}
 
+    def taken_over(self, state: AgentState) -> dict:
+        """A task at its review whose app has left the page it was prepared on: the user confirmed
+        it by touch or left it (the app reports pages, not taps, so which is not known). It ends, and
+        the new message starts a new request with the conversation's memory (P6-12). Else nothing."""
+        report = state.get("report")
+        if state["task_state"] != "ready_for_user" or not report or not report["steps"]:
+            return {}
+        if self.nodes.tools.screen() == report["steps"][-1]["screen"]:
+            return {}
+        moved(state, "completed")  # refused here if task.json did not allow it
+        text = state["said"] if state.get("said") is not None else state["messages"][-1]
+        return dict(new_request(state["conversation_id"], text)) | {"turns": state["turns"]}
+
     def route(self, state: AgentState) -> dict:
+        """Door A: a task the user took over ends first (taken_over); then the message is routed."""
+        reset = self.taken_over(state)
+        return reset | self.routed(state | reset)
+
+    def routed(self, state: AgentState) -> dict:
         """Door A (D-034): a new message, read in the conversation. The fast path refuses a confirm
         request or a secret and cancels; the router says what else it is, and code acts. With no task
         open, anything but chat or a cancel is a new request (the rewrite, guarded, else the message).

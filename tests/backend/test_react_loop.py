@@ -292,6 +292,21 @@ def test_a_model_failure_at_the_review_keeps_the_review_and_the_review_rule_is_s
     assert AT_REVIEW in chat.prompts[-1]
 
 
+def test_a_task_the_user_took_over_ends_before_the_model_reads_the_next_message() -> None:
+    # P6-12: the user confirmed the review by touch (or left it); the app is no longer on it.
+    chat = StepChat([*at_the_review(), call("reply", text=HELLO)])
+    app = RecordingApp()
+    graph = react(chat, app)
+    graph.invoke(new_request("c", CARD_SENTENCE), CONFIG)
+    app.screen = "S-026"
+    previous = graph.get_state(CONFIG).values
+    result = graph.invoke(next_input(previous, "c", "مرسی"), CONFIG)
+    assert result["task_state"] == "created" and result["plan"] is None and result["reply"] == HELLO
+    assert tools_offered(chat, -1) == ["reply", "find_features", "current_screen"]  # no task open
+    assert "The open task: none." in chat.prompts[-1] and AT_REVIEW not in chat.prompts[-1]
+    assert "از کارت ****3566 به رضا کارت به کارت کن" in chat.prompts[-1]  # the conversation is kept, masked
+
+
 def test_the_model_never_sees_a_full_card_number() -> None:
     chat = StepChat([*started("card_transfer"), STOP])
     react(chat).invoke(new_request("c", "از کارت 6104336383233566 کارت به کارت کن"), CONFIG)

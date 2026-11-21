@@ -111,6 +111,31 @@ def test_a_new_request_after_the_review_asks_to_switch_and_yes_starts_it() -> No
     assert ("ready_for_user", "cancelled") in CHANGES  # the old task is cancelled first
 
 
+def test_a_task_the_user_took_over_ends_and_the_next_request_needs_no_switch_question() -> None:
+    # P6-12: the user confirmed the review by touch (or left it); the app is no longer on it.
+    chat = FakeChat([CARD, card(), {"choice": "notifications"}])
+    app = RecordingApp()
+    graph = build_agent(chat, app)
+    graph.invoke(new_request("c", FULL), CONFIG)
+    app.screen = "S-026"
+    result = say(graph, "اعلان‌ها را نشان بده")
+    assert "__interrupt__" not in result  # no «… نیمه‌کاره است؛ لغو شود؟»
+    assert result["task_state"] == "completed" and result["plan"]["intent"] == "notifications"
+    assert ("ready_for_user", "completed") in CHANGES and ("ready_for_user", "cancelled") not in CHANGES
+    assert "Open task: none." in chat.routed[-1]
+    assert any(FULL in line["text"] for line in result["turns"])  # the conversation is kept
+
+
+def test_with_the_app_still_on_the_review_a_new_request_still_asks_to_switch() -> None:
+    chat = FakeChat([CARD, card(), {"answer": "new_request"}, {"choice": "notifications"}])
+    app = RecordingApp()
+    graph = build_agent(chat, app)
+    graph.invoke(new_request("c", FULL), CONFIG)
+    assert app.screen == "S-176"  # the review
+    result = say(graph, "اعلان‌ها را نشان بده")
+    assert result["__interrupt__"][0].value["options"][0]["ref"] == "switch=yes"
+
+
 def test_no_at_the_switch_question_keeps_the_review() -> None:
     chat = FakeChat([CARD, card(), {"answer": "new_request"}, {"choice": "notifications"}])
     graph = build_agent(chat, RecordingApp())
