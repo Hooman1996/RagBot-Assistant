@@ -320,6 +320,9 @@ def test_a_bare_number_correcting_an_amount_is_in_that_amounts_scale_and_never_t
     assert money({"value": 100000, "unit": "IRT"}, card) == {"value": 1000000, "unit": "IRR"}
     full = ["۱۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن", "نه ۳۰۰ هزار تومن بشه"]
     assert money({"value": 100000, "unit": "IRT"}, full) == {"value": 3000000, "unit": "IRR"}
+    # Seen live: a corrected amount stays the user's in the turns after it, not the first one.
+    later = asked + ["از کارت 4544 باشه"]
+    assert money({"value": 1500000, "unit": "IRR"}, later) == {"value": 1500000, "unit": "IRR"}
 
 
 def test_an_amount_with_no_unit_is_in_tomans() -> None:

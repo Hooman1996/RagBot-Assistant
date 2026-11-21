@@ -88,7 +88,7 @@ def money(value: object, messages: list[str]) -> dict | None:
     """An amount in rials: the one in the user's newest answer, if it names one; else a bare number
     correcting an amount, in that amount's scale and unit; else the model's, only if the user wrote
     it; else the one amount the user wrote."""
-    said = [found for text in messages for found in amounts(text) if found >= SMALLEST]
+    said = written(messages)
     newest = [found for found in amounts(messages[-1]) if found >= SMALLEST] if len(messages) > 1 else []
     bare = BARE.findall(messages[-1].translate(PERSIAN_DIGITS)) if len(messages) > 1 and not newest else []
     model = None
@@ -109,6 +109,19 @@ def money(value: object, messages: list[str]) -> dict | None:
         return money_value(str(model)) if model is not None else None
     except TaskStopped:
         return None
+
+
+def written(messages: list[str]) -> list[int]:
+    """Every amount the user wrote, in rials, in order. A later message with no amount and one bare
+    number counts that number in the scale and unit of the amount before it (D-037), so a corrected
+    amount stays the user's in the turns after it."""
+    found: list[int] = []
+    for index, text in enumerate(messages):
+        own = [amount for amount in amounts(text) if amount >= SMALLEST]
+        bare = set(BARE.findall(text.translate(PERSIAN_DIGITS))) if index and not own else set()
+        scale = next((each for earlier in reversed(messages[:index]) if (each := scale_of(earlier))), None)
+        found += [int(bare.pop()) * scale] if len(bare) == 1 and scale else own
+    return found
 
 
 def shorthand(model: int | None, value: object, bare: list[str], messages: list[str]) -> int | None:
