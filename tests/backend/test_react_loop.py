@@ -162,6 +162,8 @@ def test_a_typed_answer_to_a_tasks_question_goes_to_the_model_with_the_conversat
     assert state["plan"]["intent"] == "card_transfer"
     assert state["steps"][-1]["result"] == {"answer": "پس‌انداز", "next": NEXT_ANSWER}
     assert "- user: «پس‌انداز»" in chat.prompts[-1] and SOURCE_QUESTION in chat.prompts[-1]
+    # A task the model just started is not offered to be cancelled until the user speaks again.
+    assert "cancel_task" not in tools_offered(chat, 2) and "cancel_task" in tools_offered(chat, 4)
 
 
 def test_chat_in_the_middle_of_a_task_is_replied_to_and_its_question_asked_again() -> None:
@@ -178,6 +180,10 @@ def test_chat_in_the_middle_of_a_task_is_replied_to_and_its_question_asked_again
     result = graph.invoke(Command(resume="سلام خوبی؟"), CONFIG)
     question = result["__interrupt__"][0].value["question"]
     assert question.startswith("سلام! در خدمتم.\n") and SOURCE_QUESTION in question
+    # A secret typed next is refused, and the question comes back without the earlier reply.
+    result = graph.invoke(Command(resume="رمز دومم 482913"), CONFIG)
+    again = result["__interrupt__"][0].value["question"]
+    assert again.startswith(replies.NO_SECRETS + "\n") and "در خدمتم" not in again
 
 
 def test_a_secret_typed_at_a_question_is_refused_and_the_question_asked_again_with_no_model() -> None:

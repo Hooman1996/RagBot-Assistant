@@ -63,7 +63,7 @@ TEXTS = {
         " open, code asks the user first."
     ),
     "ask_which": "ask_which(features): asks the user which of 2 to 4 found features they mean.",
-    "cancel_task": "cancel_task(): cancels the open task; the app stays where it is.",
+    "cancel_task": "cancel_task(): cancels the open task, only when the user's newest words ask to stop it.",
     "find_records": (
         "find_records(ref, words): the records the app lists for that field that match the words"
         " (all of them when words is empty)."
@@ -154,7 +154,8 @@ class ReactTools:
         tools["current_screen"] = arguments()
         if not self.open(state):
             return tools
-        tools["cancel_task"] = arguments()
+        if not self.just_started(state):
+            tools["cancel_task"] = arguments()
         records = self.with_records(state)
         if records:
             tools["find_records"] = arguments(ref={"enum": records}, words=TEXT)
@@ -169,6 +170,16 @@ class ReactTools:
     def open(self, state: AgentState) -> bool:
         """True while a task is open: planned, and not ended."""
         return state["plan"] is not None and state["task_state"] in OPEN
+
+    def just_started(self, state: AgentState) -> bool:
+        """True when the open task was started in this turn after the user's last words: the user
+        has not asked since to stop it, so it is not offered to be cancelled."""
+        for step in reversed(state["steps"]):
+            if step["tool"] == "start_task":
+                return True
+            if {"answer", "picked"} & step.get("result", {}).keys():
+                return False
+        return False
 
     def found(self, state: AgentState) -> list[str]:
         """The features the newest find_features of this turn found."""
@@ -388,7 +399,7 @@ class ReactTools:
         shown = "\n".join(part for part in (state["lead"], question) if part)
         fields = [item["ref"] for item in wanted if item["kind"] == "field"]
         pending = {"question": shown, "options": options, "fields": fields, "task_state": asked["task_state"]}
-        answer, kind, turns = self.asked(state, pending)
+        answer, kind, turns = self.asked(state, pending, question)
         task = state | asked
         refs = [option["ref"] for option in options]
         if kind in ("cancel", "only_looking"):
@@ -414,11 +425,12 @@ class ReactTools:
         item = next(item for item in wanted if item["ref"] == ref)
         return {"picked": {ref: self.label(item, key)}} | self.next_step(state | update), update
 
-    def asked(self, state: AgentState, pending: dict) -> tuple[str, str | None, list[dict]]:
+    def asked(self, state: AgentState, pending: dict, bare: str) -> tuple[str, str | None, list[dict]]:
         """Asks the question and waits. A typed secret or confirm request is refused at once and the
-        question asked again with the refusal first, so the model never reads it. Returns the answer,
-        the fast path's reading of it (None for a picked option or words for the model), and the
-        history with the question and each typed answer, a secret replaced so no prompt ever has it."""
+        question (bare, without a reply said before it) asked again with the refusal first, so the
+        model never reads it. Returns the answer, the fast path's reading of it (None for a picked
+        option or words for the model), and the history with the question and each typed answer, a
+        secret replaced so no prompt ever has it."""
         refs = [option["ref"] for option in pending["options"]]
         turns, lead = state["turns"], None
         while True:
@@ -431,6 +443,7 @@ class ReactTools:
             turns = kept(turns, line("assistant", masked(question)), line("user", said))
             if kind not in REFUSALS:
                 return answer, kind, turns
+            pending = pending | {"question": bare}
             lead = REFUSALS[kind]
 
     def reply(self, state: AgentState, given: dict) -> tuple[dict, dict]:
@@ -499,7 +512,7 @@ class ReactTools:
         question = replies.SWITCH.format(old=old, new=self.nodes.features[feature]["title"])
         options = [replies.SWITCH_YES, replies.SWITCH_NO, CANCEL]
         pending = {"question": question, "options": options, "fields": [], "task_state": state["task_state"]}
-        answer, kind, turns = self.asked(state, pending)
+        answer, kind, turns = self.asked(state, pending, question)
         words = plain(answer).strip(" .!؟?،,")
         if kind in ("cancel", "only_looking"):
             return {"switch": "cancel"}, self.cancelled(state) | {"turns": turns}
@@ -519,7 +532,9 @@ class ReactTools:
         options = [{"ref": intent, "label": self.nodes.features[intent]["title"]} for intent in shown]
         question = "\n".join(part for part in (state["lead"], replies.NOT_SURE) if part)
         pending = {"question": question, "options": options + [CANCEL], "fields": []}
-        answer, kind, turns = self.asked(state, pending | {"task_state": state["task_state"]})
+        answer, kind, turns = self.asked(
+            state, pending | {"task_state": state["task_state"]}, replies.NOT_SURE
+        )
         update = {"turns": turns, "lead": None}
         if kind in ("cancel", "only_looking"):
             return {"answer": "cancel"}, update | self.cancelled(state)
