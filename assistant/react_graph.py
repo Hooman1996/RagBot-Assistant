@@ -221,8 +221,10 @@ class ReactAgent:
                 return before | {"steps": state["steps"][:-1] + [step | {"result": stopped}]}
             if step["tool"] == "set_values":
                 # A correction: the workflow's reader read the newest message as the task opened
-                # again, so what it changes is the reader's, not the model's copy of it.
-                step = step | {"arguments": {"values": dict.fromkeys(step["arguments"]["values"])}}
+                # again, so what it changes is the reader's, not the model's copy of it. Each value
+                # the model named stands as the reader left it, and is reported back as held.
+                values = self.tools.as_held(state | before, step["arguments"]["values"])
+                step = step | {"arguments": {"values": values}}
         result, update = getattr(self.tools, step["tool"])(state | before, step["arguments"])
         show("act", tool=step["tool"], result=result)
         return before | update | {"steps": state["steps"][:-1] + [step | {"result": result}]}

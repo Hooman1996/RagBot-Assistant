@@ -314,6 +314,16 @@ class ReactTools:
         note = task["question"] or (NOT_NAMED if unnamed else NOT_KEPT if refused else None)
         return {"kept": kept, "refused": refused, "note": note} | self.next_step(task), update
 
+    def as_held(self, state: AgentState, values: dict) -> dict:
+        """The values the model named, each as the label of the value the task holds now (None when
+        it holds none), so set_values keeps them as they are and reports them."""
+        items = {item["ref"]: item for item in state["plan"]["requirements"]}
+        return {
+            ref: self.label(items[ref], state["values"][ref]) if ref in state["values"] else None
+            for ref, value in values.items()
+            if value is not None
+        }
+
     def read(self, state: AgentState, said: dict) -> dict:
         """The workflow's own reading (slots.extract) of the missing fields, but those in said, so no
         value the user wrote is lost when the model misses it. A model error reads nothing."""
