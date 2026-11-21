@@ -142,9 +142,16 @@ def text(value: object, messages: list[str]) -> str | None:
         return None
     found = numbers(messages)
 
+    said = " ".join(messages).translate(PERSIAN_DIGITS)
+
     def back(shown: re.Match) -> str:
-        whole = [number for number in found if number.endswith(shown.group(1).translate(PERSIAN_DIGITS))]
-        return whole[0] if whole else shown.group()
+        """The user's number for a ****1234: a long one they typed, or the four digits they wrote on
+        their own («کارتی که آخرش ۳۵۶۶»); else it stays masked, and is refused."""
+        digits = shown.group(1).translate(PERSIAN_DIGITS)
+        whole = [number for number in found if number.endswith(digits)]
+        if whole:
+            return whole[0]
+        return digits if re.search(rf"(?<!\d){digits}(?!\d)", said) else shown.group()
 
     value = SHOWN.sub(back, value.strip())
     words = value.replace("IR ", "IR").split()

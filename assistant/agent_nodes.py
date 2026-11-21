@@ -341,7 +341,10 @@ class Nodes:
         if answer in [item["ref"] for item in options] and not wants_cancel(answer):
             ref, key = answer.split("=", 1)
             missing = [item for item in state["missing"] if item != ref]
-            return update | {"values": state["values"] | {ref: key}, "missing": missing}
+            # The pick's label joins the user's words, so a later re-read keeps it (P6-14).
+            label = next(item["label"] for item in options if item["ref"] == answer)
+            values = state["values"] | {ref: key}
+            return update | {"values": values, "missing": missing, "messages": state["messages"] + [label]}
         kind, turns = (
             self.heard(state, shown, answer) if answer != CANCEL["ref"] else ("cancel", state["turns"])
         )

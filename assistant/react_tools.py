@@ -437,6 +437,8 @@ class ReactTools:
         picked = None
         if answer in refs:
             picked = tuple(answer.split("=", 1))
+            # The pick's label joins the user's words, so a later re-read keeps it (P6-14).
+            update["messages"] = state["messages"] + [next(o["label"] for o in options if o["ref"] == answer)]
         elif len(wanted) == 1 and wanted[0]["lookup"]:
             record = self.nodes.record(wanted[0], answer)
             picked = (wanted[0]["ref"], record.key) if record else None

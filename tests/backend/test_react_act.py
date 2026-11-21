@@ -117,6 +117,7 @@ def test_a_missing_source_moves_the_app_then_asks_the_workflows_question() -> No
     result = graph.invoke(Command(resume="card-transfer-source=card-1"), CONFIG)
     assert result["task_state"] == "ready_for_user"
     assert given(app)["card-transfer-source"] == "card-1"
+    assert result["messages"][-1] == "****3566"  # the pick joins the user's words (P6-14)
     picked = result["steps"][4]["result"]
     assert picked == {"picked": {"card-transfer-source": "****3566"}, "missing": [], "next": "open_review"}
 
