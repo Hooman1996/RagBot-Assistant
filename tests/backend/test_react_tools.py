@@ -69,6 +69,8 @@ def test_the_model_starts_a_found_feature_and_reads_records_and_the_screen() -> 
     result = react(chat, app).invoke(new_request("c", "کارت به کارت به رضا"), CONFIG)
     found, began, records, screen = (step["result"] for step in result["steps"])
     assert {"feature": "card_transfer", "title": "کارت به کارت"}.items() <= found["features"][0].items()
+    # A feature whose title is in the user's words is marked, and only that one.
+    assert [item["feature"] for item in found["features"] if item.get("named")] == ["card_transfer"]
     assert began["started"] == "کارت به کارت"
     assert result["chosen"] == "card_transfer" and result["plan"]["intent"] == "card_transfer"
     assert records == {"records": ["رضا محمدی ****8880"], "count": 1}

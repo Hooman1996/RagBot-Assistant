@@ -172,8 +172,7 @@ def test_chat_in_the_middle_of_a_task_is_replied_to_and_its_question_asked_again
     chat = StepChat(
         [
             *asking_for_the_source(),
-            call("reply", text="سلام! در خدمتم."),
-            call("ask_user", question="؟"),
+            call("reply", text="سلام! در خدمتم."),  # code asks the task's question right after it
             {"card-transfer-source": None, "card-transfer-amount": None},  # the reader reads the new words
         ]
     )

@@ -62,7 +62,10 @@ TEXTS = {
         " open, code asks the user first."
     ),
     "ask_which": "ask_which(features): asks the user which of 2 to 4 found features they mean.",
-    "cancel_task": "cancel_task(): cancels the open task, only when the user's newest words ask to stop it.",
+    "cancel_task": (
+        "cancel_task(): cancels the open task, only when the user's newest words ask to stop it and ask"
+        " for nothing else; never to start another task."
+    ),
     "find_records": (
         "find_records(ref, words): the records the app lists for that field that match the words"
         " (all of them when words is empty)."
@@ -476,8 +479,10 @@ class ReactTools:
             return {"error": "the search failed; reply to the user"}, {}
         merged = {item["intent"]: item for item in words[:6] + request[:2] + words[6:] + request[2:]}
         closest = list(merged.values())[:FEATURES]
+        words = plain(said)
         features = [
             {"feature": item["intent"], "title": item["title"]}
+            | ({"named": True} if plain(item["title"]) in words else {})
             | {"about": feature_words(item["intent"]) or item["description"]}
             for item in closest
         ]

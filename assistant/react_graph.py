@@ -54,12 +54,13 @@ RULES = [
     " set_values with the new value, then open_review.",
     "  - A greeting, thanks, small talk, a question for information or advice (rates, fees, rules),"
     " something the app cannot do, or rude words: reply.",
-    "  - It wants the open task stopped and asks for nothing else («ولش کن», «نمیخوام دیگه»): cancel_task.",
+    "  - It wants the open task stopped and asks for nothing else («ولش کن», «نمیخوام دیگه»): cancel_task."
+    " Never cancel_task to start another task: start_task asks the user before leaving the open one.",
     "- Choosing a feature: read each found feature's title and about. Start the one the user's words"
     " fit best: where the money comes from («از حساب», «سپرده», «پس‌انداز», «کارت» is the bank;"
-    " «کیف» is the wallet), the kind of task the user names («انتقال داخلی», «کارت به کارت», «بین بانکی»),"
-    " and what it is for. ask_which only when the words fit two or more features equally well and"
-    " nothing in them tells them apart.",
+    " a feature that uses the wallet only when the user says «کیف»), a feature whose title the user"
+    ' names ("named": true, such as «انتقال داخلی»), and what it is for. ask_which only when the words'
+    " fit two or more features equally well and nothing in them tells them apart.",
     "- For the open task: when something is missing, ask_user (the app moves to the question's page"
     " first); when nothing is, open_review.",
     "- Never guess a value the user did not give, and never pick a record or an option for the user.",
@@ -203,12 +204,21 @@ class ReactAgent:
                 steps.append({key: step[key] for key in ("thought", "tool", "arguments")})
             show("act", tool="move_app", result=result)
             return update | {"steps": steps}
+        if step["tool"] == "reply" and state["task_state"] == "resolving" and state["missing"]:
+            # Chat during a task: the reply is said with the task's question, asked at once.
+            result, update = self.tools.reply(state, step["arguments"])
+            asking = {"thought": step["thought"], "tool": "ask_user", "arguments": {"question": ""}}
+            return update | {"steps": state["steps"][:-1] + [step | {"result": result}, asking]}
         before = {}
         if step["tool"] in REOPENING and state["task_state"] in FOLLOW_UP:
             before = self.tools.reopened(state)
             if before["task_state"] != "resolving":
                 stopped = {"stopped": (state | before)["reply"]}
                 return before | {"steps": state["steps"][:-1] + [step | {"result": stopped}]}
+            if step["tool"] == "set_values":
+                # A correction: the workflow's reader read the newest message as the task opened
+                # again, so what it changes is the reader's, not the model's copy of it.
+                step = step | {"arguments": {"values": dict.fromkeys(step["arguments"]["values"])}}
         result, update = getattr(self.tools, step["tool"])(state | before, step["arguments"])
         show("act", tool=step["tool"], result=result)
         return before | update | {"steps": state["steps"][:-1] + [step | {"result": result}]}

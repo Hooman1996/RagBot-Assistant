@@ -257,6 +257,29 @@ def test_a_correction_after_the_review_prepares_it_again() -> None:
     assert {"set_values", "open_review", "cancel_task"} <= set(tools_offered(chat, 4))
 
 
+def test_at_a_correction_the_workflows_reader_wins_over_the_models_copy() -> None:
+    chat = StepChat(
+        [
+            *started("card_transfer"),
+            card_values("****3566"),
+            card_values("****3566")["arguments"]["values"],
+            call("open_review"),
+            card_values("****3566", "رضا", {"value": 999000, "unit": "IRT"}),  # the model's misreading
+            card_values("****3566", "رضا", {"value": 300000, "unit": "IRT"})["arguments"][
+                "values"
+            ],  # the reader
+            call("open_review"),
+        ]
+    )
+    app = RecordingApp()
+    graph = react(chat, app)
+    graph.invoke(new_request("c", "۲۵۰ هزار تومان از کارت 6104336383233566 به رضا کارت به کارت کن"), CONFIG)
+    previous = graph.get_state(CONFIG).values
+    result = graph.invoke(next_input(previous, "c", "نه، ۳۰۰ هزار تومان"), CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    assert app.sent[-2][1]["values"]["card-transfer-amount"] == {"value": 3000000, "unit": "IRR"}
+
+
 def test_a_page_to_see_opens_it() -> None:
     chat = StepChat(started("home"))
     app = RecordingApp(screen="S-174")
