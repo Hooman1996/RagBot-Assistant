@@ -280,6 +280,17 @@ def test_at_a_correction_the_workflows_reader_wins_over_the_models_copy() -> Non
     assert app.sent[-2][1]["values"]["card-transfer-amount"] == {"value": 3000000, "unit": "IRR"}
 
 
+def test_held_values_sent_back_as_their_labels_are_kept_not_refused() -> None:
+    read = {"card-transfer-source": None, "card-transfer-destination": "رضا", "card-transfer-amount": AMOUNT}
+    echoed = card_values(None, "رضا محمدی ****8880", "2,500,000 ریال")  # the labels the model was shown
+    chat = StepChat([*started("card_transfer", read), echoed, {}, ModelError("chat: stop here")])
+    result = react(chat, RecordingApp()).invoke(new_request("c", CARD_SENTENCE), CONFIG)
+    found = result["steps"][2]["result"]
+    assert found["refused"] == [] and found["missing"] == ["card-transfer-source"]
+    assert result["values"]["card-transfer-destination"] == "reza"
+    assert result["values"]["card-transfer-amount"] == {"value": 2500000, "unit": "IRR"}
+
+
 def test_a_page_to_see_opens_it() -> None:
     chat = StepChat(started("home"))
     app = RecordingApp(screen="S-174")

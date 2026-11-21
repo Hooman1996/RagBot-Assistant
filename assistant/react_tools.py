@@ -22,7 +22,7 @@ from assistant import replies
 from assistant.agent_lifecycle import Lifecycle
 from assistant.agent_nodes import REFUSALS, Nodes
 from assistant.agent_state import AgentState, moved, new_request
-from assistant.conversation import kept, line, safe_chat
+from assistant.conversation import kept, line, safe_chat, user_words
 from assistant.intent import KNOWLEDGE
 from assistant.lifecycle import CANCEL, FOLLOW_UP, NO_WORDS, YES_WORDS, fast
 from assistant.lookups import GENERIC, plain
@@ -35,6 +35,7 @@ from assistant.words import feature_words, field_words, plates
 TEXT = {"type": "string"}
 TEXT_OR_NULL = {"anyOf": [{"type": "string"}, {"type": "null"}]}
 OPEN = ("resolving", "ready_for_user", "paused")  # a task the model works on
+WALLET_WORD = "کیف"  # the word that names the app's wallet
 FEATURES = 8  # the features find_features shows, as many as the workflow's chooser sees
 ASK_WHICH = 4  # the most features ask_which offers (as the not-sure question, owner 18 Nov 2026)
 SHOWN = re.compile(r"\*{4}(\d{4})")  # a long number as the model is shown it
@@ -282,11 +283,15 @@ class ReactTools:
 
     def set_values(self, state: AgentState, given: dict) -> tuple[dict, dict]:
         """The workflow's reading of the missing fields, and the model's new values for fields held
-        before, through the workflow's check and resolve: what is kept, refused and still missing."""
+        before, through the workflow's check and resolve: what is kept, refused and still missing. A
+        held value the model sends back as the label it was shown is unchanged, so it is not read
+        again: a masked label is not the user's words, and re-checking it would drop the value."""
+        items = {item["ref"]: item for item in state["plan"]["requirements"]}
         said = {
             ref: shown_again(value, state["messages"])
             for ref, value in given["values"].items()
             if value is not None
+            and not (ref in state["values"] and value == self.label(items[ref], state["values"][ref]))
         }
         lookups = {item["ref"]: item["lookup"] for item in state["plan"]["requirements"]}
         # A record comes only from the user's words, never from a label the model read in find_records.
@@ -470,7 +475,8 @@ class ReactTools:
     def find_features(self, state: AgentState, given: dict) -> tuple[dict, dict]:
         """TEI's closest features, each with its name, title and what it is for: the user's newest
         words first, which TEI ranks best, then the closest to the model's request sentence (what a
-        reference like «همونو» means). Nothing is started."""
+        reference like «همونو» means). A wallet feature only once the user has said «کیف». Nothing
+        is started."""
         said = state["messages"][-1] if state["messages"] else given["request"]
         index = self.nodes.tools.index
         try:
@@ -478,6 +484,9 @@ class ReactTools:
         except ModelError:
             return {"error": "the search failed; reply to the user"}, {}
         merged = {item["intent"]: item for item in words[:6] + request[:2] + words[6:] + request[2:]}
+        if WALLET_WORD not in user_words(state["turns"], said):
+            # The app's wallet features only when the user says «کیف»: else its bank twin is meant.
+            merged = {intent: item for intent, item in merged.items() if not intent.startswith("wallet_")}
         closest = list(merged.values())[:FEATURES]
         words = plain(said)
         features = [

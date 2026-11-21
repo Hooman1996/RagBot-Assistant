@@ -150,3 +150,15 @@ def test_the_same_call_twice_is_not_run_again() -> None:
     chat = StepChat([*started(), call("current_screen"), call("current_screen"), STOP])
     result = react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
     assert result["steps"][3]["result"] == {"error": REPEATED}
+
+
+def test_a_wallet_feature_is_found_only_once_the_user_says_kif() -> None:
+    for text, wallet in (
+        ("خرید شارژ برای 09121234567", False),
+        ("با کیف پول خرید شارژ برای 09121234567", True),
+    ):
+        chat = StepChat([call("find_features", request=text), STOP])
+        result = react(chat).invoke(new_request("c", text), CONFIG)
+        found = found_intents(result["steps"][0]["result"])
+        assert "mobile_top_up" in found
+        assert ("wallet_mobile_top_up" in found) is wallet
