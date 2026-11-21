@@ -216,7 +216,15 @@ Plan §13 and `contracts/transitions/task.json`, done in #142, all on the assist
   review or while paused. At a question, an answer saying the user only wanted to see the page
   («میخواستم ببینم فقط») ends the task the same way and leaves the page open (#164). While the task runs, the button stops it before its next command: the
   app stays where it is, and a command already sent is never undone (`lifecycle.StoppableBridge`).
-- **A correction after the review.** While the task is `ready_for_user`, a new message in the same
+- **The user took the task over (P6-12, #204).** Once the app has left the page a `ready_for_user`
+  task was prepared on (its review, or its page), the user has confirmed it by touch or left it. The
+  app reports pages, not taps, so which one is not known, and nothing is claimed. At the next
+  message, before anything else, the route ends the task (`ready_for_user → completed`), and the
+  message is read as a new request with the conversation kept: no switch question
+  (`Lifecycle.taken_over`). Before this, the next request asked «… نیمه‌کاره است؛ لغو شود؟», and
+  «نه» went back to the confirmed task.
+- **A correction after the review.** While the task is `ready_for_user` and the app is still on its
+  review, a new message in the same
   conversation is a follow-up (`lifecycle.next_input`). The model, shown the task's title and its
   Persian words, says whether it corrects the prepared task or is a new request (a message that
   names a task of its own, such as «انتقال وجه داخلی…» after a loan payment, is new, #164); a correction is prepared again from the app's current screen,

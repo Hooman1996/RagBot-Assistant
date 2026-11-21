@@ -160,11 +160,14 @@ class ReactAgent:
     def begin(self, state: ReactState) -> dict:
         """Door A (D-034): a new message starts a turn with no steps, and goes into the history. The
         fast path refuses a secret (kept out of the history) or a confirm request, and a cancel
-        phrase cancels the open task; the message then stays out of the task's messages."""
+        phrase cancels the open task; the message then stays out of the task's messages. A task the
+        user took over (confirmed or left its page) ends first, as in the workflow (P6-12)."""
+        reset = self.lifecycle.taken_over(state)
+        state = state | reset
         text = state["messages"][-1]
         kind = fast(text)
         turns = kept(state["turns"], line("user", replies.REMOVED if kind == "secret" else text))
-        base = {"steps": [], "turns": turns, "said": None, "lead": None}
+        base = reset | {"steps": [], "turns": turns, "said": None, "lead": None}
         if kind is None:
             return base
         taken = {"messages": state["messages"][:-1] if state["task_state"] in FOLLOW_UP else []}

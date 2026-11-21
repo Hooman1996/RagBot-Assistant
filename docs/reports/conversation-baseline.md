@@ -274,3 +274,37 @@ agents.
 | «نه ۱۵۰ بشه» | 1,500,000 rials (before: 1,000,000 again) |
 | «از کارت 4544 باشه» | 1,500,000 rials, with the card changed |
 | «نه ۳۰۰ هزار تومن بشه» | 3,000,000 rials |
+
+## P6-12 (#204): the user took over a prepared task
+
+**Date:** 21 Nov 2026. Owner's live test: "when i confirm a transaction on the review page, the
+assistant doesnt know about it and when i confirm by clicking and then ask it to do another task it
+thinks that im aborting the current task". Both agents ran on commit `ba058e6`.
+
+**The bug, in both agents.** A task stayed `ready_for_user` after the user confirmed it by touch or
+left the page, so the next request asked «کار «…» نیمه‌کاره است؛ لغو شود و «…» شروع شود؟». This also
+explains the owner's «برو به تسهیلات باشگاه مشتریان» that ended on «تسهیلات در جریان و پرداخت»:
+answering «نه» to that question went back to the confirmed loan task. From a fresh start, the
+chooser, the plan and the replica all open S-307.
+
+**The change** (`Lifecycle.taken_over`, at door A of both agents):
+- If the task is at its review and the app has left the page it was prepared on, the task ends
+  (`ready_for_user → completed`).
+- The message is then a new request, with the conversation kept.
+- The app reports pages, not taps, so a confirm and a Back look the same, and nothing is claimed.
+
+| Run | Workflow | ReAct |
+|---|---|---|
+| Held-out (critical, unambiguous, preparation, safe stops) | 0 / 145, 101 / 101, 108 / 108, 27 / 27 | 0 / 145, 100 / 101, 107 / 108, 27 / 27 |
+| Conversation held-out (critical, turns right, safety) | 0 / 133, 132 / 133, 21 / 21 | 1 / 133, 122 / 133, 21 / 21 |
+
+Both runs are the same as before the change, with the same failing turns. The scripted
+conversations never move the app.
+
+**Live on the replica (workflow, this branch):**
+1. «قسط بعدی وام شخصیمو از سپرده پس‌انداز بده» reaches the review.
+2. The user leaves it with Back.
+3. «برو به تسهیلات باشگاه مشتریان» now opens S-307 with no question. Before, it asked «کار «تسهیلات در جریان و پرداخت» نیمه‌کاره است…».
+
+A confirm by touch needs the user's own fields (the static password and CVV2), so it was left to
+the owner. The assistant sees it as the same signal: the app has left the review.
