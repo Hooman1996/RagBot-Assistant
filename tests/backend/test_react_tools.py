@@ -162,3 +162,21 @@ def test_a_wallet_feature_is_found_only_once_the_user_says_kif() -> None:
         found = found_intents(result["steps"][0]["result"])
         assert "mobile_top_up" in found
         assert ("wallet_mobile_top_up" in found) is wallet
+
+
+def test_a_call_repeated_after_code_named_the_next_step_takes_that_step() -> None:
+    values = {
+        "card-transfer-source": "****3566",
+        "card-transfer-destination": "رضا",
+        "card-transfer-amount": None,
+    }
+    read = values | {"card-transfer-amount": {"value": 250000, "unit": "IRT"}}
+    echo = call("set_values", values=values)
+    app = RecordingApp()
+    sentence = "۲۵۰ هزار تومان از کارت 6104336383233566 به رضا کارت به کارت کن"
+    result = react(StepChat([*started("card_transfer", read), echo, echo]), app).invoke(
+        new_request("c", sentence), CONFIG
+    )
+    # The second, identical set_values is not run: code opens the review its last result named.
+    assert [step["tool"] for step in result["steps"]][-2:] == ["set_values", "open_review"]
+    assert result["task_state"] == "ready_for_user"
