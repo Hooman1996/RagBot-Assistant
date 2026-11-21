@@ -234,3 +234,43 @@ an amount or a claim. One small slip: «خوش آمدم» for «خوش آمدی�
 - «سلام، خوبی؟» in the middle of a card transfer got a reply, then «از کدام کارت انتقال انجام شود؟»
   with its card options. The card picked after it reached the review.
 
+
+## P6-11 (#202): a bare number correcting an amount
+
+**Date:** 21 Nov 2026. **Decision:** [D-037](../decisions/0037-bare-number-correction.md) (owner: option B). Both agents ran
+on commit `4253372`. The frozen sets are unchanged (`a052b637…`, `67a20ca5…`).
+
+**The bug, in both agents.** After «۱۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن», the
+correction «نه ۱۵۰ بشه» prepared the review again with the old 100 thousand toman, a critical wrong
+action (tuning CT-006). Three things combined:
+- The parser counts a number only with a scale or unit word.
+- The model's amount was rightly refused.
+- The money check then fell back to "the one amount the user wrote", the very amount being changed.
+
+**The change** (`assistant/slots.py`, `assistant/amounts.py`):
+- A bare number of up to three digits in the newest message takes the scale and unit of the amount it
+  replaces, when the model read that number, as written or already scaled.
+- Anything else is asked, and the old amount is never brought back.
+- In later turns that number counts as an amount the user wrote. This was found live: after
+  «نه ۱۵۰ بشه», «از کارت 4544 باشه» had brought back the first amount.
+
+| Run | Workflow | ReAct |
+|---|---|---|
+| Correction conversations (CT-006, CT-037 to CT-040), turns right | 11 / 11 | 11 / 11 |
+| Held-out (critical, unambiguous, preparation, safe stops) | 0 / 145, 101 / 101, 108 / 108, 27 / 27 | 0 / 145, 100 / 101, 107 / 108, 27 / 27 |
+| Conversation held-out (critical, turns right, safety) | 0 / 133, 132 / 133, 21 / 21 | 1 / 133, 122 / 133, 21 / 21 |
+
+**Before the change,** the workflow scored the same on both frozen sets: CH-004 was its one missed
+turn then too. The ReAct agent at RA-9 had 2 / 133 critical and 124 / 133 turns right. Its turns
+that differ now are switch turns («نه ولش، قبض آبمو بده» was cancelled), which is the model's
+run-to-run variance. None involves an amount, and every amount field on held-out is right in both
+agents.
+
+**Live on the replica (workflow, this branch):**
+
+| The user's words | The review's amount |
+|---|---|
+| «۱۰۰ هزار تومن به رضا کارت به کارت کن», then ****3566 | 1,000,000 rials |
+| «نه ۱۵۰ بشه» | 1,500,000 rials (before: 1,000,000 again) |
+| «از کارت 4544 باشه» | 1,500,000 rials, with the card changed |
+| «نه ۳۰۰ هزار تومن بشه» | 3,000,000 rials |
