@@ -360,6 +360,14 @@ fresh install of the replica (a device-test run removes it), select the layout a
 `local/toolchain/replica-viewer/keyboard_layout.sh`, which also turns off the on-screen keyboard.
 The remap is made from the layout file by `make_persian_remap.py` beside it.
 
+**If «گ» types `'` (21 Nov 2026, #205),** the layout choice for the viewer's keyboard was lost:
+Android has gone back to «خودکار: فارسی», its own Persian layout, which has no «گ» at all. With
+the viewer running, run `local/toolchain/replica-viewer/keyboard_layout.sh` once; Settings then
+shows «انتخاب کاربر: فارسی (استاندارد، با گ)». Never use `adb root` or `adb unroot` while
+the viewer runs: they restart the emulator's adb daemon, which stops the viewer and drops
+`adb reverse tcp:8100`. Restart the viewer with `start.sh` and set the reverse again (or run
+`up.sh`). For a root command, use `adb shell su 0 …`, which restarts nothing.
+
 For speed: the viewer captures at 1200 px (`--max-size=1200`); x11vnc runs with `-nonap -wait 5
 -defer 5 -threads` (about 16 screen updates a second while the app scrolls, from 8); and the
 emulator's display is overridden for the viewer with `adb -s emulator-5554 shell wm size 720x1600`
