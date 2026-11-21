@@ -34,13 +34,14 @@ def call(tool: str, **arguments: object) -> dict:
     return {"thought": "…", "tool": tool, "arguments": arguments}
 
 
-def started(feature: str) -> list[dict]:
-    """The model's first two steps for a new request: the features found, then the one started."""
+def started(feature: str, read: dict | None = None) -> list[dict]:
+    """The model's two steps that start a feature, the features found then the one started, and the
+    workflow's reading of the request that start_task does (none for a page to see)."""
     title = next(item["title"] for item in PROFILE["features"] if item["intent"] == feature)
     return [
         call("find_features", request=title),
         call("start_task", feature=feature, request=title, second=None),
-    ]
+    ] + ([] if feature == "home" else [read or {}])
 
 
 def card_values(source: str | None = None, destination: str | None = "رضا", amount: object = AMOUNT) -> dict:
@@ -120,25 +121,20 @@ def test_a_missing_source_moves_the_app_then_asks_the_workflows_question() -> No
     assert picked == {"picked": {"card-transfer-source": "****3566"}, "missing": [], "next": "open_review"}
 
 
-def test_asking_at_once_reads_the_words_moves_the_app_and_never_moves_it_twice() -> None:
-    # The model skips set_values and move_app: the workflow's reader reads the user's words, the app
-    # moves as a step of its own, and the answer resumes only the question.
+def test_starting_reads_the_request_and_asking_at_once_moves_the_app_never_twice() -> None:
+    # start_task reads the user's words with the workflow's reader, so the model asks at once; the
+    # app moves as a step of its own, and the answer resumes only the question.
+    read = {"card-transfer-source": None, "card-transfer-destination": "رضا", "card-transfer-amount": AMOUNT}
     chat = StepChat(
-        [
-            *started("card_transfer"),
-            call("ask_user", question="کارت؟"),
-            {
-                "card-transfer-source": None,
-                "card-transfer-destination": "رضا",
-                "card-transfer-amount": AMOUNT,
-            },
-            call("open_review"),
-        ]
+        [*started("card_transfer", read), call("ask_user", question="کارت؟"), call("open_review")]
     )
     app = RecordingApp()
     graph = react(chat, app)
     result = graph.invoke(new_request("c", CARD_SENTENCE), CONFIG)
     assert result["__interrupt__"][0].value["question"] == "از کدام کارت انتقال انجام شود؟"
+    kept = graph.get_state(CONFIG).values["steps"][1]["result"]
+    assert kept["kept"]["card-transfer-destination"] == "رضا محمدی ****8880"
+    assert kept["missing"] == ["card-transfer-source"] and kept["next"] == "ask_user"
     moved = len(app.sent)
     assert moved == 2 and app.screen == "S-174"
     result = graph.invoke(Command(resume="card-transfer-source=card-2"), CONFIG)
@@ -259,6 +255,43 @@ def test_a_correction_after_the_review_prepares_it_again() -> None:
     assert "3,000,000" in result["reply"]
     # At the review the model may correct a value and open the review again.
     assert {"set_values", "open_review", "cancel_task"} <= set(tools_offered(chat, 4))
+
+
+def test_at_a_correction_the_workflows_reader_wins_over_the_models_copy() -> None:
+    chat = StepChat(
+        [
+            *started("card_transfer"),
+            card_values("****3566"),
+            card_values("****3566")["arguments"]["values"],
+            call("open_review"),
+            card_values("****3566", "رضا", {"value": 999000, "unit": "IRT"}),  # the model's misreading
+            card_values("****3566", "رضا", {"value": 300000, "unit": "IRT"})["arguments"][
+                "values"
+            ],  # the reader
+            call("open_review"),
+        ]
+    )
+    app = RecordingApp()
+    graph = react(chat, app)
+    graph.invoke(new_request("c", "۲۵۰ هزار تومان از کارت 6104336383233566 به رضا کارت به کارت کن"), CONFIG)
+    previous = graph.get_state(CONFIG).values
+    result = graph.invoke(next_input(previous, "c", "نه، ۳۰۰ هزار تومان"), CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    assert app.sent[-2][1]["values"]["card-transfer-amount"] == {"value": 3000000, "unit": "IRR"}
+    # The model is told the value it named as it is now held, so it sees the correction landed.
+    corrected = next(step for step in result["steps"] if step["tool"] == "set_values")["result"]
+    assert corrected["kept"]["card-transfer-amount"] == "3,000,000 ریال"
+
+
+def test_held_values_sent_back_as_their_labels_are_kept_not_refused() -> None:
+    read = {"card-transfer-source": None, "card-transfer-destination": "رضا", "card-transfer-amount": AMOUNT}
+    echoed = card_values(None, "رضا محمدی ****8880", "2,500,000 ریال")  # the labels the model was shown
+    chat = StepChat([*started("card_transfer", read), echoed, {}, ModelError("chat: stop here")])
+    result = react(chat, RecordingApp()).invoke(new_request("c", CARD_SENTENCE), CONFIG)
+    found = result["steps"][2]["result"]
+    assert found["refused"] == [] and found["missing"] == ["card-transfer-source"]
+    assert result["values"]["card-transfer-destination"] == "reza"
+    assert result["values"]["card-transfer-amount"] == {"value": 2500000, "unit": "IRR"}
 
 
 def test_a_page_to_see_opens_it() -> None:

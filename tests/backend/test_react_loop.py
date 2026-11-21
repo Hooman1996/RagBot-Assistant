@@ -17,7 +17,7 @@ from assistant.lifecycle import next_input
 from assistant.lookups import FixtureLookups
 from assistant.models import Chat, ModelError
 from assistant.navigator import Navigator
-from assistant.react_graph import build_agent, build_react_graph
+from assistant.react_graph import AT_REVIEW, build_agent, build_react_graph
 from assistant.react_tools import NEXT_ANSWER, NEXT_PICKED
 from tools import evaluate_agent
 
@@ -42,13 +42,14 @@ def call(tool: str, thought: str = "…", **given: object) -> dict:
     return {"thought": thought, "tool": tool, "arguments": given}
 
 
-def started(feature: str, request: str | None = None) -> list[dict]:
-    """The model's two steps that start a feature: the features found, then the one started."""
+def started(feature: str, request: str | None = None, read: dict | None = None) -> list[dict]:
+    """The model's two steps that start a feature, the features found then the one started, and the
+    workflow's reading of the request that start_task does (none for a page to see)."""
     title = next(item["title"] for item in PROFILE["features"] if item["intent"] == feature)
     return [
         call("find_features", request=title),
         call("start_task", feature=feature, request=request or title, second=None),
-    ]
+    ] + ([] if feature == "home" else [read or {}])
 
 
 def asking_for_the_source() -> list[dict]:
@@ -123,6 +124,7 @@ def test_a_request_not_clear_asks_which_feature_and_a_pick_goes_back_to_the_mode
             call("find_features", request="یه کاری با حسابم دارم"),
             call("ask_which", features=which),
             call("start_task", feature="card_transfer", request="…", second=None),
+            {},  # the workflow's reading of the request
             STOP,
         ]
     )
@@ -170,8 +172,7 @@ def test_chat_in_the_middle_of_a_task_is_replied_to_and_its_question_asked_again
     chat = StepChat(
         [
             *asking_for_the_source(),
-            call("reply", text="سلام! در خدمتم."),
-            call("ask_user", question="؟"),
+            call("reply", text="سلام! در خدمتم."),  # code asks the task's question right after it
             {"card-transfer-source": None, "card-transfer-amount": None},  # the reader reads the new words
         ]
     )
@@ -280,12 +281,15 @@ def test_the_model_sees_the_conversation_across_requests() -> None:
     assert f"- user: «سلام»\n- assistant: «{HELLO}»\n- user: «کارت به کارت»" in chat.prompts[-1]
 
 
-def test_a_model_failure_at_the_review_keeps_the_review() -> None:
-    graph = react(StepChat([*at_the_review(), STOP]))
+def test_a_model_failure_at_the_review_keeps_the_review_and_the_review_rule_is_said_only_there() -> None:
+    chat = StepChat([*at_the_review(), STOP])
+    graph = react(chat)
     graph.invoke(new_request("c", CARD_SENTENCE), CONFIG)
+    assert not any(AT_REVIEW in prompt for prompt in chat.prompts)
     previous = graph.get_state(CONFIG).values
     result = graph.invoke(next_input(previous, "c", "یه چیزی بگم"), CONFIG)
     assert result["task_state"] == "ready_for_user" and result["reply"] == replies.MODEL_FAILED
+    assert AT_REVIEW in chat.prompts[-1]
 
 
 def test_the_model_never_sees_a_full_card_number() -> None:

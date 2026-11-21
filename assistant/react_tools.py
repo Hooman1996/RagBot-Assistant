@@ -22,7 +22,7 @@ from assistant import replies
 from assistant.agent_lifecycle import Lifecycle
 from assistant.agent_nodes import REFUSALS, Nodes
 from assistant.agent_state import AgentState, moved, new_request
-from assistant.conversation import kept, line, safe_chat
+from assistant.conversation import kept, line, safe_chat, user_words
 from assistant.intent import KNOWLEDGE
 from assistant.lifecycle import CANCEL, FOLLOW_UP, NO_WORDS, YES_WORDS, fast
 from assistant.lookups import GENERIC, plain
@@ -35,15 +35,15 @@ from assistant.words import feature_words, field_words, plates
 TEXT = {"type": "string"}
 TEXT_OR_NULL = {"anyOf": [{"type": "string"}, {"type": "null"}]}
 OPEN = ("resolving", "ready_for_user", "paused")  # a task the model works on
+WALLET_WORD = "کیف"  # the word that names the app's wallet
 FEATURES = 8  # the features find_features shows, as many as the workflow's chooser sees
 ASK_WHICH = 4  # the most features ask_which offers (as the not-sure question, owner 18 Nov 2026)
 SHOWN = re.compile(r"\*{4}(\d{4})")  # a long number as the model is shown it
-NEXT_MISSING = "move_app, then ask_user"
+NEXT_MISSING = "ask_user"
 NEXT_READY = "open_review"
 NEXT_ANSWER = "read it: set_values when it gives values; else reply, find_features or cancel_task"
 NEXT_FEATURE = "start_task with the feature the request means, or ask_which when two or more could"
 NEXT_PICKED = "start_task with the picked feature"
-NEXT_TASK = "set_values with every value the user gave, then move_app and ask_user, or open_review"
 NEXT_ASK = "go on with the task: its question is asked after your reply"
 NOT_KEPT = "a value not kept: use only the user's own words, or ask"
 NOT_NAMED = "a record must be in the user's own words, not one you read; else ask"
@@ -63,7 +63,10 @@ TEXTS = {
         " open, code asks the user first."
     ),
     "ask_which": "ask_which(features): asks the user which of 2 to 4 found features they mean.",
-    "cancel_task": "cancel_task(): cancels the open task, only when the user's newest words ask to stop it.",
+    "cancel_task": (
+        "cancel_task(): cancels the open task, only when the user's newest words ask to stop it and ask"
+        " for nothing else; never to start another task."
+    ),
     "find_records": (
         "find_records(ref, words): the records the app lists for that field that match the words"
         " (all of them when words is empty)."
@@ -75,11 +78,15 @@ TEXTS = {
         " Give a text without its field's label words («عنوان», «نشانی»)."
         ' Money is {"value": the number as the user said it, "unit": "IRT" for تومان or "IRR" for'
         " ریال}; هزار is 1000, میلیون is 1000000, no unit is IRT. Code checks every value and says what"
-        " it kept, refused and still misses."
+        " it kept, refused and still misses. At the review: only to change a value of this task, never"
+        " for a new task."
     ),
-    "move_app": "move_app(): takes the app to the page of the next missing value, before ask_user.",
+    "move_app": "move_app(): takes the app to the page of the next missing value (ask_user does it too).",
     "open_review": "open_review(): fills the task in the app and opens its review, for the user to check.",
-    "ask_user": "ask_user(question): asks the user about what is missing (code words the question).",
+    "ask_user": (
+        "ask_user(question): moves the app to the page of what is missing, then asks the user about it"
+        " (code words the question)."
+    ),
 }
 
 
@@ -107,16 +114,21 @@ def shown_again(value: object, messages: list[str]) -> object:
 
 
 def read_since_words(steps: list[dict]) -> bool:
-    """True when set_values ran after the user's newest words in this turn: the request the task
-    was started from, or a typed answer. A correction after the review was read by the workflow's
-    own reader already, when the task was opened again."""
+    """True when the user's newest words in this turn were read: the request the task was started
+    from (start_task reads it), or a typed answer that set_values read after it. A correction after
+    the review was read by the workflow's own reader already, when the task was opened again."""
     words = [
         index
         for index, step in enumerate(steps)
         if step["tool"] == "start_task" or "answer" in step.get("result", {})
     ]
-    read = [index for index, step in enumerate(steps) if step["tool"] == "set_values"]
-    return not words or bool(read) and read[-1] > words[-1]
+    # start_task reads its request itself, so it is words and their reading at once.
+    read = [
+        index
+        for index, step in enumerate(steps)
+        if step["tool"] == "set_values" or "kept" in step.get("result", {})
+    ]
+    return not words or bool(read) and read[-1] >= words[-1]
 
 
 def arguments(**properties: dict) -> dict:
@@ -271,11 +283,15 @@ class ReactTools:
 
     def set_values(self, state: AgentState, given: dict) -> tuple[dict, dict]:
         """The workflow's reading of the missing fields, and the model's new values for fields held
-        before, through the workflow's check and resolve: what is kept, refused and still missing."""
+        before, through the workflow's check and resolve: what is kept, refused and still missing. A
+        held value the model sends back as the label it was shown is unchanged, so it is not read
+        again: a masked label is not the user's words, and re-checking it would drop the value."""
+        items = {item["ref"]: item for item in state["plan"]["requirements"]}
         said = {
             ref: shown_again(value, state["messages"])
             for ref, value in given["values"].items()
             if value is not None
+            and not (ref in state["values"] and value == self.label(items[ref], state["values"][ref]))
         }
         lookups = {item["ref"]: item["lookup"] for item in state["plan"]["requirements"]}
         # A record comes only from the user's words, never from a label the model read in find_records.
@@ -291,10 +307,22 @@ class ReactTools:
         update = self.settle(state | {"values": state["values"] | held | self.read(state, {})})
         task = state | update
         items = {item["ref"]: item for item in task["plan"]["requirements"]}
-        kept = {ref: self.label(items[ref], value) for ref, value in task["values"].items() if ref in said}
+        # Every value the model named, as it is now held (its own, the reader's, or unchanged).
+        named = [ref for ref, value in given["values"].items() if value is not None]
+        kept = {ref: self.label(items[ref], value) for ref, value in task["values"].items() if ref in named}
         refused = unnamed + [ref for ref in said if ref not in task["values"]]
         note = task["question"] or (NOT_NAMED if unnamed else NOT_KEPT if refused else None)
         return {"kept": kept, "refused": refused, "note": note} | self.next_step(task), update
+
+    def as_held(self, state: AgentState, values: dict) -> dict:
+        """The values the model named, each as the label of the value the task holds now (None when
+        it holds none), so set_values keeps them as they are and reports them."""
+        items = {item["ref"]: item for item in state["plan"]["requirements"]}
+        return {
+            ref: self.label(items[ref], state["values"][ref]) if ref in state["values"] else None
+            for ref, value in values.items()
+            if value is not None
+        }
 
     def read(self, state: AgentState, said: dict) -> dict:
         """The workflow's own reading (slots.extract) of the missing fields, but those in said, so no
@@ -459,7 +487,8 @@ class ReactTools:
     def find_features(self, state: AgentState, given: dict) -> tuple[dict, dict]:
         """TEI's closest features, each with its name, title and what it is for: the user's newest
         words first, which TEI ranks best, then the closest to the model's request sentence (what a
-        reference like «همونو» means). Nothing is started."""
+        reference like «همونو» means). A wallet feature only once the user has said «کیف». Nothing
+        is started."""
         said = state["messages"][-1] if state["messages"] else given["request"]
         index = self.nodes.tools.index
         try:
@@ -467,9 +496,14 @@ class ReactTools:
         except ModelError:
             return {"error": "the search failed; reply to the user"}, {}
         merged = {item["intent"]: item for item in words[:6] + request[:2] + words[6:] + request[2:]}
+        if WALLET_WORD not in user_words(state["turns"], said):
+            # The app's wallet features only when the user says «کیف»: else its bank twin is meant.
+            merged = {intent: item for intent, item in merged.items() if not intent.startswith("wallet_")}
         closest = list(merged.values())[:FEATURES]
+        words = plain(said)
         features = [
             {"feature": item["intent"], "title": item["title"]}
+            | ({"named": True} if plain(item["title"]) in words else {})
             | {"about": feature_words(item["intent"]) or item["description"]}
             for item in closest
         ]
@@ -501,8 +535,18 @@ class ReactTools:
         if not task["missing"] and not self.settable(task):
             result, opened = self.open_review(task, {})
             return result, planned | opened
+        # The workflow's reader reads the request at once, so no step is spent on it.
+        planned |= self.settle(task | {"values": task["values"] | self.read(task, {})})
+        task = state | planned
+        items = {item["ref"]: item for item in task["plan"]["requirements"]}
+        kept = {
+            ref: self.label(items[ref], value)
+            for ref, value in task["values"].items()
+            if ref in items and ref not in task["plan"]["preset"]
+        }
         title = self.nodes.features[given["feature"]]["title"]
-        return {"started": title, "missing": task["missing"], "next": NEXT_TASK}, planned
+        result = {"started": title, "kept": kept, "note": task["question"]} | self.next_step(task)
+        return result, planned
 
     def switch(self, state: AgentState, feature: str) -> tuple[dict, dict]:
         """The switch question while a task is open: «بله» leaves it for the new one, from where the

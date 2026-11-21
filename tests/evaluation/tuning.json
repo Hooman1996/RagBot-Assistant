@@ -1335,5 +1335,54 @@
         "bill-pay-id"
       ]
     }
+  },
+  {
+    "id": "T-066",
+    "tags": [
+      "unambiguous",
+      "e2e",
+      "wallet_vs_bank",
+      "colloquial"
+    ],
+    "turns": [
+      "یه شارژ ۵۰ تومنی از سپرده پس‌انداز برای 09127775511 بخر"
+    ],
+    "expect": {
+      "intent": "mobile_top_up",
+      "values": {
+        "topup-source": "account-2",
+        "topup-phone": "09127775511",
+        "topup-amount": {
+          "value": 500000,
+          "unit": "IRR"
+        }
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
+  },
+  {
+    "id": "T-067",
+    "tags": [
+      "unambiguous",
+      "e2e"
+    ],
+    "turns": [
+      "۲۵۰ هزار تومن از کوتاه‌مدت به حساب مهدی کریمی انتقال داخلی بده بابت خرید کالا"
+    ],
+    "expect": {
+      "intent": "internal_transfer",
+      "values": {
+        "account-transfer-source": "account-1",
+        "account-transfer-destination": "account-4",
+        "account-transfer-amount": {
+          "value": 2500000,
+          "unit": "IRR"
+        },
+        "account-transfer-reason": "1"
+      },
+      "end": "ready_for_user",
+      "asks": []
+    }
   }
 ]

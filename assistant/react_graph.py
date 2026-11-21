@@ -40,28 +40,53 @@ AGENTS = ("workflow", "react")
 REPEATED = "the same call as your last step: its result is above; do the next thing"
 ASKING = ("ask_user", "ask_which")  # tools that wait for the user, so the same call again is fine
 HEARD = {"answer", "picked", "switch"}  # a result that holds the user's newest words
-REOPENING = ("set_values", "move_app", "open_review")  # acts that open a task at its review again
+REOPENING = ("set_values", "move_app", "open_review")
+TAKEN = (
+    "open_review",
+    "ask_user",
+)  # a next step code takes when the model only repeats itself  # acts that open a task at its review again
 RULES = [
     "Rules:",
     "- Read the newest user line in the conversation and act on what it is:",
     "  - It asks to do or see something in the app, even while a task is open and even when it starts"
     " with «نه», «ولش» or «بیخیال» («نه، اول یه شارژ بخرم»): find_features with the request as one full"
-    " sentence (fill in what it refers to from the conversation, never an amount, name or number the"
-    " user did not write), then start_task with the feature it means, or ask_which when two or more could.",
+    " sentence, then start_task with the feature it means. When it refers to an earlier request («همین»,"
+    " «همون», «عین همین», «دوباره», «یکی دیگه»), the sentence copies that request's amount, card, account,"
+    " number and person as the user wrote them, and changes only what the newest message changes"
+    " («همینو برای سارا هم بزن» after «۵۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن» is «۵۰۰ هزار"
+    " تومن از کارت 3566 به سارا کارت به کارت کن»); never an amount, name or number the user"
+    " did not write. A request to see, check or look"
+    " up something the app shows (a statement, a toll, a rating, a balance, a list) is a task too.",
     "  - It gives values for the open task or answers its question: set_values.",
-    "  - It changes a value of the open task, even at its review: set_values with the new value, then"
-    " open_review.",
-    "  - A greeting, thanks, small talk, a question (rates, fees, rules), something the app cannot do,"
-    " or rude words: reply.",
-    "  - It wants the open task stopped and asks for nothing else («ولش کن», «نمیخوام دیگه»): cancel_task.",
-    "- For the open task: when something is missing, move_app then ask_user; when nothing is: open_review.",
+    "  - It only changes a value of the open task, even at its review, and asks for no task again:"
+    " set_values with the new value, then open_review.",
+    "  - A greeting, thanks, small talk, a question for information or advice (rates, fees, rules),"
+    " something the app cannot do, or rude words: reply.",
+    "  - It wants the open task stopped and asks for nothing else («ولش کن», «نمیخوام دیگه»): cancel_task."
+    " Never cancel_task to start another task: start_task asks the user before leaving the open one.",
+    "- Choosing a feature: read each found feature's title and about. Start the one the user's words"
+    " fit best: where the money comes from («از حساب», «سپرده», «پس‌انداز», «کارت» is the bank;"
+    " a feature that uses the wallet only when the user says «کیف»), a feature whose title the user"
+    ' names ("named": true, such as «انتقال داخلی»), and what it is for. ask_which only when the words'
+    " fit two or more features equally well and nothing in them tells them apart.",
+    "- For the open task: when something is missing, ask_user (the app moves to the question's page"
+    " first); when nothing is, open_review.",
     "- Never guess a value the user did not give, and never pick a record or an option for the user.",
     "- A reply is one or two short, warm Persian sentences. You prepare tasks in this app (transfers,"
     " bills, top-ups, loans, cards, cheques and more) up to a review page that only the user confirms,"
     " by touch. Say kindly what you cannot do here, and that you cannot answer questions about rates,"
     " fees or rules yet. Never give numbers, amounts, account details or advice, and never say anything"
-    " was sent, paid or confirmed.",
+    " was sent, paid, cancelled or confirmed.",
 ]
+# Said with the open task at its review: the old follow-up's distinction, which held up (D-032).
+AT_REVIEW = (
+    "The task is prepared and at its review. The newest message is a new task when it asks for a task"
+    " of its own: it names a kind of task, or asks for one again or for someone else («یکی دیگه»،"
+    " «عین همین»، «دوباره»، «برای سارا هم»), even of the same kind: find_features, then start_task (code"
+    " asks the user before leaving this task). It is a correction only when it just changes or adds a"
+    " value of this task without asking for a task again («نه، ۳۰۰ هزار بشه»، «از اون یکی کارتم»):"
+    " set_values."
+)
 WHERE = {"ready_for_user": " It is at its review.", "paused": " It is paused: the app was out of reach."}
 
 
@@ -95,6 +120,7 @@ def task_lines(state: ReactState, held: dict) -> list[str]:
     asks = {item["ref"]: item["ask"] for item in state["plan"]["requirements"]}
     missing = [f"{ref} («{asks[ref]}»)" for ref in held["missing"]]
     lines = [f"The open task: «{held['feature']}».{WHERE.get(state['task_state'], '')}"]
+    lines += [AT_REVIEW] if state["task_state"] == "ready_for_user" else []
     lines += ["Its messages, oldest first:"]
     lines += [f"{index}. «{text}»" for index, text in enumerate(hidden(state["messages"]), start=1)]
     return lines + [
@@ -177,6 +203,16 @@ class ReactAgent:
             and step["tool"] not in ASKING
             and called(step) == called(state["steps"][-2])
         ):
+            advised = state["steps"][-2].get("result", {}).get("next")  # what the same call was told
+            if advised in TAKEN and advised in self.tools.available(state):
+                # Seen live: the model repeats a call whose result named the next step. Code takes
+                # that step instead (the review, or the task's question).
+                step = {
+                    "thought": step["thought"],
+                    "tool": advised,
+                    "arguments": {"question": ""} if advised == "ask_user" else {},
+                }
+                return {"steps": state["steps"][:-1] + [step]}
             # The same call again changes nothing: the model is told so instead, and goes on.
             return {"steps": state["steps"][:-1] + [step | {"result": {"error": REPEATED}}]}
         if step["tool"] == "ask_user" and state["task_state"] == "resolving":
@@ -186,12 +222,23 @@ class ReactAgent:
                 steps.append({key: step[key] for key in ("thought", "tool", "arguments")})
             show("act", tool="move_app", result=result)
             return update | {"steps": steps}
+        if step["tool"] == "reply" and state["task_state"] == "resolving" and state["missing"]:
+            # Chat during a task: the reply is said with the task's question, asked at once.
+            result, update = self.tools.reply(state, step["arguments"])
+            asking = {"thought": step["thought"], "tool": "ask_user", "arguments": {"question": ""}}
+            return update | {"steps": state["steps"][:-1] + [step | {"result": result}, asking]}
         before = {}
         if step["tool"] in REOPENING and state["task_state"] in FOLLOW_UP:
             before = self.tools.reopened(state)
             if before["task_state"] != "resolving":
                 stopped = {"stopped": (state | before)["reply"]}
                 return before | {"steps": state["steps"][:-1] + [step | {"result": stopped}]}
+            if step["tool"] == "set_values":
+                # A correction: the workflow's reader read the newest message as the task opened
+                # again, so what it changes is the reader's, not the model's copy of it. Each value
+                # the model named stands as the reader left it, and is reported back as held.
+                values = self.tools.as_held(state | before, step["arguments"]["values"])
+                step = step | {"arguments": {"values": values}}
         result, update = getattr(self.tools, step["tool"])(state | before, step["arguments"])
         show("act", tool=step["tool"], result=result)
         return before | update | {"steps": state["steps"][:-1] + [step | {"result": result}]}
