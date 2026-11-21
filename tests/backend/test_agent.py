@@ -307,6 +307,21 @@ def test_an_amount_that_may_be_shorthand_is_asked() -> None:
     assert money({"value": 300000, "unit": "IRT"}, answered) == {"value": 300000, "unit": "IRR"}
 
 
+def test_a_bare_number_correcting_an_amount_is_in_that_amounts_scale_and_never_the_old_amount() -> None:
+    # D-037: «نه ۱۵۰ بشه» after «۱۰۰ هزار تومن» is 150 thousand toman, read as 150 or already scaled.
+    asked = ["۱۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن", "نه ۱۵۰ بشه"]
+    assert money({"value": 150, "unit": "IRT"}, asked) == {"value": 1500000, "unit": "IRR"}
+    assert money({"value": 150000, "unit": "IRT"}, asked) == {"value": 1500000, "unit": "IRR"}
+    # Any other reading is asked: the old 100 thousand never comes back.
+    assert money({"value": 90, "unit": "IRT"}, asked) is None
+    assert money(None, asked) is None
+    # A correction that names no amount keeps it; a full amount still replaces it at once.
+    card = ["۱۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن", "از کارت 4544 باشه"]
+    assert money({"value": 100000, "unit": "IRT"}, card) == {"value": 1000000, "unit": "IRR"}
+    full = ["۱۰۰ هزار تومن از کارت 3566 به رضا کارت به کارت کن", "نه ۳۰۰ هزار تومن بشه"]
+    assert money({"value": 100000, "unit": "IRT"}, full) == {"value": 3000000, "unit": "IRR"}
+
+
 def test_an_amount_with_no_unit_is_in_tomans() -> None:
     said = ["۵۰ هزار کارت به کارت کن برا رضا"]
     assert money({"value": 50000, "unit": "IRT"}, said) == {"value": 500000, "unit": "IRR"}

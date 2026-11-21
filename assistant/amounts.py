@@ -3,7 +3,9 @@
 Called by slots.checked. It reads Persian and Latin digits, number words up to the billions
 («دویست», «یک میلیون و پونصد هزار»), and the units تومان/تومن/ت and ریال. Only a number with a
 scale word or a unit counts as an amount, and with no unit it is in tomans, as people say it
-(«۵۰ هزار» is 50,000 toman). It returns whole rials and never guesses.
+(«۵۰ هزار» is 50,000 toman). It returns whole rials and never guesses. scale_of gives the rials
+one unit of a written amount stands for, so a bare number correcting it can be read in its scale
+(D-037).
 """
 
 import re
@@ -50,4 +52,19 @@ def amounts(text: str) -> list[int]:
             total, current, scaled, joined = 0, 0, False, True
             if number is not None:  # a number that cannot join the last one starts a new amount
                 current, joined = number, False
+    return found
+
+
+def scale_of(text: str) -> int | None:
+    """The rials that 1 stands for in the last amount written as digits and its scale and unit words
+    («۱۰۰ هزار تومن» → 10,000; «۲ میلیون ریال» → 1,000,000), or None when no such amount is there."""
+    words, found = tokens(text) + [""], None
+    for index, word in enumerate(words):
+        if not word.isdigit():
+            continue
+        scale, after = 1, index + 1
+        while words[after] in SCALES:
+            scale, after = scale * SCALES[words[after]], after + 1
+        if scale > 1 or words[after] in TOMAN | RIAL:
+            found = scale * (1 if words[after] in RIAL else 10)
     return found

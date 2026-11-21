@@ -2,7 +2,7 @@
 
 import pytest
 
-from assistant.amounts import amounts
+from assistant.amounts import amounts, scale_of
 
 
 @pytest.mark.parametrize(
@@ -38,3 +38,18 @@ def test_an_amount_is_read_in_whole_rials(text: str, rials: list[int]) -> None:
 )
 def test_a_number_with_no_unit_or_scale_word_is_not_an_amount(text: str) -> None:
     assert amounts(text) == []
+
+
+@pytest.mark.parametrize(
+    ("text", "scale"),
+    [
+        ("۱۰۰ هزار تومن از کارت 3566 به رضا", 10_000),
+        ("۲ میلیون ریال بفرست", 1_000_000),
+        ("۵۰۰ تومن", 10),
+        ("۵۰ هزار کارت به کارت کن", 10_000),  # no unit: tomans (D-030)
+        ("از کارت 4544 به رضا", None),
+        ("یک میلیون تومن", None),  # a number word, not digits: no shorthand is read from it
+    ],
+)
+def test_the_scale_of_a_written_amount(text: str, scale: int | None) -> None:
+    assert scale_of(text) == scale

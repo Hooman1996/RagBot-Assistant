@@ -9,7 +9,7 @@ and a choice only as one of its allowed keys, so no other text is ever sent to t
 
 import re
 
-from assistant.amounts import amounts
+from assistant.amounts import amounts, scale_of
 from assistant.lookups import GENERIC
 from assistant.models import Chat
 from assistant.task_runner import PERSIAN_DIGITS, TaskStopped, money_value
@@ -20,6 +20,7 @@ PLAIN_KEY = re.compile(r"[\w-]+")
 UNITS = {"IRR": 1, "IRT": 10}  # IRT is the toman: ten rials
 # Under 1,000 toman, a written amount is usually shorthand («شصت تمن» for sixty thousand), so it is asked.
 SMALLEST = 10_000
+BARE = re.compile(r"(?<!\d)\d{1,3}(?!\d)")  # a short number with no scale or unit: «۱۵۰»
 MONEY = {
     "type": "object",
     "properties": {"value": {"type": "integer"}, "unit": {"enum": list(UNITS)}},
@@ -84,15 +85,19 @@ def extract(chat: Chat, messages: list[str], requirements: list[dict]) -> dict:
 
 
 def money(value: object, messages: list[str]) -> dict | None:
-    """An amount in rials: the one in the user's newest answer, if it names one; else the model's,
-    only if the user wrote it; else the one amount the user wrote."""
+    """An amount in rials: the one in the user's newest answer, if it names one; else a bare number
+    correcting an amount, in that amount's scale and unit; else the model's, only if the user wrote
+    it; else the one amount the user wrote."""
     said = [found for text in messages for found in amounts(text) if found >= SMALLEST]
     newest = [found for found in amounts(messages[-1]) if found >= SMALLEST] if len(messages) > 1 else []
+    bare = BARE.findall(messages[-1].translate(PERSIAN_DIGITS)) if len(messages) > 1 and not newest else []
     model = None
     if isinstance(value, dict) and type(value.get("value")) is int and value.get("unit") in UNITS:
         model = value["value"] * UNITS[value["unit"]]
     if len(set(newest)) == 1:
         model = newest[0]  # a correction: the newest amount the user wrote wins
+    elif said and model not in said and bare:
+        model = shorthand(model, value, bare, messages)
     elif said and model not in said:
         model = said[0] if len(set(said)) == 1 else None  # a model amount the user never wrote is not used
     elif not said and model is not None:
@@ -104,6 +109,17 @@ def money(value: object, messages: list[str]) -> dict | None:
         return money_value(str(model)) if model is not None else None
     except TaskStopped:
         return None
+
+
+def shorthand(model: int | None, value: object, bare: list[str], messages: list[str]) -> int | None:
+    """A bare number correcting an amount («نه ۱۵۰ بشه» after «۱۰۰ هزار تومن», D-037): the number in
+    the scale and unit of the amount it replaces, when the model read that number, as written or
+    already scaled. Anything else is None, to be asked: never the old amount."""
+    scale = next((found for text in reversed(messages[:-1]) if (found := scale_of(text))), None)
+    if scale is None or len(set(bare)) != 1 or not isinstance(value, dict):
+        return None
+    number = int(bare[0])
+    return number * scale if value.get("value") == number or model == number * scale else None
 
 
 def text(value: object, messages: list[str]) -> str | None:
