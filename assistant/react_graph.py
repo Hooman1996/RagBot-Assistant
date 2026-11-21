@@ -1,37 +1,34 @@
-"""The ReAct agent: code understands the request, then the model picks each next step for the task,
-one tool call at a time ([D-032], [D-033]).
+"""The ReAct agent: the model reads every message in the conversation and picks each next step,
+one tool call at a time ([D-032], [D-036]).
 
 Chosen by ASSISTANT_AGENT=react in app.py, `main_debug.py --agent react` and
 `tools/evaluate_agent.py --agent react`. The default is the workflow agent of agent_graph.py, which
-this file does not change. A new request is first understood by the workflow's own code: a greeting,
-thanks or a question about what the assistant does gets a fixed reply; TEI and the workflow's chooser
-pick the feature, `not_sure` (the 4 closest as options) or a knowledge question; a feature is
-planned, and a page to see is opened at once. Then `think` asks the model for {"thought", "tool",
-"arguments"}, held to the tools the task allows, and `act` runs that tool in code (react_tools.py).
-A turn ends when something sets the reply (the review reached, a cancel, a failure or a pause), or
-after STEP_BUDGET tool calls. A message to a task at its review or paused goes to the workflow's own
-follow-up. Every question the user sees is code's. No tool can confirm, submit or pay.
+this file does not change. A new message goes through the fast path first (door A, D-034): a secret
+or a confirm request is refused and a cancel phrase cancels, all in code. Everything else goes to the
+model, with the recent conversation: `think` asks it for {"thought", "tool", "arguments"}, held to
+the tools this state allows, and `act` runs that tool in code (react_tools.py). The model replies to
+chat, finds and starts a feature, asks which one is meant, sets a task's values, corrects a task at
+its review, and cancels. A turn ends when something sets the reply (a reply, the review reached, a
+cancel, a failure or a pause), or after STEP_BUDGET tool calls. Every question shown with options is
+code's. No tool can confirm, submit or pay.
 
 [D-032]: docs/decisions/0032-react-agent-beside-the-workflow.md
-[D-033]: docs/decisions/0033-react-uses-the-workflows-feature-choice.md
+[D-036]: docs/decisions/0036-real-react-agent.md
 """
 
 import json
-import re
 
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
-from langgraph.types import interrupt
 
 from assistant import replies
 from assistant.agent_graph import build_graph
 from assistant.agent_lifecycle import Lifecycle
-from assistant.agent_nodes import Nodes, Tools
-from assistant.agent_state import AgentState, moved
-from assistant.intent import KNOWLEDGE, NOT_SURE
-from assistant.lifecycle import CANCEL, FOLLOW_UP, wants_cancel
-from assistant.lookups import plain
+from assistant.agent_nodes import REFUSALS, Nodes, Tools
+from assistant.agent_state import AgentState
+from assistant.conversation import kept, line
+from assistant.lifecycle import FOLLOW_UP, fast
 from assistant.models import ModelError
 from assistant.react_tools import TEXTS, ReactTools
 from assistant.slots import hidden
@@ -41,41 +38,31 @@ STEP_BUDGET = 12  # tool calls in one turn, counted from the user's last answer
 TOO_MANY_STEPS = "دستیار نتوانست این کار را در چند گام آماده کند؛ چیزی ارسال یا تأیید نشد."
 AGENTS = ("workflow", "react")
 REPEATED = "the same call as your last step: its result is above; do the next thing"
-NOT_SURE_OPTIONS = 4  # the closest features offered when the request is not clear (owner, 18 Nov 2026)
-GREETING = "سلام! بنویسید چه کاری انجام دهم؛ مثلاً «۵۰۰ هزار تومن به رضا کارت به کارت کن»."
-THANKS = "خواهش می‌کنم. هر وقت کاری داشتید بنویسید."
-HELP = (
-    "کارهای برنامه را تا صفحه بازبینی آماده می‌کنم و تأیید همیشه با خود شماست. مثلاً: «۵۰۰ هزار تومن"
-    " به رضا کارت به کارت کن»، «قسط بعدی وامم را از پس‌انداز بده»، «عوارض آلودگی هوای ماشینم را"
-    " ببین»، «برو به خانه»."
-)
-UNDERSTOOD = "تشخیص کار درخواستی"
-ASKED = "پرسیدن منظور کاربر"
-OPENED = "باز کردن صفحه"
+ASKING = ("ask_user", "ask_which")  # tools that wait for the user, so the same call again is fine
+HEARD = {"answer", "picked", "switch", "refused"}  # a result that holds the user's newest words
+REOPENING = ("set_values", "move_app", "open_review")  # acts that open a task at its review again
 RULES = [
     "Rules:",
-    "- The task's feature is already chosen: work only on it.",
-    "- First set_values with every value the user gave.",
-    "- When something is missing: move_app, then ask_user. When nothing is missing: open_review.",
-    "- After the user answers, set_values with what the answer gives.",
+    "- Read the newest user line in the conversation and act on what it is:",
+    "  - It asks to do or see something in the app, even while a task is open and even when it starts"
+    " with «نه», «ولش» or «بیخیال» («نه، اول یه شارژ بخرم»): find_features with the request as one full"
+    " sentence (fill in what it refers to from the conversation, never an amount, name or number the"
+    " user did not write), then start_task with the feature it means, or ask_which when two or more could.",
+    "  - It gives values for the open task or answers its question: set_values.",
+    "  - It changes a value of the open task, even at its review: set_values with the new value, then"
+    " open_review.",
+    "  - A greeting, thanks, small talk, a question (rates, fees, rules), something the app cannot do,"
+    " or rude words: reply.",
+    "  - It wants the open task stopped and asks for nothing else («ولش کن», «نمیخوام دیگه»): cancel_task.",
+    "- For the open task: when something is missing, move_app then ask_user; when nothing is: open_review.",
     "- Never guess a value the user did not give, and never pick a record or an option for the user.",
+    "- A reply is one or two short, warm Persian sentences. You prepare tasks in this app (transfers,"
+    " bills, top-ups, loans, cards, cheques and more) up to a review page that only the user confirms,"
+    " by touch. Say kindly what you cannot do here, and that you cannot answer questions about rates,"
+    " fees or rules yet. Never give numbers, amounts, account details or advice, and never say anything"
+    " was sent, paid or confirmed.",
 ]
-
-
-def spoken(text: str) -> str:
-    """The words of a message as the fixed lists hold them: plain, without punctuation."""
-    return " ".join(re.sub(r"[^\w\s]", " ", plain(text)).split())
-
-
-# Whole messages that get a fixed reply instead of the chooser, which calls them not_sure.
-GREETINGS = {spoken(text) for text in ("سلام", "سلام خوبی", "سلام وقت بخیر", "درود", "وقت بخیر",
-             "صبح بخیر", "عصر بخیر", "شب بخیر", "سلام دستیار")}  # fmt: skip
-THANKS_WORDS = {spoken(text) for text in ("ممنون", "ممنونم", "مرسی", "متشکرم", "خیلی ممنون", "تشکر",
-                "ممنون از کمکت", "مرسی، خیلی کمک کردی", "دستت درد نکنه", "دمت گرم", "خداحافظ")}  # fmt: skip
-HELP_ASKS = {spoken(text) for text in ("چیکار میتونی بکنی", "چه کار میتونی بکنی", "چیکارا میتونی بکنی",
-             "چه کارهایی میتونی انجام بدی", "چه کمکی میتونی بکنی", "چه کمکی از دستت برمیاد", "چیکار بلدی",
-             "تو کی هستی", "تو چی هستی", "راهنما", "راهنمایی", "چطوری ازت استفاده کنم")}  # fmt: skip
-FIXED = ((GREETINGS, GREETING), (THANKS_WORDS, THANKS), (HELP_ASKS, HELP))
+WHERE = {"ready_for_user": " It is at its review.", "paused": " It is paused: the app was out of reach."}
 
 
 class ReactState(AgentState):
@@ -91,9 +78,9 @@ def called(step: dict) -> tuple[str, str]:
 
 
 def since_answer(steps: list[dict]) -> list[dict]:
-    """The steps after the user's last answer to ask_user."""
-    asked = [index for index, step in enumerate(steps) if step["tool"] == "ask_user"]
-    return steps[asked[-1] + 1 :] if asked else steps
+    """The steps after the user's last answer: to a question, a feature pick or the switch."""
+    heard = [index for index, step in enumerate(steps) if HEARD & step.get("result", {}).keys()]
+    return steps[heard[-1] + 1 :] if heard else steps
 
 
 def step_line(step: dict) -> str:
@@ -102,37 +89,34 @@ def step_line(step: dict) -> str:
     return f"- {step['tool']}({called}) → {json.dumps(step.get('result', {}), ensure_ascii=False)}"
 
 
-def code_step(thought: str, tool: str, result: dict) -> dict:
-    """A step code took itself, shown with the model's steps."""
-    return {"thought": thought, "tool": tool, "arguments": {}, "result": result}
-
-
 def task_lines(state: ReactState, held: dict) -> list[str]:
-    """The task: its feature, the fields the model may set, the values held as the user reads them,
-    and what is missing."""
+    """The open task: its feature and where it is, its messages, the fields the model may set, the
+    values held as the user reads them, and what is missing."""
     asks = {item["ref"]: item["ask"] for item in state["plan"]["requirements"]}
     missing = [f"{ref} («{asks[ref]}»)" for ref in held["missing"]]
-    return [
-        f"The task: «{held['feature']}».",
+    lines = [f"The open task: «{held['feature']}».{WHERE.get(state['task_state'], '')}"]
+    lines += ["Its messages, oldest first:"]
+    lines += [f"{index}. «{text}»" for index, text in enumerate(hidden(state["messages"]), start=1)]
+    return lines + [
         f"Fields: {json.dumps(held['fields'], ensure_ascii=False)}",
         f"Held values: {json.dumps(held['held'], ensure_ascii=False)}",
         f"Missing: {', '.join(missing) or 'nothing'}",
     ]
 
 
-def prompt(state: ReactState, names: list[str], held: dict) -> str:
-    """The model's view: the rules, the tools it may call now, the user's words, the task and the
-    steps of this turn."""
+def prompt(state: ReactState, names: list[str], held: dict | None) -> str:
+    """The model's view: the rules, the tools it may call now, the recent conversation, the open
+    task and the steps of this turn, all masked."""
     lines = [
-        "You are the assistant inside a Persian mobile banking app. You prepare the user's task by",
-        "calling one tool per step, up to its review page; only the user confirms it, on the phone.",
+        "You are the assistant inside a Persian mobile banking app. You talk with the user and prepare",
+        "their tasks by calling one tool per step, up to the review page; only the user confirms it.",
         "Tools you can call now:",
     ]
     lines += [f"- {TEXTS[name]}" for name in names]
     lines += RULES
-    lines += ["The user's messages, oldest first:"]
-    lines += [f"{index}. «{text}»" for index, text in enumerate(hidden(state["messages"]), start=1)]
-    lines += task_lines(state, held)
+    lines += ["The conversation, oldest first (the newest user line is the one to act on):"]
+    lines += [f"- {item['from']}: «{item['text']}»" for item in state["turns"]] or ["- none"]
+    lines += task_lines(state, held) if held else ["The open task: none."]
     lines += ["Your steps so far:"] + ([step_line(step) for step in state["steps"]] or ["none"])
     lines += ["Write the thought in Persian, in one short sentence, then call one tool."]
     return masked("\n".join(lines))
@@ -148,82 +132,49 @@ class ReactAgent:
         self.chat = tools.chat
 
     def begin(self, state: ReactState) -> dict:
-        """A new message starts a new turn: its steps start empty."""
-        return {"steps": []}
+        """Door A (D-034): a new message starts a turn with no steps, and goes into the history. The
+        fast path refuses a secret (kept out of the history) or a confirm request, and a cancel
+        phrase cancels the open task; the message then stays out of the task's messages."""
+        text = state["messages"][-1]
+        kind = fast(text)
+        turns = kept(state["turns"], line("user", replies.REMOVED if kind == "secret" else text))
+        base = {"steps": [], "turns": turns, "said": None, "lead": None}
+        if kind is None:
+            return base
+        taken = {"messages": state["messages"][:-1] if state["task_state"] in FOLLOW_UP else []}
+        if kind in REFUSALS:
+            return base | taken | {"reply": REFUSALS[kind]}
+        return base | taken | self.lifecycle.stopped(state)
 
-    def understand(self, state: ReactState) -> dict:
-        """A new request, understood by code: a greeting, thanks or a question about what the
-        assistant does gets its fixed reply; else the workflow's understand (TEI's closest 8, then its
-        chooser) picks a feature, not_sure or a knowledge question, which gets the workflow's reply."""
-        said = spoken(state["messages"][-1])
-        for words, reply in FIXED:
-            if said in words:
-                return {"reply": reply, "steps": state["steps"] + [code_step(UNDERSTOOD, "understand", {})]}
-        update = self.nodes.understand(state)
-        chosen = update.get("chosen")
-        if chosen == KNOWLEDGE:
-            update["reply"] = replies.KNOWLEDGE
-        shown = self.nodes.features[chosen]["title"] if chosen in self.nodes.features else chosen
-        return update | {"steps": state["steps"] + [code_step(UNDERSTOOD, "understand", {"chosen": shown})]}
-
-    def not_sure(self, state: ReactState) -> dict:
-        """The workflow's not-sure question with the 4 closest features and «لغو». A picked feature is
-        planned, «لغو» cancels, and other words are understood again as the request."""
-        shown = state["offered"][:NOT_SURE_OPTIONS]
-        options = [{"ref": intent, "label": self.nodes.features[intent]["title"]} for intent in shown]
-        pending = {"question": replies.NOT_SURE, "options": options + [CANCEL], "fields": []}
-        answer = interrupt(pending | {"task_state": state["task_state"]})
-        if wants_cancel(answer):
-            return moved(state, "cancelled") | {"reply": replies.CANCELLED}
-        if answer in shown:
-            step = code_step(ASKED, "ask_user", {"picked": self.nodes.features[answer]["title"]})
-            return {"chosen": answer, "steps": state["steps"] + [step]}
-        step = code_step(ASKED, "ask_user", {"answer": hidden([answer])[0]})
-        return {"chosen": None, "messages": state["messages"] + [answer], "steps": state["steps"] + [step]}
-
-    def plan(self, state: ReactState) -> dict:
-        """The workflow's plan of the chosen feature. A feature with nothing for the model to set (a
-        page to see) is opened at once, with no model step."""
-        update = self.nodes.plan(state)
-        task = state | update
-        if task["task_state"] != "resolving" or task["missing"] or self.tools.settable(task):
-            return update
-        result, opened = self.tools.open_review(task, {})
-        return update | opened | {"steps": task["steps"] + [code_step(OPENED, "open_review", result)]}
-
-    def follow_up(self, state: ReactState) -> dict:
-        """The workflow's follow-up: cancel, resume, a correction or a new request. A correction is
-        read again by the workflow's own reader, as in the workflow, and a task going on is settled
-        at once, so the model sees what it holds and what is missing."""
-        update = self.lifecycle.follow_up(state)
-        task = state | update
-        if task["task_state"] != "resolving":
-            return update
-        if state["task_state"] == "ready_for_user":  # a correction: every value is read again
-            update["values"] = task["values"] | self.tools.read(task, {})
-        return update | self.tools.settle(state | update)
+    def ended(self, state: ReactState, reason: str) -> dict:
+        """The turn ends with the reason. A task at its review or paused stays as it is; any other
+        ends as failed."""
+        if state["task_state"] in FOLLOW_UP:
+            return {"reply": reason}
+        return self.nodes.failed(state, reason)
 
     def think(self, state: ReactState) -> dict:
         """Asks the model for the next step, held to the tools this state allows."""
         if len(since_answer(state["steps"])) >= STEP_BUDGET:
-            return self.nodes.failed(state, TOO_MANY_STEPS)
+            return self.ended(state, TOO_MANY_STEPS)
         tools = self.tools.available(state)
-        held = self.tools.held(state)
+        held = self.tools.held(state) if self.tools.open(state) else None
         try:
             step = self.chat.step(prompt(state, list(tools), held), tools)
         except ModelError:
-            return self.nodes.failed(state, replies.MODEL_FAILED)
+            return self.ended(state, replies.MODEL_FAILED)
         show("think", thought=step["thought"], tool=step["tool"], arguments=step["arguments"])
         return {"steps": state["steps"] + [step]}
 
     def act(self, state: ReactState) -> dict:
         """Runs the step's tool in code and keeps its result with the step. A question about a task
         whose app has not moved yet first moves it (D-029), as a step of its own, so the move is
-        never run again when the answer resumes the question."""
+        never run again when the answer resumes the question. An act on a task at its review or
+        paused opens it again first."""
         step = state["steps"][-1]
         if (
             len(state["steps"]) > 1
-            and step["tool"] != "ask_user"
+            and step["tool"] not in ASKING
             and called(step) == called(state["steps"][-2])
         ):
             # The same call again changes nothing: the model is told so instead, and goes on.
@@ -235,35 +186,20 @@ class ReactAgent:
                 steps.append({key: step[key] for key in ("thought", "tool", "arguments")})
             show("act", tool="move_app", result=result)
             return update | {"steps": steps}
-        result, update = getattr(self.tools, step["tool"])(state, step["arguments"])
+        before = {}
+        if step["tool"] in REOPENING and state["task_state"] in FOLLOW_UP:
+            before = self.tools.reopened(state)
+            if before["task_state"] != "resolving":
+                stopped = {"stopped": (state | before)["reply"]}
+                return before | {"steps": state["steps"][:-1] + [step | {"result": stopped}]}
+        result, update = getattr(self.tools, step["tool"])(state | before, step["arguments"])
         show("act", tool=step["tool"], result=result)
-        return update | {"steps": state["steps"][:-1] + [step | {"result": result}]}
+        return before | update | {"steps": state["steps"][:-1] + [step | {"result": result}]}
 
 
-def start(state: ReactState) -> str:
-    """A message to a task at its review or paused is a follow-up; anything else is a new request."""
-    return "follow_up" if state["task_state"] in FOLLOW_UP else "understand"
-
-
-def after_follow_up(state: ReactState) -> str:
-    """A new request is understood; a corrected or resumed task goes on; a cancel or failure ends."""
-    if state["reply"] is not None:
-        return END
-    return "understand" if state["task_state"] == "created" else "think"
-
-
-def after_understand(state: ReactState) -> str:
-    """A feature is planned, a request not clear is asked about, and a reply ends the turn."""
-    if state["reply"] is not None:
-        return END
-    return "not_sure" if state["chosen"] == NOT_SURE else "plan"
-
-
-def after_not_sure(state: ReactState) -> str:
-    """A picked feature is planned; new words are understood again; a cancel ends."""
-    if state["reply"] is not None:
-        return END
-    return "understand" if state["chosen"] is None else "plan"
+def after_begin(state: ReactState) -> str:
+    """The fast path's reply ends the turn; anything else goes to the model."""
+    return END if state["reply"] is not None else "think"
 
 
 def go_on(state: ReactState) -> str:
@@ -284,18 +220,10 @@ def build_react_graph(tools: Tools) -> CompiledStateGraph:
     agent = ReactAgent(tools)
     graph = StateGraph(ReactState)
     graph.add_node("begin", agent.begin)
-    graph.add_node("follow_up", agent.follow_up)
-    graph.add_node("understand", agent.understand)
-    graph.add_node("not_sure", agent.not_sure)
-    graph.add_node("plan", agent.plan)
     graph.add_node("think", agent.think)
     graph.add_node("act", agent.act)
     graph.add_edge(START, "begin")
-    graph.add_conditional_edges("begin", start, ["follow_up", "understand"])
-    graph.add_conditional_edges("follow_up", after_follow_up, ["understand", "think", END])
-    graph.add_conditional_edges("understand", after_understand, ["not_sure", "plan", END])
-    graph.add_conditional_edges("not_sure", after_not_sure, ["understand", "plan", END])
-    graph.add_conditional_edges("plan", go_on, ["think", END])
+    graph.add_conditional_edges("begin", after_begin, ["think", END])
     graph.add_conditional_edges("think", after_think, ["act", END])
     graph.add_conditional_edges("act", go_on, ["think", "act", END])
     return graph.compile(checkpointer=InMemorySaver())

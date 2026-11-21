@@ -1,9 +1,9 @@
-"""The task's life around the review: cancel, a message after the review, and a run the user stops.
+"""The task's life around the review: cancel, the fast path, a message after the review, and a run
+the user stops.
 
 Called by the agent's nodes, agent_chat and main_debug. A cancel needs no model: the «لغو» option, or
-a message that is only a cancel phrase. After the review the model only says whether a new message
-corrects the prepared task or is a new request, held to an enum; code does the rest. Nothing here
-can confirm, submit or pay, and a command already sent is never undone.
+a message that is only a cancel phrase. Nothing here can confirm, submit or pay, and a command
+already sent is never undone.
 """
 
 import re
@@ -13,8 +13,6 @@ from assistant.agent_state import new_request
 from assistant.amounts import DIGITS
 from assistant.conversation import kept, line
 from assistant.lookups import plain
-from assistant.models import Chat
-from assistant.slots import hidden
 from assistant.steps import masked
 from assistant.task_runner import Bridge, Cancelled
 
@@ -80,31 +78,6 @@ def next_input(previous: dict, conversation_id: str, text: str) -> dict:
     if previous.get("task_state") in FOLLOW_UP:
         return {"messages": previous["messages"] + [text], "reply": None} | memory
     return new_request(conversation_id, text) | memory
-
-
-def follow_up_prompt(title: str, words: str, messages: list[str]) -> str:
-    """The question for the model: does the newest message change the prepared task?"""
-    lines = [f"The assistant prepared the task «{title}» ({words}) for the user from these messages:"]
-    lines += [f"- «{text}»" for text in hidden(messages[:-1])]
-    lines += [
-        f"Then the user wrote: «{hidden(messages)[-1]}»",
-        "Answer new_request when the newest message asks for a task of its own: it names a kind of task",
-        "(a transfer, a payment, a page to see) and that task's own words, even if it is the same kind.",
-        "Answer correction only when it just changes or adds a value of the prepared task (an amount,",
-        "an account, a card, a person, a date) without asking for a task again.",
-    ]
-    return "\n".join(lines)
-
-
-def corrects(chat: Chat, title: str, words: str, messages: list[str]) -> bool:
-    """True when the model reads the newest message as a correction of the prepared task."""
-    schema = {
-        "type": "object",
-        "properties": {"answer": {"enum": ["correction", "new_request"]}},
-        "required": ["answer"],
-        "additionalProperties": False,
-    }
-    return chat.json(follow_up_prompt(title, words, messages), schema).get("answer") == "correction"
 
 
 class StoppableBridge:

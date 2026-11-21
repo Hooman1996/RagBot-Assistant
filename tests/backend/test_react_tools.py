@@ -1,4 +1,4 @@
-"""The ReAct agent's read tools and its view of the task (D-032, D-033): the chosen feature's fields,
+"""The ReAct agent's read tools and its view of the task (D-032, D-036): the started feature's fields,
 records and the current screen, the step budget and repeated calls; nothing shown in full."""
 
 from agent_fakes import PROFILE, FakeChat, FakeEmbeddings, RecordingApp
@@ -13,7 +13,6 @@ from assistant.navigator import Navigator
 from assistant.react_graph import REPEATED, STEP_BUDGET, TOO_MANY_STEPS, build_react_graph
 
 CONFIG = {"configurable": {"thread_id": "react"}}
-CARD = {"choice": "card_transfer"}
 STOP = ModelError("chat: stop here")
 REZA_CARD = "6037990836388880"
 
@@ -31,6 +30,15 @@ def call(tool: str, **given: object) -> dict:
     return {"thought": "…", "tool": tool, "arguments": given}
 
 
+def started(feature: str = "card_transfer") -> list[dict]:
+    """The model's first two steps for a new request: the features found, then the one started."""
+    title = next(item["title"] for item in PROFILE["features"] if item["intent"] == feature)
+    return [
+        call("find_features", request=title),
+        call("start_task", feature=feature, request=title, second=None),
+    ]
+
+
 def react(chat: FakeChat, app: RecordingApp | None = None):
     app = app or RecordingApp()
     index = FeatureIndex(PROFILE["features"], FakeEmbeddings())
@@ -43,10 +51,14 @@ def tools_offered(chat: FakeChat, step_number: int) -> list[str]:
     return [branch["properties"]["tool"]["const"] for branch in steps[step_number]["anyOf"]]
 
 
-def test_the_model_starts_with_the_chosen_task_and_reads_records_and_the_screen() -> None:
+def found_intents(found: dict) -> list[str]:
+    return [item["feature"] for item in found["features"]]
+
+
+def test_the_model_starts_a_found_feature_and_reads_records_and_the_screen() -> None:
     chat = StepChat(
         [
-            CARD,
+            *started(),
             call("find_records", ref="card-transfer-destination", words="رضا"),
             call("current_screen"),
             STOP,
@@ -54,55 +66,58 @@ def test_the_model_starts_with_the_chosen_task_and_reads_records_and_the_screen(
     )
     app = RecordingApp()
     result = react(chat, app).invoke(new_request("c", "کارت به کارت به رضا"), CONFIG)
-    understood, records, screen = (step["result"] for step in result["steps"])
-    assert understood == {"chosen": "کارت به کارت"}
+    found, began, records, screen = (step["result"] for step in result["steps"])
+    assert {"feature": "card_transfer", "title": "کارت به کارت"}.items() <= found["features"][0].items()
+    assert began["started"] == "کارت به کارت"
     assert result["chosen"] == "card_transfer" and result["plan"]["intent"] == "card_transfer"
     assert records == {"records": ["رضا محمدی ****8880"], "count": 1}
     assert screen == {"page": "خانه", "filled": {}}
     assert app.sent == []  # reading changes nothing in the app
-    first = chat.prompts[1]
+    first = chat.prompts[2]
     assert "«کارت به کارت»" in first and "از کدام کارت انتقال انجام شود؟" in first
-    # No tool searches or picks a feature: the feature is the workflow's choice.
-    assert not {"find_features", "feature_requirements", "finish"} & set(tools_offered(chat, 0))
+    # A feature is started only from those find_features found, and no tool finishes past the review.
+    assert "start_task" not in tools_offered(chat, 0) and "start_task" in tools_offered(chat, 1)
+    start = next(b for b in chat.schemas[1]["anyOf"] if b["properties"]["tool"]["const"] == "start_task")
+    assert start["properties"]["arguments"]["properties"]["feature"]["enum"] == found_intents(found)
     seen = "\n".join(chat.prompts)
     assert "رضا محمدی ****8880" in seen and REZA_CARD not in seen
     assert "card-1" not in seen and "S-174" not in seen and "S-026" not in seen
 
 
 def test_find_records_is_offered_for_the_tasks_record_fields() -> None:
-    chat = StepChat([CARD, STOP])
+    chat = StepChat([*started(), STOP])
     react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
-    offered = {branch["properties"]["tool"]["const"]: branch for branch in chat.schemas[1]["anyOf"]}
+    offered = {branch["properties"]["tool"]["const"]: branch for branch in chat.schemas[2]["anyOf"]}
     refs = offered["find_records"]["properties"]["arguments"]["properties"]["ref"]["enum"]
     assert refs == ["card-transfer-source", "card-transfer-destination"]
 
 
 def test_find_records_lists_only_what_the_apps_picker_lists() -> None:
-    chat = StepChat([CARD, call("find_records", ref="card-transfer-source", words=""), STOP])
+    chat = StepChat([*started(), call("find_records", ref="card-transfer-source", words=""), STOP])
     result = react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
     # Only the active debit cards, as for the workflow's question.
-    assert result["steps"][1]["result"] == {"records": ["****3566", "****4544"], "count": 2}
+    assert result["steps"][2]["result"] == {"records": ["****3566", "****4544"], "count": 2}
 
 
 def test_a_choice_shows_its_labels_never_its_keys() -> None:
-    chat = StepChat([{"choice": "internal_transfer"}, STOP])
+    chat = StepChat([*started("internal_transfer"), STOP])
     result = react(chat).invoke(new_request("c", "انتقال داخلی"), CONFIG)
     reason = next(item for item in result["plan"]["requirements"] if item["ref"] == "account-transfer-reason")
     labels = [option["label"] for option in reason["options"]]
     keys = [option["key"] for option in reason["options"] if option["key"] not in labels]
-    assert "پرداخت اجاره" in labels and "پرداخت اجاره" in chat.prompts[1]
-    shape = chat.schemas[1]["anyOf"]
+    assert "پرداخت اجاره" in labels and "پرداخت اجاره" in chat.prompts[2]
+    shape = chat.schemas[2]["anyOf"]
     values = next(b for b in shape if b["properties"]["tool"]["const"] == "set_values")
     reason_shape = values["properties"]["arguments"]["properties"]["values"]["properties"][
         "account-transfer-reason"
     ]
     assert reason_shape["anyOf"][0] == {"enum": labels}
-    assert not any(f'"{key}"' in chat.prompts[1] for key in keys)
+    assert not any(f'"{key}"' in chat.prompts[2] for key in keys)
 
 
 def test_a_turn_ends_after_the_step_budget() -> None:
     reading = [call("current_screen"), call("find_records", ref="card-transfer-source", words="")]
-    chat = StepChat([CARD] + reading * 6)
+    chat = StepChat(started() + reading * 5)
     app = RecordingApp()
     result = react(chat, app).invoke(new_request("c", "کارت به کارت"), CONFIG)
     assert len(result["steps"]) == STEP_BUDGET
@@ -114,7 +129,7 @@ def test_the_budget_counts_again_after_the_users_answer() -> None:
     reading = [call("current_screen"), call("find_records", ref="card-transfer-source", words="")]
     nothing = {"card-transfer-source": None, "card-transfer-destination": None, "card-transfer-amount": None}
     chat = StepChat(
-        [CARD]
+        started()
         + reading * 4
         + [call("ask_user", question="؟"), nothing]  # the workflow's reader, before the app moves
         + [call("set_values", values=nothing), nothing]
@@ -129,6 +144,6 @@ def test_the_budget_counts_again_after_the_users_answer() -> None:
 
 
 def test_the_same_call_twice_is_not_run_again() -> None:
-    chat = StepChat([CARD, call("current_screen"), call("current_screen"), STOP])
+    chat = StepChat([*started(), call("current_screen"), call("current_screen"), STOP])
     result = react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
-    assert result["steps"][2]["result"] == {"error": REPEATED}
+    assert result["steps"][3]["result"] == {"error": REPEATED}
