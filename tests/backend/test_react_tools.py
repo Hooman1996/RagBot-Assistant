@@ -30,13 +30,14 @@ def call(tool: str, **given: object) -> dict:
     return {"thought": "…", "tool": tool, "arguments": given}
 
 
-def started(feature: str = "card_transfer") -> list[dict]:
-    """The model's first two steps for a new request: the features found, then the one started."""
+def started(feature: str = "card_transfer", read: dict | None = None) -> list[dict]:
+    """The model's two steps that start a feature, the features found then the one started, and the
+    workflow's reading of the request that start_task does (none for a page to see)."""
     title = next(item["title"] for item in PROFILE["features"] if item["intent"] == feature)
     return [
         call("find_features", request=title),
         call("start_task", feature=feature, request=title, second=None),
-    ]
+    ] + ([] if feature == "home" else [read or {}])
 
 
 def react(chat: FakeChat, app: RecordingApp | None = None):
@@ -73,7 +74,7 @@ def test_the_model_starts_a_found_feature_and_reads_records_and_the_screen() -> 
     assert records == {"records": ["رضا محمدی ****8880"], "count": 1}
     assert screen == {"page": "خانه", "filled": {}}
     assert app.sent == []  # reading changes nothing in the app
-    first = chat.prompts[2]
+    first = chat.prompts[3]
     assert "«کارت به کارت»" in first and "از کدام کارت انتقال انجام شود؟" in first
     # A feature is started only from those find_features found, and no tool finishes past the review.
     assert "start_task" not in tools_offered(chat, 0) and "start_task" in tools_offered(chat, 1)
@@ -87,7 +88,7 @@ def test_the_model_starts_a_found_feature_and_reads_records_and_the_screen() -> 
 def test_find_records_is_offered_for_the_tasks_record_fields() -> None:
     chat = StepChat([*started(), STOP])
     react(chat).invoke(new_request("c", "کارت به کارت"), CONFIG)
-    offered = {branch["properties"]["tool"]["const"]: branch for branch in chat.schemas[2]["anyOf"]}
+    offered = {branch["properties"]["tool"]["const"]: branch for branch in chat.schemas[3]["anyOf"]}
     refs = offered["find_records"]["properties"]["arguments"]["properties"]["ref"]["enum"]
     assert refs == ["card-transfer-source", "card-transfer-destination"]
 
@@ -105,14 +106,14 @@ def test_a_choice_shows_its_labels_never_its_keys() -> None:
     reason = next(item for item in result["plan"]["requirements"] if item["ref"] == "account-transfer-reason")
     labels = [option["label"] for option in reason["options"]]
     keys = [option["key"] for option in reason["options"] if option["key"] not in labels]
-    assert "پرداخت اجاره" in labels and "پرداخت اجاره" in chat.prompts[2]
-    shape = chat.schemas[2]["anyOf"]
+    assert "پرداخت اجاره" in labels and "پرداخت اجاره" in chat.prompts[3]
+    shape = chat.schemas[3]["anyOf"]
     values = next(b for b in shape if b["properties"]["tool"]["const"] == "set_values")
     reason_shape = values["properties"]["arguments"]["properties"]["values"]["properties"][
         "account-transfer-reason"
     ]
     assert reason_shape["anyOf"][0] == {"enum": labels}
-    assert not any(f'"{key}"' in chat.prompts[2] for key in keys)
+    assert not any(f'"{key}"' in chat.prompts[3] for key in keys)
 
 
 def test_a_turn_ends_after_the_step_budget() -> None:
@@ -130,8 +131,8 @@ def test_the_budget_counts_again_after_the_users_answer() -> None:
     nothing = {"card-transfer-source": None, "card-transfer-destination": None, "card-transfer-amount": None}
     chat = StepChat(
         started()
-        + reading * 4
-        + [call("ask_user", question="؟"), nothing]  # the workflow's reader, before the app moves
+        + reading * 3
+        + [call("ask_user", question="؟")]
         + [call("set_values", values=nothing), nothing]
         + reading * 2
         + [STOP]

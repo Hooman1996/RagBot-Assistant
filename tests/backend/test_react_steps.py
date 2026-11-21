@@ -86,6 +86,7 @@ def test_the_react_agents_steps_show_its_thoughts_tools_and_results() -> None:
     answers = [
         call("find_features", "کار را پیدا می‌کنم.", request="کارت به کارت"),
         call("start_task", "کارت به کارت را شروع می‌کنم.", feature="card_transfer", request="…", second=None),
+        CARD_VALUES,  # the workflow's reader, run by start_task
         call("set_values", "مقدارها را می‌گذارم.", values=CARD_VALUES),
         CARD_VALUES,  # the workflow's reader
         call("ask_user", "مبدا را می‌پرسم.", question="کدام کارت؟"),

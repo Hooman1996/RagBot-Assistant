@@ -822,5 +822,105 @@
         }
       }
     ]
+  },
+  {
+    "id": "CT-034",
+    "tags": [
+      "switch",
+      "reference"
+    ],
+    "turns": [
+      {
+        "say": "۸۰ هزار تومن از کارت 3566 به لیلا حسن‌زاده کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "یکی هم برای آرش موسوی بزن",
+        "expect": {
+          "end": "switch",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "option:switch=yes",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-035",
+    "tags": [
+      "switch",
+      "reference"
+    ],
+    "turns": [
+      {
+        "say": "شارژ ۳۰ هزار تومنی از سپرده کوتاه‌مدت برای 09351112233 بگیر",
+        "expect": {
+          "end": "review",
+          "intent": "mobile_top_up"
+        }
+      },
+      {
+        "say": "دوباره همینو بخر",
+        "expect": {
+          "end": "switch",
+          "intent": "mobile_top_up"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-036",
+    "tags": [
+      "switch"
+    ],
+    "turns": [
+      {
+        "say": "۵۰ هزار تومن از کارت 4544 به رضا کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "۲۰۰ هزار تومن هم به نسرین عباسی کارت به کارت کن",
+        "expect": {
+          "end": "switch",
+          "intent": "card_transfer"
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-037",
+    "tags": [
+      "correction"
+    ],
+    "turns": [
+      {
+        "say": "۶۰ هزار تومن از کارت 3566 به سعید فلاحی کارت به کارت کن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "از کارت 4544 باشه",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-source": "card-2"
+          }
+        }
+      }
+    ]
   }
 ]

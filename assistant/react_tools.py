@@ -38,12 +38,11 @@ OPEN = ("resolving", "ready_for_user", "paused")  # a task the model works on
 FEATURES = 8  # the features find_features shows, as many as the workflow's chooser sees
 ASK_WHICH = 4  # the most features ask_which offers (as the not-sure question, owner 18 Nov 2026)
 SHOWN = re.compile(r"\*{4}(\d{4})")  # a long number as the model is shown it
-NEXT_MISSING = "move_app, then ask_user"
+NEXT_MISSING = "ask_user"
 NEXT_READY = "open_review"
 NEXT_ANSWER = "read it: set_values when it gives values; else reply, find_features or cancel_task"
 NEXT_FEATURE = "start_task with the feature the request means, or ask_which when two or more could"
 NEXT_PICKED = "start_task with the picked feature"
-NEXT_TASK = "set_values with every value the user gave, then move_app and ask_user, or open_review"
 NEXT_ASK = "go on with the task: its question is asked after your reply"
 NOT_KEPT = "a value not kept: use only the user's own words, or ask"
 NOT_NAMED = "a record must be in the user's own words, not one you read; else ask"
@@ -75,11 +74,15 @@ TEXTS = {
         " Give a text without its field's label words («عنوان», «نشانی»)."
         ' Money is {"value": the number as the user said it, "unit": "IRT" for تومان or "IRR" for'
         " ریال}; هزار is 1000, میلیون is 1000000, no unit is IRT. Code checks every value and says what"
-        " it kept, refused and still misses."
+        " it kept, refused and still misses. At the review: only to change a value of this task, never"
+        " for a new task."
     ),
-    "move_app": "move_app(): takes the app to the page of the next missing value, before ask_user.",
+    "move_app": "move_app(): takes the app to the page of the next missing value (ask_user does it too).",
     "open_review": "open_review(): fills the task in the app and opens its review, for the user to check.",
-    "ask_user": "ask_user(question): asks the user about what is missing (code words the question).",
+    "ask_user": (
+        "ask_user(question): moves the app to the page of what is missing, then asks the user about it"
+        " (code words the question)."
+    ),
 }
 
 
@@ -107,16 +110,21 @@ def shown_again(value: object, messages: list[str]) -> object:
 
 
 def read_since_words(steps: list[dict]) -> bool:
-    """True when set_values ran after the user's newest words in this turn: the request the task
-    was started from, or a typed answer. A correction after the review was read by the workflow's
-    own reader already, when the task was opened again."""
+    """True when the user's newest words in this turn were read: the request the task was started
+    from (start_task reads it), or a typed answer that set_values read after it. A correction after
+    the review was read by the workflow's own reader already, when the task was opened again."""
     words = [
         index
         for index, step in enumerate(steps)
         if step["tool"] == "start_task" or "answer" in step.get("result", {})
     ]
-    read = [index for index, step in enumerate(steps) if step["tool"] == "set_values"]
-    return not words or bool(read) and read[-1] > words[-1]
+    # start_task reads its request itself, so it is words and their reading at once.
+    read = [
+        index
+        for index, step in enumerate(steps)
+        if step["tool"] == "set_values" or "kept" in step.get("result", {})
+    ]
+    return not words or bool(read) and read[-1] >= words[-1]
 
 
 def arguments(**properties: dict) -> dict:
@@ -501,8 +509,18 @@ class ReactTools:
         if not task["missing"] and not self.settable(task):
             result, opened = self.open_review(task, {})
             return result, planned | opened
+        # The workflow's reader reads the request at once, so no step is spent on it.
+        planned |= self.settle(task | {"values": task["values"] | self.read(task, {})})
+        task = state | planned
+        items = {item["ref"]: item for item in task["plan"]["requirements"]}
+        kept = {
+            ref: self.label(items[ref], value)
+            for ref, value in task["values"].items()
+            if ref in items and ref not in task["plan"]["preset"]
+        }
         title = self.nodes.features[given["feature"]]["title"]
-        return {"started": title, "missing": task["missing"], "next": NEXT_TASK}, planned
+        result = {"started": title, "kept": kept, "note": task["question"]} | self.next_step(task)
+        return result, planned
 
     def switch(self, state: AgentState, feature: str) -> tuple[dict, dict]:
         """The switch question while a task is open: «بله» leaves it for the new one, from where the
