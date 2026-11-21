@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 19 November 2026. This page is updated whenever a task changes state.
+Last updated: 21 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Stages 2 and 3 are done: the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the Python navigator and interactive graph (#94) are on `main`. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
 
@@ -18,7 +18,13 @@ on the replica and picks the next fixes; then P7 (fault cases, latency, clean de
 [D-032](decisions/0032-react-agent-beside-the-workflow.md), [D-033](decisions/0033-react-uses-the-workflows-feature-choice.md),
 the [design](bridge/react-agent.md) and the [report](reports/react-vs-workflow.md). RA-0 to RA-5 (#166–#171) reached `main`
 in PR #181. RA-7 (#182, PR #183) made it use the workflow's feature choice first: held-out 0 / 145, 101 / 101,
-108 / 108, 27 / 27 on two runs, at 3.4 model calls and 6.4 s a case (the workflow: 1.7 and 2.0 s). RA-6 (#172,
+108 / 108, 27 / 27 on two runs, at 3.4 model calls and 6.4 s a case (the workflow: 1.7 and 2.0 s). RA-8 (#198,
+[D-036](decisions/0036-real-react-agent.md)) made it a real ReAct agent: the model reads every message with the
+conversation and acts with `reply`, `find_features`, `start_task`, `ask_which` and `cancel_task`, while the fast path,
+the value guards and every question stay in code. Its wrong actions are reported, not gated (owner, 21 Nov 2026):
+conversation held-out 1 / 133 critical, 85 / 133 turns right, 18 / 21 safety; held-out 0 / 145, 76 / 101, 81 / 108,
+22 / 27; 2.7 calls and 7.4 s a conversation turn ([report](reports/react-vs-workflow.md#ra-8-the-model-handles-the-conversation)).
+Next for ReAct: tuning (a new request at an open review taken as a correction, too many «منظورتان کدام است؟»). RA-6 (#172,
 native tool calls) stays blocked on RagBot's vLLM settings. Open in both agents: the shared chooser takes gateway
 funding into the account for wallet funding (tuning T-059).
 
@@ -80,6 +86,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #198 RA-8 A real ReAct agent | Done | The model reads every message with the last 8 lines of the conversation and acts with new tools: `reply` (guarded by `safe_chat`), `find_features`, `start_task` (rewrite guarded, the switch question first), `ask_which` and `cancel_task`; a correction or a paused task is opened again by the act tools; the fast path refuses a secret or confirm request at a new message and at every question, without the model; the ReAct-only follow-up is removed ([D-036](decisions/0036-real-react-agent.md)). ReAct, reported not gated: conversation held-out 1 / 133 critical (CH-023: a new request at the review prepared again as a correction), 85 / 133, 18 / 21; held-out 0 / 145, 76 / 101, 81 / 108, 22 / 27. The workflow is unchanged: 0 / 145, 101 / 101, 108 / 108, 27 / 27; conversations 0 / 133, 132 / 133, 21 / 21. Tried live on the replica ([report](reports/react-vs-workflow.md#ra-8-the-model-handles-the-conversation)). `workflow` stays the default |
 | #188 CF-3 The chat reply | Done | One guarded model call for chat and knowledge questions; the pending question comes back after it. Conversation held-out 0 / 133 critical, 21 / 21 safety, 133 / 133 and 132 / 133 turns right, chat included; existing held-out unchanged; live checks pass ([report](reports/conversation-baseline.md#cf-3-188-the-chat-reply)) |
 | #192 CF-4 The shared chooser's wrong picks | Done | Feature words, the two-task split, a code rule (a page that only shows loans gives way to paying an installment) and a rewrite guard on meaning. Existing held-out unchanged twice; conversation held-out 0 / 133 critical, 21 / 21 safety, non-chat 125 / 125 and 124 / 125; all live checks pass ([report](reports/conversation-baseline.md#cf-4-192-the-shared-choosers-wrong-picks)) |
 | #187 CF-2 Conversation memory, fast path, turn router, switch question | Done | Every message now goes through the fast path (typed confirm and secrets refused, secrets never in a prompt) and one router call with query rewriting (a rewrite is used only after earlier messages, and the guard keeps values to the user's own words); a new task while one is open asks the switch question. Conversation held-out twice: 2 / 133 critical, 119 / 133 turns right (119 / 125 without chat), 20 / 21 safety (baseline 11, 79, 8). The existing held-out is unchanged, twice (0 / 145, 101 / 101, 108 / 108, 27 / 27). Still failing: «قسط بعدی وام…» opens the loans page (the shared chooser, outside CF-2), two tasks in one message ([report](reports/conversation-baseline.md#after-cf-2-187-the-router-the-fast-path-and-the-switch-question)). Tried live on the replica |

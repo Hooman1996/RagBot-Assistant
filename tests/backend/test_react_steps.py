@@ -20,7 +20,7 @@ from assistant.lookups import FixtureLookups
 from assistant.models import Chat
 from assistant.navigator import Navigator
 from assistant.panel_api import RESULT_CHARACTERS, brief, build_panel_router
-from assistant.react_graph import UNDERSTOOD, build_react_graph
+from assistant.react_graph import build_react_graph
 
 CARD_VALUES = {
     "card-transfer-source": None,
@@ -84,7 +84,8 @@ def settled(client: TestClient) -> dict:
 
 def test_the_react_agents_steps_show_its_thoughts_tools_and_results() -> None:
     answers = [
-        {"choice": "card_transfer"},  # the workflow's chooser
+        call("find_features", "کار را پیدا می‌کنم.", request="کارت به کارت"),
+        call("start_task", "کارت به کارت را شروع می‌کنم.", feature="card_transfer", request="…", second=None),
         call("set_values", "مقدارها را می‌گذارم.", values=CARD_VALUES),
         CARD_VALUES,  # the workflow's reader
         call("ask_user", "مبدا را می‌پرسم.", question="کدام کارت؟"),
@@ -93,14 +94,15 @@ def test_the_react_agents_steps_show_its_thoughts_tools_and_results() -> None:
     client.post("/assistant/v1/messages", json=message(CARD_SENTENCE))
     steps = settled(client)["agent_steps"]
     assert [step["action"] for step in steps] == [
-        "understand",
+        "find_features",
+        "start_task",
         "set_values",
         "move_app",
         "ask_user",
     ]
-    assert steps[0] == {"thought": UNDERSTOOD, "action": "understand", "result": '{"chosen": "کارت به کارت"}'}
-    assert steps[1]["thought"] == "مقدارها را می‌گذارم."
-    assert "رضا محمدی ****8880" in steps[1]["result"]
+    assert steps[1]["thought"] == "کارت به کارت را شروع می‌کنم."
+    assert '"started": "کارت به کارت"' in steps[1]["result"]
+    assert "رضا محمدی ****8880" in steps[2]["result"]
     assert steps[-1]["result"] == ""  # the question still waits
     assert all(len(step["result"]) <= RESULT_CHARACTERS for step in steps)
     assert "6037990836388880" not in str(steps)
@@ -126,14 +128,16 @@ def test_the_workflows_steps_are_its_nodes() -> None:
 
 
 def test_the_graph_pages_chat_shows_the_same_steps() -> None:
-    client = served(react([]))
+    client = served(react([call("reply", "سلام می‌کنم.", text="سلام! بفرمایید.")]))
     client.post("/graph/chat", json={"text": "سلام"})
     for _ in range(200):
         progress = client.get("/graph/chat").json()
         if not progress["busy"]:
             break
         time.sleep(0.02)
-    assert progress["agent_steps"] == [{"thought": UNDERSTOOD, "action": "understand", "result": "{}"}]
+    assert progress["agent_steps"] == [
+        {"thought": "سلام می‌کنم.", "action": "reply", "result": '{"said": "سلام! بفرمایید."}'}
+    ]
 
 
 def test_a_long_result_is_cut_and_masked() -> None:

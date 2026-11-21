@@ -1,12 +1,12 @@
 """The agent's nodes around a task: every new message in the conversation, the switch question,
-the follow-up of the ReAct agent, and a reconcile.
+and a reconcile.
 
 Wired into the graph by agent_graph.py, beside the nodes of agent_nodes.py. route is door A of D-034:
 each new message goes through the fast path, then the turn router, and code acts on what it is
 (a new request, a correction or resume of the task at its review or paused, chat, a cancel, or a new
-task while one is open, which asks the switch question). follow_up is the ReAct agent's (D-032).
-A reconcile plans again from wherever the app is after an uncertain command, and tries once more.
-Code acts; nothing here can confirm or pay.
+task while one is open, which asks the switch question). The ReAct agent calls again, corrected
+and stopped from its own tools (D-036). A reconcile plans again from wherever the app is after an
+uncertain command, and tries once more. Code acts; nothing here can confirm or pay.
 """
 
 from langgraph.types import interrupt
@@ -16,17 +16,17 @@ from assistant.agent_nodes import MODEL_SEES, REFUSALS, Nodes
 from assistant.agent_state import AgentState, moved, new_request
 from assistant.conversation import kept, line
 from assistant.intent import NOT_SURE
-from assistant.lifecycle import CANCEL, FOLLOW_UP, NO_WORDS, YES_WORDS, corrects, fast, wants_cancel
+from assistant.lifecycle import CANCEL, FOLLOW_UP, NO_WORDS, YES_WORDS, fast, wants_cancel
 from assistant.lookups import plain
 from assistant.models import ModelError
 from assistant.navigator import CrossesUserOnly, NoRoute
 from assistant.slots import extract
 from assistant.steps import masked
-from assistant.words import feature_words, field_words, plates
+from assistant.words import field_words, plates
 
 
 class Lifecycle:
-    """The route, switch, follow-up and reconcile nodes, over the same tools as the other nodes."""
+    """The route, switch and reconcile nodes, over the same tools as the other nodes."""
 
     def __init__(self, nodes: Nodes) -> None:
         self.nodes = nodes
@@ -43,23 +43,6 @@ class Lifecycle:
         skipped = plan["preset"] if reread else planned["values"]
         planned["missing"] = [item["ref"] for item in plan["requirements"] if item["ref"] not in skipped]
         return update | planned | {"report": None, "question": None, "options": []}
-
-    def follow_up(self, state: AgentState) -> dict:
-        """A new message to a task at its review or paused: cancel, resume, correct, or a new request."""
-        text = state["messages"][-1]
-        if wants_cancel(text):
-            return moved(state, "cancelled") | {"reply": replies.CANCELLED}
-        if state["task_state"] == "paused":
-            return self.again(state, ("reconciling", "resolving"), reread=False)
-        intent = state["plan"]["intent"]
-        title = self.nodes.features[intent]["title"]
-        try:
-            correction = corrects(self.nodes.tools.chat, title, feature_words(intent), state["messages"])
-        except ModelError:
-            return {"reply": replies.MODEL_FAILED}  # the review stays as it is
-        if correction:
-            return self.again(state, ("resolving",), reread=True)
-        return dict(new_request(state["conversation_id"], text))
 
     def reconcile(self, state: AgentState) -> dict:
         """After an uncertain command: plan again from where the app is and prepare once more."""
