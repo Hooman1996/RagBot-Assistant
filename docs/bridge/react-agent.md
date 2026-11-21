@@ -82,20 +82,32 @@ What is offered depends on the state:
 
 | Tool | What code does |
 |---|---|
-| `reply(text)` | The model's own reply, through CF-3's `safe_chat`: it is masked, and a reply that holds a number, an amount or a claim that something was done is replaced with a fixed line. It ends the turn. While a task goes on, it is said before the task's next question. With no task open, the request counts as answered (`knowledge_question`). |
-| `find_features(request)` | TEI's closest features: first those closest to the user's newest words (TEI ranks the user's own words best), then those closest to the model's request sentence (what «همونو» refers to). At most 8, each with its name, title and words. Nothing is started. |
-| `start_task(feature, request, second)` | Starts one of the features the newest `find_features` found: no other name is allowed. The request goes through CF-2's `standalone` and rewrite guard: the model's sentence is used only when the conversation has earlier words or a second task, and when every amount, number and name in it is the user's own; else the user's message. `second` is said again at the review. If another task is open, code asks «… لغو شود و … شروع شود؟» (yes, no, «لغو»). A page to see is opened at once. |
+| `reply(text)` | The model's own reply, through CF-3's `safe_chat`: it is masked, and a reply that holds a number, an amount or a claim that something was done is replaced with a fixed line. It ends the turn. While a task waits on a missing value, code asks the task's question right after the reply (RA-9: the model looped on replies). With no task open, the request counts as answered (`knowledge_question`). |
+| `find_features(request)` | TEI's closest features: first those closest to the user's newest words (TEI ranks the user's own words best), then those closest to the model's request sentence (what «همونو» refers to). At most 8, each with its name, title and words, and `"named": true` when its title is in the user's words. The app's wallet features (`wallet_*`) are left out until the user has said «کیف» (RA-9), so a plain top-up or bill is never offered as the wallet's. Nothing is started. |
+| `start_task(feature, request, second)` | Starts one of the features the newest `find_features` found: no other name is allowed. The request goes through CF-2's `standalone` and rewrite guard: the model's sentence is used only when the conversation has earlier words or a second task, and when every amount, number and name in it is the user's own; else the user's message. `second` is said again at the review. If another task is open, code asks «… لغو شود و … شروع شود؟» (yes, no, «لغو»). A page to see is opened at once. Otherwise the workflow's reader reads the request at once and the result lists what was kept, what is missing and the next step (RA-9: one model step fewer). |
 | `ask_which(features)` | «منظورتان کدام است؟» with 2 to 4 found features and «لغو». A pick goes back to the model, and typed words are a new message for it. |
 | `cancel_task()` | Cancels the open task. The app stays where it is. It is not offered for a task the model started after the user's last words. |
 | `find_records(ref, words)` | Returns the records the app's picker lists for that field that match the words, as masked labels (at most 8). |
 | `current_screen()` | Returns the page by its Persian name (Home, a feature's page or review) and the values given there. Never a screen ID. |
-| `set_values(values)` | The workflow's own reader (`slots.extract`) decides every missing field, and what it finds nothing for is asked; the model's value counts only for a value held before (a correction). Then the workflow's `check` and `resolve` run. Returns what was kept, what was refused (and why), and what is missing. |
+| `set_values(values)` | The workflow's own reader (`slots.extract`) decides every missing field, and what it finds nothing for is asked; the model's value counts only for a value held before (a correction). Then the workflow's `check` and `resolve` run. Returns every value the model named as it is now held, what was refused (and why), and what is missing. A held value the model sends back as the label it was shown is unchanged and not checked again (a masked label is not the user's words). At a correction, the reader has read the newest message as the task opened again, so the model's copy of a value does not overwrite it (RA-9). |
 | `move_app()` | Runs the workflow's `advance`: the app goes as far as the values allow and waits on the page of the first missing value ([D-029](../decisions/0029-asked-on-the-screen.md)). |
 | `open_review()` | Runs the workflow's `prepare`, `verify` and `ready_for_user`. The reply is the workflow's list of prepared values. An uncertain command is planned again once, with the workflow's `reconcile`. |
-| `ask_user(question)` | The question is the workflow's, after the model's reply if it gave one; the model's words are not used. It holds every missing question of the page the app waits on, with the records (2 to 8) or allowed choices as options, and «لغو». A picked option, or a typed answer naming one listed record, sets that value. A typed secret or confirm request is refused and the question asked again. Other words go back to the model, which decides: an answer, chat, another task or a cancel. |
+| `ask_user(question)` | It moves the app to the question's page first, so `move_app` is not needed before it. The question is the workflow's, after the model's reply if it gave one; the model's words are not used. It holds every missing question of the page the app waits on, with the records (2 to 8) or allowed choices as options, and «لغو». A picked option, or a typed answer naming one listed record, sets that value. A typed secret or confirm request is refused and the question asked again. Other words go back to the model, which decides: an answer, chat, another task or a cancel. |
 
 There is no confirm, submit or pay tool. The app is reached only through `TaskRunner`, so the
 only commands are `navigate`, `fill_form` and `show_review`.
+
+## The rules the model gets (RA-9)
+
+- What each kind of message is, and the tool for it. A request starting with «نه», «ولش» or «بیخیال»
+  is a new task, and `cancel_task` is never used to start another task.
+- A reference («همین», «همون», «عین همین», «دوباره», «یکی دیگه») copies the earlier request's
+  amount, card, account, number and person into the new sentence, changing only what the newest
+  message changes.
+- How to choose a feature: where the money comes from, the kind of task the user names (`named`),
+  and each feature's words. `ask_which` only for a real tie.
+- With the task at its review, the old follow-up's distinction: asking for a task again, or for
+  someone else, is a new task; only changing a value is a correction.
 
 ## Guards, in code, whatever the model says
 
@@ -161,3 +173,4 @@ history's body open (`docs/bridge/panel.md`), so `contracts/` does not change.
 | RA-6 | #172 | Native tool calls (blocked) |
 | RA-7 | #182 | The workflow's feature choice first (D-033) |
 | RA-8 | #198 | The model handles the conversation with tools (D-036) |
+| RA-9 | #200 | Tuned where RA-8 failed: the review rule, feature choice, fewer steps, corrections |
