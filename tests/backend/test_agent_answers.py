@@ -1,5 +1,6 @@
 """How the agent reads the user's answers: corrections, hidden numbers, choices and fixed selections."""
 
+import pytest
 from agent_fakes import CARD_SENTENCE, PROFILE, FakeChat, RecordingApp, build_agent, reviewed
 from langgraph.types import Command
 
@@ -292,3 +293,47 @@ def test_a_value_changed_for_a_page_already_passed_is_filled_there_again() -> No
     loan = [arguments["values"] for operation, arguments in app.sent if operation == "fill_form"]
     assert loan[-3]["svc-amount"] == {"value": 2000000000, "unit": "IRR"}  # S-308 filled again
     assert filled_forms(app)[-4:] == ["S-287", "S-308", "S-286", "S-335"]
+
+
+@pytest.mark.parametrize("source", ["****3566", "کارتی که آخرش ۳۵۶۶ـه"])
+def test_values_given_in_another_order_are_each_asked_once(source: str) -> None:
+    # P6-14, the owner's conversation: «هزارتومن» joined, the card by its last four digits, and a
+    # pick that a later typed answer reads again from its label.
+    nothing = {"card-transfer-source": None, "card-transfer-destination": None, "card-transfer-amount": None}
+    chat = FakeChat(
+        [
+            CARD,
+            nothing,  # «برو تو صفحه کارت به کارت»: nothing to read yet
+            card(source, toman=500000),
+        ]
+    )
+    app = RecordingApp()
+    graph = build_agent(chat, app)
+    graph.invoke(new_request("c", "برو تو صفحه کارت به کارت"), CONFIG)
+    result = graph.invoke(Command(resume="از کارتی که آخرش ۳۵۶۶ هست به رضا ۵۰۰ هزارتومن"), CONFIG)
+    assert result["task_state"] == "ready_for_user"  # nothing asked again
+    values = sent_values(app)
+    assert values["card-transfer-source"] == "card-1"
+    assert values["card-transfer-amount"] == {"value": 5000000, "unit": "IRR"}
+
+
+def test_a_picked_option_survives_a_later_typed_answer() -> None:
+    nothing = {"card-transfer-source": None, "card-transfer-destination": None, "card-transfer-amount": None}
+    chat = FakeChat(
+        [
+            CARD,
+            nothing | {"card-transfer-destination": "رضا"},
+            {"card-transfer-amount": None},  # after the pick, only the amount is read: none yet
+            # After the typed amount every value is read again; the pick is in the words as its label.
+            card("****3566", toman=500000),
+        ]
+    )
+    app = RecordingApp()
+    graph = build_agent(chat, app)
+    graph.invoke(new_request("c", "کارت به کارت به رضا"), CONFIG)
+    result = graph.invoke(Command(resume="card-transfer-source=card-1"), CONFIG)
+    assert result["__interrupt__"][0].value["question"] == "چند ریال منتقل شود؟"
+    assert graph.get_state(CONFIG).values["messages"][-1] == "****3566"  # the pick, as the user reads it
+    result = graph.invoke(Command(resume="۵۰۰ هزار تومن"), CONFIG)
+    assert result["task_state"] == "ready_for_user"
+    assert sent_values(app)["card-transfer-source"] == "card-1"

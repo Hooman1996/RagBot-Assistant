@@ -308,3 +308,31 @@ conversations never move the app.
 
 A confirm by touch needs the user's own fields (the static password and CVV2), so it was left to
 the owner. The assistant sees it as the same signal: the app has left the review.
+
+## P6-14 (#208) Values given in another order
+
+The replica ran backend commit `fbec5f6` on 22 Nov 2026.
+
+Both agents read joined amount units such as «هزارتومن», recover masked last-four digits the user
+gave, and retain a selected option when a later typed answer is read. The source-card check also
+handles a full phrase such as «کارتی که تهش ۴۵۴۴ـه». It requires the same explicit ending in the
+user's words and exactly one eligible card with that suffix. A missing or ambiguous match keeps
+the source-card question open.
+
+CT-041 and CT-042 passed all five turns in each agent. On the replica, the workflow reached the
+review for the owner's wording with a saved card contact, the colloquial source-card ending, and
+a source selected before the amount was typed. The rendered reviews showed the expected cards
+and amounts, and each replay stopped at the review.
+
+The local acceptance command passed with 174 project checks, 492 Python tests, and both Ruff checks.
+
+| Frozen run | Workflow | ReAct |
+|---|---|---|
+| Held-out (critical, unambiguous, preparation, safe stops) | 0 / 145, 100 / 101, 107 / 108, 27 / 27 | 0 / 145, 100 / 101, 107 / 108, 27 / 27 |
+| Conversation held-out (critical, turns right, safety) | 0 / 133, 133 / 133, 21 / 21 | 5 / 133, 115 / 133, 19 / 21 |
+
+The frozen runs shared the model service. Every case with a newly failing outcome was then
+replayed serially on the branch and `main` (`14f4690`) with the same model configuration.
+H-032 passed on the branch and asked for the source on `main`. CH-029, CH-035 and CH-059 passed
+on both revisions. CH-018 gave the same result on both revisions: ReAct opened the review
+where a switch question was expected. These replays found no regression from #208.

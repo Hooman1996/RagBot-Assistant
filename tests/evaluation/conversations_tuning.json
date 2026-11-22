@@ -1020,5 +1020,70 @@
         }
       }
     ]
+  },
+  {
+    "id": "CT-041",
+    "tags": [
+      "bare_answer"
+    ],
+    "turns": [
+      {
+        "say": "می‌خوام کارت به کارت کنم",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "به سعید فلاحی از کارتی که تهش ۴۵۴۴ـه ۳۰۰ هزارتومن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-source": "card-2",
+            "card-transfer-amount": {
+              "value": 3000000,
+              "unit": "IRR"
+            }
+          }
+        }
+      }
+    ]
+  },
+  {
+    "id": "CT-042",
+    "tags": [
+      "bare_answer"
+    ],
+    "turns": [
+      {
+        "say": "کارت به کارت به نسرین عباسی",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "option:card-transfer-source=card-2",
+        "expect": {
+          "end": "asking",
+          "intent": "card_transfer"
+        }
+      },
+      {
+        "say": "۱۲۰ هزارتومن",
+        "expect": {
+          "end": "review",
+          "intent": "card_transfer",
+          "values": {
+            "card-transfer-source": "card-2",
+            "card-transfer-amount": {
+              "value": 1200000,
+              "unit": "IRR"
+            }
+          }
+        }
+      }
+    ]
   }
 ]

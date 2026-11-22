@@ -53,3 +53,16 @@ def test_a_number_with_no_unit_or_scale_word_is_not_an_amount(text: str) -> None
 )
 def test_the_scale_of_a_written_amount(text: str, scale: int | None) -> None:
     assert scale_of(text) == scale
+
+
+@pytest.mark.parametrize(
+    ("text", "rials"),
+    [
+        ("۵۰۰ هزارتومن", 5_000_000),
+        ("۲ میلیونتومان", 20_000_000),
+        ("۳۰۰ هزارریال", 300_000),
+        ("هزارتا کار دارم", None),
+    ],
+)
+def test_a_scale_word_joined_to_its_unit_is_read(text: str, rials: int | None) -> None:
+    assert amounts(text) == ([rials] if rials else [])

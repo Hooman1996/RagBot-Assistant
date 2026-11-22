@@ -29,7 +29,15 @@ def tokens(text: str) -> list[str]:
     text = text.translate(DIGITS).replace("ي", "ی").replace("ك", "ک").replace("‌", " ")
     text = re.sub(r"(?<=\d)[,٬](?=\d{3})", "", text)
     text = re.sub(r"(\d)(?=[^\d\s])|(?<=[^\d\s])(?=\d)", r"\1 ", text)
-    return re.findall(r"\d+|[^\W\d]+", text)
+    return [part for word in re.findall(r"\d+|[^\W\d]+", text) for part in unjoined(word)]
+
+
+def unjoined(word: str) -> list[str]:
+    """A scale word written joined to its unit, split («هزارتومن» → «هزار», «تومن»); else the word."""
+    for scale in SCALES:
+        if word.startswith(scale) and word[len(scale) :] in TOMAN | RIAL:
+            return [scale, word[len(scale) :]]
+    return [word]
 
 
 def amounts(text: str) -> list[int]:
