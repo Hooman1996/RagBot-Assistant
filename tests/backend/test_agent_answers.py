@@ -1,5 +1,6 @@
 """How the agent reads the user's answers: corrections, hidden numbers, choices and fixed selections."""
 
+import pytest
 from agent_fakes import CARD_SENTENCE, PROFILE, FakeChat, RecordingApp, build_agent, reviewed
 from langgraph.types import Command
 
@@ -294,7 +295,8 @@ def test_a_value_changed_for_a_page_already_passed_is_filled_there_again() -> No
     assert filled_forms(app)[-4:] == ["S-287", "S-308", "S-286", "S-335"]
 
 
-def test_values_given_in_another_order_are_each_asked_once() -> None:
+@pytest.mark.parametrize("source", ["****3566", "کارتی که آخرش ۳۵۶۶ـه"])
+def test_values_given_in_another_order_are_each_asked_once(source: str) -> None:
     # P6-14, the owner's conversation: «هزارتومن» joined, the card by its last four digits, and a
     # pick that a later typed answer reads again from its label.
     nothing = {"card-transfer-source": None, "card-transfer-destination": None, "card-transfer-amount": None}
@@ -302,7 +304,7 @@ def test_values_given_in_another_order_are_each_asked_once() -> None:
         [
             CARD,
             nothing,  # «برو تو صفحه کارت به کارت»: nothing to read yet
-            card("****3566", toman=500000),  # the reader copies the masked style for «آخرش ۳۵۶۶»
+            card(source, toman=500000),
         ]
     )
     app = RecordingApp()

@@ -19,7 +19,8 @@ from langgraph.types import Command
 
 from assistant import replies
 from assistant.agent_state import new_request
-from assistant.slots import money, text
+from assistant.lookups import Candidate, FixtureLookups
+from assistant.slots import money, source_card, text
 
 CONFIG = {"configurable": {"thread_id": "test"}}
 CARD = {"choice": "card_transfer"}
@@ -330,6 +331,23 @@ def test_a_masked_last_four_the_user_wrote_on_its_own_is_put_back() -> None:
     assert text("****3566", ["از کارتی که آخرش ۳۵۶۶ هست"]) == "3566"
     assert text("****3566", ["از کارت 3566"]) == "3566"
     assert text("****3566", ["کارت به کارت کن"]) is None  # never typed: still refused
+
+
+def test_a_card_ending_must_be_stated_and_match_one_eligible_suffix(monkeypatch: pytest.MonkeyPatch) -> None:
+    lookups = FixtureLookups()
+    item = {"ref": "card-transfer-source", "lookup": "cards"}
+    value = "کارتی که تهش ۴۵۴۴ـه"
+    assert source_card(value, ["از کارت که تهش 4544 هست"], item, lookups) == "card-2"
+    assert source_card(value, ["۴۵۴۴ ریال"], item, lookups) is None
+    assert source_card(value, [value, "از کارت که تهش ۳۵۶۶ هست"], item, lookups) is None
+    middle = "کارتی که تهش ۴۳۳۶ـه"
+    assert source_card(middle, [middle], item, lookups) is None
+
+    cards = lookups.candidates("cards", {"kind": "DEBIT", "status": "فعال"})
+    duplicate = Candidate("other-card", "other-card", "1000000000004544")
+    monkeypatch.setattr(lookups, "candidates", lambda lookup, where: cards + [duplicate])
+    assert source_card(value, [value], item, lookups) is None
+    assert source_card("4544", [value], item, lookups) is None
 
 
 def test_an_amount_with_no_unit_is_in_tomans() -> None:

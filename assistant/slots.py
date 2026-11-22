@@ -10,12 +10,14 @@ and a choice only as one of its allowed keys, so no other text is ever sent to t
 import re
 
 from assistant.amounts import amounts, scale_of
-from assistant.lookups import GENERIC
+from assistant.lookups import GENERIC, FixtureLookups, plain
 from assistant.models import Chat
+from assistant.replies import offered
 from assistant.task_runner import PERSIAN_DIGITS, TaskStopped, money_value
 
 LONG_NUMBER = re.compile(r"\d{12,}")
 SHOWN = re.compile(r"\*{4}(\d{4})")  # how a long number is shown to the model
+CARD_ENDING = re.compile(r"\bکارت(?:ی|م)?\s+(?:که\s+)?(?:آخرش|تهش)\s*([0-9]{4})(?!\d)")
 PLAIN_KEY = re.compile(r"[\w-]+")
 UNITS = {"IRR": 1, "IRT": 10}  # IRT is the toman: ten rials
 # Under 1,000 toman, a written amount is usually shorthand («شصت تمن» for sixty thousand), so it is asked.
@@ -177,7 +179,24 @@ def choice(value: object, options: list[dict]) -> str | None:
     return value.strip() if not options and PLAIN_KEY.fullmatch(value.strip()) else None
 
 
-def checked(values: dict, requirements: list[dict], messages: list[str]) -> dict:
+def source_card(value: str, messages: list[str], item: dict, lookups: FixtureLookups) -> str | None:
+    """Resolve a source-card ending copied as a phrase, using only eligible cards with that suffix."""
+    read = plain(value)
+    said = next(
+        (set(found) for message in reversed(messages) if (found := CARD_ENDING.findall(plain(message)))),
+        set(),
+    )
+    endings = {read} if read in said else set(CARD_ENDING.findall(read))
+    if not endings:
+        return value
+    if len(endings) != 1 or endings != said:
+        return None
+    suffix = endings.pop()
+    matches = [card.key for card in offered(lookups, item) if plain(card.label).endswith(suffix)]
+    return matches[0] if len(matches) == 1 else None
+
+
+def checked(values: dict, requirements: list[dict], messages: list[str], lookups: FixtureLookups) -> dict:
     """Only the values the plan asks for, each in the form the task runner takes."""
     wanted = {item["ref"]: item for item in requirements}
     kept = {}
@@ -192,6 +211,8 @@ def checked(values: dict, requirements: list[dict], messages: list[str]) -> dict
         else:
             good = text(value, messages)
             good = unlabelled(good, item) if item["type"] == "text" else good
+            if good and ref == "card-transfer-source":
+                good = source_card(good, messages, item, lookups)
         if good is not None:
             kept[ref] = good
     return kept

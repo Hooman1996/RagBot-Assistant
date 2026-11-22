@@ -196,7 +196,7 @@ class Nodes:
     def check(self, state: AgentState) -> dict:
         """Code only: keeps the values the plan asks for, in the app's form, and lists what is missing."""
         plan = state["plan"]
-        values = checked(state["values"], plan["requirements"], state["messages"])
+        values = checked(state["values"], plan["requirements"], state["messages"], self.tools.lookups)
         values |= self.named(plan, values, state["messages"])
         through, fields = when(values)
         if [through, sorted(fields)] != plan["when"]:
