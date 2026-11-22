@@ -15,7 +15,7 @@ import re
 from assistant import replies
 from assistant.amounts import DIGITS, amounts
 from assistant.intent import PAY, SEE
-from assistant.lookups import GENERIC, FixtureLookups, plain
+from assistant.lookups import GENERIC, FixtureLookups, LookupUnavailable, plain
 from assistant.models import Chat, ModelError
 from assistant.steps import masked, show
 
@@ -150,7 +150,7 @@ class Conversation:
     def __init__(self, chat: Chat, lookups: FixtureLookups) -> None:
         self.chat = chat
         self.lookups = lookups
-        self.names = self.record_words()
+        self.names: dict[str, list[set[str]]] | None = None
 
     def record_words(self) -> dict[str, list[set[str]]]:
         """Each word of a person's, destination's or account's label, with the labels that hold it,
@@ -218,6 +218,11 @@ class Conversation:
             return None
         # A record's word the user did not say is kept only beside another word of that record's label
         # the user did say («سپرده» for the «پس‌انداز» the user named), never as a name of its own.
+        if self.names is None:
+            try:
+                self.names = self.record_words()
+            except LookupUnavailable:
+                return None  # the rewrite cannot be checked, so keep the user's words
         spoken = set(said.split())
         for word in compared.split():
             if (
@@ -237,10 +242,12 @@ class Conversation:
         # Two tasks in one message: the rewrite is the first task alone, the chooser's one request; a
         # rewrite that still holds the second task has it taken out.
         rest = self.guarded(routed["rest"], turns, text, second=True)
+        if not (earlier or rest):
+            return text
         rewrite = self.guarded(routed["standalone"], turns, text, rest)
         if rewrite and rest and rest in rewrite and rest != rewrite:
             rewrite = rewrite.replace(rest, "").strip(" ،,و") or rewrite
-        return rewrite if rewrite and (earlier or rest) else text
+        return rewrite or text
 
     def label(self, item: dict, value: str | dict) -> str:
         """A value as the user reads it, masked: a record by its label, never its key."""

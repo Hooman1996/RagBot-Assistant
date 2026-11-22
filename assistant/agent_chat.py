@@ -13,6 +13,7 @@ from __future__ import annotations
 import traceback
 import uuid
 from collections.abc import Callable
+from logging import getLogger
 from threading import Event, RLock, Thread
 
 from langgraph.graph.state import CompiledStateGraph
@@ -20,8 +21,11 @@ from langgraph.types import Command
 
 from assistant.command_queue import CommandQueue, DeviceMismatch
 from assistant.lifecycle import CANCEL, FOLLOW_UP, next_input
+from assistant.lookups import LookupUnavailable
 
 INTERNAL_ERROR = "خطای داخلی پیش آمد؛ کاری انجام نشد."
+LOOKUP_ERROR = "ارتباط با سرویس اطلاعات بانکی برقرار نشد. لطفاً دوباره تلاش کنید."
+logger = getLogger(__name__)
 
 
 class TurnRefused(Exception):
@@ -113,7 +117,17 @@ class AgentChat:
                 result = self.graph.invoke(Command(resume=answer), config)
             else:
                 previous = self.graph.get_state(config).values
+                if self.task_state == "failed" and previous.get("task_state") in FOLLOW_UP:
+                    previous = previous | {"task_state": "failed"}
                 result = self.graph.invoke(next_input(previous, self.conversation_id, answer), config)
+        except LookupUnavailable as error:
+            logger.warning("Banking lookup unavailable: %s", error)
+            with self.lock:
+                self.pending = self.pending_id = None
+                self.task_state = "failed"
+                self.report = None
+                self.lines.append({"from": "assistant", "text": LOOKUP_ERROR})
+            return
         except Exception:
             traceback.print_exc()
             with self.lock:
