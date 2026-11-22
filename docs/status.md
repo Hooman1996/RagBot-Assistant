@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 21 November 2026. This page is updated whenever a task changes state.
+Last updated: 22 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Stages 2 and 3 are done: the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the Python navigator and interactive graph (#94) are on `main`. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
 
@@ -89,6 +89,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #208 P6-14 Values given in another order | Done | Both agents keep joined amount units, explicit source-card endings and previously selected options. Both passed CT-041 and CT-042. Three replica replays reached the expected review. Frozen-case differences were checked against `main` in serial runs ([report](reports/conversation-baseline.md#p6-14-208-values-given-in-another-order)) |
 | #204 P6-12 The user took over a prepared task | Done | Owner's live test: after a confirm by touch, the next request asked to leave an "unfinished" task (and «نه» went back to it, which is why «تسهیلات باشگاه مشتریان» ended on the loan page). Now, in both agents, a `ready_for_user` task whose app has left the page it was prepared on ends (`completed`), and the message is a new request with the conversation kept (`Lifecycle.taken_over`). Frozen sets unchanged for both agents; tried live on the replica ([report](reports/conversation-baseline.md#p6-12-204-the-user-took-over-a-prepared-task)) |
 | #205 P6-13 «گ» from the computer keyboard | Done | No code: the replica's Persian layout with «گ» (#144) had lost its selection for the viewer's keyboard; selected again, and the runbook says how ([replica development](runbook/replica-development.md)) |
 | #202 P6-11 A bare number correcting an amount | Done | The shared money check: a bare number in a correction takes the scale and unit of the amount it replaces when the model read that number; anything else is asked, never the old amount; the corrected amount stays the user's in later turns ([D-037](decisions/0037-bare-number-correction.md), owner's option B). Correction conversations 11 / 11 in both agents; frozen sets unchanged for the workflow (0 / 145, 101 / 101, 108 / 108, 27 / 27; 0 / 133, 132 / 133, 21 / 21) and the ReAct agent's held-out gates kept; tried live on the replica ([report](reports/conversation-baseline.md#p6-11-202-a-bare-number-correcting-an-amount)) |
