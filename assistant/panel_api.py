@@ -8,12 +8,13 @@ observation. Nothing here can confirm, submit or pay.
 """
 
 import json
+from collections.abc import Callable
 from typing import Annotated
 
-from fastapi import APIRouter, Body, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
 from assistant.agent_chat import AgentChat, Chats, TurnRefused
-from assistant.mobile_api import require_valid
+from assistant.mobile_api import development_session, require_session, require_valid
 from assistant.steps import masked
 
 RESULT_CHARACTERS = 160  # a step's result, cut short for the panel
@@ -93,57 +94,52 @@ def agent_steps(chat: AgentChat) -> list[dict]:
     return found[::-1]
 
 
-def build_panel_router(chats: Chats) -> APIRouter:
+def build_panel_router(chats: Chats, session: Callable[..., str] = development_session) -> APIRouter:
     """Builds the panel's routes around the backend's conversations."""
     router = APIRouter(prefix="/assistant/v1")
 
     @router.post("/messages")
-    def send_message(request: Annotated[dict, Body()]) -> dict:
+    def send_message(request: Annotated[dict, Body()], caller: Annotated[str, Depends(session)]) -> dict:
         """Starts or resumes the agent with the user's words, or an option of the pending question."""
         require_valid("conversation_request.schema.json", request)
-        chat = chats.panel(request["conversation_id"])
+        require_session(caller, request["session_id"])
         try:
-            if "selection" in request:
-                if request["selection"]["question_id"] != chat.question_id():
-                    raise TurnRefused("stale_question")
-                chat.start(None, request["selection"]["ref"])
-            else:
-                chat.start(request["message"], None)
+            chat = chats.send(caller, request)
         except TurnRefused as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
-        chats.latest = chat
         return status(chat)
 
     @router.get("/history")
-    def history(conversation_id: str) -> dict:
+    def history(
+        conversation_id: Annotated[str, Query(min_length=1)], caller: Annotated[str, Depends(session)]
+    ) -> dict:
         """The conversation as the panel shows it on reopening: messages, question or task, progress."""
-        chat = chats.panels.get(conversation_id)
-        if chat is None:
+        with chats.lock:
+            chat = chats.panels.get((caller, conversation_id))
+            if chat is None:
+                return {
+                    "conversation_id": conversation_id,
+                    "busy": False,
+                    "messages": [],
+                    "current": None,
+                    "steps": [],
+                    "agent_steps": [],
+                }
             return {
                 "conversation_id": conversation_id,
-                "busy": False,
-                "messages": [],
-                "current": None,
-                "steps": [],
-                "agent_steps": [],
+                "busy": chat.busy(),
+                "messages": list(chat.lines),
+                "current": current(chat),
+                "steps": steps(chat),
+                "agent_steps": agent_steps(chat),
             }
-        return {
-            "conversation_id": conversation_id,
-            "busy": chat.busy(),
-            "messages": chat.lines,
-            "current": current(chat),
-            "steps": steps(chat),
-            "agent_steps": agent_steps(chat),
-        }
 
     @router.post("/sessions/{session_id}/cancel")
-    def cancel(session_id: str) -> dict:
-        """Cancels the task the panel's user wrote about last: stops a run, or answers with «لغو»."""
-        chat = chats.latest
-        if chat is None:
-            raise HTTPException(status_code=409, detail="nothing_to_cancel")
+    def cancel(session_id: str, caller: Annotated[str, Depends(session)]) -> dict:
+        """Requests cancellation of the named session's current task."""
+        require_session(caller, session_id)
         try:
-            chat.cancel()
+            chat = chats.cancel(session_id)
         except TurnRefused as error:
             raise HTTPException(status_code=409, detail=str(error)) from error
         return status(chat, chat.live_state())

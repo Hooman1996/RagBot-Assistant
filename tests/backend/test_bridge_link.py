@@ -19,7 +19,7 @@ class AnsweringQueue:
     def device(self, _: str) -> Device:
         return self.record
 
-    def queue_command(self, device_id: str, operation: str, arguments: dict) -> dict:
+    def queue_command(self, device_id: str, operation: str, arguments: dict, *, stopped=bool) -> dict:
         if self.refuse:
             raise self.refuse
         self.sent += 1
@@ -64,6 +64,6 @@ def test_a_device_that_cannot_take_it_stops_the_task(refusal: Exception, stop: t
 def test_no_result_makes_the_command_uncertain() -> None:
     queue = AnsweringQueue()
     queue.record.last_result = None
-    queue.queue_command = lambda *_: {"command_id": "lost"}
+    queue.queue_command = lambda *_, **__: {"command_id": "lost"}
     with pytest.raises(Uncertain):
         BridgeLink(queue, "d", timeout=0.01).send("observe", {})

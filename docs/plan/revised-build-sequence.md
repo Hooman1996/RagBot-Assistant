@@ -114,6 +114,22 @@ These feed the assistant in stage 6 but block nothing before it.
    results all need verification.) The accepted scenarios run on their staging build, with
    compatibility differences resolved before any production claim.
 
+## Approved demo roadmap
+
+| Step | Issue | Deliverable |
+|---|---|---|
+| 1 | [#210](https://github.com/Hooman1996/RagBot-Assistant/issues/210) | Replay the five candidate journeys on the Android replica and record the baseline. |
+| 2 | [#211](https://github.com/Hooman1996/RagBot-Assistant/issues/211) | Run the standalone Assistant API and verify its five operations and session boundaries. |
+| 3 | [#212](https://github.com/Hooman1996/RagBot-Assistant/issues/212) | Load and validate graph and mock banking service bindings from configuration. |
+| 4 | [#213](https://github.com/Hooman1996/RagBot-Assistant/issues/213) | Verify the Android replica bridge and a Persian journey against the configured standalone API. |
+| 5 | [#214](https://github.com/Hooman1996/RagBot-Assistant/issues/214) | Harden the candidate transaction journeys and record which pass. |
+| 6 | [#215](https://github.com/Hooman1996/RagBot-Assistant/issues/215) | Build the selected web journeys with their own graph and bridge against the same API. |
+| 7 | [#216](https://github.com/Hooman1996/RagBot-Assistant/issues/216) | Verify and rehearse the complete web demo. |
+| 8 | [#217](https://github.com/Hooman1996/RagBot-Assistant/issues/217) | Build and verify the Android APK against the hosted Assistant backend. |
+
+After #214, the owner records the web demo features and the first web journey in #215. The
+hardening report and that selection are the inputs for the web work.
+
 ## The runtime loop (what happens on every user request)
 
 Built in stage 6, shown in stage 7, reused unchanged by the app team in stage 8. Since #136

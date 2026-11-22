@@ -2,7 +2,6 @@
 thought, tool and result, or the workflow's nodes, always masked."""
 
 import time
-from threading import Event
 
 from agent_fakes import CARD_SENTENCE, PROFILE, FakeChat, FakeEmbeddings, RecordingApp, build_agent
 from fastapi import FastAPI
@@ -54,7 +53,8 @@ def served(graph) -> TestClient:
     """The panel's and the graph page's routes over one agent graph."""
     queue = CommandQueue()
     tasks = GraphTasks(queue, DEVICE_ID, PROFILE)
-    chats = Chats(graph, tasks, Event())
+    chats = Chats(queue, lambda *_: graph)
+    chats.page = chats.new_chat(DEVICE_ID)
     app = FastAPI()
     app.include_router(build_panel_router(chats))
     app.include_router(build_graph_router(queue, tasks, chats.page, {}, DEVICE_ID, "test"))

@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 import pytest
 from samples import observation, result
 
-from assistant.command_queue import CommandQueue, DeviceBusy, DeviceNotSeen, UnknownCommand
+from assistant.command_queue import CommandQueue, DeviceBusy, DeviceNotSeen, StaleResult, UnknownCommand
 from assistant.contract_check import problems
 
 DEVICE = "replica-dev"
@@ -84,6 +84,36 @@ def test_a_repeated_result_changes_nothing(queue: CommandQueue) -> None:
 def test_a_result_for_an_unknown_command_is_refused(queue: CommandQueue) -> None:
     with pytest.raises(UnknownCommand):
         queue.record_result(result("never-issued"))
+
+
+def test_undelivered_and_expired_results_leave_the_command_intact(queue: CommandQueue, clock: Clock) -> None:
+    command = queue.queue_command(DEVICE, "navigate", {"destination": "S-174"})
+    reply = result(command["command_id"])
+    with pytest.raises(StaleResult):
+        queue.record_result(reply, session_id=DEVICE)
+    assert queue.next_command(DEVICE, observation()) == command
+    clock.moment += timedelta(seconds=31)
+    with pytest.raises(StaleResult):
+        queue.record_result(reply, session_id=DEVICE)
+    device = queue.device(DEVICE)
+    assert device.outstanding == command and device.observation == observation()
+    queue.next_command(DEVICE, observation())
+    assert device.last_result["outcome"] == "uncertain"
+
+
+def test_cancel_closes_only_the_named_sessions_unsent_command(queue: CommandQueue) -> None:
+    other = "other"
+    queue.next_command(other, observation())
+    first = queue.queue_command(DEVICE, "navigate", {"destination": "S-174"})
+    second = queue.queue_command(other, "navigate", {"destination": "S-192"})
+    queue.cancel_unsent(DEVICE)
+    assert queue.next_command(DEVICE, observation()) is None
+    assert queue.device(DEVICE).last_result["outcome"] == "cancelled"
+    with pytest.raises(UnknownCommand):
+        queue.record_result(result(first["command_id"]), session_id=DEVICE)
+    assert queue.next_command(other, observation()) == second
+    queue.cancel_unsent(other)
+    assert queue.device(other).outstanding == second
 
 
 def test_an_expired_command_is_never_delivered(queue: CommandQueue, clock: Clock) -> None:

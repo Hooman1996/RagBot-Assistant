@@ -3,109 +3,153 @@
   "info": {
     "title": "Assistant mobile API",
     "version": "1",
-    "description": "The app talks to the assistant backend. No operation here submits or authorizes a transaction."
+    "description": "Standalone Assistant API for one synthetic demo client at a time. Use the same X-Assistant-Session value on every call. Only the user authorizes a transaction."
   },
   "paths": {
     "/assistant/v1/messages": {
       "post": {
         "operationId": "sendMessage",
-        "summary": "Send a user message or a clarification answer",
+        "summary": "Start a turn or answer a pending question in the caller's session",
+        "parameters": [{ "$ref": "#/components/parameters/Session" }],
         "requestBody": {
           "required": true,
           "content": { "application/json": { "schema": { "$ref": "../schemas/conversation_request.schema.json" } } }
         },
         "responses": {
-          "200": {
-            "description": "The next response",
-            "content": { "application/json": { "schema": { "$ref": "../schemas/response.schema.json" } } }
-          }
-        }
-      }
-    },
-    "/assistant/v1/results": {
-      "post": {
-        "operationId": "postResult",
-        "summary": "Post a command result with a fresh observation",
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "../schemas/result.schema.json" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "The next response",
-            "content": { "application/json": { "schema": { "$ref": "../schemas/response.schema.json" } } }
-          }
-        }
-      }
-    },
-    "/assistant/v1/sessions/{session_id}/resume": {
-      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
-      "post": {
-        "operationId": "resume",
-        "summary": "Resume after foreground or reconnect, with a fresh observation",
-        "requestBody": {
-          "required": true,
-          "content": { "application/json": { "schema": { "$ref": "../schemas/observation.schema.json" } } }
-        },
-        "responses": {
-          "200": {
-            "description": "The next response",
-            "content": { "application/json": { "schema": { "$ref": "../schemas/response.schema.json" } } }
-          }
-        }
-      }
-    },
-    "/assistant/v1/sessions/{session_id}/cancel": {
-      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
-      "post": {
-        "operationId": "cancel",
-        "summary": "Cancel the current task",
-        "responses": {
-          "200": {
-            "description": "The task status after cancellation",
-            "content": { "application/json": { "schema": { "$ref": "../schemas/response.schema.json" } } }
-          }
+          "200": { "$ref": "#/components/responses/AssistantResponse" },
+          "403": { "$ref": "#/components/responses/SessionMismatch" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/Invalid" }
         }
       }
     },
     "/assistant/v1/history": {
       "get": {
         "operationId": "getHistory",
-        "summary": "Read conversation history",
-        "responses": { "200": { "description": "The history" } }
+        "summary": "Read history in the caller's session. Unknown conversations return empty history.",
+        "parameters": [
+          { "$ref": "#/components/parameters/Session" },
+          { "name": "conversation_id", "in": "query", "required": true, "schema": { "type": "string", "minLength": 1 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "The conversation's messages, task state and actions",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/History" } } }
+          },
+          "422": { "$ref": "#/components/responses/Invalid" }
+        }
       }
     },
-    "/assistant/v1/queries/{query_id}/feedback": {
-      "parameters": [{ "name": "query_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+    "/assistant/v1/sessions/{session_id}/cancel": {
+      "parameters": [{ "$ref": "#/components/parameters/SessionPath" }],
       "post": {
-        "operationId": "postFeedback",
-        "summary": "Give feedback on an answer",
-        "responses": { "200": { "description": "Feedback recorded" } }
+        "operationId": "cancel",
+        "summary": "Cancel the current task in the session named in the path",
+        "parameters": [{ "$ref": "#/components/parameters/Session" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/AssistantResponse" },
+          "403": { "$ref": "#/components/responses/SessionMismatch" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/Invalid" }
+        }
       }
     },
-    "/assistant/v1/queries/{query_id}/comment": {
-      "parameters": [{ "name": "query_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+    "/assistant/v1/sessions/{session_id}/resume": {
+      "parameters": [{ "$ref": "#/components/parameters/SessionPath" }],
       "post": {
-        "operationId": "postComment",
-        "summary": "Comment on an answer",
-        "responses": { "200": { "description": "Comment recorded" } }
+        "operationId": "resume",
+        "summary": "Record a bridge observation and poll for the session's next command",
+        "parameters": [{ "$ref": "#/components/parameters/Session" }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "../schemas/observation.schema.json" } } }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AssistantResponse" },
+          "403": { "$ref": "#/components/responses/SessionMismatch" },
+          "422": { "$ref": "#/components/responses/Invalid" }
+        }
       }
     },
-    "/assistant/v1/sessions/{session_id}/close": {
-      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
+    "/assistant/v1/results": {
       "post": {
-        "operationId": "closeSession",
-        "summary": "Close a session",
-        "responses": { "200": { "description": "Session closed" } }
-      }
-    },
-    "/assistant/v1/sessions/{session_id}/satisfaction": {
-      "parameters": [{ "name": "session_id", "in": "path", "required": true, "schema": { "type": "string" } }],
-      "post": {
-        "operationId": "postSatisfaction",
-        "summary": "Rate satisfaction with a session",
-        "responses": { "200": { "description": "Satisfaction recorded" } }
+        "operationId": "postResult",
+        "summary": "Report a delivered command for the caller's session. Accepted retries are idempotent.",
+        "parameters": [{ "$ref": "#/components/parameters/Session" }],
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "../schemas/result.schema.json" } } }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/AssistantResponse" },
+          "409": { "$ref": "#/components/responses/Conflict" },
+          "422": { "$ref": "#/components/responses/Invalid" }
+        }
       }
     }
-  }
+  },
+  "components": {
+    "parameters": {
+      "Session": {
+        "name": "X-Assistant-Session", "in": "header", "required": true,
+        "schema": { "type": "string", "minLength": 1 },
+        "description": "Caller session, equal to any session ID in the path or request body."
+      },
+      "SessionPath": {
+        "name": "session_id", "in": "path", "required": true,
+        "schema": { "type": "string" }
+      }
+    },
+    "responses": {
+      "AssistantResponse": {
+        "description": "Assistant status or the next command",
+        "content": { "application/json": { "schema": { "$ref": "../schemas/response.schema.json" } } }
+      },
+      "SessionMismatch": {
+        "description": "The path or body targets a different session",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "Conflict": {
+        "description": "The operation conflicts with the current turn, device binding, task, question, or command",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      },
+      "Invalid": {
+        "description": "Missing session header or invalid request",
+        "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } }
+      }
+    },
+    "schemas": {
+      "History": {
+        "type": "object",
+        "required": ["conversation_id", "busy", "messages", "current", "steps", "agent_steps"],
+        "properties": {
+          "conversation_id": { "type": "string" },
+          "busy": { "type": "boolean" },
+          "messages": { "type": "array", "items": {
+            "type": "object", "required": ["from", "text"],
+            "properties": { "from": { "enum": ["user", "assistant"] }, "text": { "type": "string" } }
+          } },
+          "current": { "anyOf": [{ "type": "null" }, { "$ref": "../schemas/response.schema.json" }] },
+          "steps": { "type": "array", "items": {
+            "type": "object", "required": ["operation", "screen", "outcome"],
+            "properties": { "operation": { "type": "string" }, "screen": { "type": "string" }, "outcome": { "type": "string" } }
+          } },
+          "agent_steps": { "type": "array", "items": {
+            "type": "object", "required": ["thought", "action", "result"],
+            "properties": { "thought": { "type": "string" }, "action": { "type": "string" }, "result": { "type": "string" } }
+          } }
+        }
+      },
+      "Error": {
+        "type": "object", "required": ["detail"],
+        "properties": { "detail": { "type": ["string", "array"] } }
+      }
+    }
+  },
+  "x-planned-operations": [
+    { "method": "POST", "path": "/assistant/v1/queries/{query_id}/feedback", "summary": "Give feedback on an answer" },
+    { "method": "POST", "path": "/assistant/v1/queries/{query_id}/comment", "summary": "Comment on an answer" },
+    { "method": "POST", "path": "/assistant/v1/sessions/{session_id}/close", "summary": "Close a session" },
+    { "method": "POST", "path": "/assistant/v1/sessions/{session_id}/satisfaction", "summary": "Rate satisfaction with a session" }
+  ]
 }

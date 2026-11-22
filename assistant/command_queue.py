@@ -1,4 +1,4 @@
-"""One outstanding command per device, following contracts/transitions/command.json.
+"""One outstanding command per session, following contracts/transitions/command.json.
 
 Called by mobile_api when the app reports in, and by test_harness_api when a command is queued.
 It holds state in memory: this is a development loop, not the task store of later stages.
@@ -10,6 +10,7 @@ import uuid
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
+from threading import RLock
 
 from assistant.steps import show
 
@@ -34,10 +35,23 @@ class UnknownCommand(Exception):
     """A result arrived for a command this queue never issued."""
 
 
+class StaleResult(Exception):
+    """A result cannot finish the outstanding command."""
+
+
+class DeviceMismatch(Exception):
+    """The session is already bound to another device."""
+
+
+class CommandCancelled(Exception):
+    """The turn stopped before the command was queued."""
+
+
 @dataclass
 class Device:
-    """What the backend knows about one device."""
+    """What the backend knows about a session's device."""
 
+    device_id: str | None = None
     observation: dict | None = None
     outstanding: dict | None = None
     delivered: bool = False
@@ -56,37 +70,55 @@ def format_time(moment: datetime) -> str:
 
 
 class CommandQueue:
-    """The command loop's state, for every device."""
+    """The command loop's state, partitioned by session."""
 
     def __init__(self, now: Callable[[], datetime] = utc_now) -> None:
         self.now = now
         self.devices: dict[str, Device] = {}
+        self.lock = RLock()
 
-    def device(self, device_id: str) -> Device:
-        """Returns the device's record, creating it the first time."""
-        return self.devices.setdefault(device_id, Device())
+    def device(self, session_id: str) -> Device:
+        """Returns the session's device record, creating it the first time."""
+        with self.lock:
+            return self.devices.setdefault(session_id, Device())
 
-    def queue_command(self, device_id: str, operation: str, arguments: dict) -> dict:
+    def bind_device(self, session_id: str, device_id: str) -> None:
+        """Binds the device named on the first accepted message."""
+        with self.lock:
+            device = self.device(session_id)
+            if device.device_id not in (None, device_id):
+                raise DeviceMismatch
+            device.device_id = device_id
+
+    def queue_command(
+        self, session_id: str, operation: str, arguments: dict, *, stopped: Callable[[], bool] = bool
+    ) -> dict:
         """Queues a command. The same request while it waits returns the same command."""
         if operation not in OPERATIONS:
             raise ValueError(operation)
-        device = self.device(device_id)
+        with self.lock:
+            if stopped():
+                raise CommandCancelled
+            return self._queue_command(session_id, operation, arguments)
+
+    def _queue_command(self, session_id: str, operation: str, arguments: dict) -> dict:
+        device = self.device(session_id)
         if device.observation is None:
-            raise DeviceNotSeen(device_id)
+            raise DeviceNotSeen(session_id)
         self.drop_if_expired(device)
         waiting = device.outstanding
         if waiting is not None:
             if waiting["operation"] == operation and waiting["arguments"] == arguments:
                 return waiting
-            raise DeviceBusy(device_id)
+            raise DeviceBusy(session_id)
         command = {
             "protocol_version": PROTOCOL_VERSION,
             "profile_version": PROFILE_VERSION,
             "task_id": f"graph-{uuid.uuid4().hex}",
             "task_revision": 1,
             "command_id": uuid.uuid4().hex,
-            "device_id": device_id,
-            "session_id": device_id,
+            "device_id": device.device_id or session_id,
+            "session_id": session_id,
             "operation": operation,
             "arguments": arguments,
             "expected_observation_version": device.observation["observation_version"],
@@ -107,9 +139,15 @@ class CommandQueue:
         device.delivered = False
         return command
 
-    def next_command(self, device_id: str, observation: dict) -> dict | None:
+    def next_command(self, session_id: str, observation: dict) -> dict | None:
         """Records the app's observation and returns its next command, if one may still run."""
-        device = self.device(device_id)
+        with self.lock:
+            return self._next_command(self.device(session_id), observation)
+
+    def _next_command(self, device: Device, observation: dict) -> dict | None:
+        seen_version = device.observation["observation_version"] if device.observation else -1
+        if device.delivered and observation["observation_version"] < seen_version:
+            return None
         device.observation = observation
         self.drop_if_expired(device)
         command = device.outstanding
@@ -126,18 +164,40 @@ class CommandQueue:
         )
         return command
 
-    def record_result(self, result: dict) -> None:
-        """Records a result. A repeat of a finished command changes nothing."""
+    def record_result(self, result: dict, *, session_id: str | None = None) -> None:
+        """Records a delivered result. HTTP always supplies its session; the stand-in runs in-process."""
+        with self.lock:
+            devices = self.devices.values() if session_id is None else (self.devices.get(session_id),)
+            self._record_result(result, devices)
+
+    def _record_result(self, result: dict, devices) -> None:
         command_id = result["command_id"]
-        for device in self.devices.values():
+        for device in devices:
+            if device is None:
+                continue
             if command_id in device.finished:
                 return
             waiting = device.outstanding
             if waiting is not None and waiting["command_id"] == command_id:
-                device.observation = result["observation"]
+                observation = result["observation"]
+                if (
+                    not device.delivered
+                    or format_time(self.now()) >= waiting["expires_at"]
+                    or observation["observation_version"] < device.observation["observation_version"]
+                ):
+                    raise StaleResult(command_id)
+                device.observation = observation
                 self.finish(device, result)
+                device.finished = (device.finished + [command_id])[-FINISHED_KEPT:]
                 return
         raise UnknownCommand(command_id)
+
+    def cancel_unsent(self, session_id: str) -> None:
+        """Closes work that has yet to leave the queue. A delivered command still needs its result."""
+        with self.lock:
+            device = self.devices.get(session_id)
+            if device is not None and device.outstanding is not None and not device.delivered:
+                self.close_unsent(device, "cancelled", "cancelled")
 
     def drop_if_expired(self, device: Device) -> None:
         """Closes a command past its expiry, so it can never run late."""
@@ -165,8 +225,7 @@ class CommandQueue:
         self.finish(device, result)
 
     def finish(self, device: Device, result: dict) -> None:
-        """Ends the outstanding command and keeps its ID, so a repeat is recognized."""
+        """Ends the outstanding command and wakes the bridge waiting for its result."""
         device.last_result = result
         device.outstanding = None
         device.delivered = False
-        device.finished = (device.finished + [result["command_id"]])[-FINISHED_KEPT:]
