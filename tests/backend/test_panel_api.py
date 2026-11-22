@@ -32,8 +32,9 @@ def card(source: str | None = "کارت 3566") -> dict:
 
 def panel(answers: list) -> tuple[TestClient, Chats]:
     """The panel's routes over the real agent graph, a scripted model and the stand-in app."""
-    tasks = GraphTasks(CommandQueue(), DEVICE_ID, PROFILE)
-    chats = Chats(build_agent(FakeChat(answers), RecordingApp()), tasks, Event())
+    chats = Chats(
+        CommandQueue(), lambda _, stop: build_agent(FakeChat(answers), RecordingApp(), stopped=stop.is_set)
+    )
     app = FastAPI()
     app.include_router(build_panel_router(chats))
     return TestClient(app), chats
@@ -128,7 +129,8 @@ class SlowGraph:
 def test_the_panel_the_graph_page_and_a_run_take_one_turn_at_a_time() -> None:
     graph = SlowGraph()
     tasks = GraphTasks(CommandQueue(), DEVICE_ID, PROFILE)
-    chats = Chats(graph, tasks, Event())
+    chats = Chats(tasks.queue, lambda *_: graph, lambda: tasks.report.state == "running")
+    chats.page = chats.new_chat(DEVICE_ID)
     tasks.chat_busy = chats.busy
     app = FastAPI()
     app.include_router(build_panel_router(chats))

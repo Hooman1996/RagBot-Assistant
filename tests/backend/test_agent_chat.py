@@ -31,7 +31,7 @@ class SlowGraph:
 def test_a_run_and_a_chat_turn_refuse_each_other() -> None:
     tasks = GraphTasks(CommandQueue(), DEVICE_ID, read_json("replica.profile.json"))
     graph = SlowGraph()
-    chat = AgentChat(graph, tasks)
+    chat = AgentChat(graph, run_busy=lambda: tasks.report.state == "running")
     tasks.chat_busy = chat.busy
     chat.start("سلام", None)
     with pytest.raises(RunInProgress):
@@ -47,7 +47,7 @@ def test_a_run_and_a_chat_turn_refuse_each_other() -> None:
 
 
 def test_an_option_must_be_one_the_agent_offered() -> None:
-    chat = AgentChat(SlowGraph(), GraphTasks(CommandQueue(), DEVICE_ID, read_json("replica.profile.json")))
+    chat = AgentChat(SlowGraph())
     with pytest.raises(TurnRefused, match="unknown_option"):
         chat.start(None, "card-transfer-source=card-1")
 
