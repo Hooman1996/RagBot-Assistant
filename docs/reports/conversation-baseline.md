@@ -336,3 +336,44 @@ replayed serially on the branch and `main` (`14f4690`) with the same model confi
 H-032 passed on the branch and asked for the source on `main`. CH-029, CH-035 and CH-059 passed
 on both revisions. CH-018 gave the same result on both revisions: ReAct opened the review
 where a switch question was expected. These replays found no regression from #208.
+
+## P6-15 (#210) Android replica demo replay
+
+On 22 Nov 2026, the backend ran commit `82a3d7919c32ab9b35d0ace44f3dc557e0364d3b` from
+`feature/210-workflow-demo-qa` with `ASSISTANT_AGENT=workflow`. The debug replica `0.1`
+(version code 1) was rebuilt and installed on the pinned `ragbot_investigation` emulator
+(`emulator-5554`, Android 15). The demo entry displayed build `82a3d7919c32`. The replica
+used the local development bridge and synthetic fixtures.
+
+With the branch backend and replica bridge running, the acceptance smoke in the
+`assistant` conda environment passed.
+
+```text
+$ source android/env.sh
+$ python tools/bridge_e2e.py
+PASS  card to Reza: review at S-176 shows the source, رضا's card and 250000, and it stayed there
+      navigate: succeeded at S-174
+      fill_form: succeeded at S-174 (****3566, ****8880, 250000 IRR)
+      show_review: succeeded at S-176
+PASS  S-003: refused, not built
+```
+
+The five journeys used the in-app assistant panel. Screen IDs are from the bridge observation.
+The values below were checked against the rendered replica screens. Identifiers are masked.
+
+| Journey and panel input | Expected stopping screen and values | Observed |
+|---|---|---|
+| Card transfer — «۲۵۰ هزار تومن به رضا کارت به کارت کن», then «نه، مبلغ رو ۳۰۰ هزار تومن کن» while the source was still being asked, then select `****3566` | S-176, source `****3566`, رضا محمدی `****8880`, 3,000,000 IRR | S-176 showed the corrected amount and both cards. |
+| Internal transfer — «۳۰۰ هزار تومن از سپرده پس‌انداز به حساب رضا انتقال داخلی بزن بابت اجاره» | S-173, savings `****0579` to رضا's saved account `****7800`, 3,000,000 IRR, reason «پرداخت اجاره» | S-173 showed the expected accounts, amount and reason. |
+| Mobile top-up — «از سپرده پس‌انداز برای [شمارهٔ آزمایشی] شارژ همراه اول ۲۰ هزار تومنی بخر» (number from H-079) | S-212, savings `****0579`, همراه اول mobile ending `7496`, 200,000 IRR | S-212 showed the expected account, carrier, mobile and exact amount. |
+| Saved-plate toll — «عوارض آلودگی هوا», then select the saved car plate ending `67` when asked «کدام پلاک؟» | S-257, all saved plate fields and «خودم». The inquiry form is the review boundary, before a fee or payable amount is displayed. | The panel asked at S-256. S-257 showed the selected plate and ownership with the inquiry button still untouched. |
+| Loan installment — «قسط بعدی وام شخصیمو از سپرده کوتاه‌مدت بده» | S-331, short-term deposit `****3231`, personal loan file `****1287`, installment 2, 5,000,000 IRR | S-331 showed the expected source, loan and installment, with 5,000,000 IRR payable. |
+
+On the card review, tapping **لغو کار** closed the panel. Reopening it showed «لغو شد», the
+active-task control was gone, and the backend history reported `cancelled`. The corrected
+review stayed open at S-176. The other four journeys ended in `ready_for_user` at their expected
+screens. Their bridge histories ended with `show_review` and none crossed the user-only
+confirmation boundary. No replay defects were found.
+
+The 174 project checks, 492 Python tests, both Ruff checks, and 176 Android JVM tests passed.
+Android lint completed with 0 errors and 116 warnings. The local evidence ID is `P6-15`.
