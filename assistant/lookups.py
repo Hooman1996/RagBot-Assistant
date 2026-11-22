@@ -60,6 +60,10 @@ class Ambiguous(Exception):
     """Several records match, so the user must choose."""
 
 
+class LookupUnavailable(Exception):
+    """A configured read-only lookup could not supply its records."""
+
+
 @dataclass(frozen=True)
 class Candidate:
     """One record: its key, the value to send to the app, and what to show the user."""
@@ -112,7 +116,7 @@ class FixtureLookups:
         ]
         return data[source.rows] + saved
 
-    def people(self) -> list[dict]:
+    def people(self, lookup: str = "contacts") -> list[dict]:
         """The contacts that are people, without the saved destinations."""
         return json.loads((self.folder / "contacts.json").read_text(encoding="utf-8"))["people"]
 
@@ -190,7 +194,7 @@ class FixtureLookups:
             return []  # a bare number is no IBAN: never matched inside one, so the user is asked
         if typed(lookup, said):
             # A typed number is the user's own: it names a person who has it, never a saved destination.
-            people = {row["id"] for row in self.people()}
+            people = {row["id"] for row in self.people(lookup)}
             candidates = [item for item in candidates if item.key in people]
         exact = [
             item for item in candidates if said in (plain(item.key), plain(item.value), plain(item.label))

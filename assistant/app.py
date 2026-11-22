@@ -3,12 +3,12 @@
 Started by `python -m assistant`, by tests through create_app, and by `main_debug.py --replica`.
 It listens on a local address only. ASSISTANT_AGENT picks the agent: `workflow` (the default) or
 `react` (D-032). The agent reads the Gemma model and the TEI embeddings, and only when a turn
-runs. There is no RAG and no route to a bank or a mock bank. Its only data is the read-only
-fixtures behind lookups.
+runs. The standalone entry point takes a graph and read-only lookup bindings.
 """
 
 import os
 import subprocess
+from pathlib import Path
 from threading import Event
 
 from fastapi import FastAPI
@@ -17,6 +17,7 @@ from assistant.agent_chat import Chats
 from assistant.agent_nodes import Tools
 from assistant.bridge_link import BridgeLink
 from assistant.command_queue import CommandQueue
+from assistant.config import load_graph, load_lookups
 from assistant.graph_data import read_json
 from assistant.intent import FeatureIndex
 from assistant.lookups import FixtureLookups
@@ -36,24 +37,27 @@ def source_revision() -> str:
 
 def create_app(queue: CommandQueue | None = None) -> FastAPI:
     """Builds the development app with the graph viewer and test harness."""
-    return build_app(queue or CommandQueue(), development=True)
+    return build_app(queue or CommandQueue(), read_json("replica.profile.json"), development=True)
 
 
-def create_standalone_app() -> FastAPI:
-    """Builds the standalone Assistant API for Uvicorn's factory entry point."""
-    return build_app(CommandQueue(), development=False)
+def create_standalone_app(graph: Path, services: Path) -> FastAPI:
+    """Builds the standalone Assistant API from two explicit configuration files."""
+    profile = load_graph(graph)
+    return build_app(CommandQueue(), profile, development=False, lookups=load_lookups(services, profile))
 
 
-def build_app(commands: CommandQueue, *, development: bool) -> FastAPI:
+def build_app(
+    commands: CommandQueue, profile: dict, *, development: bool, lookups: FixtureLookups | None = None
+) -> FastAPI:
     """Wires the workflow to the session's command loop in both environments."""
-    profile = read_json("replica.profile.json")
     tasks = None
     if development:
         from assistant.graph_tasks import GraphTasks
 
         tasks = GraphTasks(commands, DEVICE_ID, profile)
     navigator = tasks.navigator if tasks else Navigator(profile)
-    lookups = tasks.lookups if tasks else FixtureLookups()
+    lookups = tasks.lookups if tasks else lookups
+    assert lookups is not None
     index = FeatureIndex(profile["features"], Embeddings())
     chat = Chat()
     agent = os.environ.get("ASSISTANT_AGENT", "workflow")

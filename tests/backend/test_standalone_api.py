@@ -1,20 +1,14 @@
 """Exercise the real standalone process over HTTP with local model and bridge stand-ins."""
 
-import json
-import os
 import re
-import subprocess
-import sys
 import time
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from queue import Queue
-from threading import Thread
 from uuid import uuid4
 
 import httpx
 import pytest
 from jsonschema import Draft202012Validator
 from samples import observation
+from standalone_fakes import PROFILE, SERVICES, assistant_command, demo_models, started_server
 
 from assistant.app import create_standalone_app
 from assistant.command_queue import CommandQueue
@@ -35,96 +29,10 @@ EXPECTED = {
 }
 
 
-class DemoModels(BaseHTTPRequestHandler):
-    """The two HTTP model protocols with deterministic answers for the card journey."""
-
-    def send_json(self, body: object) -> None:
-        data = json.dumps(body).encode()
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(data)))
-        self.end_headers()
-        self.wfile.write(data)
-
-    def do_GET(self) -> None:
-        if self.path == "/info":
-            self.send_json({"max_client_batch_size": 128})
-        else:
-            self.send_error(404)
-
-    def do_POST(self) -> None:
-        body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
-        if self.path == "/embed":
-            self.send_json([[1.0] for _ in body["inputs"]])
-        elif self.path == "/chat/completions":
-            fields = body["response_format"]["json_schema"]["schema"]["properties"]
-            if "kind" in fields:
-                answer = {"kind": "new_task", "standalone": None, "rest": None}
-            elif "choice" in fields:
-                answer = {"choice": "card_transfer"}
-            else:
-                values = {
-                    "card-transfer-destination": "رضا",
-                    "card-transfer-amount": {"value": 250000, "unit": "IRT"},
-                }
-                answer = {ref: values.get(ref) for ref in fields}
-            self.send_json({"choices": [{"message": {"content": json.dumps(answer)}}]})
-        else:
-            self.send_error(404)
-
-    def log_message(self, *_: object) -> None:
-        pass
-
-
 @pytest.fixture(scope="module")
 def api():
-    with ThreadingHTTPServer(("127.0.0.1", 0), DemoModels) as models:
-        model_thread = Thread(target=models.serve_forever, daemon=True)
-        model_thread.start()
-        model_url = f"http://127.0.0.1:{models.server_port}"
-        env = os.environ | {
-            "ASSISTANT_AGENT": "workflow",
-            "ASSISTANT_LLM_URL": model_url,
-            "ASSISTANT_LLM_MODEL": "synthetic-test-model",
-            "ASSISTANT_EMBED_URL": model_url,
-            "ASSISTANT_TRACE": "0",
-        }
-        args = [
-            sys.executable,
-            "-m",
-            "uvicorn",
-            "assistant.app:create_standalone_app",
-            "--factory",
-            "--host",
-            "127.0.0.1",
-            "--port",
-            "0",
-            "--no-access-log",
-            "--timeout-graceful-shutdown",
-            "5",
-        ]
-        try:
-            with subprocess.Popen(
-                args, env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
-            ) as process:
-                output = Queue()
-                reader = Thread(target=lambda: [output.put(line) for line in process.stdout], daemon=True)
-                reader.start()
-                try:
-                    while line := output.get(timeout=15):
-                        started = re.search(r"Uvicorn running on (http://127\.0\.0\.1:\d+)", line)
-                        if started:
-                            break
-                        assert "ERROR:" not in line, "Standalone startup failed"
-                    with httpx.Client(base_url=started[1], timeout=5, trust_env=False) as client:
-                        yield client
-                finally:
-                    process.terminate()
-                    process.wait(timeout=10)
-                    reader.join(timeout=2)
-        finally:
-            models.shutdown()
-            model_thread.join(timeout=2)
+    with demo_models() as env, started_server(assistant_command(PROFILE, SERVICES), env) as (client, _):
+        yield client
 
 
 def contract_response(spec: dict, response: httpx.Response, path: str) -> dict:
@@ -149,7 +57,7 @@ def test_standalone_advertises_only_the_supported_routes(api: httpx.Client) -> N
     } == EXPECTED
     assert {
         (method, route.path)
-        for route in create_standalone_app().routes
+        for route in create_standalone_app(PROFILE, SERVICES).routes
         for method in route.methods
         if route.path != "/openapi.json"
     } == EXPECTED

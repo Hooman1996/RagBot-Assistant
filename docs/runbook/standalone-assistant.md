@@ -1,22 +1,50 @@
 # Standalone Assistant API
 
-The standalone application serves the workflow and its HTTP bridge on loopback. The default
-workflow uses the existing replica profile and synthetic lookups. The model and embeddings clients
-use the development settings in `.env`, with addresses documented in `.env.example`.
+The standalone application serves the workflow and its HTTP bridge on loopback. It loads its graph
+and banking lookup bindings at startup. The model and embeddings clients use the development
+settings in `.env`, with addresses documented in `.env.example`.
 
-From the checkout, in the `assistant` conda environment, start one worker.
+From the checkout, in the `assistant` conda environment, start the synthetic lookup provider.
+
+```bash
+python -m uvicorn mock_services.app:create_app --factory --host 127.0.0.1 --port 8110
+```
+
+In another terminal, start the Assistant with both configuration files.
 
 ```bash
 set -a
 source .env
 set +a
-python -m uvicorn assistant.app:create_standalone_app --factory --host 127.0.0.1 --port 8101
+python -m assistant --graph app_profiles/replica.profile.json \
+  --services mock_services/service-bindings.example.json
 ```
 
-The process starts with the model services offline. They are called on demand when a turn needs
-them. `GET /openapi.json` serves the [mobile contract](../../contracts/openapi/assistant_mobile.json)
+The standalone API listens on port 8101 by default and calls the model and mock services during
+a turn. `GET /openapi.json` serves the [mobile contract](../../contracts/openapi/assistant_mobile.json)
 with its schemas bundled. The development backend still starts with `python -m assistant` on port
-8100 and serves the graph viewer and test harness used by the existing replica smoke.
+8100 and serves the graph viewer and test harness with the development fixtures.
+
+## Graph and service bindings
+
+The graph uses the existing [profile schema](../../app_profiles/profile.schema.json). Its feature
+list controls what the assistant offers, and its edges and forms control routes and required
+inputs. The generated replica profile is the starting graph. To try a variant, copy it under
+`local/scratch/`, edit the copy, and restart with its path.
+
+The [example service file](../../mock_services/service-bindings.example.json) maps the two
+internal-transfer lookups to typed, read-only operations.
+
+| Lookup | Adapter | Provider |
+|---|---|---|
+| `accounts` | `accounts-http` | `GET /accounts` loads the source accounts and exact IRR balances. |
+| `contacts.account` | `saved-accounts-http` | `GET /saved-accounts` loads named account recipients from the contact and saved-destination fixtures. |
+
+To switch a provider, copy the service file under `local/scratch/`, change the operation's
+endpoint to the other mock's loopback URL, and restart the Assistant with that file. Endpoints are
+explicit loopback HTTP URLs with a port and path. Startup reports invalid graphs, invalid bindings,
+and missing bindings used by the configured internal transfer. A failed configured lookup produces a
+task error in history. Lookups outside the service file continue to use the development fixtures.
 
 ## Session and bridge calls
 
@@ -54,11 +82,21 @@ Run from the checkout in the `assistant` environment.
 python -m pytest -s tests/backend/test_standalone_api.py
 ```
 
-The test starts the Uvicorn factory on a free loopback port with a separate mock model listener
+The test starts the standalone CLI on a free loopback port with a separate mock model listener
 and the repository's stand-in bridge. It checks the actual HTTP routes against the published
 OpenAPI, drives a Persian card-transfer request from clarification to S-176, attempts cross-session
 operations and late or stale results, and verifies cancellation. Both listeners stop after the
 test. The check runs independently of the emulator, the graph viewer, and the development harness.
+
+Run the Demo 3/8 checks for alternate graph and provider bindings.
+
+```bash
+python -m pytest -s tests/backend/test_configured_standalone.py
+```
+
+These checks start real mock providers on separate free loopback ports. They write the second graph
+and both service files under `local/scratch/`. Each variant uses the same stand-in client and
+existing mobile API.
 
 ## Demo 2/8 acceptance
 
@@ -78,3 +116,20 @@ existing replica build `06c1386add06`. The smoke stopped at S-176 with source `*
 `****8880`, and 250,000 IRR. S-003 was refused. The 174 project checks, 496 Python tests, and both
 Ruff checks passed. See the [demo roadmap](../plan/revised-build-sequence.md#approved-demo-roadmap)
 for the remaining steps.
+
+## Demo 3/8 acceptance
+
+The documented example started the Assistant on 8101 and the read-only mock provider on 8110.
+The restart test used `app_profiles/replica.profile.json` for A. For B, it copied the graph and
+combined the two existing menu taps into one edge, made the payment ID required, and removed card
+transfer from the offered features. It used the same stand-in bridge for both runs.
+
+| Run | Backend plan to the internal-transfer form | Endpoint evidence | Review |
+|---|---|---|---|
+| A | S-026 → S-193 → S-192 | Provider A served `GET /accounts` and `GET /saved-accounts`. The latter supplied recipient `****7800`. | S-173, `account-2`, 3,000,000 IRR |
+| B | S-026 → S-192, with payment ID `12345` filled | `GET /accounts` stayed on A. `GET /saved-accounts` moved to B and supplied recipient `****5821`. | S-173, `account-2`, 3,000,000 IRR |
+
+Startup rejected an unknown graph screen, an unsupported operation field, an edge to a user-only
+action, an invalid endpoint, a mismatched adapter, and a missing internal-transfer binding.
+HTTP 404 and an incompatible response both produced a banking lookup error in history before a
+bridge command was sent. The 174 project checks, 505 Python tests, and both Ruff checks passed.
