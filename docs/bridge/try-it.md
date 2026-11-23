@@ -126,6 +126,74 @@ python tools/bridge_e2e.py
 To run every feature with its demo values and see how each ended, add `--features`. It takes about
 15 minutes and restarts the app between features.
 
+## Verify the replica against standalone
+
+Start the read-only provider on port 8110 as shown in the
+[standalone runbook](../runbook/standalone-assistant.md). Use the pinned emulator from step 1.
+In the `assistant` conda environment, create the local session ID and install the debug replica
+with the standalone address.
+
+```bash
+mkdir -p local/scratch/demo-4
+(umask 077; python -c 'from uuid import uuid4; print(uuid4().hex)' > local/scratch/demo-4/session-id)
+replica_session=$(cat local/scratch/demo-4/session-id)
+source android/env.sh
+./android/gradlew -p android --no-daemon -PreplicaBackend=http://127.0.0.1:8101 \
+  -PreplicaSession="$replica_session" :app:installDebug
+adb -s emulator-5554 reverse tcp:8101 tcp:8101
+```
+
+In the backend terminal, load the model settings and start the standalone API with the one-shot
+observe probe for device QA.
+
+```bash
+set -a
+source .env
+set +a
+replica_session=$(cat local/scratch/demo-4/session-id)
+ASSISTANT_AGENT=workflow python -m tools.bridge_e2e --serve-standalone "$replica_session" \
+  --graph app_profiles/replica.profile.json --services mock_services/service-bindings.example.json
+```
+
+Launch the installed standalone build and enable the loop.
+
+```bash
+adb -s emulator-5554 shell am start -n org.ragbot.replica/.MainActivity
+adb -s emulator-5554 shell touch /sdcard/Android/data/org.ragbot.replica/files/bridge.enabled
+adb -s emulator-5554 shell am force-stop org.ragbot.replica
+adb -s emulator-5554 shell am start -n org.ragbot.replica/.MainActivity
+```
+
+The probe uses the first bridge observation to queue an `observe` command in memory. Its success
+appears in the backend terminal. The original card-transfer smoke uses `/graph/state`, `/graph/run`,
+and the development command harness. The standalone smoke uses the mobile API and verifies the
+review in the replica. Enter Home before running it.
+
+```bash
+source android/env.sh
+python tools/bridge_e2e.py --standalone "$(cat local/scratch/demo-4/session-id)"
+```
+
+The smoke expects recipient `****7800` with the standard fixture provider. For the alternate
+provider in the Demo 4/8 evidence, pass `--recipient-ending 5821`. For the live panel replay, start
+at Home, open **دستیار**, and send «۳۰۰ هزار تومن از سپرده پس‌انداز به حساب رضا انتقال داخلی بزن
+بابت اجاره». Verify the source account ending `0579`, the configured recipient, and 3,000,000
+IRR on S-173. Send «نه، مبلغ رو ۳۲۰ هزار تومن کن» and verify that the review shows 3,200,000
+IRR with the same accounts.
+
+To reproduce the alternate provider, copy `accounts.json` and `contacts.json` from the synthetic
+fixtures into `local/scratch/demo-4/provider/`. Set the last four digits of the contact with ID
+`reza`'s account to `5821` in the copy. Start the provider with that directory.
+
+```bash
+python -c 'from pathlib import Path; import uvicorn
+from mock_services.app import create_app
+uvicorn.run(create_app(Path("local/scratch/demo-4/provider")), host="127.0.0.1", port=8110)'
+```
+
+After the standalone checks, stop the two loopback services and remove the emulator's port 8101
+reverse. Reinstall the default debug build from step 3 to return to the development viewer.
+
 ## Stop it
 
 ```bash
