@@ -3,6 +3,7 @@ package org.ragbot.replica.assistant
 import org.junit.Assert.*
 import org.junit.Test
 import org.ragbot.replica.Json
+import org.ragbot.replica.bridge.BridgeConfig
 import org.ragbot.replica.bridge.Observation
 
 class AssistantClientTest {
@@ -12,7 +13,8 @@ class AssistantClientTest {
     fun aMessageCarriesTheWordsAndTheObservationAndNoSelection() {
         val body = Json.parse("body", AssistantClient.requestBody("c1", "به \"رضا\"", null, null, observation))
         assertEquals("c1", body.str("conversation_id"))
-        assertEquals("replica-dev", body.str("session_id"))
+        assertEquals(BridgeConfig.SESSION_ID, body.str("session_id"))
+        assertEquals(BridgeConfig.DEVICE_ID, body.str("device_id"))
         assertEquals("به \"رضا\"", body.str("message"))
         assertFalse(body.has("selection"))
         assertEquals("S-026", body["observation"].str("screen"))

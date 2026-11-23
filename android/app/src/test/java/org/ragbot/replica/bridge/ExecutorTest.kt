@@ -222,6 +222,19 @@ class ExecutorTest {
     }
 
     @Test
+    fun aCommandMustNameTheActiveSessionEvenWhenTheDeviceMatches() {
+        val executor = Executor(controls, "device-1", { 1_000 }, patienceMs = 0, sessionId = "active")
+        val version = executor.observer.observe().observation_version
+        val command = command("navigate", destination = "S-192", observation = version)
+        val rejected = executor.execute(command)
+        assertEquals("rejected_policy", rejected.outcome)
+        assertEquals("wrong_session", rejected.error_code)
+        assertTrue(controls.tapped.isEmpty())
+        val accepted = executor.execute(command.copy(command_id = "cmd-2", session_id = "active"))
+        assertEquals("succeeded", accepted.outcome)
+    }
+
+    @Test
     fun cardAndIbanNumbersAreMasked() {
         assertEquals("****8880", Observer.mask("6037 9908 3638 8880"))
         assertEquals("250000", Observer.mask("250000"))

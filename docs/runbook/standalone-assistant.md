@@ -133,3 +133,31 @@ Startup rejected an unknown graph screen, an unsupported operation field, an edg
 action, an invalid endpoint, a mismatched adapter, and a missing internal-transfer binding.
 HTTP 404 and an incompatible response both produced a banking lookup error in history before a
 bridge command was sent. The 174 project checks, 505 Python tests, and both Ruff checks passed.
+
+## Demo 4/8 acceptance
+
+On 23 Nov 2026, the standalone backend ran `c4e43aef2ff977ec3663e45619f607284c6870f0`.
+The debug replica `0.1` (version code 1) displayed build `c4e43aef2ff9` on the pinned
+`ragbot_investigation` emulator. Its executor accepted profile version 1. The generated profile
+matched `app_profiles/replica.profile.json`. The setup used the
+[standalone replica runbook](../bridge/try-it.md#verify-the-replica-against-standalone).
+
+The QA probe completed `observe` at D-000. The adapted standalone smoke reached S-173 and
+verified the rendered review. The graph state route returned 404 on the standalone API.
+
+| Panel turn | Bridge result | Rendered review |
+|---|---|---|
+| «۳۰۰ هزار تومن از سپرده پس‌انداز به حساب رضا انتقال داخلی بزن بابت اجاره» | `navigate` followed S-026 → S-193 → S-192, `fill_form` succeeded at S-192, and `show_review` reached S-173. | Source `****0579`, recipient `****5821`, 3,000,000 IRR, reason «پرداخت اجاره». |
+| «نه، مبلغ رو ۳۲۰ هزار تومن کن» | `navigate` returned from S-173 to S-192, `fill_form` succeeded there, and `show_review` opened a fresh S-173. | Same accounts and reason, 3,200,000 IRR. |
+
+The configured mock returned HTTP 200 on `GET /accounts` and `GET /saved-accounts`. The backend
+trace recorded `contacts.account` resolving to `****5821` in the smoke and in both panel turns.
+That ending came from the alternate provider. The replica fixture's recipient ends in `7800`.
+Cancel Task cleared the standalone task and left the corrected review visible. All bridge runs
+stayed within the user review boundary. The local evidence ID is `DEMO-4`.
+
+The relevant device group passed 36 tests across `AssistantPanelTest`, `BridgeJourneysTest`,
+and `BridgeServicesTest`. Earlier runs reproduced a blocked picker being reported before its
+dismissal finished. The bridge now waits for the picker to close before reporting the result.
+The 178 Android JVM tests, 505 Python tests, 174 project checks, and both Ruff checks also passed.
+Android lint reported 0 errors and 116 warnings.

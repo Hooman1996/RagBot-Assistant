@@ -8,6 +8,16 @@ import org.ragbot.replica.BuildConfig
 /** Rule 3: the bridge talks only to a local development address, and only in debug builds. */
 class BridgeConfigTest {
     @Test
+    fun connectionsIdentifyTheConfiguredSession() {
+        val connection = BridgeConfig.connection("/assistant/v1/history")
+        try {
+            assertEquals(BuildConfig.BRIDGE_SESSION, connection.getRequestProperty("X-Assistant-Session"))
+        } finally {
+            connection.disconnect()
+        }
+    }
+
+    @Test
     fun theBackendIsALocalAddress() {
         assertTrue(BuildConfig.BRIDGE_BACKEND, BuildConfig.BRIDGE_BACKEND.startsWith("http://127.0.0.1:"))
     }

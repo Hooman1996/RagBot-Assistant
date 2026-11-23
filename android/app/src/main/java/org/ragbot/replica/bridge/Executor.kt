@@ -18,6 +18,7 @@ internal class Executor(
     private val device_id: String,
     private val now: () -> Long = System::currentTimeMillis,
     patienceMs: Long = 3_000,
+    private val sessionId: String = device_id,
 ) {
     private val actions = Actions(controls, patienceMs)
     private val navigator = Navigator(actions)
@@ -54,6 +55,7 @@ internal class Executor(
     /** Why [command] may never run, whatever the screen shows, or null. */
     private fun policyProblem(command: Command): String? {
         if (command.device_id != device_id) return "wrong_device"
+        if (command.session_id != sessionId) return "wrong_session"
         if (command.protocol_version != PROTOCOL_VERSION) return "wrong_protocol"
         if (command.profile_version != Observer.PROFILE_VERSION) return "wrong_profile"
         return when (command.operation) {
