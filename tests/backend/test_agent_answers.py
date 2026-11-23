@@ -6,6 +6,7 @@ from langgraph.types import Command
 
 from assistant.agent_state import new_request
 from assistant.lifecycle import next_input
+from assistant.lookups import FixtureLookups, LookupUnavailable
 
 CONFIG = {"configurable": {"thread_id": "answers"}}
 CARD = {"choice": "card_transfer"}
@@ -215,6 +216,17 @@ def test_a_saved_plate_is_tapped_in_the_plate_list_and_fills_the_plate() -> None
         {"destination": "S-257", "arguments": {"toll-vehicle": "plate-1"}},
     ]
     assert sent_values(app) == PLATE
+
+
+def test_a_saved_plate_changed_after_the_question_stops_before_selecting_it(monkeypatch) -> None:
+    app = RecordingApp()
+    graph = build_agent(FakeChat([{"choice": "pollution_inquiry"}, NO_PLATE]), app)
+    graph.invoke(new_request("c", "تردد طرح آلودگی هوا"), CONFIG)
+    sent = list(app.sent)
+    monkeypatch.setattr(FixtureLookups, "saved_plates", lambda _: {"plate-1": ["22", "ج", "111", "11"]})
+    with pytest.raises(LookupUnavailable, match="vehicles"):
+        graph.invoke(Command(resume="toll-vehicle=plate-1"), CONFIG)
+    assert app.sent == sent
 
 
 def test_a_new_plate_asks_its_parts_and_a_typed_plate_is_a_new_one() -> None:

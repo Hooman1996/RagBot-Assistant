@@ -56,6 +56,7 @@ class Device:
     outstanding: dict | None = None
     delivered: bool = False
     last_result: dict | None = None
+    needs_observation: bool = False
     finished: list[str] = field(default_factory=list)
 
 
@@ -103,9 +104,9 @@ class CommandQueue:
 
     def _queue_command(self, session_id: str, operation: str, arguments: dict) -> dict:
         device = self.device(session_id)
-        if device.observation is None:
-            raise DeviceNotSeen(session_id)
         self.drop_if_expired(device)
+        if device.observation is None or device.needs_observation:
+            raise DeviceNotSeen(session_id)
         waiting = device.outstanding
         if waiting is not None:
             if waiting["operation"] == operation and waiting["arguments"] == arguments:
@@ -150,6 +151,7 @@ class CommandQueue:
             return None
         device.observation = observation
         self.drop_if_expired(device)
+        device.needs_observation = False
         command = device.outstanding
         if command is None or device.delivered:
             return None
@@ -192,6 +194,14 @@ class CommandQueue:
                 return
         raise UnknownCommand(command_id)
 
+    def result_for(self, session_id: str, command_id: str) -> dict | None:
+        """Returns the command's result, closing expired work even if the app is offline."""
+        with self.lock:
+            device = self.device(session_id)
+            self.drop_if_expired(device)
+            result = device.last_result
+            return result if result is not None and result["command_id"] == command_id else None
+
     def cancel_unsent(self, session_id: str) -> None:
         """Closes work that has yet to leave the queue. A delivered command still needs its result."""
         with self.lock:
@@ -204,6 +214,7 @@ class CommandQueue:
         command = device.outstanding
         if command is None or format_time(self.now()) < command["expires_at"]:
             return
+        device.needs_observation = True
         # A delivered command may have run, and only the app can say what happened.
         if device.delivered:
             self.close_unsent(device, "uncertain", "no_result_before_expiry")

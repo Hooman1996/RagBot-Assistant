@@ -7,17 +7,45 @@ import httpx
 from pydantic import BaseModel, ConfigDict, TypeAdapter, ValidationError, field_validator
 
 from assistant.lookups import FixtureLookups, LookupUnavailable
-from mock_services.lookup_models import AccountRecord, SavedAccountRecord
+from mock_services.lookup_models import (
+    AccountRecord,
+    CardRecord,
+    LoanRecord,
+    OperatorRecord,
+    SavedAccountRecord,
+    SavedCardRecord,
+    SavedPlateRecord,
+)
 
-LookupOperation = Literal["accounts", "contacts.account"]
-Adapter = Literal["accounts-http", "saved-accounts-http"]
+LookupOperation = Literal[
+    "accounts", "cards", "contacts.account", "contacts.card", "operators", "vehicles", "loans"
+]
+Adapter = Literal[
+    "accounts-http",
+    "cards-http",
+    "saved-accounts-http",
+    "saved-cards-http",
+    "operators-http",
+    "saved-plates-http",
+    "loans-http",
+]
 ADAPTER_FOR: dict[LookupOperation, Adapter] = {
     "accounts": "accounts-http",
+    "cards": "cards-http",
     "contacts.account": "saved-accounts-http",
+    "contacts.card": "saved-cards-http",
+    "operators": "operators-http",
+    "vehicles": "saved-plates-http",
+    "loans": "loans-http",
 }
 RESPONSES = {
     "accounts-http": TypeAdapter(list[AccountRecord]),
+    "cards-http": TypeAdapter(list[CardRecord]),
     "saved-accounts-http": TypeAdapter(list[SavedAccountRecord]),
+    "saved-cards-http": TypeAdapter(list[SavedCardRecord]),
+    "operators-http": TypeAdapter(list[OperatorRecord]),
+    "saved-plates-http": TypeAdapter(list[SavedPlateRecord]),
+    "loans-http": TypeAdapter(list[LoanRecord]),
 }
 
 

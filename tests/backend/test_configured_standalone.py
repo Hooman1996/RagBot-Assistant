@@ -2,7 +2,6 @@
 
 import json
 import subprocess
-import sys
 import time
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -10,12 +9,22 @@ from uuid import uuid4
 
 import httpx
 import pytest
-from standalone_fakes import PROFILE, SERVICES, assistant_command, demo_models, started_server
+from standalone_fakes import (
+    PROFILE,
+    SERVICES,
+    assistant_command,
+    bindings_at,
+    demo_models,
+    provider_command,
+    started_server,
+)
 
 from assistant.agent_chat import LOOKUP_ERROR
 from assistant.command_queue import CommandQueue
+from assistant.config import load_graph, load_lookups
 from assistant.graph_data import read_json
 from assistant.lookups import FIXTURES
+from assistant.words import options
 from tools.stand_in_app import StandInApp
 
 INTERNAL = "۳۰۰ هزار تومان از سپرده پس‌انداز به حساب رضا انتقال داخلی بزن بابت اجاره، شناسه واریز 12345"
@@ -34,19 +43,8 @@ def write_json(path: Path, data: dict) -> Path:
     return path
 
 
-def provider_command(folder: Path) -> list[str]:
-    return [
-        sys.executable,
-        "-c",
-        "import sys, uvicorn; from pathlib import Path; from mock_services.app import create_app; "
-        "uvicorn.run(create_app(Path(sys.argv[1])), host='127.0.0.1', port=0)",
-        str(folder),
-    ]
-
-
-def with_endpoints(accounts: httpx.URL, saved_accounts: httpx.URL) -> dict:
-    bindings = json.loads(SERVICES.read_text(encoding="utf-8"))
-    bindings["accounts"]["endpoint"] = str(accounts)
+def with_saved_accounts(base_url: httpx.URL, saved_accounts: httpx.URL) -> dict:
+    bindings = bindings_at(base_url)
     bindings["contacts.account"]["endpoint"] = str(saved_accounts)
     return bindings
 
@@ -105,6 +103,23 @@ def filled_at_review(history: dict, commands: list[dict]) -> dict:
     return values
 
 
+def test_candidate_lookups_use_the_configured_read_only_provider(config_dir: Path) -> None:
+    with started_server(provider_command(FIXTURES)) as (provider, access_log):
+        services = write_json(config_dir / "bindings.json", bindings_at(provider.base_url))
+        lookups = load_lookups(services, load_graph(PROFILE))
+        active_cards = lookups.candidates("cards", {"kind": "DEBIT", "status": "فعال"})
+        assert {card.label[-4:] for card in active_cards} == {"3566", "4544"}
+        assert lookups.resolve("contacts.card", "رضا").endswith("8880")
+        operator = lookups.operator(phone="0912")
+        assert operator["operator"] == "HAMRAH_AVAL"
+        assert operator["unit"] == "IRR"
+        assert 200000 % operator["multiplier"] == 0
+        assert options("S-256", "toll-vehicle", lookups)[0]["label"].endswith("ایران 67")
+        assert lookups.installments("loans", "loan-personal") == ["1"]
+    for path in ("/cards", "/saved-cards", "/operators", "/saved-plates", "/loans"):
+        assert any(f"GET {path} HTTP/1.1" in line and "200 OK" in line for line in access_log)
+
+
 def test_restarting_with_a_new_graph_and_binding_changes_the_real_turn(config_dir: Path) -> None:
     # Test-only shortcut combines the same two safe taps. The client keeps the generated profile.
     variant = read_json(PROFILE.name)
@@ -126,14 +141,13 @@ def test_restarting_with_a_new_graph_and_binding_changes_the_real_turn(config_di
         started_server(provider_command(FIXTURES)) as (provider_a, requests_a),
         started_server(provider_command(fixtures_b)) as (provider_b, requests_b),
     ):
-        accounts_url = provider_a.base_url.join("/accounts")
         service_a = write_json(
             config_dir / "bindings-a.json",
-            with_endpoints(accounts_url, provider_a.base_url.join("/saved-accounts")),
+            bindings_at(provider_a.base_url),
         )
         service_b = write_json(
             config_dir / "bindings-b.json",
-            with_endpoints(accounts_url, provider_b.base_url.join("/saved-accounts")),
+            with_saved_accounts(provider_a.base_url, provider_b.base_url.join("/saved-accounts")),
         )
         env |= {"ASSISTANT_TRACE": "1"}
         with started_server(assistant_command(PROFILE, service_a), env) as (api, trace_a):
@@ -171,7 +185,7 @@ def test_mock_failure_is_reported_without_fixture_fallback(config_dir: Path, pat
     with demo_models() as env, started_server(provider_command(FIXTURES)) as (provider, access_log):
         services = write_json(
             config_dir / "bindings.json",
-            with_endpoints(provider.base_url.join("/accounts"), provider.base_url.join(path)),
+            with_saved_accounts(provider.base_url, provider.base_url.join(path)),
         )
         with started_server(assistant_command(PROFILE, services), env) as (api, trace):
             history, commands = drive(api, INTERNAL)
@@ -192,6 +206,8 @@ def test_mock_failure_is_reported_without_fixture_fallback(config_dir: Path, pat
         ("endpoint", "expected a loopback HTTP endpoint"),
         ("adapter", "contacts.account requires the saved-accounts-http adapter"),
         ("missing", "missing binding for internal_transfer: contacts.account"),
+        ("missing_plate", "missing binding for pollution_inquiry: vehicles"),
+        ("missing_operator", "missing binding for mobile_top_up: operators"),
     ],
 )
 def test_invalid_configuration_fails_before_listening(config_dir: Path, problem: str, message: str) -> None:
@@ -208,6 +224,10 @@ def test_invalid_configuration_fails_before_listening(config_dir: Path, problem:
         bindings["contacts.account"]["endpoint"] = "http://example.invalid:8110/saved-accounts"
     elif problem == "adapter":
         bindings["contacts.account"]["adapter"] = "accounts-http"
+    elif problem == "missing_plate":
+        del bindings["vehicles"]
+    elif problem == "missing_operator":
+        del bindings["operators"]
     else:
         del bindings["contacts.account"]
     cmd = assistant_command(

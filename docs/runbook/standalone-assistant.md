@@ -32,19 +32,24 @@ list controls what the assistant offers, and its edges and forms control routes 
 inputs. The generated replica profile is the starting graph. To try a variant, copy it under
 `local/scratch/`, edit the copy, and restart with its path.
 
-The [example service file](../../mock_services/service-bindings.example.json) maps the two
-internal-transfer lookups to typed, read-only operations.
+The [example service file](../../mock_services/service-bindings.example.json) maps the five
+candidate journeys' lookups to typed, read-only operations.
 
 | Lookup | Adapter | Provider |
 |---|---|---|
 | `accounts` | `accounts-http` | `GET /accounts` loads the source accounts and exact IRR balances. |
 | `contacts.account` | `saved-accounts-http` | `GET /saved-accounts` loads named account recipients from the contact and saved-destination fixtures. |
+| `cards` | `cards-http` | `GET /cards` loads card keys, numbers, kinds, and eligibility statuses. |
+| `contacts.card` | `saved-cards-http` | `GET /saved-cards` loads named card recipients from those same contact and saved-destination fixtures. |
+| `operators` | `operators-http` | `GET /operators` loads mobile prefixes and integer IRR charge limits. |
+| `vehicles` | `saved-plates-http` | `GET /saved-plates` loads saved automobile plate choices and form fields. |
+| `loans` | `loans-http` | `GET /loans` loads named loans and installment statuses. |
 
 To switch a provider, copy the service file under `local/scratch/`, change the operation's
 endpoint to the other mock's loopback URL, and restart the Assistant with that file. Endpoints are
 explicit loopback HTTP URLs with a port and path. Startup reports invalid graphs, invalid bindings,
-and missing bindings used by the configured internal transfer. A failed configured lookup produces a
-task error in history. Lookups outside the service file continue to use the development fixtures.
+and missing bindings for enabled candidates. A configured lookup that fails or times out produces
+a task error in history. Other journeys may still use lookups from the development fixtures.
 
 ## Session and bridge calls
 
@@ -68,7 +73,9 @@ All five operations return `422` for a missing session header or an invalid requ
 results own the live observation. The observation attached to a message is validated with the
 message body. The process holds session state in memory and runs one agent turn at a time. A
 command already delivered when a task is cancelled can still report its result. The bridge stops
-before its next command.
+before its next command. An undelivered command that expires pauses the task. If a delivered
+command expires without a result, the task stops and reports uncertainty. The queue requires a
+fresh bridge observation after either expiry.
 
 Feedback, comments, session close, and satisfaction remain in the OpenAPI document as planned
 operations. The standalone process returns `404` for them and for the graph viewer and test
