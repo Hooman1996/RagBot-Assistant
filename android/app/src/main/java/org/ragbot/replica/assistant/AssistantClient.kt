@@ -1,10 +1,7 @@
 package org.ragbot.replica.assistant
 
 import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
 import java.util.UUID
-import org.ragbot.replica.BuildConfig
 import org.ragbot.replica.Json
 import org.ragbot.replica.bridge.BridgeConfig
 import org.ragbot.replica.bridge.ContractJson
@@ -52,7 +49,7 @@ internal object AssistantClient {
 
     /** POST /assistant/v1/sessions/{session_id}/cancel. */
     fun cancel() {
-        call("POST", "/assistant/v1/sessions/${BridgeConfig.DEVICE_ID}/cancel", null)
+        call("POST", "/assistant/v1/sessions/${BridgeConfig.SESSION_ID}/cancel", null)
     }
 
     /** The loop's latest observation, or null before the loop has reported. */
@@ -73,7 +70,7 @@ internal object AssistantClient {
         return listOf(
                 "\"request_id\":${q(UUID.randomUUID().toString())}",
                 "\"conversation_id\":${q(conversationId)}",
-                "\"session_id\":${q(BridgeConfig.DEVICE_ID)}",
+                "\"session_id\":${q(BridgeConfig.SESSION_ID)}",
                 "\"device_id\":${q(BridgeConfig.DEVICE_ID)}",
                 "\"user_context\":{\"user_ref\":\"synthetic-user\",\"locale\":\"fa-IR\"}",
                 said,
@@ -106,7 +103,7 @@ internal object AssistantClient {
 
     /** One HTTP call; any answer but 200 is an IOException naming the backend's reason. */
     private fun call(method: String, path: String, body: String?): String {
-        val connection = URL(BuildConfig.BRIDGE_BACKEND + path).openConnection() as HttpURLConnection
+        val connection = BridgeConfig.connection(path)
         try {
             connection.requestMethod = method
             connection.connectTimeout = TIMEOUT_MS

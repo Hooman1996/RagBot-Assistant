@@ -40,10 +40,11 @@ def create_app(queue: CommandQueue | None = None) -> FastAPI:
     return build_app(queue or CommandQueue(), read_json("replica.profile.json"), development=True)
 
 
-def create_standalone_app(graph: Path, services: Path) -> FastAPI:
+def create_standalone_app(graph: Path, services: Path, *, queue: CommandQueue | None = None) -> FastAPI:
     """Builds the standalone Assistant API from two explicit configuration files."""
     profile = load_graph(graph)
-    return build_app(CommandQueue(), profile, development=False, lookups=load_lookups(services, profile))
+    lookups = load_lookups(services, profile)
+    return build_app(queue or CommandQueue(), profile, development=False, lookups=lookups)
 
 
 def build_app(

@@ -16,6 +16,10 @@ val sourceRevision =
 // A local development address only. The emulator reaches it through `adb reverse`.
 val bridgeBackend =
     providers.gradleProperty("replicaBackend").orNull ?: "http://127.0.0.1:8100"
+val bridgeSession = providers.gradleProperty("replicaSession").orNull ?: "replica-dev"
+require(bridgeSession.matches(Regex("[A-Za-z0-9_-]+"))) {
+    "replicaSession must contain only letters, digits, underscores or hyphens"
+}
 val privateResources = providers.gradleProperty("replicaPrivateResources").orNull
 val mockFixtures = rootDir.resolve("../mock_services/fixtures")
 val mockAssets = layout.buildDirectory.dir("generated/mockAssets")
@@ -39,6 +43,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "SOURCE_REVISION", "\"$sourceRevision\"")
         buildConfigField("String", "BRIDGE_BACKEND", "\"$bridgeBackend\"")
+        buildConfigField("String", "BRIDGE_SESSION", "\"$bridgeSession\"")
         buildConfigField("boolean", "PRIVATE_RESOURCES", (privateResources != null).toString())
     }
     buildFeatures {

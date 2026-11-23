@@ -48,7 +48,8 @@ internal class CommandPoller(private val executor: Executor, private val backend
         fun start() {
             if (started || Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return
             started = true
-            val executor = Executor(ComposeControls(), BridgeConfig.DEVICE_ID)
+            val executor =
+                Executor(ComposeControls(), BridgeConfig.DEVICE_ID, sessionId = BridgeConfig.SESSION_ID)
             val poller = CommandPoller(executor, BackendClient())
             Thread(poller::loop, "command-poller").apply { isDaemon = true }.start()
         }

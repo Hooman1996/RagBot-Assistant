@@ -2,9 +2,6 @@ package org.ragbot.replica.bridge
 
 import android.util.Log
 import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
-import org.ragbot.replica.BuildConfig
 
 /*
  * The two calls of contracts/openapi/assistant_mobile.json that the loop uses.
@@ -25,7 +22,7 @@ internal class BackendClient : Backend {
     override fun resume(observation: Observation) =
         logged(
             post(
-                "/assistant/v1/sessions/${BridgeConfig.DEVICE_ID}/resume",
+                "/assistant/v1/sessions/${BridgeConfig.SESSION_ID}/resume",
                 ContractJson.write(observation),
             )
         )
@@ -58,7 +55,7 @@ internal class BackendClient : Backend {
 
     /** Posts JSON and reads the command in the reply. Any non-200 is an IOException. */
     private fun post(path: String, body: String): Command? {
-        val connection = URL(BuildConfig.BRIDGE_BACKEND + path).openConnection() as HttpURLConnection
+        val connection = BridgeConfig.connection(path)
         try {
             connection.requestMethod = "POST"
             connection.connectTimeout = CONNECT_TIMEOUT_MS
