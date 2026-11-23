@@ -1,4 +1,4 @@
-"""Loads and validates the standalone graph and its two supported service bindings."""
+"""Loads and validates the standalone graph and its demo service bindings."""
 
 import json
 from pathlib import Path
@@ -13,7 +13,13 @@ from assistant.lookups import is_known
 from assistant.navigator import HOME, CrossesUserOnly, Navigator, NoRoute, search
 
 BINDINGS = TypeAdapter(dict[LookupOperation, ServiceBinding])
-DEMO_FEATURE = "internal_transfer"
+DEMO_FEATURES = {
+    "card_transfer": set(),
+    "internal_transfer": set(),
+    "mobile_top_up": {"operators"},
+    "pollution_inquiry": {"vehicles"},
+    "loan_repayment": set(),
+}
 
 
 class ConfigError(ValueError):
@@ -123,12 +129,15 @@ def load_lookups(path: Path, profile: dict) -> HttpLookups:
     for operation, binding in bindings.items():
         if binding.adapter != ADAPTER_FOR[operation]:
             raise ConfigError(f"{path}: {operation} requires the {ADAPTER_FOR[operation]} adapter")
-    demo = next((feature for feature in profile["features"] if feature["intent"] == DEMO_FEATURE), None)
-    if demo is not None:
+    navigator = Navigator(profile)
+    for feature in navigator.features:
+        intent = feature["intent"]
+        if intent not in DEMO_FEATURES:
+            continue
         required = {
-            item.lookup for item in Navigator(profile).plan_feature(HOME, demo).requirements if item.lookup
-        }
+            item.lookup for item in navigator.plan_feature(HOME, feature).requirements if item.lookup
+        } | DEMO_FEATURES[intent]
         missing = required - bindings.keys()
         if missing:
-            raise ConfigError(f"{path}: missing binding for {DEMO_FEATURE}: {', '.join(sorted(missing))}")
+            raise ConfigError(f"{path}: missing binding for {intent}: {', '.join(sorted(missing))}")
     return HttpLookups(bindings)

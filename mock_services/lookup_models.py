@@ -1,8 +1,8 @@
-"""The synthetic values exposed by the two read-only lookup endpoints."""
+"""The synthetic values exposed by the read-only demo lookup endpoints."""
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AccountRecord(BaseModel):
@@ -26,3 +26,55 @@ class SavedAccountRecord(BaseModel):
     name: str
     account: str
     person: bool
+
+
+class CardRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    key: str
+    number: str
+    kind: str
+    status: str
+
+
+class SavedCardRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    id: str
+    name: str
+    card: str
+    person: bool
+
+
+class OperatorRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    operator: str
+    prefixes: list[str]
+    min: int
+    max: int
+    multiplier: int = Field(gt=0)
+    defaults: list[int]
+    unit: Literal["IRR"]
+
+
+class SavedPlateRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    id: str
+    plate: list[str] = Field(min_length=4, max_length=4)
+
+
+class LoanInstallmentRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    number: int
+    status: Literal["PAID", "UNPAID", "TRACKABLE_OVERDUE"]
+
+
+class LoanRecord(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    id: str
+    title: str
+    installments: list[LoanInstallmentRecord]

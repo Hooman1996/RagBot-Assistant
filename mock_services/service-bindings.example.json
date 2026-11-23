@@ -6,5 +6,25 @@
   "contacts.account": {
     "adapter": "saved-accounts-http",
     "endpoint": "http://127.0.0.1:8110/saved-accounts"
+  },
+  "cards": {
+    "adapter": "cards-http",
+    "endpoint": "http://127.0.0.1:8110/cards"
+  },
+  "contacts.card": {
+    "adapter": "saved-cards-http",
+    "endpoint": "http://127.0.0.1:8110/saved-cards"
+  },
+  "operators": {
+    "adapter": "operators-http",
+    "endpoint": "http://127.0.0.1:8110/operators"
+  },
+  "vehicles": {
+    "adapter": "saved-plates-http",
+    "endpoint": "http://127.0.0.1:8110/saved-plates"
+  },
+  "loans": {
+    "adapter": "loans-http",
+    "endpoint": "http://127.0.0.1:8110/loans"
   }
 }

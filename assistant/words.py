@@ -25,6 +25,10 @@ def feature_words(intent: str) -> str:
 
 def options(screen: str, ref: str, lookups: FixtureLookups) -> list[dict]:
     """A choice's allowed keys with their labels: the screen's own list first, then the field's."""
+    if ref in plates():
+        return [
+            {"key": key, "label": plate_label(parts)} for key, parts in lookups.saved_plates().items()
+        ] + [{"key": "new", "label": "پلاک جدید"}]
     found = WORDS["choices"].get(f"{screen} {ref}") or WORDS["choices"].get(ref)
     if found is None:
         return []
@@ -76,6 +80,11 @@ def plates() -> dict[str, list[str]]:
     """Each saved-plate choice and the plate fields it fills, in the order of a record's plate. Its
     key "new" is the app's «پلاک جدید»; any other key is a saved plate, which fills the form."""
     return WORDS["plates"]
+
+
+def plate_label(parts: list[str]) -> str:
+    first, letter, middle, region = parts
+    return f"پلاک {first} {letter} {middle} ایران {region}"
 
 
 def fixed(intent: str) -> dict:

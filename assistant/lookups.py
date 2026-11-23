@@ -32,6 +32,7 @@ SOURCES = {
     "contacts": Source("contacts", "people", "id", "name"),
     "cards": Source("cards", "cards", "key", "number"),
     "accounts": Source("accounts", "accounts", "key", "type"),
+    "operators": Source("operators", "operators", "operator", "title"),
     "bills": Source("bills", "bills", "billId", "company"),
     "wallets": Source("wallets", "wallets", "number", "title"),
     "charities": Source("charities", "charities", "id", "name"),
@@ -120,6 +121,10 @@ class FixtureLookups:
         """The contacts that are people, without the saved destinations."""
         return json.loads((self.folder / "contacts.json").read_text(encoding="utf-8"))["people"]
 
+    def saved_plates(self) -> dict[str, list[str]]:
+        """Saved automobile plates, represented by their four form fields."""
+        return {row["id"]: row["plate"] for row in self.records("vehicles") if len(row["plate"]) == 4}
+
     def candidates(self, lookup: str, where: dict | None = None) -> list[Candidate]:
         """The lookup's records, only those with every field in `where` when it is given.
         `contacts.card` sends the card, plain `contacts` the ID."""
@@ -149,8 +154,9 @@ class FixtureLookups:
         """An operator's charge list (`defaults`) and limits (`min`, `max`, `multiplier`), by its key
         or by a phone number's prefix as the app detects it; None when neither names one."""
         digits = plain(phone)
-        operators = json.loads((self.folder / "operators.json").read_text(encoding="utf-8"))["operators"]
-        for item in operators:
+        if not name and len(digits) <= 3:
+            return None
+        for item in self.records("operators"):
             if item["operator"] == name or (len(digits) > 3 and digits.startswith(tuple(item["prefixes"]))):
                 return item
         return None

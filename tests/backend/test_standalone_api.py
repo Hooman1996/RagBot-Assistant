@@ -1,18 +1,30 @@
 """Exercise the real standalone process over HTTP with local model and bridge stand-ins."""
 
+import json
 import re
 import time
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from uuid import uuid4
 
 import httpx
 import pytest
 from jsonschema import Draft202012Validator
 from samples import observation
-from standalone_fakes import PROFILE, SERVICES, assistant_command, demo_models, started_server
+from standalone_fakes import (
+    PROFILE,
+    SERVICES,
+    assistant_command,
+    bindings_at,
+    demo_models,
+    provider_command,
+    started_server,
+)
 
 from assistant.app import create_standalone_app
 from assistant.command_queue import CommandQueue
 from assistant.graph_data import read_json
+from assistant.lookups import FIXTURES
 from tools.stand_in_app import StandInApp
 
 API = "/assistant/v1"
@@ -31,8 +43,17 @@ EXPECTED = {
 
 @pytest.fixture(scope="module")
 def api():
-    with demo_models() as env, started_server(assistant_command(PROFILE, SERVICES), env) as (client, _):
-        yield client
+    scratch = Path("local/scratch")
+    scratch.mkdir(parents=True, exist_ok=True)
+    with (
+        TemporaryDirectory(dir=scratch, prefix="standalone-") as folder,
+        demo_models() as env,
+        started_server(provider_command(FIXTURES)) as (provider, _),
+    ):
+        services = Path(folder) / "services.json"
+        services.write_text(json.dumps(bindings_at(provider.base_url)), encoding="utf-8")
+        with started_server(assistant_command(PROFILE, services), env) as (client, _):
+            yield client
 
 
 def contract_response(spec: dict, response: httpx.Response, path: str) -> dict:

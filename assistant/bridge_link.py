@@ -38,6 +38,10 @@ class BridgeLink:
             result = self.wait_for(self.queued(operation, arguments)["command_id"])
             if self.stopped() or result["outcome"] == "cancelled":
                 raise Cancelled("کاربر لغو کرد")
+            if result["outcome"] == "rejected_expired":
+                raise Unreachable("برنامه پیش از پایان مهلت فرمان پاسخ نداد")
+            if result.get("error_code") == "no_result_before_expiry":
+                raise TaskStopped("معلوم نشد آخرین فرمان در برنامه انجام شد یا نه")
             if result.get("error_code") != "stale_observation":
                 return result
         return result
@@ -56,10 +60,9 @@ class BridgeLink:
     def wait_for(self, command_id: str) -> dict:
         """Waits until the app has reported this command."""
         deadline = time.monotonic() + self.timeout
-        device = self.queue.device(self.session_id)
         while time.monotonic() < deadline:
-            result = device.last_result
-            if result is not None and result["command_id"] == command_id:
+            result = self.queue.result_for(self.session_id, command_id)
+            if result is not None:
                 return result
             time.sleep(POLL_SECONDS)
         raise Uncertain("پاسخی از برنامه نرسید")

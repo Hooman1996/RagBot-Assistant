@@ -17,6 +17,23 @@ PROFILE = Path("app_profiles/replica.profile.json")
 SERVICES = Path("mock_services/service-bindings.example.json")
 
 
+def provider_command(folder: Path) -> list[str]:
+    return [
+        sys.executable,
+        "-c",
+        "import sys, uvicorn; from pathlib import Path; from mock_services.app import create_app; "
+        "uvicorn.run(create_app(Path(sys.argv[1])), host='127.0.0.1', port=0)",
+        str(folder),
+    ]
+
+
+def bindings_at(base_url: httpx.URL) -> dict:
+    bindings = json.loads(SERVICES.read_text(encoding="utf-8"))
+    for binding in bindings.values():
+        binding["endpoint"] = str(base_url.join(httpx.URL(binding["endpoint"]).path))
+    return bindings
+
+
 def assistant_command(graph: Path, services: Path) -> list[str]:
     return [
         sys.executable,

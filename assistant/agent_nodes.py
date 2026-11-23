@@ -19,13 +19,13 @@ from assistant.agent_state import AgentState, moved
 from assistant.conversation import Conversation, kept, line
 from assistant.intent import KNOWLEDGE, NOT_SURE, FeatureIndex, choose
 from assistant.lifecycle import AFTER_STOP, CANCEL, StoppableBridge, fast, wants_cancel
-from assistant.lookups import Candidate, FixtureLookups, plain, source_of, typed
+from assistant.lookups import Candidate, FixtureLookups, LookupUnavailable, plain, source_of, typed
 from assistant.models import Chat, ModelError
 from assistant.navigator import CrossesUserOnly, Navigator, NoRoute, Plan
 from assistant.slots import checked, extract, hidden
 from assistant.steps import masked, show
 from assistant.task_runner import Bridge, TaskReport, TaskRunner
-from assistant.words import field_words, fixed, installment_of, limits, options, plates, when
+from assistant.words import field_words, fixed, installment_of, limits, options, plate_label, plates, when
 
 MODEL_SEES = ("ref", "type", "ask", "description")
 NOT_SURE_OPTIONS = 4  # the closest features a not-sure question offers (owner, 19 Nov 2026)
@@ -217,14 +217,19 @@ class Nodes:
     def plate(self, plan: dict, values: dict) -> dict:
         """Code only: a saved plate fills the plate's parts with its own, as the app does when it is
         tapped; a plate the user typed, in whole or in part, is a new one, so a correction counts."""
-        refs = {item["ref"] for item in plan["requirements"]}
-        records = {row["id"]: row["plate"] for row in self.tools.lookups.records("vehicles")}
+        refs = {item["ref"]: item for item in plan["requirements"]}
         found = {}
         for ref, parts in plates().items():
             chosen = values.get(ref)
             if ref not in refs or chosen == "new":
                 continue
-            saved = dict(zip(parts, records[chosen], strict=True)) if chosen else {}
+            saved = {}
+            if chosen:
+                current = self.tools.lookups.saved_plates().get(chosen)
+                offered = next((row["label"] for row in refs[ref]["options"] if row["key"] == chosen), None)
+                if current is None or plate_label(current) != offered:
+                    raise LookupUnavailable("vehicles")
+                saved = dict(zip(parts, current, strict=True))
             if any(part in values and values[part] != saved.get(part) for part in parts):
                 found[ref] = "new"
             else:
