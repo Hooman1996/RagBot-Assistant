@@ -89,6 +89,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #215 Demo 6/8 NegahOrbit web client | Done | The Agentic Assistant entry opens the Persian web client. Configured graph and service bindings drive both transfer reviews and read-only statements ([browser replay](runbook/standalone-assistant.md#demo-68-web-client)). |
 | #214 Demo 5/8 standalone candidate journeys | Done | All five candidates passed configured Android review and applicable fault checks. The owner records the web features and first journey in #215 ([candidate matrix](runbook/standalone-assistant.md#demo-58-candidate-journey-replay)) |
 | #213 Demo 4/8 Android bridge against standalone | Done | The pinned replica completed all four bridge operations and the Persian internal transfer and correction against standalone. Both reviews used the alternate mock recipient, and 36 device tests passed ([runbook and acceptance](runbook/standalone-assistant.md#demo-48-acceptance)) |
 | #212 Demo 3/8 graph and service configuration | Done | The standalone process loads a validated profile and read-only HTTP bindings for internal transfer. Two graph variants and two mock endpoints changed the real plan and recipient at the same review with the same bridge. Invalid configs failed startup and lookup failures surfaced in history ([runbook and acceptance](runbook/standalone-assistant.md#demo-38-acceptance)) |

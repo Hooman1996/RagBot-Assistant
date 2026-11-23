@@ -212,3 +212,138 @@ reported 0 lint errors and 116 warnings.
 
 Record the selected web features and the first web journey in an issue comment before web UI
 implementation begins. [Demo 6/8 issue](https://github.com/Hooman1996/RagBot-Assistant/issues/215)
+
+## Demo 6/8 web client
+
+The owner selected internal transfer first, then account statement and card transfer.
+[Owner selection](https://github.com/Hooman1996/RagBot-Assistant/issues/215#issuecomment-7102378696)
+
+Start the provider and the web-configured Assistant in separate terminals from the checkout
+in the `assistant` environment.
+
+```bash
+python -m uvicorn mock_services.app:create_app --factory --host 127.0.0.1 --port 8110
+```
+
+```bash
+set -a
+source .env
+set +a
+python -m assistant --graph app_profiles/web.profile.json --services mock_services/web-services.json
+```
+
+Open [NegahOrbit on loopback](http://127.0.0.1:8101/), select **Agentic Assistant** and click
+**Launch Service**. The registry opens `/banking/` in the same tab. The standalone process serves
+the checked-in assets, the existing session/bridge API and the browser's read-only display data
+on the same origin. Each tab keeps its session, current screen, masked draft and pending bridge
+delivery in session storage. Reloading the page resumes polling with that session. The backend
+holds conversations in memory. Start a fresh tab after restarting the backend with a new graph.
+
+For a separate static host, serve the contents of `negahorbit-platform/` at the site root and
+forward `/assistant/v1/` to the standalone loopback listener. The checked-in Nginx configuration
+includes this location. The proxy and Assistant must share the same loopback network namespace.
+For example, with the backend on 8101 and a local Nginx installation:
+
+```bash
+mkdir -p local/scratch/web-nginx
+cat > local/scratch/web-nginx/nginx.conf <<EOF
+daemon off;
+pid nginx.pid;
+error_log error.log;
+events {}
+http {
+  include /etc/nginx/mime.types;
+  access_log off;
+  client_body_temp_path client_temp;
+  proxy_temp_path proxy_temp;
+  fastcgi_temp_path fastcgi_temp;
+  uwsgi_temp_path uwsgi_temp;
+  scgi_temp_path scgi_temp;
+  server {
+    listen 127.0.0.1:8120;
+    root $PWD/negahorbit-platform;
+    location /assistant/v1/ { proxy_pass http://127.0.0.1:8101; }
+  }
+}
+EOF
+nginx -p "$PWD/local/scratch/web-nginx/" -c nginx.conf
+```
+
+Run Nginx as a user with read access to the static directory and write access to the prefix.
+Open the portal on 8120. This check verifies JSON forwarding independently of the page.
+
+```bash
+curl -fsS -H 'X-Assistant-Session: check' http://127.0.0.1:8120/assistant/v1/web/profile |
+  python -c 'import json,sys; print([f["intent"] for f in json.load(sys.stdin)["features"]])'
+```
+
+The web graph controls the offered journeys, routes, forms and required fields. The service
+file binds accounts, saved account recipients, source cards, saved card recipients and
+`statement` to explicit loopback HTTP endpoints. The statement provider accepts an account key
+and inclusive Gregorian ISO dates (`YYYY-MM-DD`). Like the replica, the synthetic provider applies
+the transaction fixture's day offsets to today and its balance offsets to the selected account.
+A successful empty range displays an empty-state message. A failed lookup ends with the provider
+error. All amounts and balances are signed integer IRR.
+
+### Browser replay
+
+With the project emulator stopped, run from the checkout using Node, Playwright Core and a
+compatible headless Chromium. The recorded run used Playwright Core 1.49.1 and Chromium 131.
+
+```bash
+export PLAYWRIGHT_CORE="$PWD/local/toolchain/playwright-core"
+export CHROMIUM_PATH="$PWD/local/toolchain/web-browser/chromium"
+mkdir -p local/scratch/web-browser
+export TMPDIR="$PWD/local/scratch/web-browser"
+local/toolchain/node/bin/node tests/browser/web-demo.cjs
+python -m pytest tests/backend/test_web_statement.py
+```
+
+For the configuration replay, copy the graph, service file, and the alternate provider's
+`accounts.json` and `transactions.json` under `local/scratch/demo6/`. In the graph copy
+`graph-b.json`, append the edge
+`{"from":"S-026","to":"S-192","action":"transfer-internal"}`. In `provider-b/transactions.json`,
+set the first statement row's amount to `2100000`. In `services-b.json`, change just the
+statement endpoint to `http://127.0.0.1:8111/statement`. Use these commands in separate terminals:
+
+```bash
+python -c 'from pathlib import Path; import uvicorn; from mock_services.app import create_app; uvicorn.run(create_app(Path("local/scratch/demo6/provider-b")),host="127.0.0.1",port=8111)'
+python -m assistant --port 8102 --graph local/scratch/demo6/graph-b.json --services local/scratch/demo6/services-b.json
+```
+
+Point the local static host's proxy at port 8102 and restart it. The same client checks the
+alternate route and compares the rendered rows with that provider. To check failure, copy
+`services-b.json` to `services-fault.json`, change its statement endpoint path to `/unavailable`
+and run the third command in a separate terminal with the same model settings.
+
+```bash
+DEMO_URL=http://127.0.0.1:8120 PROVIDER_URL=http://127.0.0.1:8111 SHORT_ROUTE=1 \
+  local/toolchain/node/bin/node tests/browser/web-demo.cjs
+python -m assistant --port 8103 --graph app_profiles/web.profile.json --services local/scratch/demo6/services-fault.json
+DEMO_URL=http://127.0.0.1:8103 EXPECT_FAILURE=1 STATEMENT_ONLY=1 \
+  local/toolchain/node/bin/node tests/browser/web-demo.cjs
+```
+
+### Evidence for Demo 7/8
+
+Implementation `e18847caad34663ea2b6818ca72520389ac050e3`, graph blob
+`64d0e2874c64aa972aaa83c78bce0a0638077c85`, bindings blob
+`9241d52ea574304acf2acf1e32c22b76474c6f25`. The 23 November 2026 replay used the development
+model, the workflow agent, Chromium and the synthetic providers. Local evidence ID is `DEMO-6`.
+
+| Journey | Browser observation and comparison |
+|---|---|
+| Internal transfer | S-026 → S-193 → S-192, then S-173. Source `****0579`, recipient `****7800`, 3,000,000 IRR. Correcting the amount displayed 3,200,000 IRR. Cancel ended the task. Graph B went directly from S-026 to S-192. |
+| Account statement | «صورتحساب حسابم رو نشون بده» requested the account and range. For savings `****0579`, 16–23 November, W-statement showed 2,000,000, −750,000 and 1,000,000 IRR. Dates, descriptions and balances matched the provider. The pending message was «در حال دریافت صورتحساب» and the rendered result reported «صورتحساب نمایش داده شد». Provider B changed only the first amount to 2,100,000 IRR. A missing endpoint displayed the banking lookup error and no table. |
+| Card transfer | The user selected source `****3566`. S-176 displayed that source, recipient `****8880` and exactly 2,500,000 IRR. |
+
+For short-term account `****3231` on 21 November, reloading during a pending statement read
+recovered one row with a −750,000 IRR amount and 10,500,000 IRR balance. On 23 November, the
+same account showed the empty-state message. The first replay exposed an aborted browser fetch
+being recorded as a provider failure on unload. The client now retains the delivered command
+through unload and completes it after reload.
+
+The registry upgrade retained an existing service override and eight entries. The browser switched
+to the stone theme, retained it and the clarification across reload, and fit a 380 px viewport.
+The acceptance run passed 176 project checks, 517 Python tests and both Ruff checks. The Android
+debug build, JVM tests and lint passed. Lint reported 0 errors and 116 warnings.
