@@ -10,7 +10,7 @@ it fills nothing the plan does not list, so a secret field can never be sent.
 from dataclasses import asdict, dataclass, field
 from typing import Protocol
 
-from assistant.lookups import Ambiguous, FixtureLookups, NotFound
+from assistant.lookups import Ambiguous, FixtureLookups, LookupUnavailable, NotFound
 from assistant.navigator import Leg, Navigator, Plan, Requirement
 from assistant.steps import show
 
@@ -215,6 +215,8 @@ class TaskRunner:
                 "trace": result.get("trace", []),
             }
         )
+        if result.get("error_code") == "lookup_unavailable":
+            raise LookupUnavailable(operation)
         if result["outcome"] == "uncertain":
             raise Uncertain(f"معلوم نیست {operation} انجام شد یا نه: {why(result)}")
         return result

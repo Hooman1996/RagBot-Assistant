@@ -44,7 +44,12 @@ def create_standalone_app(graph: Path, services: Path, *, queue: CommandQueue | 
     """Builds the standalone Assistant API from two explicit configuration files."""
     profile = load_graph(graph)
     lookups = load_lookups(services, profile)
-    return build_app(queue or CommandQueue(), profile, development=False, lookups=lookups)
+    app = build_app(queue or CommandQueue(), profile, development=False, lookups=lookups)
+    if "W-statement" in profile["screens"]:
+        from assistant.web_client import mount_web_client
+
+        mount_web_client(app, profile, lookups)
+    return app
 
 
 def build_app(

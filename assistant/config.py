@@ -132,11 +132,12 @@ def load_lookups(path: Path, profile: dict) -> HttpLookups:
     navigator = Navigator(profile)
     for feature in navigator.features:
         intent = feature["intent"]
-        if intent not in DEMO_FEATURES:
+        web_statement = intent == "account_statement" and feature["review"] == "W-statement"
+        if intent not in DEMO_FEATURES and not web_statement:
             continue
         required = {
             item.lookup for item in navigator.plan_feature(HOME, feature).requirements if item.lookup
-        } | DEMO_FEATURES[intent]
+        } | ({"statement", "accounts"} if web_statement else DEMO_FEATURES[intent])
         missing = required - bindings.keys()
         if missing:
             raise ConfigError(f"{path}: missing binding for {intent}: {', '.join(sorted(missing))}")

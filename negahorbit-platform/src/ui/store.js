@@ -85,6 +85,18 @@ export class PlatformStore {
         hasOverride = Boolean(localStorage.getItem(STORAGE_KEY));
       } catch (_) {}
 
+      // Preserve saved service URLs when upgrading the original Assistant placeholder.
+      const placeholder = 'TODO: http://10.0.0.10:8007';
+      if (hasOverride && prevHash !== nextHash &&
+          prevHash === hashString(rawText.replace('"/banking/"', JSON.stringify(placeholder)))) {
+        const assistant = this.getServiceById('banking-agentic-assistant');
+        if (assistant?.url === placeholder) assistant.url = '/banking/';
+        this.persistOverride();
+        localStorage.setItem(STORAGE_HASH_KEY, nextHash);
+        this.emit('config');
+        return parsed;
+      }
+
       // If services.json changed on disk (or no local override exists), adopt services.json
       if (!hasOverride || prevHash !== nextHash) {
         this.config = clone(parsed);

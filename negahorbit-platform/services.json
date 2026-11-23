@@ -112,7 +112,7 @@
       "title": "Agentic Assistant",
       "kicker": "Banking App",
       "tagline": "An autonomous banking copilot that plans and executes multi-step financial actions inside the app.",
-      "url": "TODO: http://10.0.0.10:8007",
+      "url": "/banking/",
       "openIn": "same-tab",
       "status": "live",
       "form": "agentic-card-orbit"

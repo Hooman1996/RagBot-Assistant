@@ -1,5 +1,6 @@
 """Typed, read-only HTTP lookups for the configured demo operations."""
 
+from datetime import date
 from ipaddress import ip_address
 from typing import Literal
 
@@ -15,12 +16,14 @@ from mock_services.lookup_models import (
     SavedAccountRecord,
     SavedCardRecord,
     SavedPlateRecord,
+    Statement,
 )
 
 LookupOperation = Literal[
-    "accounts", "cards", "contacts.account", "contacts.card", "operators", "vehicles", "loans"
+    "accounts", "cards", "contacts.account", "contacts.card", "operators", "vehicles", "loans", "statement"
 ]
 Adapter = Literal[
+    "statement-http",
     "accounts-http",
     "cards-http",
     "saved-accounts-http",
@@ -30,6 +33,7 @@ Adapter = Literal[
     "loans-http",
 ]
 ADAPTER_FOR: dict[LookupOperation, Adapter] = {
+    "statement": "statement-http",
     "accounts": "accounts-http",
     "cards": "cards-http",
     "contacts.account": "saved-accounts-http",
@@ -102,3 +106,19 @@ class HttpLookups(FixtureLookups):
         if lookup in self.bindings:
             return [row for row in self.records(lookup) if row.get("person")]
         return super().people(lookup)
+
+    def statement(self, account: str, start: date, end: date) -> Statement:
+        params = {"account": account, "start": start.isoformat(), "end": end.isoformat()}
+        try:
+            response = httpx.get(
+                self.bindings["statement"].endpoint, params=params, timeout=3, trust_env=False
+            )
+            response.raise_for_status()
+            result = Statement.model_validate_json(response.content)
+        except (httpx.HTTPError, ValidationError) as error:
+            raise LookupUnavailable("statement") from error
+        if (result.account, result.start, result.end) != (account, start, end) or any(
+            not start <= row.date <= end for row in result.rows
+        ):
+            raise LookupUnavailable("statement")
+        return result
