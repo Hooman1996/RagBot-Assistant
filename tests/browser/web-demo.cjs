@@ -111,6 +111,31 @@ async function replay() {
     assert.equal(await read('card-transfer-destination'), '****8880');
     assert.equal(await read('card-transfer-amount'), '2500000 ریال');
     console.log('PASS card transfer');
+
+    for (const days of [2, 0]) {
+      const tab = await browser.newPage({baseURL: origin});
+      try {
+        await tab.goto('/banking/');
+        const day = date(days);
+        if (days === 2) {
+          // Hold one read until reload so the saved session has a delivered command to recover.
+          await tab.route('**/web/statement?*', () => {}, {times: 1});
+        }
+        await tab.locator('#message').fill('صورتحساب سپرده کوتاه‌مدت از ' + day + ' تا ' + day + ' رو نشون بده');
+        await tab.locator('#send').click();
+        if (days === 2) {
+          await tab.getByText('در حال دریافت صورتحساب', {exact: true}).waitFor();
+          await tab.reload();
+        }
+        await tab.waitForSelector('[data-screen="W-statement"]', {timeout: 90000});
+        assert.equal(await tab.locator('#ledger-account').inputValue(), '****3231');
+        if (days === 2) {
+          assert.deepEqual(await tab.locator('table tr:has(td) td').allTextContents(),
+            [day, 'برداشت از خودپرداز', '-750000', '10500000']);
+        } else await tab.getByText('در این بازه تراکنشی ثبت نشده است.').waitFor();
+      } finally { await tab.close(); }
+    }
+    console.log('PASS second account, refresh during provider read and empty range');
   } finally { await browser.close(); }
 }
 replay().catch(err => { console.error(err); process.exitCode = 1; });

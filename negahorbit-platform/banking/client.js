@@ -14,6 +14,10 @@ const state = JSON.parse(sessionStorage.getItem(storage)) || {
 const save = () => sessionStorage.setItem(storage, JSON.stringify(state));
 save();
 const sessionPath = '/sessions/' + state.session;
+// A navigation can abort fetch before pagehide. Keep the delivered command for the next document.
+let leaving = false;
+window.addEventListener('beforeunload', () => { leaving = true; });
+window.addEventListener('pageshow', () => { leaving = false; });
 let bridge, busy = false, sending = false, connected = false, historyKey;
 let clarification;
 const activity = text => { if (el('activity').textContent !== text) el('activity').textContent = text; };
@@ -103,7 +107,9 @@ async function poll() {
       if (reply.kind === 'command') { state.pending = reply.command; save(); }
     }
     if (state.pending) {
-      state.result = await bridge.execute(state.pending);
+      const result = await bridge.execute(state.pending);
+      if (leaving) return;
+      state.result = result;
       state.event = actionText({...state.result, operation: state.pending.operation, screen: state.screen});
       if (state.result.error_code === 'lookup_unavailable') el('error').textContent = providerError;
       delete state.pending;
