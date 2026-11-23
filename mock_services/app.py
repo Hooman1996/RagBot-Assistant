@@ -1,8 +1,9 @@
 """Loopback demo provider for the candidates' read-only lookups."""
 
+from datetime import date, timedelta
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from assistant.lookups import FIXTURES, FixtureLookups
 from mock_services.lookup_models import (
@@ -14,6 +15,8 @@ from mock_services.lookup_models import (
     SavedAccountRecord,
     SavedCardRecord,
     SavedPlateRecord,
+    Statement,
+    StatementRow,
 )
 
 
@@ -81,5 +84,29 @@ def create_app(folder: Path = FIXTURES) -> FastAPI:
             )
             for row in fixtures.records("loans")
         ]
+
+    @app.get("/statement")
+    def statement(account: str, start: date, end: date) -> Statement:
+        source = next((row for row in fixtures.records("accounts") if row["key"] == account), None)
+        if source is None:
+            raise HTTPException(404, "unknown_account")
+        if start > end:
+            raise HTTPException(422, "invalid_range")
+        today = date.today()
+        rows = []
+        for template in fixtures.records("statements"):
+            day = today - timedelta(days=template["daysAgo"])
+            if start <= day <= end:
+                balance = source["balance"]
+                rows.append(
+                    StatementRow(
+                        date=day,
+                        description=template["description"],
+                        amount=template["amount"],
+                        balance=None if balance is None else balance - template["balanceOffset"],
+                        unit="IRR",
+                    )
+                )
+        return Statement(account=account, start=start, end=end, rows=rows)
 
     return app

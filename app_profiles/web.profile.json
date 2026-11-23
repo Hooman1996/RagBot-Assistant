@@ -1,0 +1,223 @@
+{
+  "profile_version": 1,
+  "screens": [
+    "S-016",
+    "S-026",
+    "S-173",
+    "S-174",
+    "S-176",
+    "S-192",
+    "S-193",
+    "W-statement"
+  ],
+  "edges": [
+    {
+      "from": "S-026",
+      "to": "S-174",
+      "action": "menu-card-transfer"
+    },
+    {
+      "from": "S-026",
+      "to": "S-193",
+      "action": "menu-transfer"
+    },
+    {
+      "from": "S-026",
+      "to": "S-016",
+      "action": "menu-statement"
+    },
+    {
+      "from": "S-193",
+      "to": "S-192",
+      "action": "transfer-internal"
+    },
+    {
+      "from": "S-174",
+      "to": "S-176",
+      "action": "card-transfer-review"
+    },
+    {
+      "from": "S-192",
+      "to": "S-173",
+      "action": "account-transfer-continue"
+    },
+    {
+      "from": "S-016",
+      "to": "W-statement",
+      "action": "view-statement"
+    }
+  ],
+  "forms": [
+    {
+      "id": "S-174",
+      "fields": [
+        {
+          "ref": "card-transfer-source",
+          "type": "ref",
+          "requires": true,
+          "ask": "از کدام کارت انتقال انجام شود؟",
+          "description": "کارت مبدا",
+          "lookup": "cards"
+        },
+        {
+          "ref": "card-transfer-destination",
+          "type": "ref",
+          "requires": true,
+          "ask": "به چه کسی یا کدام کارت منتقل شود؟",
+          "description": "کارت مقصد",
+          "lookup": "contacts.card"
+        },
+        {
+          "ref": "card-transfer-amount",
+          "type": "money",
+          "requires": true,
+          "ask": "چند ریال منتقل شود؟",
+          "description": "مبلغ انتقال"
+        }
+      ]
+    },
+    {
+      "id": "S-192",
+      "fields": [
+        {
+          "ref": "account-transfer-source",
+          "type": "ref",
+          "requires": true,
+          "ask": "از کدام حساب برداشت شود؟",
+          "description": "حساب مبدا",
+          "lookup": "accounts"
+        },
+        {
+          "ref": "account-transfer-destination",
+          "type": "ref",
+          "requires": true,
+          "ask": "شماره حساب یا شبای مقصد چیست؟",
+          "description": "حساب مقصد",
+          "lookup": "contacts.account"
+        },
+        {
+          "ref": "account-transfer-amount",
+          "type": "money",
+          "requires": true,
+          "ask": "چند ریال منتقل شود؟",
+          "description": "مبلغ انتقال"
+        },
+        {
+          "ref": "account-transfer-reason",
+          "type": "choice",
+          "requires": true,
+          "ask": "علت انتقال چیست؟",
+          "description": "علت انتقال"
+        },
+        {
+          "ref": "account-transfer-payment-id",
+          "type": "text",
+          "ask": "شناسه واریز چیست؟",
+          "description": "شناسه واریز"
+        },
+        {
+          "ref": "account-transfer-withdraw-id",
+          "type": "text",
+          "ask": "شناسه برداشت چیست؟",
+          "description": "شناسه برداشت"
+        },
+        {
+          "ref": "account-transfer-source-description",
+          "type": "text",
+          "ask": "شرح برداشت چیست؟",
+          "description": "شرح مبدا"
+        },
+        {
+          "ref": "account-transfer-destination-description",
+          "type": "text",
+          "ask": "شرح واریز چیست؟",
+          "description": "شرح مقصد"
+        }
+      ]
+    },
+    {
+      "id": "S-016",
+      "fields": [
+        {
+          "ref": "ledger-account",
+          "type": "ref",
+          "ask": "صورتحساب کدام حساب را می‌خواهید؟",
+          "description": "حساب صورتحساب",
+          "lookup": "accounts",
+          "requires": true
+        },
+        {
+          "ref": "ledger-start",
+          "type": "text",
+          "ask": "از چه تاریخی؟ (میلادی، YYYY-MM-DD)",
+          "description": "از تاریخ (میلادی، YYYY-MM-DD)",
+          "requires": true
+        },
+        {
+          "ref": "ledger-end",
+          "type": "text",
+          "ask": "تا چه تاریخی؟ (میلادی، YYYY-MM-DD)",
+          "description": "تا تاریخ (میلادی، YYYY-MM-DD)",
+          "requires": true
+        }
+      ]
+    }
+  ],
+  "features": [
+    {
+      "intent": "card_transfer",
+      "title": "کارت به کارت",
+      "description": "Prepare a card-to-card transfer up to its review.",
+      "required_slots": [
+        "card-transfer-source",
+        "card-transfer-destination",
+        "card-transfer-amount"
+      ],
+      "lookups": [
+        "cards",
+        "contacts"
+      ],
+      "destination": "S-174",
+      "form": "S-174",
+      "review": "S-176"
+    },
+    {
+      "intent": "internal_transfer",
+      "title": "انتقال داخلی",
+      "description": "Prepare an internal account transfer up to its review.",
+      "required_slots": [
+        "account-transfer-source",
+        "account-transfer-destination",
+        "account-transfer-amount",
+        "account-transfer-reason"
+      ],
+      "lookups": [
+        "accounts",
+        "contacts"
+      ],
+      "destination": "S-192",
+      "form": "S-192",
+      "review": "S-173"
+    },
+    {
+      "intent": "account_statement",
+      "title": "صورتحساب",
+      "description": "Show an account statement for a date range.",
+      "required_slots": [
+        "ledger-account",
+        "ledger-start",
+        "ledger-end"
+      ],
+      "lookups": [
+        "accounts"
+      ],
+      "destination": "S-016",
+      "form": "S-016",
+      "review": "W-statement"
+    }
+  ],
+  "user_only_actions": [
+    "submit",
+    "confirm"
+  ]
+}

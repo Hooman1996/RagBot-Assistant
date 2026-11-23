@@ -1,5 +1,6 @@
 """The synthetic values exposed by the read-only demo lookup endpoints."""
 
+from datetime import date
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -78,3 +79,22 @@ class LoanRecord(BaseModel):
     id: str
     title: str
     installments: list[LoanInstallmentRecord]
+
+
+class StatementRow(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    date: date
+    description: str
+    amount: int
+    balance: int | None
+    unit: Literal["IRR"]
+
+
+class Statement(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    account: str
+    start: date
+    end: date
+    rows: list[StatementRow]

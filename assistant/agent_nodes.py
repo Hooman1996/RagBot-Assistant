@@ -489,6 +489,8 @@ class Nodes:
     def ready_for_user(self, state: AgentState) -> dict:
         """Tells the user what was prepared. Only the user checks and confirms it."""
         feature = self.features[state["plan"]["intent"]]
+        if feature["review"] == "W-statement":
+            return moved(state, "ready_for_user", "completed") | {"reply": "صورتحساب نمایش داده شد."}
         if feature["form"] is None:
             reply = replies.PAGE_OPEN.format(title=feature["title"])
             return moved(state, "ready_for_user", "completed") | {"reply": reply}

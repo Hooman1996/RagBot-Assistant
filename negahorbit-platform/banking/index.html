@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>دستیار بانکی | NegahOrbit</title>
+  <link rel="stylesheet" href="../src/styles/tokens.css">
+  <link rel="stylesheet" href="../src/styles/components.css">
+  <link rel="stylesheet" href="banking.css">
+</head>
+<body>
+<header><a href="/">بازگشت به نگاه اوربیت</a><div id="themes" dir="ltr"></div></header>
+<main>
+  <section class="assistant"><div class="identity"><div id="character"></div><div>
+    <h1>دستیار بانکی</h1><p id="activity" role="status">در حال اتصال…</p>
+  </div></div>
+  <div id="messages" aria-label="گفت‌وگو"></div>
+  <div id="choices"></div>
+  <form id="compose"><label for="message">پیام شما</label><textarea id="message" rows="2" required></textarea>
+    <div class="actions"><button id="send" disabled>ارسال پیام</button><button type="button" id="cancel" hidden>لغو کار</button></div>
+  </form><p id="error" role="alert"></p></section>
+  <section class="workspace" aria-labelledby="screen-title"><h2 id="screen-title">خدمات بانکی</h2>
+    <div id="screen"></div>
+  </section>
+</main>
+<script type="module" src="client.js"></script>
+</body></html>
