@@ -168,3 +168,47 @@ and `BridgeServicesTest`. Earlier runs reproduced a blocked picker being reporte
 dismissal finished. The bridge now waits for the picker to close before reporting the result.
 The 178 Android JVM tests, 505 Python tests, 174 project checks, and both Ruff checks also passed.
 Android lint reported 0 errors and 116 warnings.
+
+## Demo 5/8 candidate journey replay
+
+On 23 Nov 2026, the standalone backend and synthetic provider ran the branch code recorded in
+`726f16856064a93758fac14a6996c73293a1ac4f`. The default workflow used profile version 1 from
+`app_profiles/replica.profile.json` (Git blob `437b9495872df83593df982a10e3cf5f90fdbf34`) and
+`mock_services/service-bindings.example.json` (Git blob `3304489a69135ecd0f5ca74e8661c3eaa77dfa1f`).
+The pinned `ragbot_investigation` emulator ran Android 15 and replica 0.1 (version code 1),
+built from the merged Demo 4 revision `e874284d9d27` with the standalone bridge address and a
+fresh demo session. The replica started with cleared app data, and the provider read the
+repository's synthetic fixtures.
+
+The replay sent the following requests through the in-app assistant panel. The backend history
+confirmed the screen and final bridge operation. The replica UI tree supplied the actual values.
+Identifiers are masked. Each endpoint listed in the matrix returned HTTP 200 during its replay.
+
+| Candidate and panel input | Service endpoints | Expected review fields | Actual review fields and result |
+|---|---|---|---|
+| Card transfer. «۲۵۰ هزار تومن به رضا کارت به کارت کن», then choose source `****3566`. | `/cards`, `/saved-cards` | S-176, source `****3566`, destination `****8880` (رضا محمدی), 2,500,000 IRR. | **Pass.** S-176 displayed source `****3566`, destination `****8880`, رضا محمدی, and 2,500,000 IRR. The panel waited for a source choice on S-174 before opening review. |
+| Internal transfer. «۳۰۰ هزار تومن از سپرده پس‌انداز به حساب رضا انتقال داخلی بزن بابت اجاره». | `/accounts`, `/saved-accounts` | S-173, savings `****0579`, saved recipient `****7800`, 3,000,000 IRR, reason «پرداخت اجاره». | **Pass.** S-173 displayed source `****0579`, recipient `****7800`, 3,000,000 IRR, and «پرداخت اجاره». The corrected review displayed 3,200,000 IRR with the same accounts and reason. |
+| Mobile top-up. «از سپرده پس‌انداز برای [شمارهٔ آزمایشی H-079، پایان ۷۴۹۶] شارژ همراه اول ۲۰ هزار تومنی بخر». | `/accounts`, `/operators` | S-212, savings `****0579`, همراه اول, mobile `****7496`, 200,000 IRR. | **Pass.** S-212 displayed savings `****0579`, همراه اول, mobile `****7496`, and 200,000 IRR. |
+| Saved-plate pollution inquiry. «عوارض آلودگی هوا», then choose the saved plate ending `67`. | `/saved-plates` | S-257, all four plate fields for synthetic `plate-1` (`** ب *** ایران 67`), and «خودم» selected. This is the inquiry boundary before any fee is shown. | **Pass.** The question waited at S-256. S-257 matched all four saved fields, with «خودم» checked and the inquiry button untouched. |
+| Loan installment. «قسط بعدی وام شخصیمو از سپرده کوتاه‌مدت بده». | `/loans`, `/accounts` | S-331, short-term deposit `****3231`, personal loan file `****1287`, guarantee account `****4131`, no withdrawal ID, installment 2 and total 5,000,000 IRR. | **Pass.** S-331 displayed `****3231`, `****1287`, `****4131`, a dash for withdrawal ID, and 5,000,000 IRR for installment 2 and the total. |
+
+| Fault or follow-up | Observed result |
+|---|---|
+| Ambiguous card source | The panel offered both eligible debit cards, `****3566` and `****4544`. It stayed at S-174 until the user selected `****3566`. |
+| Correction and cancellation | «نه، مبلغ رو ۳۲۰ هزار تومن کن» opened a fresh S-173 at 3,200,000 IRR. **لغو کار** cleared the task and history showed `cancelled`. The corrected review remained open. |
+| Provider timeout and retry | Pausing the synthetic provider timed out the top-up's `operators` lookup. History reported `failed` with the banking-service message and the queue had no bridge command. After the provider recovered, repeating the request in the same panel reached S-212 with the four expected fields. |
+| Bridge disconnect and reconnect | A loopback fault proxy dropped the replica's bridge connections while the panel remained reachable. The undelivered internal-transfer command expired against observation 2 and the task paused. The user opened the transfer menu while disconnected. On reconnect the replica sent observation 3 at S-193. «ادامه» planned from S-193 and reached S-173 with the original accounts, reason, and 3,000,000 IRR. A backend regression check also covers a delivered command with a lost result. It stops the task and requires a fresh poll before another command. |
+
+The five happy paths stopped at `show_review`. The configured provider uses the same synthetic
+records as the replica. The replica renders the loan amount and the inquiry boundary from its
+fixtures. All five candidates passed the configured replay and the applicable fault checks. The
+replay found no remaining defects in these five scenarios. The local evidence ID is `DEMO-5`.
+See [the Android replay runbook](../bridge/try-it.md#verify-the-replica-against-standalone) for setup.
+
+The acceptance commands passed with 174 project checks, 511 Python tests, and both Ruff checks.
+The development bridge smoke reached S-176 and refused S-003. The standalone bridge smoke reached
+S-173 and verified the rendered account transfer. The Android build passed 178 JVM tests and
+reported 0 lint errors and 116 warnings.
+
+Record the selected web features and the first web journey in an issue comment before web UI
+implementation begins. [Demo 6/8 issue](https://github.com/Hooman1996/RagBot-Assistant/issues/215)
