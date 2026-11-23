@@ -1,0 +1,24 @@
+<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="negahOrbitGrad" x1="10" y1="54" x2="54" y2="10" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0B4F39"/>
+      <stop offset="52%" stop-color="#136F52"/>
+      <stop offset="100%" stop-color="#3D9979"/>
+    </linearGradient>
+    <clipPath id="diamondClip">
+      <rect x="13" y="13" width="38" height="38" rx="9" transform="rotate(45 32 32)"/>
+    </clipPath>
+  </defs>
+  <ellipse cx="32" cy="32" rx="29" ry="11" transform="rotate(-24 32 32)" stroke="#D8C39E" stroke-opacity="0.55" stroke-width="1.2"/>
+  <rect x="13" y="13" width="38" height="38" rx="9" transform="rotate(45 32 32)" fill="url(#negahOrbitGrad)" stroke="#D8C39E" stroke-opacity="0.5" stroke-width="1"/>
+  <g clip-path="url(#diamondClip)" stroke="#F2EFE9" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 14 V33 L22 37 V54"/>
+    <path d="M24 10 V27 L21 30 V48"/>
+    <path d="M29.5 6 V58"/>
+    <path d="M35 8 V34 L39 38 V54"/>
+    <path d="M40.5 12 V26 L44.5 30 V50"/>
+    <path d="M46 18 V44"/>
+    <path d="M24 22 L27 25 V31"/>
+    <path d="M40.5 36 L37.5 39 V46"/>
+  </g>
+</svg>

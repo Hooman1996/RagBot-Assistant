@@ -1,0 +1,121 @@
+/* ==========================================================================
+   NegahOrbit — Design Tokens & Four Luxury Fintech Palettes
+   Zero external CDN dependencies. Optional local .woff2 fonts can be dropped
+   into assets/fonts/ and enabled below.
+   ========================================================================== */
+
+:root {
+  --font-display: 'Oswald', 'DIN Condensed', 'Bahnschrift', 'Arial Narrow', Impact, sans-serif;
+  --font-grotesk: 'Space Grotesk', 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Inter', sans-serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+
+  --t-theme: 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 1. Obsidian & Champagne (Private-Banking Luxury — Default) */
+:root,
+html[data-theme="obsidian-champagne"] {
+  --bg-canvas:       #0B0C0B;
+  --bg-surface:      #151716;
+  --bg-elevated:     rgba(21, 23, 22, 0.84);
+  --bg-overlay:      rgba(11, 12, 11, 0.92);
+  --bg-input:        #0E100F;
+  --text-primary:    #F2EFE9;
+  --text-secondary:  #9E9B93;
+  --text-muted:      rgba(242, 239, 233, 0.44);
+  --brand:           #136F52;
+  --brand-soft:      rgba(19, 111, 82, 0.22);
+  --accent:          #D8C39E;
+  --accent-soft:     rgba(216, 195, 158, 0.14);
+  --accent-border:   rgba(216, 195, 158, 0.38);
+  --border-subtle:   rgba(242, 239, 233, 0.10);
+  --border-strong:   rgba(216, 195, 158, 0.28);
+  --vignette-edge:   rgba(11, 12, 11, 0.72);
+  --nav-fade:        rgba(11, 12, 11, 0.82);
+  --scrollbar-thumb: rgba(216, 195, 158, 0.32);
+  --selection-bg:    rgba(216, 195, 158, 0.28);
+  --selection-txt:   #F2EFE9;
+  color-scheme: dark;
+}
+
+/* 2. Slate & Platinum (Swiss Editorial Fintech) */
+html[data-theme="slate-platinum"] {
+  --bg-canvas:       #0A0E14;
+  --bg-surface:      #141B24;
+  --bg-elevated:     rgba(20, 27, 36, 0.86);
+  --bg-overlay:      rgba(10, 14, 20, 0.93);
+  --bg-input:        #0D131B;
+  --text-primary:    #F4F7FA;
+  --text-secondary:  #8B9BB0;
+  --text-muted:      rgba(244, 247, 250, 0.42);
+  --brand:           #159C6B;
+  --brand-soft:      rgba(21, 156, 107, 0.20);
+  --accent:          #94A3B8;
+  --accent-soft:     rgba(148, 163, 184, 0.16);
+  --accent-border:   rgba(148, 163, 184, 0.38);
+  --border-subtle:   rgba(244, 247, 250, 0.10);
+  --border-strong:   rgba(148, 163, 184, 0.30);
+  --vignette-edge:   rgba(10, 14, 20, 0.76);
+  --nav-fade:        rgba(10, 14, 20, 0.84);
+  --scrollbar-thumb: rgba(148, 163, 184, 0.32);
+  --selection-bg:    rgba(21, 156, 107, 0.30);
+  --selection-txt:   #F4F7FA;
+  color-scheme: dark;
+}
+
+/* 3. Espresso, Sage & Copper (Editorial Techwear) */
+html[data-theme="espresso-copper"] {
+  --bg-canvas:       #0F0E0D;
+  --bg-surface:      #1B1917;
+  --bg-elevated:     rgba(27, 25, 23, 0.86);
+  --bg-overlay:      rgba(15, 14, 13, 0.93);
+  --bg-input:        #131210;
+  --text-primary:    #EFECE6;
+  --text-secondary:  #9C958B;
+  --text-muted:      rgba(239, 236, 230, 0.44);
+  --brand:           #3D7A62;
+  --brand-soft:      rgba(61, 122, 98, 0.24);
+  --accent:          #D4896A;
+  --accent-soft:     rgba(212, 137, 106, 0.16);
+  --accent-border:   rgba(212, 137, 106, 0.42);
+  --border-subtle:   rgba(239, 236, 230, 0.10);
+  --border-strong:   rgba(212, 137, 106, 0.32);
+  --vignette-edge:   rgba(15, 14, 13, 0.74);
+  --nav-fade:        rgba(15, 14, 13, 0.84);
+  --scrollbar-thumb: rgba(212, 137, 106, 0.36);
+  --selection-bg:    rgba(212, 137, 106, 0.28);
+  --selection-txt:   #EFECE6;
+  color-scheme: dark;
+}
+
+/* 4. Architectural Stone & Emerald (Light Editorial) */
+html[data-theme="architectural-stone"] {
+  --bg-canvas:       #F3F2EE;
+  --bg-surface:      #E6E4DD;
+  --bg-elevated:     rgba(243, 242, 238, 0.90);
+  --bg-overlay:      rgba(243, 242, 238, 0.95);
+  --bg-input:        #ECEAE4;
+  --text-primary:    #111614;
+  --text-secondary:  #525B56;
+  --text-muted:      rgba(17, 22, 20, 0.50);
+  --brand:           #0F6B4A;
+  --brand-soft:      rgba(15, 107, 74, 0.12);
+  --accent:          #0F6B4A;
+  --accent-soft:     rgba(15, 107, 74, 0.10);
+  --accent-border:   rgba(15, 107, 74, 0.34);
+  --border-subtle:   rgba(17, 22, 20, 0.11);
+  --border-strong:   rgba(17, 22, 20, 0.22);
+  --vignette-edge:   rgba(218, 215, 206, 0.42);
+  --nav-fade:        rgba(243, 242, 238, 0.88);
+  --scrollbar-thumb: rgba(17, 22, 20, 0.26);
+  --selection-bg:    rgba(15, 107, 74, 0.20);
+  --selection-txt:   #111614;
+  color-scheme: light;
+}
