@@ -19,7 +19,7 @@ const sessionPath = '/sessions/' + state.session;
 let leaving = false;
 window.addEventListener('beforeunload', () => { leaving = true; });
 window.addEventListener('pageshow', () => { leaving = false; });
-let bridge, busy = false, sending = false, connected = false, historyKey;
+let bridge, busy = false, sending = false, connected = false, historyKey, progressKey;
 let clarification, taskStatus;
 const interactive = () => connected && !busy && !sending && !state.editing;
 const canConfirm = () => interactive() && (state.manual || taskStatus === 'ready_for_user');
@@ -74,7 +74,7 @@ el('cancel').onclick = async () => {
 
 function actionText(step) {
   if (step.outcome !== 'succeeded') return 'انجام کار متوقف شد';
-  if (step.operation === 'navigate') return 'صفحه باز شد';
+  if (step.operation === 'navigate') return 'صفحه آماده شد';
   if (step.operation === 'fill_form') return 'فرم تکمیل شد';
   if (step.operation === 'show_review') return step.screen === 'W-statement' ? 'صورتحساب نمایش داده شد' : 'بازبینی نمایش داده شد';
   return 'صفحه بررسی شد';
@@ -97,7 +97,14 @@ function showHistory(h) {
       return button;
     }));
   }
-  const steps = h.steps;
+  const steps = busy ? [] : h.steps;
+  const nextProgress = JSON.stringify(steps);
+  if (nextProgress !== progressKey) {
+    progressKey = nextProgress;
+    const progress = el('progress');
+    progress.querySelector('ol').replaceChildren(...steps.map(step => node('li', actionText(step))));
+    progress.hidden = steps.length === 0;
+  }
   const status = h.current?.task_state;
   taskStatus = status;
   el('cancel').hidden = !(busy || clarification || ['ready_for_user', 'paused'].includes(status));

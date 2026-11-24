@@ -377,3 +377,85 @@ The interactive replay checks the 500,000 toman request from card ending 4544 ag
 is in the viewport, and the 1,250,000 IRR shortfall prevents confirmation. It also checks the
 desktop manual forms, editing and cancellation, two direct user confirmations, receipt reload,
 the resulting balance and both statement debits.
+
+## Demo 7/8 web rehearsal
+
+Start the [web profile and provider](#demo-68-web-client) in the `assistant` environment. Check out
+the revision listed in the acceptance record before starting. With a separate static host, start
+the local [Nginx proxy](#demo-68-web-client) as shown above and open
+[NegahOrbit on port 8120](http://127.0.0.1:8120/). Use a fresh browser profile for each rehearsal.
+Provider fixtures are read-only. A fresh browser profile clears theme and URL overrides, drafts,
+and any synthetic ledger debits. Restart the standalone process between rehearsals to clear its
+in-memory conversation and command state.
+
+### Presenter script
+
+1. Select **Agentic Assistant**, then **Launch Service**. From the dashboard settings drawer,
+   change its URL to `/banking/?rehearsal=1`, reload the dashboard and launch again. Check the query
+   string, then reset the registry in the drawer. The home banking panel offers the three journeys
+   below.
+2. Ask «۳۰۰ هزار تومن از سپرده پس‌انداز به حساب رضا انتقال داخلی بزن بابت اجاره». On S-173
+   check source `****0579`, recipient `****7800` and 3,000,000 IRR. Say «نه، مبلغ رو ۳۲۰ هزار
+   تومن کن». Check 3,200,000 IRR, then choose **لغو کار** and wait for **کار لغو شد**.
+3. Ask «صورتحساب حسابم رو نشون بده». Reload while the account choices are visible. Select the
+   savings account ending 0579 and request the last seven days through today, using ISO dates.
+   Open **مراحل اجراشده** beside the mascot. W-statement displays Gregorian dates, descriptions,
+   exact signed IRR amounts and balances. For the short-term account ending 3231, today's range
+   has no rows in a fresh browser profile.
+4. Ask «۲۵۰ هزار تومن به رضا کارت به کارت کن» and choose source `****3566`. On S-176 check
+   recipient `****8880` and 2,500,000 IRR. End the presentation at the review. The predecessor
+   browser procedure also exercises the separate user's mock confirmation click.
+
+### API and configuration handoff
+
+The static host forwards `/assistant/v1/` to the standalone listener with `X-Assistant-Session`
+intact. The client uses the five [session and bridge calls](#session-and-bridge-calls) plus the
+read-only web display endpoints. The completed progress list uses the session's `history.steps`
+in recorded order. The status above it reflects pending clarification, work, completion, failure
+and reconnect. The four bridge operations are `observe`, `navigate`, `fill_form` and
+`show_review`.
+
+These are the repeatable inputs for the provider change and recovery. Generate the variants
+under the ignored scratch directory from the checked-in [web bindings](../../mock_services/web-services.json)
+and [synthetic fixtures](../../mock_services/fixtures/transactions.json).
+
+| Case | `statement` endpoint | Expected statement result |
+|---|---|---|
+| A | `http://127.0.0.1:8110/statement` | Savings account over seven days shows 2,000,000, −750,000 and 1,000,000 IRR. |
+| B | `http://127.0.0.1:8111/statement` | Copy `accounts.json` and `transactions.json` to the alternate provider folder. Set `statement[0].amount` to 2100000. The first row changes to 2,100,000 IRR. |
+| Fault | `http://127.0.0.1:8111/unavailable` | The provider's 404 produces the banking lookup error and an empty results pane. |
+
+For B, start the [alternate provider](#browser-replay). Restart the standalone process on the
+same port with the same graph and the B bindings file. For the fault, restart it with the fault
+bindings file. To recover, restart it with the original A bindings and open a fresh profile.
+The browser files and proxy address stay the same through these runs.
+
+### Automated rehearsal
+
+Set the Playwright and Chromium paths shown in [Browser replay](#browser-replay), then run the
+browser checks with the proxy on port 8120. Each Node invocation launches a fresh Chromium
+profile. Run the A command three times, restarting the Assistant between invocations.
+
+```bash
+export DEMO_URL=http://127.0.0.1:8120
+local/toolchain/node/bin/node tests/browser/web-demo.cjs
+local/toolchain/node/bin/node tests/browser/interactive-bank.cjs
+
+# After restarting with the B bindings
+PROVIDER_URL=http://127.0.0.1:8111 STATEMENT_ONLY=1 local/toolchain/node/bin/node tests/browser/web-demo.cjs
+
+# After restarting with the fault bindings
+EXPECT_FAILURE=1 STATEMENT_ONLY=1 local/toolchain/node/bin/node tests/browser/web-demo.cjs
+
+# After restoring the A bindings
+STATEMENT_ONLY=1 local/toolchain/node/bin/node tests/browser/web-demo.cjs
+
+python tools/project_checks.py all
+python -m pytest
+ruff check .
+ruff format --check .
+```
+
+Row dates are relative to the provider's local day. Use the same local timezone for the browser
+and provider and finish each replay within one provider day. The browser profiles use the
+workflow agent and synthetic accounts. The standalone service runs one agent turn at a time.
