@@ -9,6 +9,7 @@
 </head>
 <body>
 <header><a href="/">بازگشت به نگاه اوربیت</a><div id="themes" dir="ltr"></div></header>
+<nav aria-label="بخش‌های برنامه"><button id="open-bank">بانک من</button><button id="open-chat">گفت‌وگو با دستیار</button></nav>
 <main>
   <section class="assistant"><div class="identity"><div id="character"></div><div>
     <h1>دستیار بانکی</h1><p id="activity" role="status">در حال اتصال…</p>
@@ -18,8 +19,9 @@
   <form id="compose"><label for="message">پیام شما</label><textarea id="message" rows="2" required></textarea>
     <div class="actions"><button id="send" disabled>ارسال پیام</button><button type="button" id="cancel" hidden>لغو کار</button></div>
   </form><p id="error" role="alert"></p></section>
-  <section class="workspace" aria-labelledby="screen-title"><h2 id="screen-title">خدمات بانکی</h2>
-    <div id="screen"></div>
+  <section class="workspace" aria-labelledby="screen-title"><details id="portfolio"><summary>حساب‌ها و کارت‌های من</summary><div id="holdings"></div></details>
+    <h2 id="screen-title" tabindex="-1">خدمات بانکی</h2>
+    <div id="screen"></div><button id="bank-home" hidden>بازگشت به خدمات</button>
   </section>
 </main>
 <script type="module" src="client.js"></script>

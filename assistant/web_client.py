@@ -1,6 +1,7 @@
 """Read-only data used by the standalone browser executor."""
 
 from datetime import date
+from hashlib import sha256
 from pathlib import Path
 from typing import Literal
 
@@ -27,6 +28,50 @@ def mount_web_client(app: FastAPI, profile: dict, lookups: HttpLookups) -> None:
             return {
                 row["key"]: "****" + row["number"].translate(DIGITS)[-4:]
                 for row in lookups.records(operation)
+            }
+        except LookupUnavailable as error:
+            raise HTTPException(503, "lookup_unavailable") from error
+
+    @router.get("/portfolio")
+    def portfolio() -> dict:
+        try:
+            accounts = lookups.records("accounts")
+            keys = {r["number"].translate(DIGITS): r["key"] for r in accounts}
+            cards = lookups.records("cards")
+            recipients = {}
+            for kind in ("card", "account"):
+                recipients[kind] = [
+                    {
+                        "key": sha256(r[kind].translate(DIGITS).encode()).hexdigest(),
+                        "number": "****" + r[kind].translate(DIGITS)[-4:],
+                        "name": r["name"],
+                    }
+                    for r in lookups.records("contacts." + kind)
+                ]
+            return {
+                "accounts": [
+                    {
+                        "key": r["key"],
+                        "number": "****" + r["number"].translate(DIGITS)[-4:],
+                        "identity": sha256(r["number"].translate(DIGITS).encode()).hexdigest(),
+                        "label": r["type"],
+                        "balance": r["balance"],
+                        "unit": r["unit"],
+                    }
+                    for r in accounts
+                ],
+                "cards": [
+                    {
+                        "key": r["key"],
+                        "number": "****" + r["number"].translate(DIGITS)[-4:],
+                        "identity": sha256(r["number"].translate(DIGITS).encode()).hexdigest(),
+                        "account": keys.get((r["primaryAccount"] or "").translate(DIGITS)),
+                        "kind": r["kind"],
+                        "status": r["status"],
+                    }
+                    for r in cards
+                ],
+                "recipients": recipients,
             }
         except LookupUnavailable as error:
             raise HTTPException(503, "lookup_unavailable") from error

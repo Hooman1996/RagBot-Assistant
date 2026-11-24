@@ -89,6 +89,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #224 Interactive banking client | Done | All three selected features support manual use. Transfer reviews expose funds, direct user confirmation, receipts and tab-local statement debits ([runbook](runbook/standalone-assistant.md#interactive-banking-and-personal-confirmation-224)). |
 | #215 Demo 6/8 NegahOrbit web client | Done | The Agentic Assistant entry opens the Persian web client. Configured graph and service bindings drive both transfer reviews and read-only statements ([browser replay](runbook/standalone-assistant.md#demo-68-web-client)). |
 | #214 Demo 5/8 standalone candidate journeys | Done | All five candidates passed configured Android review and applicable fault checks. The owner records the web features and first journey in #215 ([candidate matrix](runbook/standalone-assistant.md#demo-58-candidate-journey-replay)) |
 | #213 Demo 4/8 Android bridge against standalone | Done | The pinned replica completed all four bridge operations and the Persian internal transfer and correction against standalone. Both reviews used the alternate mock recipient, and 36 device tests passed ([runbook and acceptance](runbook/standalone-assistant.md#demo-48-acceptance)) |

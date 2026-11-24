@@ -13,13 +13,16 @@ const state = JSON.parse(sessionStorage.getItem(storage)) || {
 };
 const save = () => sessionStorage.setItem(storage, JSON.stringify(state));
 save();
+state.editing = false;
 const sessionPath = '/sessions/' + state.session;
 // A navigation can abort fetch before pagehide. Keep the delivered command for the next document.
 let leaving = false;
 window.addEventListener('beforeunload', () => { leaving = true; });
 window.addEventListener('pageshow', () => { leaving = false; });
 let bridge, busy = false, sending = false, connected = false, historyKey;
-let clarification;
+let clarification, taskStatus;
+const interactive = () => connected && !busy && !sending && !state.editing;
+const canConfirm = () => interactive() && (state.manual || taskStatus === 'ready_for_user');
 const activity = text => { if (el('activity').textContent !== text) el('activity').textContent = text; };
 const providerError = 'ارتباط با سرویس اطلاعات بانکی برقرار نشد. لطفاً دوباره تلاش کنید.';
 async function api(path, body) {
@@ -38,12 +41,14 @@ async function api(path, body) {
   return result;
 }
 function controls() {
-  const disabled = !connected || busy || sending;
+  const disabled = !connected || busy || sending || state.editing;
   el('send').disabled = disabled;
-  for (const button of document.querySelectorAll('#screen button, #choices button')) button.disabled = disabled;
+  const confirm = el('user-confirm');
+  if (confirm) confirm.disabled = !canConfirm() || state.cancelled || confirm.dataset.eligible !== 'true';
+  for (const button of document.querySelectorAll('#screen button:not(#user-confirm), #choices button, #bank-home')) button.disabled = disabled;
 }
 async function request(payload) {
-  if (!connected || busy || sending) return;
+  if (!connected || busy || sending || state.editing) return;
   sending = true;
   controls();
   try {
@@ -59,9 +64,11 @@ async function request(payload) {
   } catch { el('error').textContent = 'پیام ارسال نشد. دوباره تلاش کنید.'; }
   finally { sending = false; controls(); }
 }
+el('open-bank').onclick = () => el('screen-title').focus();
+el('open-chat').onclick = () => el('message').focus();
 el('compose').onsubmit = e => { e.preventDefault(); const message = el('message').value.trim(); if (message) request({message}); };
 el('cancel').onclick = async () => {
-  try { await api(sessionPath + '/cancel', {}); activity('در حال لغو کار'); }
+  try { await api(sessionPath + '/cancel', {}); bridge.cancel(); activity('در حال لغو کار'); }
   catch { el('error').textContent = 'لغو کار انجام نشد.'; }
 };
 
@@ -92,16 +99,24 @@ function showHistory(h) {
   }
   const steps = h.steps;
   const status = h.current?.task_state;
+  taskStatus = status;
   el('cancel').hidden = !(busy || clarification || ['ready_for_user', 'paused'].includes(status));
+  if (status === 'cancelled') bridge.cancel();
   const endings = {failed: 'درخواست انجام نشد', cancelled: 'کار لغو شد', paused: 'کار متوقف شده است'};
-  if (clarification) activity('منتظر پاسخ شما');
+  if (state.screen === 'W-receipt' && !busy && !clarification) {
+    el('cancel').hidden = true;
+    activity('انتقال آزمایشی با تأیید شما ثبت شد');
+  } else if (clarification) activity('منتظر پاسخ شما');
   else if (busy) activity(state.event || 'در حال انجام درخواست');
   else activity(endings[status] || (steps.length ? actionText(steps.at(-1)) : 'آمادهٔ دریافت درخواست'));
   controls();
 }
 async function poll() {
   try {
-    if (!bridge) bridge = workspace(await api('/web/profile'), api, state, request, activity);
+    if (!bridge) {
+      const [graph, portfolio, reasons] = await Promise.all([api('/web/profile'), api('/web/portfolio'), api('/web/reasons')]);
+      bridge = workspace(graph, api, state, portfolio, reasons, save, activity, interactive, canConfirm);
+    }
     if (!state.pending && !state.result) {
       const reply = await api(sessionPath + '/resume', bridge.observe());
       if (reply.kind === 'command') { state.pending = reply.command; save(); }

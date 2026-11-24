@@ -110,7 +110,10 @@ async function replay() {
     assert.equal(await read('card-transfer-source'), '****3566');
     assert.equal(await read('card-transfer-destination'), '****8880');
     assert.equal(await read('card-transfer-amount'), '2500000 ریال');
-    console.log('PASS card transfer');
+    await page.locator('#user-confirm:enabled').click();
+    await screen('W-receipt');
+    assert.match(await page.locator('#screen').innerText(), /رضا محمدی/);
+    console.log('PASS card transfer and user-only mock receipt');
 
     for (const days of [2, 0]) {
       const tab = await browser.newPage({baseURL: origin});
