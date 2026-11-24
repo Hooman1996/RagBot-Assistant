@@ -1,6 +1,6 @@
 # Project Status
 
-Last updated: 22 November 2026. This page is updated whenever a task changes state.
+Last updated: 24 November 2026. This page is updated whenever a task changes state.
 
 **Where we are:** P0 and the whole-app reverse-engineering catalogue (P1a-01…05) are done. Stage 1 is done: the replica has 189 registered screens across FR-01 to FR-13 and the eight D-021 batches (FR-35, FR-23, FR-14, FR-15, FR-19, FR-20, FR-16, FR-17), all with synthetic local data. The other batches are deferred until the owner picks them. S1-CHECK (#91) found **ready with gaps**, and #96 fixed a flaky device test and kept card secrets out of saved state: see the [readiness report](reports/stage1-readiness.md). Stages 2 and 3 are done: the core-journey graph (#92), the replica bridge (#93) and the dev command loop with the Python navigator and interactive graph (#94) are on `main`. Every built journey becomes an assistant feature, with PINs, OTPs, passwords and the final confirm left to the user. Original-app fidelity remains unscored pending owner comparison.
 
@@ -89,6 +89,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
+| #227 Android assistant dictation | Done | The Persian panel records into an editable draft when speech is ready. Verified Enter and touch Send, speech recovery, and a standalone transfer that stayed at review ([rehearsal](runbook/standalone-assistant.md#android-dictation-227)). |
 | #216 Demo 7/8 NegahOrbit web rehearsal | Done | Three clean browser rehearsals verified the selected journeys, ordered bridge progress, four palettes, session isolation, and a provider switch, failure and recovery. [Script and acceptance record](runbook/standalone-assistant.md#demo-78-web-rehearsal) |
 | #224 Interactive banking client | Done | All three selected features support manual use. Transfer reviews expose funds, direct user confirmation, receipts and tab-local statement debits ([runbook](runbook/standalone-assistant.md#interactive-banking-and-personal-confirmation-224)). |
 | #215 Demo 6/8 NegahOrbit web client | Done | The Agentic Assistant entry opens the Persian web client. Configured graph and service bindings drive both transfer reviews and read-only statements ([browser replay](runbook/standalone-assistant.md#demo-68-web-client)). |

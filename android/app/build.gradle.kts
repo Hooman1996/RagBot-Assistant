@@ -17,6 +17,15 @@ val sourceRevision =
 val bridgeBackend =
     providers.gradleProperty("replicaBackend").orNull ?: "http://127.0.0.1:8100"
 val bridgeSession = providers.gradleProperty("replicaSession").orNull ?: "replica-dev"
+val asrUrl = providers.environmentVariable("ASR_URL").orNull
+    ?: providers.fileContents(rootProject.layout.projectDirectory.file("../.env")).asText.orNull
+        ?.lineSequence()
+        ?.map { it.trim().removePrefix("export ") }
+        ?.filter { it.substringBefore('=').trim() == "ASR_URL" && '=' in it }
+        ?.lastOrNull()?.substringAfter('=')?.trim()?.removeSurrounding("\"")?.removeSurrounding("'")
+    ?: ""
+val asrBuildValue = asrUrl.takeUnless { value -> value.any { it.isISOControl() } }.orEmpty()
+    .replace("\\", "\\\\").replace("\"", "\\\"")
 require(bridgeSession.matches(Regex("[A-Za-z0-9_-]+"))) {
     "replicaSession must contain only letters, digits, underscores or hyphens"
 }
@@ -44,6 +53,7 @@ android {
         buildConfigField("String", "SOURCE_REVISION", "\"$sourceRevision\"")
         buildConfigField("String", "BRIDGE_BACKEND", "\"$bridgeBackend\"")
         buildConfigField("String", "BRIDGE_SESSION", "\"$bridgeSession\"")
+        buildConfigField("String", "ASR_URL", "\"$asrBuildValue\"")
         buildConfigField("boolean", "PRIVATE_RESOURCES", (privateResources != null).toString())
     }
     buildFeatures {
@@ -75,6 +85,7 @@ dependencies {
     androidTestImplementation(composeBom)
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.compose.material3:material3")
+    implementation("com.google.code.gson:gson:2.11.0")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")

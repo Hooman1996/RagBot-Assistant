@@ -17,7 +17,8 @@ internal object AssistantPanelState {
     var conversationId by mutableStateOf(UUID.randomUUID().toString())
     var history by mutableStateOf(PanelHistory())
     var draft by mutableStateOf("")
-    var sending by mutableStateOf(false)
+    var pendingCalls by mutableIntStateOf(0)
+    val sending get() = pendingCalls > 0
     var error by mutableStateOf<String?>(null)
     var bubbleX by mutableFloatStateOf(-1f) // where the user dragged the bubble, in pixels; -1: not yet
     var bubbleY by mutableFloatStateOf(-1f)
