@@ -263,6 +263,9 @@ http {
     listen 127.0.0.1:8120;
     root $PWD/negahorbit-platform;
     location /assistant/v1/ { proxy_pass http://127.0.0.1:8101; }
+    location = /speech/health { proxy_pass http://127.0.0.1:8101; }
+    location = /speech/transcribe { client_max_body_size 4m; proxy_read_timeout 365s; proxy_pass http://127.0.0.1:8101; }
+    location /speech/ { return 404; }
   }
 }
 EOF
@@ -579,3 +582,114 @@ received HTTP 200 with Persian text in the draft. The provider misrecognized par
 utterance. The replay kept «سلام» and removed the misrecognized words. With speech then switched
 to an unavailable stub response, the mic went grey, the draft stayed editable, and tapping **ارسال**
 made exactly one request containing the edited greeting. Each provider received its recording once.
+
+## Browser dictation (#228)
+
+Open **Agentic Assistant → Launch Service** at the HTTPS demo origin, or open
+`http://localhost:8101/banking/` on the machine running the browser. To use a workstation
+microphone with a remote loopback backend, forward port 8101 over SSH and open that same
+localhost URL on the workstation. Browsers require a secure context for microphone access.
+In an embedded demo the parent must allow microphone access to the banking frame.
+
+For the port-forwarded attendee workflow, run this on the attendee's computer, substituting
+their usual SSH login for `USER@SERVER`. Leave the SSH session open and visit
+`http://localhost:8101/banking/` in that computer's browser.
+
+```bash
+ssh -N -o ExitOnForwardFailure=yes -L 127.0.0.1:8101:127.0.0.1:8101 USER@SERVER
+```
+
+To use a direct server IP, open `https://SERVER_IP:TLS_PORT/banking/` through the demo's
+access-controlled TLS gateway. Its certificate must include that IP as an IP subject alternative
+name and chain to a CA trusted by attendee devices. Use the same-origin forwarding rules below.
+A remote plain-HTTP IP address cannot request microphone permission. The localhost tunnel
+works with the existing loopback HTTP listener and requires no certificates on attendee devices.
+
+Set `ASR_URL` in the private checkout `.env` to the speech service origin. A bare host and port
+selects HTTP. Explicit HTTP and HTTPS origins are also supported. Run the web-profile launch
+command above. The web listener reads the project `.env` at startup. An exported
+`ASR_URL` takes precedence, including an explicitly empty value. Restart the **web standalone**
+process after editing it, and refresh any previously exported value. Reload the browser after updating static assets.
+An empty setting disables dictation. Changing the banking bindings, agent or portal registry
+is unnecessary.
+
+The browser opens `/banking/` and uses `GET /speech/health` and `POST /speech/transcribe` at
+that origin. For the hosted demo, terminate TLS at the attendee-facing gateway and forward the
+two exact locations in `negahorbit-platform/nginx.conf` to the web standalone listener. Reload
+the gateway when changing its routes. Only the standalone listener reads the private origin.
+It checks readiness, forwards one audio file and returns the transcript or a short error.
+The provider receives the audio with a generated filename identifying its format. The gateway
+omits browser cookies and session headers and filters provider diagnostics from browser responses.
+
+Select **میکروفون** and allow the browser to use your microphone. Select **توقف ضبط** to finish,
+or **دور انداختن صدا** to discard. Recording stops automatically at 45 seconds. While the
+service transcribes, you can keep typing. Edit the returned text and press **ارسال پیام** or
+Enter. Shift+Enter inserts a newline. The status below the editor explains an unavailable
+microphone. Readiness refreshes every 30 seconds while the page is visible.
+
+### Browser acceptance
+
+Use the provider and standalone commands in the web-client section. With the browser environment
+from **Browser replay**, run the following from the checkout.
+
+```bash
+export DEMO_URL=http://127.0.0.1:8101
+mkdir -p local/scratch/228/visual
+local/toolchain/node/bin/node tests/browser/history-render.cjs
+local/toolchain/node/bin/node tests/browser/dictation.cjs
+DEMO_CAPTURE_DIR=local/scratch/228/visual local/toolchain/node/bin/node tests/browser/web-demo.cjs
+local/toolchain/node/bin/node tests/browser/interactive-bank.cjs
+python tools/project_checks.py all
+python -m pytest
+ruff check .
+ruff format --check .
+source android/env.sh
+./android/gradlew -p android --offline :app:testDebugUnitTest --tests '*SpeechClientTest' :app:lintDebug
+adb -s emulator-5554 shell am instrument -w -r -e class org.ragbot.replica.bridge.AssistantDictationTest org.ragbot.replica.test/androidx.test.runner.AndroidJUnitRunner
+```
+
+On 24 November, the 380 × 780 history trace added one reply after three identical polls.
+At baseline `60e90a2` it removed 32 prior message nodes and jumped from scroll position 0
+to 3,956 px. The updated client removed zero prior nodes and stayed at 0 px with the same
+focused draft and selection (characters 1–3). This measures browser rendering only.
+
+Chromium's synthetic microphone exercised the native recorder, delayed transcription,
+permission denial, discard, navigation, draft replacement, submission, empty text, provider
+errors, timeout, Retry-After, the recording limit and health recovery. Receiving a transcript
+made zero assistant requests. Explicitly submitting the edit made one. The gateway tests
+checked both provider paths and the filtered request and response fields.
+
+The web and interactive rehearsals passed the internal-transfer correction/cancel, statement
+clarification/reload and card-review/user-confirm journeys. The visual capture directory holds
+four palettes at 1280 and 380 px, expanded progress, narrow clarification and card review with
+synthetic data. For the outage replay we started a second web standalone with a blank setting
+and completed the typed statement journey and reconnect checks:
+
+```bash
+ASR_URL= python -m assistant --port 8129 --graph app_profiles/web.profile.json --services mock_services/web-services.json
+# In a second terminal
+DEMO_URL=http://127.0.0.1:8129 STATEMENT_ONLY=1 local/toolchain/node/bin/node tests/browser/web-demo.cjs
+```
+
+For the live-service rehearsal, supply an absolute path to a synthetic Persian speech WAV
+and point `DEMO_URL` to the browser-facing demo. The script records about five seconds, edits the
+returned Persian draft, then sends the edited text once to the synthetic banking assistant.
+For a local test certificate only, `TEST_CERT_SPKI` accepts its SHA-256 public-key pin.
+
+```bash
+SYNTHETIC_WAV="$PWD/local/scratch/227/synthetic-fa.wav" local/toolchain/node/bin/node tests/browser/dictation-live.cjs
+```
+
+The loopback HTTPS rehearsal used the checked-in Nginx routes, a temporary pinned certificate,
+the private HTTP service and a synthetic Persian utterance. One upload produced an eight-character
+Persian draft. Transcription generated zero messages and the edited send generated one.
+The same real-service rehearsal passed through a loopback TCP forward from attendee port 8148
+to the existing web listener on 8101, using the checkout's `.env` without an exported `ASR_URL`.
+It produced one upload, eight Persian characters in the draft, and one edited send. The Android
+dictation regression passed five JVM and two emulator tests. The project suite passed 177 checks,
+530 Python tests and both Ruff checks.
+
+**Attendee microphone check pending.** On the forwarded localhost URL or trusted HTTPS IP, a consenting speaker should select
+**میکروفون**, say «صورتحساب حسابم را نشان بده», stop, edit one word and send. Check the browser
+network panel for one transcription, no assistant message until Send, then one edited message.
+Record the result without storing the audio or private host.

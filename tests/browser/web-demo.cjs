@@ -16,6 +16,10 @@ async function replay() {
   try {
     const origin = process.env.DEMO_URL || 'http://127.0.0.1:8101';
     const page = await browser.newPage({baseURL: origin, reducedMotion: 'reduce'});
+    const capture = async label => {
+      if (process.env.DEMO_CAPTURE_DIR)
+        await page.screenshot({path:process.env.DEMO_CAPTURE_DIR + '/' + label + '.png', fullPage:true});
+    };
     page.setDefaultTimeout(90000);
     const pageErrors = [], external = [], commands = new Map(), results = [];
     let history, historyPolls = 0;
@@ -148,6 +152,7 @@ async function replay() {
     await page.reload();
     await page.waitForSelector('#choices button');
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'architectural-stone');
+    await capture('clarification-380');
     const savings = page.locator('#choices button').filter({hasText: 'پس‌انداز'});
     if (await savings.count()) await savings.first().click();
     await idle();
@@ -201,6 +206,7 @@ async function replay() {
         await progress.locator('summary').click();
         assert.equal(await progress.locator('ol').isVisible(), true);
         assert.deepEqual(await progress.locator('li').allTextContents(), visible);
+        await capture(id + '-' + width);
       }
     }
     // Sample two new history polls after a severed request. The last completed action stays put.
@@ -238,6 +244,7 @@ async function replay() {
     assert.equal(await read('card-transfer-destination'), '****8880');
     assert.equal(await read('card-transfer-amount'), '2500000 ریال');
     assert.equal(await page.locator('[data-screen="W-receipt"]').count(), 0);
+    await capture('review-380');
     await page.locator('#user-confirm:enabled').click();
     await screen('W-receipt');
     assert.match(await page.locator('#screen').innerText(), /رضا محمدی/);

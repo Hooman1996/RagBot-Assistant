@@ -39,3 +39,17 @@ select { display:block; width:100%; padding:.6rem; font:inherit; background:var(
 #user-confirm { background: var(--accent); color: var(--bg-canvas); }
 #bank-home { margin-top: 1rem; }
 @media(max-width:720px) { .workspace {grid-row:1} }
+
+.assistant { align-self: start; }
+.identity { flex-wrap: nowrap; border-bottom: 1px solid var(--border-strong); }
+#messages p { max-width: 92%; background: var(--bg-surface); border-radius: var(--radius-sm); }
+#messages p.user { margin-inline-start: auto; color: var(--text-primary); background: var(--bg-input); }
+#compose { margin-block: 1rem; padding: 0 1rem .65rem; border: 1px solid var(--border-strong); border-radius: var(--radius-lg); }
+#voice-status { min-height: 1.7em; font-size: .9rem; color: var(--text-secondary); }
+#mic:disabled { filter: grayscale(1); cursor: default; }
+button:not(.theme-swatch-btn), summary { min-height: 44px; }
+#progress summary { align-content: center; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0s !important; scroll-behavior: auto !important; } }
+#themes .theme-swatch-btn { width: 44px; height: 44px; padding: 11px; }
+#themes .theme-swatches { gap: 0; }
+#choices button { scroll-margin-top: 4rem; }
