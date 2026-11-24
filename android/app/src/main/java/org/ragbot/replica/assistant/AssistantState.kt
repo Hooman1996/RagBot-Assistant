@@ -44,16 +44,3 @@ internal val STATE_WORDS =
         "cancelled" to "لغو شد",
         "failed" to "انجام نشد",
     )
-
-/** States in which the task can still be cancelled. */
-internal val CANCELLABLE =
-    setOf(
-        "created",
-        "clarifying",
-        "resolving",
-        "preparing",
-        "verifying_review",
-        "ready_for_user",
-        "paused",
-        "reconciling",
-    )

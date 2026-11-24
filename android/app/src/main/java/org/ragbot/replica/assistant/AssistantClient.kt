@@ -3,6 +3,7 @@ package org.ragbot.replica.assistant
 import java.io.IOException
 import java.util.UUID
 import org.ragbot.replica.Json
+import org.ragbot.replica.MockDataError
 import org.ragbot.replica.bridge.BridgeConfig
 import org.ragbot.replica.bridge.ContractJson
 import org.ragbot.replica.bridge.Observation
@@ -34,6 +35,9 @@ internal data class PanelHistory(
     /** The state to show: a pending question means the task waits for the user. */
     val shownState
         get() = if (questionId != null) "clarifying" else taskState
+
+    val canCancel
+        get() = busy || questionId != null || taskState == "ready_for_user" || taskState == "paused"
 }
 
 internal object AssistantClient {
@@ -49,8 +53,22 @@ internal object AssistantClient {
 
     /** POST /assistant/v1/sessions/{session_id}/cancel. */
     fun cancel() {
-        call("POST", "/assistant/v1/sessions/${BridgeConfig.SESSION_ID}/cancel", null)
+        try {
+            call("POST", "/assistant/v1/sessions/${BridgeConfig.SESSION_ID}/cancel", null)
+        } catch (error: HttpFailure) {
+            // The task may finish between the last history poll and the tap.
+            if (!alreadyIdle(error.status, error.body)) throw error
+        }
     }
+
+    internal fun alreadyIdle(status: Int, body: String): Boolean =
+        status == 409 && try {
+            Json.parse("cancel", body).str("detail") == "nothing_to_cancel"
+        } catch (_: MockDataError) {
+            false
+        }
+
+    private class HttpFailure(val status: Int, val body: String) : IOException("HTTP $status $body")
 
     /** The loop's latest observation, or null before the loop has reported. */
     fun lastObservation(): Observation? = org.ragbot.replica.bridge.CommandPoller.lastObservation
@@ -115,7 +133,7 @@ internal object AssistantClient {
             }
             if (connection.responseCode != 200) {
                 val reason = connection.errorStream?.use { it.readBytes().decodeToString() }.orEmpty()
-                throw IOException("HTTP ${connection.responseCode} $reason")
+                throw HttpFailure(connection.responseCode, reason)
             }
             return connection.inputStream.use { it.readBytes().decodeToString() }
         } finally {

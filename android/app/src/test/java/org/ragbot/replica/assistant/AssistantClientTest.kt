@@ -83,6 +83,20 @@ class AssistantClientTest {
         val states = listOf("created", "clarifying", "resolving", "preparing", "verifying_review",
             "ready_for_user", "completed", "paused", "reconciling", "cancelling", "cancelled", "failed")
         assertEquals(states.toSet(), STATE_WORDS.keys)
-        assertFalse("completed" in CANCELLABLE || "cancelled" in CANCELLABLE || "failed" in CANCELLABLE)
+    }
+
+    @Test
+    fun cancelMatchesTheCurrentSessionAndOnlyIgnoresAnAlreadyFinishedTask() {
+        assertFalse(PanelHistory(taskState = "created").canCancel)
+        assertFalse(PanelHistory(taskState = "completed").canCancel)
+        assertTrue(PanelHistory(busy = true).canCancel)
+        assertTrue(PanelHistory(questionId = "q1").canCancel)
+        assertTrue(PanelHistory(taskState = "ready_for_user").canCancel)
+        assertTrue(PanelHistory(taskState = "paused").canCancel)
+        val idle = """{"detail": "nothing_to_cancel"}"""
+        assertTrue(AssistantClient.alreadyIdle(409, idle))
+        assertFalse(AssistantClient.alreadyIdle(500, idle))
+        assertFalse(AssistantClient.alreadyIdle(409, """{"detail":"session_busy"}"""))
+        assertFalse(AssistantClient.alreadyIdle(409, "unreadable"))
     }
 }
