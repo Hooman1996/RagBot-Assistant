@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
@@ -28,7 +29,7 @@ import kotlin.math.roundToInt
  * covers more than its own small size; a tap on it only opens or closes the box.
  */
 @Composable
-internal fun Bubble(state: AssistantPanelState) {
+internal fun Bubble(state: AssistantPanelState, panelHeight: Dp) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val density = LocalDensity.current
         val width = constraints.maxWidth.toFloat()
@@ -36,9 +37,10 @@ internal fun Bubble(state: AssistantPanelState) {
         val margin = with(density) { 16.dp.toPx() }
         val reach = with(density) { 120.dp.toPx() } // keeps the whole bubble on screen
         // While the box is open the bubble stays above it, so it never covers the question or options.
-        val lowest = if (state.open) height * (1 - PANEL_SHARE) - reach / 2 - margin else height - reach / 2
+        val lowest = height - with(density) { panelHeight.toPx() } - reach / 2
         val y = { (if (state.bubbleY < 0) height * .72f else state.bubbleY).coerceIn(0f, lowest.coerceAtLeast(0f)) }
-        val x = if (state.bubbleX < 0) margin else state.bubbleX
+        val rightEdge = (width - reach).coerceAtLeast(0f)
+        val x = (if (state.bubbleX < 0) margin else state.bubbleX).coerceIn(0f, rightEdge)
         Surface(
             { toggle(state) },
             // Measured from the screen's left edge whatever the layout direction, as a finger drags it.
@@ -48,7 +50,7 @@ internal fun Bubble(state: AssistantPanelState) {
                     detectDragGestures { change, amount ->
                         change.consume()
                         state.bubbleX = ((if (state.bubbleX < 0) margin else state.bubbleX) + amount.x)
-                            .coerceIn(0f, (width - reach).coerceAtLeast(0f))
+                            .coerceIn(0f, rightEdge)
                         state.bubbleY = (y() + amount.y).coerceIn(0f, lowest.coerceAtLeast(0f))
                     }
                 }

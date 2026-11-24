@@ -507,7 +507,14 @@ def check_isolation(root: Path, report: Report) -> None:
         report.check(not problem, f"{key} is a project {kind}", problem)
     for key, value in settings.items():
         if key.endswith(("_HOST", "_URL")):
-            report.check(is_development_host(value), f"{key} is a development host", value)
+            optional_blank = key == "ASR_URL" and not value
+            report.check(
+                optional_blank or is_development_host(value),
+                f"{key} is blank or a development host"
+                if key == "ASR_URL"
+                else f"{key} is a development host",
+                value,
+            )
         if any(word in key for word in SECRET_SETTING_WORDS):
             report.check(value == SECRET_PLACEHOLDER, f"{key} is a placeholder", f"use {SECRET_PLACEHOLDER}")
 

@@ -537,3 +537,45 @@ table or completed progress (9.6 s). Restoring A recovered the original statemen
 
 The complete Python acceptance passed 176 project checks and 517 tests. Ruff lint passed and
 all 195 Python files were already formatted. The archived statement suite passed six tests.
+
+## Android dictation (#227)
+
+Configure the speech origin and launch the debug replica using the
+[Android dictation runbook](replica-development.md#persian-dictation-in-the-assistant-panel).
+For the standalone bridge, use the [replica setup](../bridge/try-it.md#verify-the-replica-against-standalone)
+with the synthetic provider and the replica graph.
+
+Run the Android checks from the repository root.
+
+```bash
+source android/env.sh
+./android/gradlew -p android --no-daemon -PreplicaBackend=http://127.0.0.1:8101 \
+  -PreplicaSession="$replica_session" :app:testDebugUnitTest :app:lintDebug \
+  :app:installDebug :app:installDebugAndroidTest
+adb -s emulator-5554 shell am instrument -w -r -e package org.ragbot.replica.bridge \
+  org.ragbot.replica.test/androidx.test.runner.AndroidJUnitRunner
+python tools/bridge_e2e.py --standalone "$replica_session"
+```
+
+`SpeechClientTest` uses loopback responses for strict readiness, the single M4A upload, provider
+errors, Retry-After and timeout. `AssistantDictationTest` drives the Compose panel with the device's
+recorder and a device-local speech stub. It checks readiness recovery while the editor keeps focus
+and older messages stay in view,
+append to a draft edited during upload, discarding a late response on close, and audio cleanup.
+
+For the manual standalone replay, return deterministic Persian text from the stub and count POSTs
+to `/assistant/v1/messages` at the standalone ingress. Start with `300` in the draft, record and
+stop, then change `300` to `320` after text arrives. Verify that the transcript and the edit produce
+zero Assistant requests. Press Enter twice and check for exactly one request with the edited draft.
+The standalone transfer reached S-173 and stayed at the 3,200,000 IRR mock review.
+
+The previous panel used a fixed-height purple sheet with a wide minimize label. At 343 dp in the
+updated panel, the Persian keyboard, draft, mic and Send remained visible together. The same draft
+kept focus when permission was denied, while recording, and after the transcript was appended.
+
+In the separate real-provider rehearsal, eSpeak NG synthesized «سلام، صورت حساب من را نشان بده.»
+and the emulator's audio controller fed the clip to its microphone. The panel recorded M4A and
+received HTTP 200 with Persian text in the draft. The provider misrecognized part of the synthetic
+utterance. The replay kept «سلام» and removed the misrecognized words. With speech then switched
+to an unavailable stub response, the mic went grey, the draft stayed editable, and tapping **ارسال**
+made exactly one request containing the edited greeting. Each provider received its recording once.

@@ -2,7 +2,8 @@
 
 Issues #40 (foundation), #42 (populated Home), #44 (FR-02 accounts), #46 (FR-03 cards), #48 (FR-04a card requests), #50 (FR-04b card blocking/PIN), #52 (FR-04c wallet cards), #54 (FR-05 profile/settings), #56 (FR-06 notifications/support), #58 (FR-07 saved destinations/shortcuts), #60 (FR-08 individual transfers), #62 (FR-09 group transfers), #64 (FR-10 recurring/continuous transfers), #66 (FR-11 bill/insurance payments), #68 (FR-12 mobile top-up/charity), #70 (FR-13 wallet overview), #73 (FR-35 loans), #74 (FR-23 identifier conversion), #75 (FR-14 wallet operations), #76 (FR-15 funding), #77 (FR-19 cheques), #78 (FR-20 digital cheques), #79 (FR-16 vehicles) and #80 (FR-17 road tolls), D-020 and D-021. One Kotlin/Compose app: `org.ragbot.replica` (launcher
 `.MainActivity`, label **RagBot Replica**). Tap **ورود به خانه** to open Home.
-No credentials, banking service, INTERNET permission, assistant or bridge is present.
+The base replica uses packaged mock data. The debug variant adds the development bridge and the
+assistant panel when the bridge flag is present.
 
 Data comes from the JSON files in `mock_services/fixtures/`, and every service runs against the
 local mock bank. See the [mock data runbook](mock-data.md).
@@ -61,6 +62,38 @@ If the existing emulator is stopped, use section 5 of the emulator profile with
 both `restrict=on` options. Keep its existing AVD path; do not recreate it or
 change locale, density, font scale, guest network or snapshots for this task.
 Only install/launch `org.ragbot.replica` and its instrumentation package.
+
+## Persian dictation in the assistant panel
+
+Choose **دستیار** with the development bridge enabled. Tap the microphone, allow audio permission,
+and speak. **توقف ضبط** converts the clip to text and adds it to the current draft. **حذف صدا**
+discards the clip or its pending result. Edit the draft, then press Enter or the keyboard’s Send
+action, or tap **ارسال**. **لغو کار** cancels the assistant's current task.
+
+Gradle reads the optional `ASR_URL` from the exported environment first, then from the checkout's
+ignored `.env`. An explicitly empty environment value disables dictation for that build. Use an
+HTTP(S) origin or a bare `host:port` for an HTTP upstream. The value is compiled into the APK.
+Rebuild and reinstall after changing it. Blank or invalid configuration keeps the mic disabled and
+typed chat available. Each panel opening or foreground return checks provider health independently
+of bridge traffic. Health checks repeat every 30 seconds while the panel is visible.
+
+On the isolated development emulator, use the existing debug cleartext exception for
+`127.0.0.1`. Forward that port to the service as seen from the emulator host. The commands below
+use a service reachable on the host's loopback port 9081.
+
+```bash
+source android/env.sh
+adb -s emulator-5554 reverse tcp:9081 tcp:9081
+ASR_URL=127.0.0.1:9081 ./android/gradlew -p android --no-daemon :app:installDebug
+adb -s emulator-5554 shell am force-stop org.ragbot.replica
+adb -s emulator-5554 shell am start -n org.ragbot.replica/.MainActivity
+```
+
+For a remote HTTP upstream, use a host-local tunnel with the same debug loopback setup, or serve
+the provider through an HTTPS gateway. Point a network-enabled hosted demo build at the HTTPS
+origin and configure its gateway to serve only `GET /api/health` and `POST /api/transcribe`.
+Keep private origins out of Git and use an origin suitable for distribution when sharing an APK.
+The standalone test procedure and results are in the [standalone runbook](standalone-assistant.md#android-dictation-227).
 
 ## Download provenance and blocked official routes
 
