@@ -36,6 +36,7 @@ class CardRecord(BaseModel):
     number: str
     kind: str
     status: str
+    primaryAccount: str | None = None
 
 
 class SavedCardRecord(BaseModel):

@@ -27,3 +27,14 @@ td, th { border-bottom: 1px solid var(--border-subtle); text-align: start; paddi
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media(max-width: 720px) { main { grid-template-columns: minmax(0, 1fr); padding-block: .8rem; } #active-theme-label { display:none; } }
 @media(prefers-reduced-motion: reduce) { *, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+
+nav { position: sticky; top: 0; z-index: 5; display: flex; justify-content: center; gap: .6rem; padding: .5rem; background: var(--bg-canvas); border-bottom: 1px solid var(--border-strong); }
+.workspace, #screen-title, #message { scroll-margin-top: 4rem; }
+#portfolio { margin-bottom: 1rem; color: var(--accent); }
+summary { cursor: pointer; }
+#holdings article { padding: .65rem; margin-top: .5rem; border-inline-start: 2px solid var(--brand); background: var(--bg-input); }
+#holdings small { display:block; }
+select { display:block; width:100%; padding:.6rem; font:inherit; background:var(--bg-input); color:var(--text-primary); }
+#user-confirm { background: var(--accent); color: var(--bg-canvas); }
+#bank-home { margin-top: 1rem; }
+@media(max-width:720px) { .workspace {grid-row:1} }

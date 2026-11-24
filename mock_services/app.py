@@ -45,7 +45,7 @@ def create_app(folder: Path = FIXTURES) -> FastAPI:
     @app.get("/cards")
     def cards() -> list[CardRecord]:
         return [
-            CardRecord(**{key: row[key] for key in CardRecord.model_fields})
+            CardRecord(**{key: row.get(key) for key in CardRecord.model_fields})
             for row in fixtures.records("cards")
         ]
 

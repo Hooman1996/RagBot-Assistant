@@ -347,3 +347,33 @@ The registry upgrade retained an existing service override and eight entries. Th
 to the stone theme, retained it and the clarification across reload, and fit a 380 px viewport.
 The acceptance run passed 176 project checks, 517 Python tests and both Ruff checks. The Android
 debug build, JVM tests and lint passed. Lint reported 0 errors and 116 warnings.
+
+### Interactive banking and personal confirmation (#224)
+
+Launch **Agentic Assistant** from NegahOrbit. In **بانک من**, expand **حساب‌ها و کارت‌های من**
+to inspect the configured accounts, linked cards and available IRR balances. Select card transfer,
+internal transfer or statement to use the form yourself, or use **گفت‌وگو با دستیار** to prepare
+the same review by conversation. A review receives keyboard focus and moves into view on mobile.
+Use **ویرایش انتقال** to change a prepared draft.
+
+**تأیید انتقال آزمایشی** posts a synthetic debit only on a direct user interaction with an eligible
+review. Insufficient or unavailable funds, an unknown recipient and a cancelled draft prevent
+posting. The receipt shows the recipient, masked endpoints, date, amount, balance and reference.
+Open the source account's statement for today to inspect its debit. The tab stores its receipts
+and ledger in session storage alongside the existing bridge session. Reload retains them.
+A new independent browser session starts from the configured provider balances. The provider
+continues serving read-only fixtures. Mock confirmation uses a personal button press with no
+bank credentials. The bridge still supports observe, navigate, fill_form and show_review.
+
+With the same browser environment and services as the Demo 6 replay, run:
+
+```bash
+local/toolchain/node/bin/node tests/browser/interactive-bank.cjs
+local/toolchain/node/bin/node tests/browser/web-demo.cjs
+```
+
+The interactive replay checks the 500,000 toman request from card ending 4544 against its
+3,750,000 IRR linked account balance. At 380 × 780 the review takes focus, the 5,000,000 IRR amount
+is in the viewport, and the 1,250,000 IRR shortfall prevents confirmation. It also checks the
+desktop manual forms, editing and cancellation, two direct user confirmations, receipt reload,
+the resulting balance and both statement debits.
