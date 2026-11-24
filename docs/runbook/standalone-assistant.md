@@ -324,7 +324,7 @@ DEMO_URL=http://127.0.0.1:8103 EXPECT_FAILURE=1 STATEMENT_ONLY=1 \
   local/toolchain/node/bin/node tests/browser/web-demo.cjs
 ```
 
-### Evidence for Demo 7/8
+### Demo 6/8 acceptance evidence
 
 Implementation `e18847caad34663ea2b6818ca72520389ac050e3`, graph blob
 `64d0e2874c64aa972aaa83c78bce0a0638077c85`, bindings blob
@@ -377,3 +377,163 @@ The interactive replay checks the 500,000 toman request from card ending 4544 ag
 is in the viewport, and the 1,250,000 IRR shortfall prevents confirmation. It also checks the
 desktop manual forms, editing and cancellation, two direct user confirmations, receipt reload,
 the resulting balance and both statement debits.
+
+## Demo 7/8 web rehearsal
+
+Start the [web profile and provider](#demo-68-web-client) in the `assistant` environment. Check out
+the revision listed in the acceptance record before starting. With a separate static host, start
+the local [Nginx proxy](#demo-68-web-client) as shown above and open
+[NegahOrbit on port 8120](http://127.0.0.1:8120/). Use a fresh browser profile for each rehearsal.
+Provider fixtures are read-only. A fresh browser profile clears theme and URL overrides, drafts,
+and any synthetic ledger debits. Restart the standalone process between rehearsals to clear its
+in-memory conversation and command state.
+
+### Presenter script
+
+1. Select **Agentic Assistant**, then **Launch Service**. From the dashboard settings drawer,
+   change its URL to `/banking/?rehearsal=1`, reload the dashboard and launch again. Check the query
+   string, then reset the registry in the drawer. The home banking panel offers the three journeys
+   below.
+2. Ask «۳۰۰ هزار تومن از سپرده پس‌انداز به حساب رضا انتقال داخلی بزن بابت اجاره». On S-173
+   check source `****0579`, recipient `****7800` and 3,000,000 IRR. Say «نه، مبلغ رو ۳۲۰ هزار
+   تومن کن». Check 3,200,000 IRR, then choose **لغو کار** and wait for **کار لغو شد**.
+3. Ask «صورتحساب حسابم رو نشون بده». Reload while the account choices are visible. Select the
+   savings account ending 0579 and request the last seven days through today, using ISO dates.
+   Open **مراحل اجراشده** beside the mascot. W-statement displays Gregorian dates, descriptions,
+   exact signed IRR amounts and balances. For the short-term account ending 3231, today's range
+   has no rows in a fresh browser profile.
+4. Ask «۲۵۰ هزار تومن به رضا کارت به کارت کن» and choose source `****3566`. On S-176 check
+   recipient `****8880` and 2,500,000 IRR. End the presentation at the review. The predecessor
+   browser procedure also exercises the separate user's mock confirmation click.
+
+### API and configuration handoff
+
+The static host forwards `/assistant/v1/` to the standalone listener with `X-Assistant-Session`
+intact. The client uses the five [session and bridge calls](#session-and-bridge-calls) plus the
+read-only web display endpoints. The completed progress list uses the session's `history.steps`
+in recorded order. The status above it reflects pending clarification, work, completion, failure
+and reconnect. The four bridge operations are `observe`, `navigate`, `fill_form` and
+`show_review`.
+
+These are the repeatable inputs for the provider change and recovery. Generate the variants
+under the ignored scratch directory from the checked-in [web bindings](../../mock_services/web-services.json)
+and [synthetic fixtures](../../mock_services/fixtures/transactions.json).
+
+| Case | `statement` endpoint | Expected statement result |
+|---|---|---|
+| A | `http://127.0.0.1:8110/statement` | Savings account over seven days shows 2,000,000, −750,000 and 1,000,000 IRR. |
+| B | `http://127.0.0.1:8111/statement` | Copy `accounts.json` and `transactions.json` to the alternate provider folder. Set `statement[0].amount` to 2100000. The first row changes to 2,100,000 IRR. |
+| Fault | `http://127.0.0.1:8111/unavailable` | The provider's 404 produces the banking lookup error. The statement table stays absent. |
+
+For B, start the [alternate provider](#browser-replay). Restart the standalone process on the
+same port with the same graph and the B bindings file. For the fault, restart it with the fault
+bindings file. To recover, restart it with the original A bindings and open a fresh profile.
+The browser files and proxy address stay the same through these runs.
+
+```bash
+# Use the port that the static host already forwards to.
+python -m assistant --port 8101 --graph app_profiles/web.profile.json \
+  --services local/scratch/demo6/services-b.json
+```
+
+### Automated rehearsal
+
+Set the Playwright and Chromium paths shown in [Browser replay](#browser-replay), then run the
+browser checks with the proxy on port 8120. Each Node invocation launches a fresh Chromium
+profile. Run the A command three times, restarting the Assistant between invocations.
+
+```bash
+export DEMO_URL=http://127.0.0.1:8120
+local/toolchain/node/bin/node tests/browser/web-demo.cjs
+local/toolchain/node/bin/node tests/browser/interactive-bank.cjs
+
+# After restarting with the B bindings
+PROVIDER_URL=http://127.0.0.1:8111 STATEMENT_ONLY=1 local/toolchain/node/bin/node tests/browser/web-demo.cjs
+
+# After restarting with the fault bindings
+EXPECT_FAILURE=1 STATEMENT_ONLY=1 local/toolchain/node/bin/node tests/browser/web-demo.cjs
+
+# After restoring the A bindings
+STATEMENT_ONLY=1 local/toolchain/node/bin/node tests/browser/web-demo.cjs
+
+python tools/project_checks.py all
+python -m pytest
+ruff check .
+ruff format --check .
+```
+
+Row dates are relative to the provider's local day. Use the same local timezone for the browser
+and provider and finish each replay within one provider day. The browser profiles use the
+workflow agent and synthetic accounts. The standalone service runs one agent turn at a time.
+
+For the archived Demo 6 replay, use the browser script, backend and mock provider from
+`e18847caad34663ea2b6818ca72520389ac050e3`. The earlier backend validates card responses against
+the schema at that revision. The later #224 mock adds a card-to-account field. Pair the archived
+backend with its own provider when reproducing that replay. If the current demo occupies 8110,
+copy the archived bindings in scratch and replace only the loopback port in all five endpoints.
+Set `PROVIDER_URL` to the archived provider's loopback origin when running its browser script.
+
+### Demo 7/8 acceptance record
+
+The 24 November 2026 rehearsal used implementation
+`a98e882fb5c7355a54ee507dd8315c213340a2af`, NegahOrbit tree
+`af6290a0ee43f046296a2edfba3d8e03764ae958`, graph
+[`app_profiles/web.profile.json`](../../app_profiles/web.profile.json) blob
+`64d0e2874c64aa972aaa83c78bce0a0638077c85`, and A bindings
+[`mock_services/web-services.json`](../../mock_services/web-services.json) blob
+`9241d52ea574304acf2acf1e32c22b76474c6f25`. Chromium 131 with Playwright Core 1.49.1
+loaded Nginx on 8120. The proxy forwarded to the branch's standalone process on 8102.
+The archived replay passed with its matching provider on 8112 and the original backend and web
+build on 8106. The archived bindings differed only by loopback port.
+
+The browser verified the 17–24 November savings statement for `****0579` against the configured
+provider. The rows below give the browser and provider values in the same order.
+
+| Date | Description | Amount (IRR) | Balance (IRR) |
+|---|---|---:|---:|
+| 2026-11-23 | واریز حقوق آبان | 2,000,000 | 3,750,000 |
+| 2026-11-22 | برداشت از خودپرداز | −750,000 | 1,750,000 |
+| 2026-11-19 | واریز سود سپرده | 1,000,000 | 2,500,000 |
+
+The account question displayed **منتظر پاسخ شما** and survived reload. The statement showed
+**در حال دریافت صورتحساب** while the provider read was pending. The completed W-statement
+showed these bridge results in order, matching the session history and the observed results posts.
+
+| Bridge result | Progress text |
+|---|---|
+| `navigate` to S-016 before the account question | صفحه آماده شد |
+| `navigate` preparing the open S-016 form after the answer | صفحه آماده شد |
+| `fill_form` at S-016 | فرم تکمیل شد |
+| `show_review` at W-statement | صورتحساب نمایش داده شد |
+
+The two navigation results had different command IDs. The statement stayed read-only.
+Reconnect and repeated history polling preserved the list without posting another result, and a
+second browser profile read empty history and progress for the first profile's conversation.
+Reload also recovered the delayed short-term-account lookup and displayed its one row. A new
+profile returned the expected empty result for the short-term account's current-day range.
+
+All three clean A rehearsals passed. The provider fixtures stayed at baseline and the standalone
+process and Chromium profile reset before each run. Times include browser waits and synthetic
+user interactions. They are observations from one development host.
+
+| Run | Portal, registry and proxy | Internal transfer, correction and cancel | Statement with clarification and reload | Card review and user click | Total |
+|---|---:|---:|---:|---:|---:|
+| A1 | 18.3 s | 12.8 s | 9.5 s | 7.2 s | 66.7 s |
+| A2 | 17.5 s | 13.1 s | 8.9 s | 7.1 s | 65.1 s |
+| A3 | 16.5 s | 12.9 s | 9.4 s | 7.1 s | 64.9 s |
+
+The other seven registry addresses survived the Assistant override and reload. The dashboard's
+OCR chapter link and settings drawer opened from the portal. All four palettes, including
+Architectural Stone, kept the mascot clickable and the ordered Persian RTL list readable at
+1,280 px and 380 px. The browser blocked off-origin resources and observed zero attempts.
+The interactive banking replay passed the insufficient-balance, cancellation, direct user
+confirmation, receipt reload and statement-debit checks.
+
+With the same web build and graph, B bindings blob
+`53e4e51fd2c2ee9e9ac3484734f32d864d48747e` displayed 2,100,000 IRR in the first row
+and left the other values intact (9.8 s). Fault bindings blob
+`9ee56d4465bfddca782f91f8b8e40eb4d7591086` returned the lookup error and no statement
+table or completed progress (9.6 s). Restoring A recovered the original statement (9.9 s).
+
+The complete Python acceptance passed 176 project checks and 517 tests. Ruff lint passed and
+all 195 Python files were already formatted. The archived statement suite passed six tests.

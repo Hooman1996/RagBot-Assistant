@@ -11,6 +11,7 @@ h1, h2, p { margin: .4rem 0; }
 #character { width: 6.8rem; height: 7.4rem; display: grid; place-items: center; position: relative; overflow: hidden; }
 #character .agent-breathe { width: 5.2rem; }
 #character .agent-orbit-wrap { width: 6.7rem; height: 5rem; }
+#progress ol { margin-block: .25rem; padding-inline-start: 1.5rem; }
 #messages { max-height: 38vh; overflow-y: auto; }
 #messages p { border-inline-start: 2px solid var(--border-strong); padding: .5rem .9rem; white-space: pre-line; overflow-wrap: anywhere; }
 #messages p.user { border-color: var(--brand); color: var(--text-secondary); }
