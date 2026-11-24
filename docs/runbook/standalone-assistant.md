@@ -549,7 +549,8 @@ Run the Android checks from the repository root.
 
 ```bash
 source android/env.sh
-./android/gradlew -p android --no-daemon :app:testDebugUnitTest :app:lintDebug \
+./android/gradlew -p android --no-daemon -PreplicaBackend=http://127.0.0.1:8101 \
+  -PreplicaSession="$replica_session" :app:testDebugUnitTest :app:lintDebug \
   :app:installDebug :app:installDebugAndroidTest
 adb -s emulator-5554 shell am instrument -w -r -e package org.ragbot.replica.bridge \
   org.ragbot.replica.test/androidx.test.runner.AndroidJUnitRunner
