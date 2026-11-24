@@ -68,7 +68,11 @@ Only install/launch `org.ragbot.replica` and its instrumentation package.
 Choose **دستیار** with the development bridge enabled. Tap the microphone, allow audio permission,
 and speak. **توقف ضبط** converts the clip to text and adds it to the current draft. **حذف صدا**
 discards the clip or its pending result. Edit the draft, then press Enter or the keyboard’s Send
-action, or tap **ارسال**. **لغو کار** cancels the assistant's current task.
+action, or tap **ارسال**. While recording, the microphone becomes **توقف ضبط**. It stays
+in the same place. **در انتظار صدای میکروفون…** means Android is still waiting for input.
+**در حال ضبط صدا** means the recorder measured an audio signal. After stopping, leave the
+panel open for the transcript. A queued upload can take up to six minutes and can be discarded
+while waiting. The separate **لغو کار** control appears for a cancellable assistant task.
 
 Gradle reads the optional `ASR_URL` from the exported environment first, then from the checkout's
 ignored `.env`. An explicitly empty environment value disables dictation for that build. Use an

@@ -89,7 +89,7 @@ The canonical remaining frontend tracker is [frontend replication steps](plan/fr
 
 | Task | Status | Scope and remaining work |
 |---|---|---|
-| #227 Android assistant dictation | Done | The Persian panel records into an editable draft when speech is ready. Verified Enter and touch Send, speech recovery, and a standalone transfer that stayed at review ([rehearsal](runbook/standalone-assistant.md#android-dictation-227)). |
+| #227 Android assistant dictation | Done | The Persian panel shows incoming microphone signal and records into an editable draft when speech is ready. Verified Enter and touch Send, speech recovery, and a standalone transfer that stayed at review ([rehearsal](runbook/standalone-assistant.md#android-dictation-227)). |
 | #216 Demo 7/8 NegahOrbit web rehearsal | Done | Three clean browser rehearsals verified the selected journeys, ordered bridge progress, four palettes, session isolation, and a provider switch, failure and recovery. [Script and acceptance record](runbook/standalone-assistant.md#demo-78-web-rehearsal) |
 | #224 Interactive banking client | Done | All three selected features support manual use. Transfer reviews expose funds, direct user confirmation, receipts and tab-local statement debits ([runbook](runbook/standalone-assistant.md#interactive-banking-and-personal-confirmation-224)). |
 | #215 Demo 6/8 NegahOrbit web client | Done | The Agentic Assistant entry opens the Persian web client. Configured graph and service bindings drive both transfer reviews and read-only statements ([browser replay](runbook/standalone-assistant.md#demo-68-web-client)). |

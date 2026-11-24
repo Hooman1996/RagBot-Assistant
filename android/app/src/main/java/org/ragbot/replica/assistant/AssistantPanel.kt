@@ -216,10 +216,14 @@ private fun Panel(state: AssistantPanelState, scope: CoroutineScope, voice: Dict
                             style = MaterialTheme.typography.labelMedium,
                         )
                     }
-                    if (history.busy || history.shownState in CANCELLABLE) {
+                    if (history.canCancel && voice.phase == null) {
                         TextButton(
                             {
-                                if (!state.sending || history.busy) {
+                                if (
+                                    state.history.canCancel &&
+                                        voice.phase == null &&
+                                        (!state.sending || state.history.busy)
+                                ) {
                                     voice.discard()
                                     state.open = false
                                     act(state, scope, call = AssistantClient::cancel)
@@ -334,6 +338,15 @@ private fun Panel(state: AssistantPanelState, scope: CoroutineScope, voice: Dict
                                 launcher.launch(Manifest.permission.RECORD_AUDIO)
                             }
                         }
+                    } else if (voice.phase == VoicePhase.Recording) {
+                        TextButton(
+                            voice::stopRecording,
+                            Modifier.size(48.dp).testTag("assistant-voice-stop"),
+                            colors = ButtonDefaults.textButtonColors(contentColor = PanelError),
+                            contentPadding = PaddingValues(0.dp),
+                        ) {
+                            Text("توقف ضبط", style = MaterialTheme.typography.labelMedium)
+                        }
                     } else Box(Modifier.size(48.dp))
                     OutlinedTextField(
                         state.draft,
@@ -372,7 +385,8 @@ private fun VoiceStatus(voice: Dictation) {
         when (phase) {
             VoicePhase.Permission -> "در انتظار دسترسی به میکروفون"
             VoicePhase.Starting -> "در حال آماده‌کردن میکروفون"
-            VoicePhase.Recording -> "در حال ضبط صدا"
+            VoicePhase.Recording ->
+                if (voice.hasSignal) "در حال ضبط صدا" else "در انتظار صدای میکروفون…"
             VoicePhase.Transcribing -> "در حال تبدیل صدا به متن"
             null -> voice.status
         } ?: return
@@ -385,15 +399,6 @@ private fun VoiceStatus(voice: Dictation) {
             color = if (phase == VoicePhase.Recording) PanelError else PanelMuted,
             style = MaterialTheme.typography.bodySmall,
         )
-        if (phase == VoicePhase.Recording) {
-            TextButton(
-                voice::stopRecording,
-                Modifier.testTag("assistant-voice-stop"),
-                contentPadding = PaddingValues(horizontal = 8.dp),
-            ) {
-                Text("توقف ضبط")
-            }
-        }
         if (phase != null) {
             TextButton(
                 { voice.discard("صدا حذف شد.") },

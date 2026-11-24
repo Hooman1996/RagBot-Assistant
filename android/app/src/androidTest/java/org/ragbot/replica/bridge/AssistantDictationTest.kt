@@ -83,13 +83,17 @@ class AssistantDictationTest {
         app.moveToState(Lifecycle.State.CREATED).moveToState(Lifecycle.State.RESUMED)
         waitForMic(true)
         val text = ui.onNodeWithTag("assistant-text")
+        ui.runOnIdle { AssistantPanelState.history = PanelHistory(taskState = "ready_for_user") }
+        ui.onNodeWithTag("assistant-cancel").assertIsDisplayed()
         text.performClick().performTextReplacement("برای")
         startAndStop()
         ui.waitUntil(5_000) { stub.uploads.get() == 1 }
+        ui.onNodeWithTag("assistant-cancel").assertDoesNotExist()
         text.performTextReplacement("لطفاً برای")
         stub.releaseReplies = true
         ui.waitUntil(5_000) { AssistantPanelState.draft == "لطفاً برای رضا" }
         text.assertIsFocused().assertTextContains("لطفاً برای رضا")
+        ui.onNodeWithTag("assistant-cancel").assertIsDisplayed()
         assertTrue("the provider received an M4A file field", stub.validUpload)
         assertFalse("the assistant was not asked to send", AssistantPanelState.sending)
 
@@ -114,6 +118,7 @@ class AssistantDictationTest {
         ui.waitUntil(5_000) {
             ui.onAllNodes(hasTestTag("assistant-voice-stop")).fetchSemanticsNodes().isNotEmpty()
         }
+        ui.onNodeWithTag("assistant-cancel").assertDoesNotExist()
         Thread.sleep(1_000) // Let the emulator's microphone deliver AAC samples before stopping.
         ui.onNodeWithTag("assistant-voice-stop").performClick()
     }

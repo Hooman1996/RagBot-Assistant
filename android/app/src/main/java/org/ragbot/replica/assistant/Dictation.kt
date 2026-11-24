@@ -41,6 +41,9 @@ internal class Dictation(
     var status by mutableStateOf<String?>(null)
         private set
 
+    var hasSignal by mutableStateOf(false)
+        private set
+
     var coolingDown by mutableStateOf(false)
         private set
 
@@ -64,6 +67,7 @@ internal class Dictation(
     fun askPermission(): Boolean {
         if (!ready || coolingDown || phase != null) return false
         status = null
+        hasSignal = false
         phase = VoicePhase.Permission
         return true
     }
@@ -112,16 +116,27 @@ internal class Dictation(
                             setOutputFile(file.absolutePath)
                             prepare()
                             start()
+                            maxAmplitude // Start measuring the input delivered to this recording.
                         }
                     }
                     phase = VoicePhase.Recording
-                    withTimeoutOrNull(45_000) { finish.await() }
+                    withTimeoutOrNull(45_000) {
+                        while (!hasSignal && !finish.isCompleted) {
+                            withTimeoutOrNull(300) { finish.await() }
+                            hasSignal =
+                                withContext(recorderThread) { checkNotNull(recorder).maxAmplitude > 0 }
+                        }
+                        finish.await()
+                    }
                     phase = VoicePhase.Transcribing
-                    withContext(recorderThread) {
+                    val finalPeak = withContext(recorderThread) {
+                        val peak = checkNotNull(recorder).maxAmplitude
                         recorder?.stop()
                         recorder?.release()
                         recorder = null
+                        peak
                     }
+                    hasSignal = hasSignal || finalPeak > 0
                     val file = checkNotNull(clip)
                     val result = provider.transcribe(file)
                     if (stop !== finish || !draftIsCurrent()) return@launch
@@ -141,7 +156,9 @@ internal class Dictation(
                                 }
                                 "سرویس گفتار شلوغ است. کمی بعد دوباره ضبط کنید."
                             }
-                            SpeechResult.Empty -> "گفتاری پیدا نشد. دوباره ضبط کنید."
+                            SpeechResult.Empty ->
+                                if (hasSignal) "گفتاری پیدا نشد. دوباره ضبط کنید."
+                                else "صدایی به برنامه نرسید. ورودی میکروفون و دسترسی آن را بررسی کنید."
                             SpeechResult.Timeout -> "زمان تبدیل صدا تمام شد. دوباره ضبط کنید."
                             SpeechResult.Unavailable ->
                                 "تبدیل صدا انجام نشد. اتصال را بررسی کنید و دوباره ضبط کنید."

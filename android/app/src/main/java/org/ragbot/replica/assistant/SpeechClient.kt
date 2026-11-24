@@ -59,7 +59,8 @@ internal sealed interface SpeechResult {
 /** The speech provider sees only a health check or a new clip, on its own connection. */
 internal class SpeechClient(
     private val origin: URI,
-    private val transcriptionTimeout: Int = 30_000,
+    // Allow the provider's five-minute queue plus processing time for one bounded recording.
+    private val transcriptionTimeout: Int = 360_000,
 ) {
     suspend fun ready(): Boolean =
         withTimeoutOrNull(HEALTH_TIMEOUT.toLong()) {
