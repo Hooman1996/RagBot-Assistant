@@ -111,6 +111,18 @@ async function run() {
     await discard.waitFor({state:'hidden'});
     await reply({json:{text:'دیر'}});
     assert.equal(await editor.inputValue(), '');
+    // A new recording may start before the previous Send acknowledgement clears its draft.
+    let acknowledge;
+    await page.route('**/assistant/v1/messages', route => {
+      acknowledge = () => route.fulfill({json:{kind:'status'}});
+    }, {times:1});
+    await editor.fill('ارسال');
+    await Promise.all([page.waitForRequest('**/assistant/v1/messages'), editor.press('Enter')]);
+    await upload();
+    await acknowledge();
+    await discard.waitFor({state:'hidden'});
+    await reply({json:{text:'دیر'}});
+    assert.equal(await editor.inputValue(), '');
     const beforePermission = uploads;
     await page.evaluate(() => { navigator.mediaDevices.getUserMedia = () => Promise.reject(new DOMException('', 'NotAllowedError')); });
     await mic.click();

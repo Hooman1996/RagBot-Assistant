@@ -71,7 +71,10 @@ async function request(payload) {
       request_id: newId(), conversation_id: state.conversation,
       user_context: {user_ref: 'web-demo', locale: 'fa-IR'}, observation: bridge.observe(), ...payload});
     busy = true;
-    if (editor.value === submitted) editor.value = '';
+    if (editor.value === submitted) {
+      cancelVoice();
+      editor.value = '';
+    }
     el('error').textContent = '';
     state.event = '';
     save();
