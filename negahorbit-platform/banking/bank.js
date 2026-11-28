@@ -1,4 +1,7 @@
 // The replica's synthetic ledger belongs to this tab. Posting is a direct user interaction.
+// getRandomValues also works on plain HTTP, so typed chat can explain the microphone requirement.
+export const newId = () => Array.from(crypto.getRandomValues(new Uint8Array(16)),
+  byte => byte.toString(16).padStart(2, '0')).join('');
 export const el = id => document.getElementById(id);
 export function node(tag, text) {
   const item = document.createElement(tag);

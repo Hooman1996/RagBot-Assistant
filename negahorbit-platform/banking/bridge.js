@@ -1,4 +1,4 @@
-import {bank, destinationKey, el, node, rial, today} from './bank.js';
+import {bank, newId, destinationKey, el, node, rial, today} from './bank.js';
 
 // Screen changes and observations share one rendered, tab-local workspace.
 const home = 'S-026';
@@ -29,7 +29,7 @@ function route(edges, start, target) {
   }
 }
 
-export function workspace(graph, api, state, portfolio, reasons, save, activity, interactive, canConfirm) {
+export function workspace(graph, api, state, portfolio, reasons, save, activity, interactive, canConfirm, cancelVoice) {
   const forms = new Map(graph.forms.map(f => [f.id, f.fields]));
   const reviews = new Map(graph.features.map(f => [f.review, f.form]));
   const pane = el('screen');
@@ -108,6 +108,7 @@ export function workspace(graph, api, state, portfolio, reasons, save, activity,
   function render() {
     const screen = state.screen;
     history.replaceState(null, '', '#' + screen);
+    if (pane.dataset.screen && pane.dataset.screen !== screen) cancelVoice();
     pane.dataset.screen = screen;
     pane.replaceChildren();
     el('screen-title').textContent = titles[screen];
@@ -216,7 +217,7 @@ export function workspace(graph, api, state, portfolio, reasons, save, activity,
     if (values['ledger-account']) state.account = values['ledger-account'];
     if (manual) state.fields = changes;
     else Object.assign(state.fields, changes);
-    state.draft = {draft_id: state.draft?.draft_id || crypto.randomUUID(), draft_version: (state.draft?.draft_version || 0) + 1, review_version: 0};
+    state.draft = {draft_id: state.draft?.draft_id || newId(), draft_version: (state.draft?.draft_version || 0) + 1, review_version: 0};
     if (!manual) render();
   }
   async function review(feature) {

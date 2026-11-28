@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from assistant.http_lookups import HttpLookups
 from assistant.lookups import DIGITS, LookupUnavailable
 from assistant.mobile_api import standalone_session
+from assistant.web_speech import speech_router
 from assistant.words import options
 from mock_services.lookup_models import Statement
 
@@ -90,5 +91,6 @@ def mount_web_client(app: FastAPI, profile: dict, lookups: HttpLookups) -> None:
             raise HTTPException(503, "lookup_unavailable") from error
 
     app.include_router(router)
+    app.include_router(speech_router())
     platform = Path(__file__).resolve().parent.parent / "negahorbit-platform"
     app.mount("/", StaticFiles(directory=platform, html=True))

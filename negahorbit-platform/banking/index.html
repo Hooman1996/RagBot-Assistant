@@ -18,8 +18,11 @@
   <div id="messages" aria-label="گفت‌وگو"></div>
   <div id="choices"></div>
   <form id="compose"><label for="message">پیام شما</label><textarea id="message" rows="2" required></textarea>
-    <div class="actions"><button id="send" disabled>ارسال پیام</button><button type="button" id="cancel" hidden>لغو کار</button></div>
-  </form><p id="error" role="alert"></p></section>
+    <div class="actions"><button id="send" disabled>ارسال پیام</button>
+      <button type="button" id="mic" aria-describedby="voice-status" disabled>میکروفون</button>
+      <button type="button" id="discard" hidden>دور انداختن صدا</button></div>
+    <p id="voice-status" role="status"></p>
+  </form><button type="button" id="cancel" hidden>لغو کار بانکی</button><p id="error" role="alert"></p></section>
   <section class="workspace" aria-labelledby="screen-title"><details id="portfolio"><summary>حساب‌ها و کارت‌های من</summary><div id="holdings"></div></details>
     <h2 id="screen-title" tabindex="-1">خدمات بانکی</h2>
     <div id="screen"></div><button id="bank-home" hidden>بازگشت به خدمات</button>
